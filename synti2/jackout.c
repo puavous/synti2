@@ -55,21 +55,9 @@ usage ()
 {
 	fprintf (stderr, "\n"
 "usage: jack_metro \n"
-"              [ --frequency OR -f frequency (in Hz) ]\n"
-"              [ --amplitude OR -A maximum amplitude (between 0 and 1) ]\n"
-"              [ --duration OR -D duration (in ms) ]\n"
-"              [ --attack OR -a attack (in percent of duration) ]\n"
-"              [ --decay OR -d decay (in percent of duration) ]\n"
-"              [ --name OR -n jack name for metronome client ]\n"
+"              [ --name OR -n jack name for this client ]\n"
 "              --bpm OR -b beats per minute\n"
 );
-}
-
-static void
-process_silence (jack_nframes_t nframes) 
-{
-	sample_t *buffer = (sample_t *) jack_port_get_buffer (output_port, nframes);
-	memset (buffer, 0, sizeof (jack_default_audio_sample_t) * nframes);
 }
 
 static void
@@ -109,54 +97,19 @@ main (int argc, char *argv[])
 	int attack_percent = 1, decay_percent = 10, dur_arg = 100;
 	char *client_name = 0;
 	char *bpm_string = "bpm";
-	int verbose = 0;
 	jack_status_t status;
 
-	const char *options = "f:A:D:a:d:b:n:thv";
+	const char *options = "b:n:h";
 	struct option long_options[] =
 	{
-		{"frequency", 1, 0, 'f'},
-		{"amplitude", 1, 0, 'A'},
-		{"duration", 1, 0, 'D'},
-		{"attack", 1, 0, 'a'},
-		{"decay", 1, 0, 'd'},
 		{"bpm", 1, 0, 'b'},
 		{"name", 1, 0, 'n'},
-		{"help", 0, 0, 'h'},
-		{"verbose", 0, 0, 'v'},
+		{"help", 1, 0, 'h'},
 		{0, 0, 0, 0}
 	};
 	
 	while ((opt = getopt_long (argc, argv, options, long_options, &option_index)) != EOF) {
 		switch (opt) {
-		case 'f':
-			if ((freq = atoi (optarg)) <= 0) {
-				fprintf (stderr, "invalid frequency\n");
-				return -1;
-			}
-			break;
-		case 'A':
-			if (((max_amp = atof (optarg)) <= 0)|| (max_amp > 1)) {
-				fprintf (stderr, "invalid amplitude\n");
-				return -1;
-			}
-			break;
-		case 'D':
-			dur_arg = atoi (optarg);
-			fprintf (stderr, "durarg = %u\n", dur_arg);
-			break;
-		case 'a':
-			if (((attack_percent = atoi (optarg)) < 0) || (attack_percent > 100)) {
-				fprintf (stderr, "invalid attack percent\n");
-				return -1;
-			}
-			break;
-		case 'd':
-			if (((decay_percent = atoi (optarg)) < 0) || (decay_percent > 100)) {
-				fprintf (stderr, "invalid decay percent\n");
-				return -1;
-			}
-			break;
 		case 'b':
 			got_bpm = 1;
 			if ((bpm = atoi (optarg)) < 0) {
@@ -170,9 +123,6 @@ main (int argc, char *argv[])
 		case 'n':
 			client_name = (char *) malloc (strlen (optarg) * sizeof (char));
 			strcpy (client_name, optarg);
-			break;
-		case 'v':
-			verbose = 1;
 			break;
 		default:
 			fprintf (stderr, "unknown option %c\n", opt); 

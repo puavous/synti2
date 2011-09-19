@@ -31,11 +31,8 @@
 #include <string.h>
 
 #include <jack/jack.h>
-#include <jack/transport.h>
 
 typedef jack_default_audio_sample_t sample_t;
-
-const double PI = 3.14;
 
 jack_client_t *client;
 jack_port_t *output_port;
@@ -45,8 +42,6 @@ int bpm;
 jack_nframes_t tone_length, wave_length;
 sample_t *wave;
 long offset = 0;
-int transport_aware = 0;
-jack_transport_state_t transport_state;
 
 static void signal_handler(int sig)
 {
@@ -66,7 +61,6 @@ usage ()
 "              [ --attack OR -a attack (in percent of duration) ]\n"
 "              [ --decay OR -d decay (in percent of duration) ]\n"
 "              [ --name OR -n jack name for metronome client ]\n"
-"              [ --transport OR -t transport aware ]\n"
 "              --bpm OR -b beats per minute\n"
 );
 }
@@ -98,17 +92,6 @@ process_audio (jack_nframes_t nframes)
 static int
 process (jack_nframes_t nframes, void *arg)
 {
-	if (transport_aware) {
-		jack_position_t pos;
-
-		if (jack_transport_query (client, &pos)
-		    != JackTransportRolling) {
-
-			process_silence (nframes);
-			return 0;
-		}
-		offset = pos.frame % wave_length;
-	}
 	process_audio (nframes);
 	return 0;
 }
@@ -139,7 +122,6 @@ main (int argc, char *argv[])
 		{"decay", 1, 0, 'd'},
 		{"bpm", 1, 0, 'b'},
 		{"name", 1, 0, 'n'},
-		{"transport", 0, 0, 't'},
 		{"help", 0, 0, 'h'},
 		{"verbose", 0, 0, 'v'},
 		{0, 0, 0, 0}
@@ -191,9 +173,6 @@ main (int argc, char *argv[])
 			break;
 		case 'v':
 			verbose = 1;
-			break;
-		case 't':
-			transport_aware = 1;
 			break;
 		default:
 			fprintf (stderr, "unknown option %c\n", opt); 

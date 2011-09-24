@@ -10,3 +10,11 @@ sdltest: sdltest.c synti2.c
 
 piippi:
 	$(CC) -o piippitesti jackout.c `pkg-config --cflags --libs jack` -lm
+
+
+clean:
+
+	-rm *~
+
+veryclean: clean
+	-rm testi sdltest piippitesti

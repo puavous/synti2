@@ -17,13 +17,21 @@
 #include <jack/jack.h>
 #include <jack/midiport.h>
 
+#include "synti2.h"
+
 typedef jack_default_audio_sample_t sample_t;
 
 jack_client_t *client;
 jack_port_t *output_port;
+jack_port_t *output_portR;
 jack_port_t *inmidi_port;
 unsigned long sr;
 char * client_name = "beeper";
+
+synti2_conts *global_cont;
+synti2_synth *global_synth;
+
+synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
 static void signal_handler(int sig)
 {
@@ -31,6 +39,7 @@ static void signal_handler(int sig)
   fprintf(stderr, "signal received, exiting ...\n");
   exit(0);
 }
+
 
 static void
 process_audio (jack_nframes_t nframes) 
@@ -40,44 +49,35 @@ process_audio (jack_nframes_t nframes)
 
   void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
   
-  static double global_freq = 440;
-  static double global_amp = 0.0;
-  static double global_phase = 0.0;
-  static double global_dphase;
-  static long int global_framesdone = 0;
-  global_dphase =  global_freq / sr;
-
   jack_midi_event_t ev;
   jack_nframes_t nev;
+
+  /* Transform MIDI messages from native type (jack) to our own format */
+  synti2_conts_reset(global_cont);
 
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-      if ((ev.buffer[0] & 0xf0) == 0x90){
-        /* note on */
-        global_freq = 440.0 * pow(2.0, ((float)ev.buffer[1] - 69.0) / 12.0 );
-	global_amp = 0.5;
-      } else if ((ev.buffer[0] & 0xf0) == 0x80) {
-        /* note off */
-	global_amp = 0.0;
-      }else {
-      }
+      synti2_conts_store(global_cont, ev.time, ev.buffer, ev.size);
     } else {
       break;
     }
   }
-  
-  for (i=0; i<nframes; i++){
-    buffer[i] = global_amp * .5 * sin(2*M_PI*global_phase);
-    global_phase += global_dphase;
-    if (global_phase > 1.0) global_phase -= floor(global_phase);
+
+  synti2_conts_start(global_cont);
+
+  /* Call our own synth engine and convert samples to native type (jack) */
+  synti2_render(global_synth, global_cont,
+		global_buffer, nframes); 
+  for (i=0;i<nframes;i++){
+    buffer[i] = global_buffer[i];
   }
-  global_framesdone += nframes;
 }
 
 static int
 process (jack_nframes_t nframes, void *arg)
 {
+  /* FIXME: Should have our own code here, arg could be our data?*/
   process_audio (nframes);
   return 0;
 }
@@ -103,6 +103,15 @@ main (int argc, char *argv[])
 
   /* Get sample rate. */
   sr = jack_get_sample_rate (client);
+
+  /* My own soft synth to be created. */
+  global_synth = synti2_create(sr);
+  global_cont = synti2_conts_create();
+  if ((global_synth == NULL) || (global_cont == NULL)){
+    fprintf (stderr, "Couldn't allocate synti-kaksi \n");
+    goto error;
+  };
+
   
   /* Now we activate our new client. */
   if (jack_activate (client)) {

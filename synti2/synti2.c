@@ -14,6 +14,16 @@ struct synti2_conts {
 
 struct synti2_synth {
   unsigned long sr;
+
+  /* Throw-away test stuff:*/
+  double global_freq;
+  double global_amp;
+  double global_phase;
+  double global_dphase;
+  double global_phase2;
+  double global_dphase2;
+  double global_fmi;
+  long int global_framesdone;
 };
 
 synti2_conts * synti2_conts_create(){
@@ -85,16 +95,7 @@ synti2_render(synti2_synth *s,
 	      synti2_smp_t *buffer,
 	      int nframes)
 {
-  
-  static double global_freq = 440;
-  static double global_amp = 0.0;
-  static double global_phase = 0.0;
-  static double global_dphase;
-  static double global_phase2 = 0.0;
-  static double global_dphase2;
-  static double global_fmi = 0.0;
-  static long int global_framesdone = 0;
-  global_dphase =  global_freq / s->sr;
+  s->global_dphase =  s->global_freq / s->sr;
   unsigned char midibuf[1024];
   
   int i;
@@ -107,26 +108,27 @@ synti2_render(synti2_synth *s,
       synti2_conts_get(control, midibuf);
       if ((midibuf[0] & 0xf0) == 0x90){
         /* note on */
-        global_freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
-	global_amp = 0.5;
-	global_dphase =  global_freq / s->sr;
-        global_fmi = 1.0 * midibuf[2] / 128.0;
+        s->global_freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
+	s->global_amp = 0.5;
+	s->global_dphase =  s->global_freq / s->sr;
+        s->global_fmi = 1.0 * midibuf[2] / 128.0;
       } else if ((midibuf[0] & 0xf0) == 0x80) {
         /* note off */
-	global_amp = 0.0;
+	s->global_amp = 0.0;
       }else {
       }
     }
 
-    //global_amp = 0.5;
+    //    global_amp = 0.
 
     /* Produce sound :) */
     //    buffer[i] = global_amp * .5 * sin(2*M_PI*global_phase);
-    buffer[i] = sin(2*M_PI* (2.1*global_phase)); /* modulator osc*/ 
+    buffer[i] = sin(2*M_PI* (1.0*s->global_phase)); /* modulator osc*/ 
+
     // final:
-    buffer[i] = global_amp * .5 * sin(2*M_PI* (global_phase + global_fmi * buffer[i]));
-    global_phase += global_dphase;
-    if (global_phase > 1.0) global_phase -= floor(global_phase);
+    buffer[i] = s->global_amp * .5 * sin(2*M_PI* (s->global_phase + s->global_fmi * buffer[i]));
+    s->global_phase += s->global_dphase;
+    if (s->global_phase > 1.0) s->global_phase -= floor(s->global_phase);
   }
-  global_framesdone += nframes;
+  s->global_framesdone += nframes;
 }

@@ -6,7 +6,7 @@ all:
 
 sdltest: sdltest.c synti2.c
 
-	$(CC) -o sdltest sdltest.c synti2.c  `sdl-config --cflags --libs` -lm
+	$(CC) -o sdltest sdltest.c synti2.c  `sdl-config --cflags --libs` -lm -lGL -lGLU
 
 piippi:
 	$(CC) -o piippitesti jackout.c `pkg-config --cflags --libs jack` -lm

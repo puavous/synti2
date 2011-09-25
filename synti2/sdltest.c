@@ -23,7 +23,7 @@ static long frame = 0;
  * Process sound with our own synthesis, then convert to SDL format.
  * TODO: Can we rely that we SDL really gave the requested format?
  */
-void sound_callback(void *udata, Uint8 *stream, int len)
+static void sound_callback(void *udata, Uint8 *stream, int len)
 {
   int i;
   float vol = 10000.0;
@@ -100,36 +100,15 @@ static void render_scene_at_time(float time){
 
 
   }
-
-
-
   SDL_GL_SwapBuffers();
 }
 
-
-#ifdef ULTRASMALL
-void _start()
-#else
-  int main(int argc, char *argv[])
-#endif
-{
+/** Try to wrap it... */
+static void main2(int sdl_flags){
   SDL_Event event;
   SDL_AudioSpec w;
 
-  /* I took this from MakeIt4k code; wonder why the second 'w' test?
-   * (some platform compatibility? Why the first one not suffice?)
-   */
-  /*int flags=SDL_OPENGL|SDL_FULLSCREEN;*/
-  int flags=SDL_OPENGL;
   float tnow;
-
-#ifndef ULTRASMALL
-  if(argc>1)
-    if(!strcmp(argv[1],"-w"))
-      flags-=SDL_FULLSCREEN;
-  if(argv[0][strlen(argv[0])-1]=='w')
-    flags-=SDL_FULLSCREEN;
-#endif
 
   /* Checks of possible failures?*/
   st = synti2_create(48000);
@@ -137,6 +116,11 @@ void _start()
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
+  /* Debugging purposes I split it*/
+  /*SDL_InitSubSystem(SDL_INIT_VIDEO);
+  SDL_InitSubSystem(SDL_INIT_TIMER);
+  SDL_InitSubSystem(SDL_INIT_AUDIO);*/
+
   SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
 
   w.freq=48000;
@@ -153,11 +137,13 @@ void _start()
   /* How do I query the qurrent display mode and use that? */
   /*SDL_SetVideoMode(1280,800,32,flags+SDL_FULLSCREEN);*/
   /*SDL_SetVideoMode(1280,720,32,flags);*/
-  SDL_SetVideoMode(1024,768,32,flags);
+  SDL_SetVideoMode(1024,768,32,sdl_flags);
   /*SDL_SetVideoMode(800,600,32,flags);*/
 
 #ifdef TOFILEONLY
-  /* Preliminary idea to just output to video and audio files. */
+  /* Preliminary idea to just output to video and audio files. 
+   * FIXME: Implement properly..
+   */
   frame = 0;
   tnow = 0.0;
   do
@@ -195,15 +181,57 @@ void _start()
   free(st);
   free(global_cont);
 #endif
+}
+
+/*
+Hmm... what are they doing in __libc_start_main that is absolutely 
+necessary... At the moment, my guess is that zeroing the 4 bits in
+rsp is the most crucial thing. But the bp reset could also be nice.
+
+=> 0x0000000000400de0 <+0>:	xor    %ebp,%ebp
+   0x0000000000400de2 <+2>:	mov    %rdx,%r9
+   0x0000000000400de5 <+5>:	pop    %rsi
+   0x0000000000400de6 <+6>:	mov    %rsp,%rdx
+   0x0000000000400de9 <+9>:	and    $0xfffffffffffffff0,%rsp
+   0x0000000000400ded <+13>:	push   %rax
+   0x0000000000400dee <+14>:	push   %rsp
+   0x0000000000400def <+15>:	mov    $0x401c50,%r8
+   0x0000000000400df6 <+22>:	mov    $0x401bc0,%rcx
+   0x0000000000400dfd <+29>:	mov    $0x4015c1,%rdi
+   0x0000000000400e04 <+36>:	callq  0x400c50 <__libc_start_main@plt>
+ */
 
 #ifdef ULTRASMALL
+__attribute__((force_align_arg_pointer))
+void _start()
+{
+  asm (                                         \
+       "xor %ebp,%ebp\n"                        \
+       "and $0xfffffffffffffff0,%rsp"           \
+       );
+  main2(SDL_OPENGL);
   /* Inline assembler for exiting without need of stdlib */
   asm (                                         \
        "movl $1,%eax\n"                         \
        "xor %ebx,%ebx\n"                        \
        "int $128\n"                             \
                                                 );
-#else
-  return 0;
-#endif
 }
+#else
+  int main(int argc, char *argv[])
+{
+  int flags=SDL_OPENGL;
+  /* I took this from MakeIt4k code; wonder why the second 'w' test?
+   * (some platform compatibility? Why the first one not suffice?)
+   */
+  /*int flags=SDL_OPENGL|SDL_FULLSCREEN;*/
+  if(argc>1)
+    if(!strcmp(argv[1],"-w"))
+      flags-=SDL_FULLSCREEN;
+  if(argv[0][strlen(argv[0])-1]=='w')
+    flags-=SDL_FULLSCREEN;
+
+  main2(flags);
+  return 0;
+}
+#endif

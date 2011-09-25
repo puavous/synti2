@@ -2,8 +2,13 @@ CC = gcc
 
 #JACKLIBS = 
 
-# Size optimization breaks audio!! Probably a bug in my code..
-HCFLAGS = 
+# I used to get a crash in PulseAudio due to misaligned stack (pa uses
+# vector registers and those instructions require 16 byte alignment). 
+# I hope my current init replacement will be enough...
+HCFLAGS = -Os -DULTRASMALL -nostdlib
+
+# Used the following the last time.. but now they don't seem to help much
+# at least with the first versions..
 
 # -fno-strict-aliasing \
 #          -nostdlib -nostartfiles -DULTRASMALL \
@@ -25,11 +30,15 @@ sdltest: sdltest.c synti2.c Makefile
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
 tinytest: sdltest.c synti2.c selfextr.stub Makefile
+# hacking
+	$(CC) $(HCFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c  \
+	   
+	$(CC) $(HCFLAGS) -c -o synti2.o synti2.c
 
-	$(CC) $(HCFLAGS) -o $@.payload sdltest.c synti2.c  \
-	   `sdl-config --cflags --libs` -lm -lGL -lGLU
+	$(CC) -o $@.payload sdltest.o synti2.o  \
+	   -nostartfiles `sdl-config --libs` -lgcc -lm -lGL -lGLU
 
-#	strip $(STRIPOPT) $@.payload
+	strip $(STRIPOPT) $@.payload
 	cat selfextr.stub > $@
 	gzip -n9 <$@.payload >> $@
 	chmod ugo+x $@
@@ -44,4 +53,4 @@ clean:
 	-rm *~
 
 veryclean: clean
-	-rm testi sdltest piippitesti
+	-rm testi sdltest tinytest piippitesti

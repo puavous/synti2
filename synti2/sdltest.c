@@ -9,9 +9,11 @@
 
 #include "synti2.h"
 
-#define AUDIOBUFSIZE  2048
+#define MY_SAMPLERATE 48000
+#define AUDIOBUFSIZE  1024
+
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
-   bytes==AUDIOBUFSIZE / 4 (correct?)  */
+   bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
 float audiobuf[AUDIOBUFSIZE];
 
 synti2_conts *global_cont;
@@ -106,39 +108,43 @@ static void render_scene_at_time(float time){
 /** Try to wrap it... */
 static void main2(int sdl_flags){
   SDL_Event event;
-  SDL_AudioSpec w;
-
+  SDL_AudioSpec aud;
+  const SDL_VideoInfo * vid;
   float tnow;
 
   /* Checks of possible failures?*/
-  st = synti2_create(48000);
+  st = synti2_create(MY_SAMPLERATE);
   global_cont = synti2_conts_create();
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
-  /* Debugging purposes I split it*/
-  /*SDL_InitSubSystem(SDL_INIT_VIDEO);
-  SDL_InitSubSystem(SDL_INIT_TIMER);
-  SDL_InitSubSystem(SDL_INIT_AUDIO);*/
 
+  aud.freq     = MY_SAMPLERATE;
+  aud.format   = AUDIO_S16SYS;
+  aud.channels = 2;
+  aud.samples  = AUDIOBUFSIZE/aud.channels;  /* "samples" means frames */
+  aud.callback = sound_callback;
+  aud.userdata = NULL;     /* Would be nice to use? &mySoundData; */
+  /* btw, if userdata is not used in the callback, can delete reference*/
+
+  /* NULL 2nd param makes SDL automatically convert btw formats. Nice! */
+  SDL_OpenAudio(&aud, NULL);   /* Returns <0 upon failure. Check fits 4k?*/
+
+  /* Necessary?? Long names take up bytes!! (anyhow call before modeset) 
+   * Actually, I think this should be quite unnecessary(?).
+   */
   SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
 
-  w.freq=48000;
-  w.format=AUDIO_S16SYS;
-  w.channels=2;
-  w.samples=AUDIOBUFSIZE/2;  /* in SDL "samples" means stereo frames(?) */
+  /* It costs >35 bytes (compressed) to politely query the mode !! */
+  vid = SDL_GetVideoInfo();  /* get desktop mode */
+#if 0
+  SDL_SetVideoMode(vid->current_w, vid->current_h,32,
+		   sdl_flags|SDL_FULLSCREEN); /* use it*/
+#endif
+  SDL_SetVideoMode(640,400,32,sdl_flags);
 
-  w.callback=sound_callback;
-  w.userdata=NULL;           /* Would be nice to use? &mySoundData; */
-
-  SDL_OpenAudio(&w,NULL);    /* Returns <-1 upon failure. Check fits 4k?*/
-                             /* Should we also check the second struct parm?*/
-
-  /* How do I query the qurrent display mode and use that? */
-  /*SDL_SetVideoMode(1280,800,32,flags+SDL_FULLSCREEN);*/
-  /*SDL_SetVideoMode(1280,720,32,flags);*/
-  SDL_SetVideoMode(1024,768,32,sdl_flags);
-  /*SDL_SetVideoMode(800,600,32,flags);*/
+  /*SDL_SetVideoMode(1280,720,32,sdl_flags);*/
+  /*SDL_SetVideoMode(1024,768,32,sdl_flags);*/
 
 #ifdef TOFILEONLY
   /* Preliminary idea to just output to video and audio files. 
@@ -148,7 +154,7 @@ static void main2(int sdl_flags){
   tnow = 0.0;
   do
   {
-    tnow = frame / 48000.0;
+    tnow = (double) frame / MY_SAMPLERATE;
     if (frame % AUDIOBUFSIZE == 0){
       sound_callback(...FIXME...);
     }
@@ -169,7 +175,7 @@ static void main2(int sdl_flags){
 
   do
   {
-    tnow = frame / 48000.0;
+    tnow = (double) frame / MY_SAMPLERATE;
     render_scene_at_time(tnow);
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN && tnow <70.0);

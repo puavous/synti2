@@ -18,8 +18,11 @@ HCFLAGS = -Os -DULTRASMALL -nostdlib
 #          --param max-unrolled-insns=0 \
 #          -msse4 -mavx -mhard-float 
 
-STRIPOPT = -s -R .comment -R .gnu.version -R .note.gnu.build-id -R .gnu.hash
-
+STRIPOPT = -s -R .comment \
+	-R .gnu.version \
+	-R .note.gnu.build-id -R .gnu.hash \
+	-R .eh_frame_hdr \
+	-R .eh_frame 
 
 all:
 	$(CC) -o testi jackmidi.c synti2.c `pkg-config --cflags --libs jack` -lm
@@ -36,7 +39,7 @@ tinytest: sdltest.c synti2.c selfextr.stub Makefile
 	$(CC) $(HCFLAGS) -c -o synti2.o synti2.c
 
 	$(CC) -o $@.payload sdltest.o synti2.o  \
-	   -nostartfiles `sdl-config --libs` -lgcc -lm -lGL -lGLU
+	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
 
 	strip $(STRIPOPT) $@.payload
 	cat selfextr.stub > $@

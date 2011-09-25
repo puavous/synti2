@@ -84,8 +84,9 @@ synti2_create(unsigned long sr)
 {
   synti2_synth * s;
   s = calloc (1, sizeof(synti2_synth));
-  if (s == NULL) return;
+  if (s == NULL) return s;
   s->sr = sr;
+  return s;
 }
 
 

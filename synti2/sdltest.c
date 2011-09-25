@@ -119,7 +119,8 @@ void _start()
   /* I took this from MakeIt4k code; wonder why the second 'w' test?
    * (some platform compatibility? Why the first one not suffice?)
    */
-  int flags=SDL_OPENGL|SDL_FULLSCREEN;
+  /*int flags=SDL_OPENGL|SDL_FULLSCREEN;*/
+  int flags=SDL_OPENGL;
   float tnow;
 
 #ifndef ULTRASMALL

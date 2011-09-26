@@ -53,7 +53,7 @@ piippi:
 
 clean:
 
-	-rm *~
+	-rm *~ *.o
 
 veryclean: clean
-	-rm testi sdltest tinytest piippitesti
+	-rm *.payload testi sdltest tinytest piippitesti

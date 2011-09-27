@@ -25,19 +25,24 @@ typedef struct counter {
 /* Number of "counters", i.e., oscillators/operators */
 #define NCOUNTERS 64
 
+/* Number of inner loop iterations (frame evaluations) between
+ * evaluating "slow-motion stuff" such as MIDI input and
+ * envelopes. Must be a divisor of the buffer length. Example: 48000/8
+ * would yield 6000 Hz (or faster than midi wire rate) responsiveness.
+ * Hmm.. will there be audible problems with "jagged volumes"...
+ */
+#define NINNERLOOP 8
+
 #define MAX_COUNTER UINT_MAX
 
 struct synti2_synth {
   unsigned long sr;
 
   counter c[NCOUNTERS];
+  float fc[NCOUNTERS];   /* store the values as floats right away. */
+
   /* Throw-away test stuff:*/
-  double global_freq;
   double global_amp;
-  double global_phase;
-  double global_dphase;
-  double global_phase2;
-  double global_dphase2;
   double global_fmi;
   long int global_framesdone;
 };
@@ -51,7 +56,7 @@ synti2_conts_get(synti2_conts *control,
 		 unsigned char *midibuf)
 {
   int i;
-  for (i=0;i < control->msglen[control->i];i++){
+  for (i=0;i < control->msglen[control->i]; i++){
     midibuf[i] = control->buf[control->ibuf++];
   }
   control->i++;
@@ -105,60 +110,64 @@ synti2_create(unsigned long sr)
   return s;
 }
 
+static
+void
+synti2_handleInput(synti2_synth *s, 
+		   synti2_conts *control,
+		   int iframe){
+    /* TODO: sane implementation */
+  unsigned char midibuf[1024];
+  double freq;
+
+  while ((0 <= control->nextframe) && (control->nextframe <= iframe)){
+    synti2_conts_get(control, midibuf);
+    if ((midibuf[0] & 0xf0) == 0x90){
+      /* note on */
+      /* Frequency computation... where to put it after all? */
+      freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
+      s->global_amp = 0.5;
+      s->c[0].delta = freq / s->sr * MAX_COUNTER;
+      s->c[1].delta = (3*freq) / s->sr * MAX_COUNTER;
+      s->c[2].delta = freq / s->sr * MAX_COUNTER; /* hack test */
+      s->global_fmi = 2.0 * midibuf[2] / 128.0;
+    } else if ((midibuf[0] & 0xf0) == 0x80) {
+      /* note off */
+      s->global_amp = 0.0;
+    }else {
+    }
+  }
+}
+
 
 void
 synti2_render(synti2_synth *s, 
 	      synti2_conts *control, 
 	      synti2_smp_t *buffer,
 	      int nframes)
-{
-  //s->global_dphase =  s->global_freq / s->sr;
-  unsigned char midibuf[1024];
-  double freq;
+{  
+  int iframe, iouter, ii, ic;
+  float interm;
   
-  int i, ic;
-  
-  for (i=0; i<nframes; i++){
-    
+  for (iframe=0; iframe<nframes; iframe += NINNERLOOP){
     /* Handle MIDI-ish controls if there are more of them waiting. */
-    /* TODO: sane implementation */
-    while (control->nextframe == i){
-      synti2_conts_get(control, midibuf);
-      if ((midibuf[0] & 0xf0) == 0x90){
-        /* note on */
-        //s->global_freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
-	freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
-	s->global_amp = 0.5;
-	s->c[0].delta = freq / s->sr * MAX_COUNTER;
-	s->c[1].delta = (3*freq) / s->sr * MAX_COUNTER;
-	//s->global_dphase =  s->global_freq / s->sr;
-        s->global_fmi = 2.0 * midibuf[2] / 128.0;
-      } else if ((midibuf[0] & 0xf0) == 0x80) {
-        /* note off */
-	s->global_amp = 0.0;
-      }else {
+    synti2_handleInput(s, control, iframe);
+    
+    for(ii=0;ii<NINNERLOOP;ii++){
+
+      for(ic=0;ic<NCOUNTERS;ic++){
+	s->c[ic].val += s->c[ic].delta;
+	s->fc[ic] = (float) s->c[ic].val / MAX_COUNTER;
       }
+      
+      /* Produce sound :) First modulator, then carrier*/
+      interm = sin(2*M_PI* s->fc[1]);
+      interm = sin(2*M_PI* (s->fc[0] + s->global_fmi * interm));
+      /* These could be chained, couldn't they: */
+      //      interm = sin(2*M_PI* (s->fc[2] + s->global_fmi * interm));
+      interm *= s->global_amp * .5;
+      buffer[iframe+ii] = interm;
+      
     }
-
-    //    global_amp = 0.
-
-    for(ic=0;ic<NCOUNTERS;ic++){
-      s->c[ic].val += s->c[ic].delta;
-    }
-
-    /* Produce sound :) */
-    //    buffer[i] = global_amp * .5 * sin(2*M_PI*global_phase);
-    //buffer[i] = sin(2*M_PI* (1.0*s->global_phase)); /* modulator osc*/ 
-    // final:
-    //buffer[i] = s->global_amp * .5 * sin(2*M_PI* (s->global_phase + s->global_fmi * buffer[i]));
-    //s->global_phase += s->global_dphase;
-    //if (s->global_phase > 1.0) s->global_phase -= floor(s->global_phase);
-
-    buffer[i] = sin(2*M_PI* ((float) s->c[1].val / MAX_COUNTER)); /* modulator osc*/ 
-    buffer[i] = sin(2*M_PI* ((float) s->c[0].val / MAX_COUNTER)
-		    + s->global_fmi * buffer[i]);
-    buffer[i] *= s->global_amp * .5;
-
   }
   s->global_framesdone += nframes;
 }

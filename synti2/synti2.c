@@ -158,13 +158,15 @@ synti2_handleInput(synti2_synth *s,
       /* TODO: trigger all envelopes.. */
       s->eprog[0].delta = (MAX_COUNTER / s->sr) / 2 * 1;
       s->eprog[1].delta = (MAX_COUNTER / s->sr) * 8 * 1; //NINNERLOOP;
+      s->eprog[2].delta = (MAX_COUNTER / s->sr) * 3 * 1; //NINNERLOOP;
       s->global_fmi = 2.0 * midibuf[2] / 128.0;
      
     } else if ((midibuf[0] & 0xf0) == 0x80) {
       /* note off */
       //s->global_amp = 0.0;
       if (s->eprog[0].delta != 0)
-        s->eprog[0].delta = (MAX_COUNTER / s->sr) * 20 * 1; //NINNERLOOP;
+        s->eprog[2].delta = s->eprog[0].delta = (MAX_COUNTER / s->sr) * 20 * 1; //NINNERLOOP;
+
     }else {
     }
   }
@@ -218,8 +220,10 @@ synti2_render(synti2_synth *s,
     for (ic=0; ic<NCOUNTERS; ic++){
       //freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
       //freq = 440.0 * pow(2.0, (s->global_note - 69.0) / 12.0 );
-      note = s->global_note; /* should be a floor!? */
-      interm = (1.0 + 0.05946 * (s->global_note - note)); /* +cents.. */
+      //note = s->global_note; /* should be a floor!? */
+      note = (s->global_note /*FIXME:*/ + 12*s->feprog[2]); /* should be a floor!? */
+
+      interm = (1.0 + 0.05946 * ((s->global_note /*FIXME:*/ + 12*s->feprog[2]) - note)); /* +cents.. */
       freq = interm * s->note2freq[note];
 
       s->c[0].delta = freq / s->sr * MAX_COUNTER;

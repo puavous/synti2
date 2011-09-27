@@ -35,11 +35,11 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   /* Make some test events.. */
   synti2_conts_reset(global_cont);
 
-  if ((rand() * (1.0/RAND_MAX)) < 0.053){
+  if ((rand() * (1.0/RAND_MAX)) < 0.053/8){
     hackbuf[0] = 0x90;
     hackbuf[1] = 0x10 + (rand() * (1.0/RAND_MAX))*0x20;
     hackbuf[2] = frame / 8000 % 0x80;
-  } else if ((rand() * (1.0/RAND_MAX)) < 0.055) {
+  } else if ((rand() * (1.0/RAND_MAX)) < 0.0535 / 8) {
     hackbuf[0] = 0x80;   hackbuf[1] = 0x40;   hackbuf[2] = 0x7f;
   }
 

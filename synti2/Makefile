@@ -25,7 +25,7 @@ STRIPOPT = -s -R .comment \
 	-R .eh_frame 
 
 all:
-	$(CC) -o testi jackmidi.c synti2.c `pkg-config --cflags --libs jack` -lm
+	$(CC) -g -o testi jackmidi.c synti2.c `pkg-config --cflags --libs jack` -lm
 
 sdltest: sdltest.c synti2.c Makefile
 

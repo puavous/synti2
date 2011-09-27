@@ -31,17 +31,19 @@ typedef struct counter {
  * would yield 6000 Hz (or faster than midi wire rate) responsiveness.
  * Hmm.. will there be audible problems with "jagged volumes"...
  */
-#define NINNERLOOP 8
+#define NINNERLOOP 16
 
 #define MAX_COUNTER UINT_MAX
 
 struct synti2_synth {
-  unsigned long sr;
-
   counter c[NCOUNTERS];
   float fc[NCOUNTERS];   /* store the values as floats right away. */
 
+  float note2freq[128]; /* pre-computed frequencies of notes... */
+  unsigned long sr;
+
   /* Throw-away test stuff:*/
+  double global_note;
   double global_amp;
   double global_fmi;
   long int global_framesdone;
@@ -104,31 +106,42 @@ synti2_synth *
 synti2_create(unsigned long sr)
 {
   synti2_synth * s;
+  int inote;
+
   s = calloc (1, sizeof(synti2_synth));
   if (s == NULL) return s;
   s->sr = sr;
+
+  /* Create a note-to-frequency look-up table (cents need interpolation). 
+   * TODO: Which is more efficient / small code: linear interpolation 
+   * on every eval or make a lookup table on the cent scale...
+   */
+  for(inote=0; inote<128; inote++){
+    s->note2freq[inote] = 440.0 * pow(2.0, ((float)inote - 69.0) / 12.0 );
+  }
+
   return s;
 }
 
+/** Things may happen late or ahead of time. I don't know if that is
+ *  what they call "jitter", but if it is, then this is where I jit
+ *  and jat...
+ */
 static
 void
 synti2_handleInput(synti2_synth *s, 
 		   synti2_conts *control,
-		   int iframe){
+		   int uptoframe){
     /* TODO: sane implementation */
   unsigned char midibuf[1024];
   double freq;
 
-  while ((0 <= control->nextframe) && (control->nextframe <= iframe)){
+  while ((0 <= control->nextframe) && (control->nextframe <= uptoframe)){
     synti2_conts_get(control, midibuf);
     if ((midibuf[0] & 0xf0) == 0x90){
       /* note on */
-      /* Frequency computation... where to put it after all? */
-      freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
+      s->global_note = (float)midibuf[1];
       s->global_amp = 0.5;
-      s->c[0].delta = freq / s->sr * MAX_COUNTER;
-      s->c[1].delta = (3*freq) / s->sr * MAX_COUNTER;
-      s->c[2].delta = freq / s->sr * MAX_COUNTER; /* hack test */
       s->global_fmi = 2.0 * midibuf[2] / 128.0;
     } else if ((midibuf[0] & 0xf0) == 0x80) {
       /* note off */
@@ -146,11 +159,29 @@ synti2_render(synti2_synth *s,
 	      int nframes)
 {  
   int iframe, iouter, ii, ic;
+  int note;
   float interm;
+  float freq;
   
   for (iframe=0; iframe<nframes; iframe += NINNERLOOP){
     /* Handle MIDI-ish controls if there are more of them waiting. */
-    synti2_handleInput(s, control, iframe);
+    synti2_handleInput(s, control, iframe + NINNERLOOP);
+
+    /* TODO: Envelopes to be evaluated here. */
+
+    /* Frequency computation... where to put it after all? */
+    for (ic=0; ic<NCOUNTERS; ic++){
+      //freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
+      //freq = 440.0 * pow(2.0, (s->global_note - 69.0) / 12.0 );
+      note = s->global_note; /* should be a floor!? */
+      interm = (1.0 + 0.05946 * (s->global_note - note)); /* +cents.. */
+      freq = interm * s->note2freq[note];
+
+      s->c[0].delta = freq / s->sr * MAX_COUNTER;
+      s->c[1].delta = (3*freq) / s->sr * MAX_COUNTER;
+      s->c[2].delta = freq / s->sr * MAX_COUNTER; /* hack test */
+    }
+
     
     for(ii=0;ii<NINNERLOOP;ii++){
 

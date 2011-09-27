@@ -22,8 +22,12 @@ typedef struct counter {
   unsigned int delta;
 } counter;
 
-/* Number of "counters", i.e., oscillators/operators */
+/* Total number of "counters", i.e., oscillators/operators. */
 #define NCOUNTERS 64
+
+/* Total number of envelopes */
+#define NENVS 128
+
 
 /* Number of inner loop iterations (frame evaluations) between
  * evaluating "slow-motion stuff" such as MIDI input and
@@ -31,15 +35,24 @@ typedef struct counter {
  * would yield 6000 Hz (or faster than midi wire rate) responsiveness.
  * Hmm.. will there be audible problems with "jagged volumes"...
  */
-#define NINNERLOOP 16
+#define NINNERLOOP 8
 
 #define MAX_COUNTER UINT_MAX
 
 struct synti2_synth {
+  float note2freq[128]; /* pre-computed frequencies of notes... */
+
+  /* Oscillators are now modeled by integer counters (phase). */
   counter c[NCOUNTERS];
   float fc[NCOUNTERS];   /* store the values as floats right away. */
 
-  float note2freq[128]; /* pre-computed frequencies of notes... */
+  /* Envelope progression also modeled by integer counters. */
+  counter eprog[NENVS];
+  float feprog[NCOUNTERS];   /* store the values as floats right away. */
+
+  /* Envelope stages just a table? TODO: think.*/
+  int estage[NENVS];
+
   unsigned long sr;
 
   /* Throw-away test stuff:*/
@@ -141,14 +154,45 @@ synti2_handleInput(synti2_synth *s,
     if ((midibuf[0] & 0xf0) == 0x90){
       /* note on */
       s->global_note = (float)midibuf[1];
-      s->global_amp = 0.5;
+      //s->global_amp = 0.5;
+      /* TODO: trigger all envelopes.. */
+      s->eprog[0].delta = (MAX_COUNTER / s->sr) / 2 * 1;
+      s->eprog[1].delta = (MAX_COUNTER / s->sr) * 8 * 1; //NINNERLOOP;
       s->global_fmi = 2.0 * midibuf[2] / 128.0;
+     
     } else if ((midibuf[0] & 0xf0) == 0x80) {
       /* note off */
-      s->global_amp = 0.0;
+      //s->global_amp = 0.0;
+      if (s->eprog[0].delta != 0)
+        s->eprog[0].delta = (MAX_COUNTER / s->sr) * 20 * 1; //NINNERLOOP;
     }else {
     }
   }
+}
+
+/** TODO: Implement better? */
+static
+void
+synti2_evalEnvelopes(synti2_synth *s){  
+  int ic;
+  unsigned int prev;
+  /* TODO: Implement. */
+
+  /* A counter is triggered just by setting delta positive. */
+  for(ic=0;ic<NENVS; ic++){
+    prev = s->eprog[ic].val;
+    s->eprog[ic].val += s->eprog[ic].delta;  /* counts from 0 to MAX */
+    if (s->eprog[ic].val <= prev){
+      s->eprog[ic].delta = 0;  /* Counter stops after full circle   */
+      s->feprog[ic] = 1.0;     /* and the floating value is clamped */ 
+    } else {
+      s->feprog[ic] = (float) s->eprog[ic].val / MAX_COUNTER;
+    }
+  }
+  /* When delta==0, the counter has gone a full circle and stopped at
+   * maximum floating value (1.0)
+   */
+
 }
 
 
@@ -167,7 +211,8 @@ synti2_render(synti2_synth *s,
     /* Handle MIDI-ish controls if there are more of them waiting. */
     synti2_handleInput(s, control, iframe + NINNERLOOP);
 
-    /* TODO: Envelopes to be evaluated here. */
+    /* Envelopes to be evaluated here. */
+    //synti2_evalEnvelopes(s);   // vol envelope makes evil jig jag here
 
     /* Frequency computation... where to put it after all? */
     for (ic=0; ic<NCOUNTERS; ic++){
@@ -183,19 +228,25 @@ synti2_render(synti2_synth *s,
     }
 
     
+    /* Inner loop runs the oscillators and audio generation. */
     for(ii=0;ii<NINNERLOOP;ii++){
+
+      synti2_evalEnvelopes(s);
 
       for(ic=0;ic<NCOUNTERS;ic++){
 	s->c[ic].val += s->c[ic].delta;
 	s->fc[ic] = (float) s->c[ic].val / MAX_COUNTER;
       }
       
+      /* Just a hack for testing: */
+
       /* Produce sound :) First modulator, then carrier*/
       interm = sin(2*M_PI* s->fc[1]);
-      interm = sin(2*M_PI* (s->fc[0] + s->global_fmi * interm));
+      //interm = sin(2*M_PI* (s->fc[0] + s->global_fmi * interm));
+      interm = sin(2*M_PI* (s->fc[0] + s->global_fmi*(1-s->feprog[1]) * interm));
       /* These could be chained, couldn't they: */
       //      interm = sin(2*M_PI* (s->fc[2] + s->global_fmi * interm));
-      interm *= s->global_amp * .5;
+      interm *= (1.0-s->feprog[0]); //s->global_amp * .5;
       buffer[iframe+ii] = interm;
       
     }

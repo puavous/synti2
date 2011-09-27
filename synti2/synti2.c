@@ -1,5 +1,6 @@
 #include "synti2.h"
 #include <math.h>
+#include <limits.h>
 #include <stdlib.h>
 
 struct synti2_conts {
@@ -12,9 +13,24 @@ struct synti2_conts {
 };
 
 
+/** I just realized that unsigned ints will nicely loop around
+ * (overflow) and as such they model an oscillator's phase pretty
+ * nicely. Can I use them for other stuff as well.
+ */
+typedef struct counter {
+  unsigned int val;
+  unsigned int delta;
+} counter;
+
+/* Number of "counters", i.e., oscillators/operators */
+#define NCOUNTERS 64
+
+#define MAX_COUNTER UINT_MAX
+
 struct synti2_synth {
   unsigned long sr;
 
+  counter c[NCOUNTERS];
   /* Throw-away test stuff:*/
   double global_freq;
   double global_amp;
@@ -96,10 +112,11 @@ synti2_render(synti2_synth *s,
 	      synti2_smp_t *buffer,
 	      int nframes)
 {
-  s->global_dphase =  s->global_freq / s->sr;
+  //s->global_dphase =  s->global_freq / s->sr;
   unsigned char midibuf[1024];
+  double freq;
   
-  int i;
+  int i, ic;
   
   for (i=0; i<nframes; i++){
     
@@ -109,10 +126,13 @@ synti2_render(synti2_synth *s,
       synti2_conts_get(control, midibuf);
       if ((midibuf[0] & 0xf0) == 0x90){
         /* note on */
-        s->global_freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
+        //s->global_freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
+	freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
 	s->global_amp = 0.5;
-	s->global_dphase =  s->global_freq / s->sr;
-        s->global_fmi = 1.0 * midibuf[2] / 128.0;
+	s->c[0].delta = freq / s->sr * MAX_COUNTER;
+	s->c[1].delta = (3*freq) / s->sr * MAX_COUNTER;
+	//s->global_dphase =  s->global_freq / s->sr;
+        s->global_fmi = 2.0 * midibuf[2] / 128.0;
       } else if ((midibuf[0] & 0xf0) == 0x80) {
         /* note off */
 	s->global_amp = 0.0;
@@ -122,14 +142,23 @@ synti2_render(synti2_synth *s,
 
     //    global_amp = 0.
 
+    for(ic=0;ic<NCOUNTERS;ic++){
+      s->c[ic].val += s->c[ic].delta;
+    }
+
     /* Produce sound :) */
     //    buffer[i] = global_amp * .5 * sin(2*M_PI*global_phase);
-    buffer[i] = sin(2*M_PI* (1.0*s->global_phase)); /* modulator osc*/ 
-
+    //buffer[i] = sin(2*M_PI* (1.0*s->global_phase)); /* modulator osc*/ 
     // final:
-    buffer[i] = s->global_amp * .5 * sin(2*M_PI* (s->global_phase + s->global_fmi * buffer[i]));
-    s->global_phase += s->global_dphase;
-    if (s->global_phase > 1.0) s->global_phase -= floor(s->global_phase);
+    //buffer[i] = s->global_amp * .5 * sin(2*M_PI* (s->global_phase + s->global_fmi * buffer[i]));
+    //s->global_phase += s->global_dphase;
+    //if (s->global_phase > 1.0) s->global_phase -= floor(s->global_phase);
+
+    buffer[i] = sin(2*M_PI* ((float) s->c[1].val / MAX_COUNTER)); /* modulator osc*/ 
+    buffer[i] = sin(2*M_PI* ((float) s->c[0].val / MAX_COUNTER)
+		    + s->global_fmi * buffer[i]);
+    buffer[i] *= s->global_amp * .5;
+
   }
   s->global_framesdone += nframes;
 }

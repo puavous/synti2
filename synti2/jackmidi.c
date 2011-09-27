@@ -22,7 +22,7 @@
 typedef jack_default_audio_sample_t sample_t;
 
 jack_client_t *client;
-jack_port_t *output_port;
+jack_port_t *output_portL;
 jack_port_t *output_portR;
 jack_port_t *inmidi_port;
 unsigned long sr;
@@ -45,7 +45,8 @@ static void
 process_audio (jack_nframes_t nframes) 
 {
   int i;
-  sample_t *buffer = (sample_t *) jack_port_get_buffer (output_port, nframes);
+  sample_t *bufferL = (sample_t *) jack_port_get_buffer (output_portL, nframes);
+  sample_t *bufferR = (sample_t *) jack_port_get_buffer (output_portR, nframes);
 
   void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
   
@@ -70,7 +71,8 @@ process_audio (jack_nframes_t nframes)
   synti2_render(global_synth, global_cont,
 		global_buffer, nframes); 
   for (i=0;i<nframes;i++){
-    buffer[i] = global_buffer[i];
+    bufferL[i] = global_buffer[i];
+    bufferR[i] = global_buffer[i];
   }
 }
 
@@ -96,7 +98,8 @@ main (int argc, char *argv[])
   jack_set_process_callback (client, process, 0);
   
   /* Create an output port */
-  output_port = jack_port_register (client, "bport", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+  output_portL = jack_port_register (client, "bportL", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+  output_portR = jack_port_register (client, "bportR", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
   /* Try to create a midi port */
   inmidi_port = jack_port_register (client, "iportti", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);

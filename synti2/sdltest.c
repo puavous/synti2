@@ -10,7 +10,7 @@
 #include "synti2.h"
 
 #define MY_SAMPLERATE 48000
-#define AUDIOBUFSIZE  1024
+#define AUDIOBUFSIZE  2048
 
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
@@ -31,16 +31,22 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   float vol = 10000.0;
   
   unsigned char hackbuf[80];
+
+  static unsigned char hack_note = 0;
   
   /* Make some test events.. */
   synti2_conts_reset(global_cont);
 
-  if ((rand() * (1.0/RAND_MAX)) < 0.053/8){
+  if ((rand() * (1.0/RAND_MAX)) < 0.053/4){
     hackbuf[0] = 0x90;
-    hackbuf[1] = 0x10 + (rand() * (1.0/RAND_MAX))*0x20;
+    hack_note = 0x10 + (rand() * (1.0/RAND_MAX))*0x20;
+    hackbuf[1] = hack_note;
     hackbuf[2] = frame / 8000 % 0x80;
-  } else if ((rand() * (1.0/RAND_MAX)) < 0.0535 / 8) {
-    hackbuf[0] = 0x80;   hackbuf[1] = 0x40;   hackbuf[2] = 0x7f;
+  } else if ((rand() * (1.0/RAND_MAX)) < 0.0535 / 4) {
+    if (hack_note != 0){
+      hackbuf[0] = 0x80;   hackbuf[1] = hack_note;   hackbuf[2] = 0x7f;
+      hack_note = 0;
+    }
   }
 
   synti2_conts_store(global_cont, 10, hackbuf, 3);

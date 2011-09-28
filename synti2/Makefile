@@ -31,7 +31,7 @@ STRIPOPT = -s -R .comment \
 all: jacktest
 
 jacktest:
-	$(CC) -g -o testi jackmidi.c synti2.c `pkg-config --cflags --libs jack` -lm
+	$(CC) $(CFLAGS) -o testi jackmidi.c synti2.c `pkg-config --cflags --libs jack` -lm
 
 sdltest: sdltest.c synti2.c Makefile
 

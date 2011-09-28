@@ -2,6 +2,10 @@ CC = gcc
 
 #JACKLIBS = 
 
+# C flags common to all files (normal/debug build)
+CFLAGS = -O3 -g -Wall -pedantic
+
+# The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
@@ -24,18 +28,19 @@ STRIPOPT = -s -R .comment \
 	-R .eh_frame_hdr \
 	-R .eh_frame 
 
-all:
+all: jacktest
+
+jacktest:
 	$(CC) -g -o testi jackmidi.c synti2.c `pkg-config --cflags --libs jack` -lm
 
 sdltest: sdltest.c synti2.c Makefile
 
-	$(CC) -o sdltest sdltest.c synti2.c \
+	$(CC) $(CFLAGS) -o sdltest sdltest.c synti2.c \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
 tinytest: sdltest.c synti2.c selfextr.stub Makefile
 # hacking
-	$(CC) $(HCFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c  \
-	   
+	$(CC) $(HCFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c
 	$(CC) $(HCFLAGS) -c -o synti2.o synti2.c
 
 	$(CC) -o $@.payload sdltest.o synti2.o  \

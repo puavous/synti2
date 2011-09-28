@@ -83,9 +83,6 @@ struct synti2_synth {
   unsigned long sr;
 
   /* Throw-away test stuff:*/
-  double global_note;
-  double global_amp;
-  double global_fmi;
   long int global_framesdone;
 };
 
@@ -199,7 +196,6 @@ synti2_handleInput(synti2_synth *s,
       s->note[freevoice] = note;
       s->velocity[freevoice] = vel;
 
-      //s->global_note = (float)note;
       /* TODO: trigger all envelopes according to patch data.. */
       s->eprog[freevoice*4+0].delta = (MAX_COUNTER / s->sr) / 7 * 1;
       s->eprog[freevoice*4+1].delta = (MAX_COUNTER / s->sr) / 1 * 1;
@@ -217,7 +213,6 @@ synti2_handleInput(synti2_synth *s,
 					 freed no earlier than when
 					 the envelope release stage
 					 ends!! */
-      //s->global_amp = 0.0;
       /* TODO: release all envelopes.. */
       s->eprog[freevoice*4+0].delta = (MAX_COUNTER / s->sr) * 20 * 1;
       s->eprog[freevoice*4+1].delta = (MAX_COUNTER / s->sr) * 20 * 1;
@@ -256,6 +251,34 @@ synti2_evalEnvelopes(synti2_synth *s){
 
 }
 
+/** Converts note values to counter deltas. */
+static
+void
+synti2_updateFrequencies(synti2_synth *s){
+  int iv, note;
+  float interm, freq;
+  /* Frequency computation... where to put it after all? */
+  for (iv=0; iv<NVOICES; iv++){
+    note = s->note[iv];  /**/
+    interm = (1.0 + 0.05946 * ((s->note[iv]) - note)); /* +cents.. */
+    freq = interm * s->note2freq[note];
+    
+    s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
+    s->c[iv*2+1].delta = (2*freq) / s->sr * MAX_COUNTER; /*hack test*/
+    //s->c[2].delta = freq / s->sr * MAX_COUNTER; /* hack test */
+  }
+}
+
+/** Updates envelope stages as the patch data dictates. */
+static
+void
+synti2_updateEnvelopeStages(synti2_synth *s){
+  int iv;
+  for(iv=0; iv<NVOICES; iv++){
+    
+  }
+}
+
 
 void
 synti2_render(synti2_synth *s, 
@@ -263,40 +286,24 @@ synti2_render(synti2_synth *s,
 	      synti2_smp_t *buffer,
 	      int nframes)
 {  
-  int iframe, iouter, ii, ic, iv;
-  int note;
+  int iframe, ii, ic, iv;
   float interm;
-  float freq;
   
   for (iframe=0; iframe<nframes; iframe += NINNERLOOP){
+    /* Outer loop for tihngs that are allowed some jitter: */
+    /* Envelopes couldn't be evaluated here because vol envelope makes
+     * evil (=very audible) jig jag 
+     */
+
     /* Handle MIDI-ish controls if there are more of them waiting. */
     synti2_handleInput(s, control, iframe + NINNERLOOP);
-
-    /* Envelopes to be evaluated here. */
-    //synti2_evalEnvelopes(s);   // vol envelope makes evil jig jag here
-
-    /* Frequency computation... where to put it after all? */
-    for (iv=0; iv<NVOICES; iv++){
-      //freq = 440.0 * pow(2.0, ((float)midibuf[1] - 69.0) / 12.0 );
-      //freq = 440.0 * pow(2.0, (s->global_note - 69.0) / 12.0 );
-      //note = s->global_note; /* should be a floor!? */
-      //note = (s->global_note /*FIXME:*/ + 12*s->feprog[2]); /* should be a floor!? */
-      //       interm = (1.0 + 0.05946 * ((s->global_note /*FIXME:*/ + 12*s->feprog[2]) - note)); /* +cents.. */
-
-      note = s->note[iv];
-      interm = (1.0 + 0.05946 * ((s->note[iv]) - note)); /* +cents.. */
-
-      freq = interm * s->note2freq[note];
-
-      s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
-      s->c[iv*2+1].delta = (2*freq) / s->sr * MAX_COUNTER; /*hack test*/
-      //s->c[2].delta = freq / s->sr * MAX_COUNTER; /* hack test */
-    }
-
+    synti2_updateFrequencies(s);    /* frequency upd. */
+    synti2_updateEnvelopeStages(s); /* move on if need be. */
     
     /* Inner loop runs the oscillators and audio generation. */
     for(ii=0;ii<NINNERLOOP;ii++){
 
+      /* Could I put all counter upds in one big awesomely parallel loop */
       synti2_evalEnvelopes(s);
 
       for(ic=0;ic<NCOUNTERS;ic++){
@@ -304,20 +311,7 @@ synti2_render(synti2_synth *s,
 	s->fc[ic] = (float) s->c[ic].val / MAX_COUNTER;
       }
       
-      /* Just a hack for testing: */
-
-#if 0
-      /* Produce sound :) First modulator, then carrier*/
-      interm = sin(2*M_PI* s->fc[1]);
-      //interm = sin(2*M_PI* (s->fc[0] + s->global_fmi * interm));
-      interm = sin(2*M_PI* (s->fc[0] + s->global_fmi*(1-s->feprog[1]) * interm));
-      /* These could be chained, couldn't they: */
-      //      interm = sin(2*M_PI* (s->fc[2] + s->global_fmi * interm));
-      interm *= (1.0-s->feprog[0]); //s->global_amp * .5;
-      buffer[iframe+ii] = interm;
-#endif
-
-      /* More realistic: */
+      /* Getting more realistic soon: */
       buffer[iframe+ii] = 0.0;
 
       for(iv=0;iv<NVOICES;iv++){

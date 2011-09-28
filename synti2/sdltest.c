@@ -214,8 +214,8 @@ rsp is the most crucial thing. But the bp reset could also be nice.
  */
 
 #ifdef ULTRASMALL
-__attribute__((force_align_arg_pointer))
 void _start()
+/* Should check the architecure maybe.. the following assumes AMD64*/
 {
   asm (                                         \
        "xor %ebp,%ebp\n"                        \

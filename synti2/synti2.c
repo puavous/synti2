@@ -103,10 +103,10 @@ struct synti2_synth {
 };
 
 const float hack_examplesound[SYNTI2_NPARAMS] = 
-  {0.01, 1.0,   0.4, 0.9,   0.8, 0.3,   1.01, 0.4,   1.03, 0.3,
-   0.00, 0.0,   0.0, 0.0,   0.0, 0.0,   0.00, 0.0,   0.00, 0.0,     
-   0.00, 0.0,   0.0, 0.0,   0.0, 0.0,   0.00, 0.0,   0.00, 0.0,     
-   0.00, 0.0,   0.0, 0.0,   0.0, 0.0,   0.00, 0.0,   0.00, 0.0,    };
+  {0.01, 1.00,   0.1, 0.5,   1.27, 0.05,   0.00, 0.05,   0.20, 0.0,
+   0.000, 1.27,   0.02, 0.1,   0.03, 0.0,   0.00, 0.00,   0.02, 0.0,
+   0.00, 36.00,   0.02, 24.0,   0.07, 0.0,   0.00, 0.0,   0.02, 0.0,
+   0.000, 1.27,   0.2, 0.4,   0.4, 0.1,   0.40, 0.2,   0.20, 0.1, };
 
 /** Creates a controller "object". Could be integrated within the synth itself?*/
 synti2_conts * synti2_conts_create(){
@@ -294,7 +294,7 @@ synti2_evalEnvelopes(synti2_synth *s){
 static
 void
 synti2_updateEnvelopeStages(synti2_synth *s){
-  int iv, ie, ithis;
+  int iv, ie, ipastend;
   int part;
   float nextgoal;
   float nexttime;
@@ -305,42 +305,39 @@ synti2_updateEnvelopeStages(synti2_synth *s){
     if (part<0) continue;
     stagesum = 0;
     for (ie=0; ie<NENVPERVOICE; ie++){
-      ithis = iv*NENVPERVOICE + ie;
+      ipastend = part * SYNTI2_NPARAMS + SYNTI2_IENVS + (ie+1) * SYNTI2_NENVD;
       if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs. */
       /* Think... delta==0 on a triggered envelope means endclamp?? 
          NOTE: Need to set delta=0 upon note on!!
          and estage == NSTAGES+1 or so (=6?) means go to attack.. */
       if (s->eprog[iv][ie].delta == 0){
         s->estage[iv][ie]--; /* Go to next stage (one smaller ind) */
-        if (s->estage[iv][ie] == 0) continue; /* Newly ended one..*/
+        if (s->estage[iv][ie] == 0) continue; /* Newly ended one.. no more knees. */
 	if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)) s->estage[iv][ie] = 3;
+        nexttime = s->patch[ipastend - s->estage[iv][ie] * 2 + 0];
+        nextgoal = s->patch[ipastend - s->estage[iv][ie] * 2 + 1];
         s->feprev[iv][ie] = s->fenv[iv][ie];
-        nexttime = s->patch[part * SYNTI2_NPARAMS 
-                            + SYNTI2_IENVS + ie * SYNTI2_NENVD 
-                            + SYNTI2_NENVD - s->estage[iv][ie] * 2 + 0];
-        nextgoal = s->patch[part * SYNTI2_NPARAMS 
-                            + SYNTI2_IENVS + ie * SYNTI2_NENVD 
-                            + SYNTI2_NENVD - s->estage[iv][ie] * 2 + 1];
         s->fegoal[iv][ie] = nextgoal;
-        /* 0 means "in no time" (which in essence lasts until next check here): */
-        s->eprog[iv][ie].delta = (nexttime==0)?0:MAX_COUNTER / s->sr / nexttime;
-        /* (Counter has been reset to 0 while doing previous clamp?)*/
-
-	  /*
-        if (ie==0)
-	jack_info("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) ", 
-		  iv, ie, part, s->estage[iv][ie], s->feprev[iv][ie], 
-		  s->fegoal[iv][ie], 
-		  nexttime, s->eprog[iv][ie].delta);
-	  */
+	if (nexttime <= 0.0){
+	  s->eprog[iv][ie].val = 1; /* hack for "no time". will be 0 after an eval. */
+	  s->eprog[iv][ie].delta = MAX_COUNTER;
+	} else {
+	  s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
+	}
+	/*
+	  if (ie==0)
+	  jack_info("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) ", 
+	  iv, ie, part, s->estage[iv][ie], s->feprev[iv][ie], 
+	  s->fegoal[iv][ie], 
+	  nexttime, s->eprog[iv][ie].delta);
+	*/
       }
       /* FIXME: just simple LFO stuff instead of this hack of a looping envelope?*/
       stagesum += s->estage[iv][ie];
     }
     if (stagesum == 0){
-      /* Consider this note instance completely finished: */
+      /* Consider note instance "completely finished" when all envelopes are over: */
       s->partofvoice[iv] = -1;
-      //s->part[part].voiceofkey[note] = 0; /*FIXME: think*/
     }
   }
 }
@@ -351,15 +348,25 @@ static
 void
 synti2_updateFrequencies(synti2_synth *s){
   int iv, note;
-  float interm, freq;
+  float notemod, interm, freq;
   /* Frequency computation... where to put it after all? */
   for (iv=0; iv<NVOICES; iv++){
-    note = s->note[iv];  /**/
-    interm = (1.0 + 0.05946 * ((s->note[iv]) - note)); /* +cents.. */
+    notemod = s->note[iv] + s->fenv[iv][2];   // HACK!!
+    /* should make a floor (does it? check spec)*/
+    note = notemod;
+    interm = (1.0 + 0.05946 * (notemod - note)); /* +cents.. */
     freq = interm * s->note2freq[note];
     
     s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
-    s->c[iv*2+1].delta = (2*freq) / s->sr * MAX_COUNTER; /*hack test*/
+
+    /* modulator pitch; Hack. FIXME: */
+    notemod = s->note[iv] + s->fenv[iv][3];   // HACK!!
+    /* should make a floor (does it? check spec)*/
+    note = notemod;
+    interm = (1.0 + 0.05946 * (notemod - note)); /* +cents.. */
+    freq = interm * s->note2freq[note];
+
+    s->c[iv*2+1].delta = (freq) / s->sr * MAX_COUNTER; /*hack test*/
     //s->c[2].delta = freq / s->sr * MAX_COUNTER; /* hack test */
   }
 }

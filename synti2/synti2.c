@@ -290,6 +290,19 @@ synti2_evalEnvelopes(synti2_synth *s){
   }
 }
 
+
+/* Advance the oscillator counters. Consider using the xmms assembly for these? */
+static 
+void
+synti2_evalCounters(synti2_synth *s){
+  int ic;
+  for(ic=0;ic<NCOUNTERS;ic++){
+    s->c[ic].val += s->c[ic].delta;
+    s->fc[ic] = (float) s->c[ic].val / MAX_COUNTER;
+  }
+}
+
+
 /** Updates envelope stages as the patch data dictates. */
 static
 void
@@ -397,11 +410,7 @@ synti2_render(synti2_synth *s,
 
       /* Could I put all counter upds in one big awesomely parallel loop */
       synti2_evalEnvelopes(s);
-
-      for(ic=0;ic<NCOUNTERS;ic++){
-	s->c[ic].val += s->c[ic].delta;
-	s->fc[ic] = (float) s->c[ic].val / MAX_COUNTER;
-      }
+      synti2_evalCounters(s);
       
       /* Getting more realistic soon: */
       buffer[iframe+ii] = 0.0;
@@ -409,6 +418,8 @@ synti2_render(synti2_synth *s,
       for(iv=0;iv<NVOICES;iv++){
 	// if (s->partofvoice[iv] < 0) continue; /* Unsounding. FIXME: (f1) */
 	/* Produce sound :) First modulator, then carrier*/
+        /* Worth using a wavetable? Probably.. Could do the first just
+	   by bit-shifting the counter... */
 	interm  = sin(2*M_PI* s->fc[iv*2+1]);
         interm *= (s->velocity[iv]/128.0) * (s->fenv[iv][1]);
 	interm  = sin(2*M_PI* (s->fc[iv*2+0] + interm));

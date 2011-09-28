@@ -6,47 +6,68 @@
 struct synti2_conts {
   int i;
   int ibuf;
-  int nextframe;
-  int frame[20000];        /*FIXME: think about limits */
+  int nextframe;            /* TODO: Necessary field? */
+  int frame[20000];         /*FIXME: think about limits */
   int msglen[20000];        /*FIXME: think about limits */
   unsigned char buf[20000]; /*FIXME: think about limits */
 };
 
+/* Total number of "counters", i.e., oscillators/operators. */
+#define NCOUNTERS 64
+
+/* Maximum value of the counter type */
+#define MAX_COUNTER UINT_MAX
+
+/* Total number of envelopes */
+#define NENVS 128
+
+/* Number of inner loop iterations (frame evaluations) between
+ * evaluating "slow-motion stuff" such as MIDI input and
+ * envelopes. Must be a divisor of the buffer length. Example: 48000/8
+ * would yield 6000 Hz (or faster than midi wire rate) responsiveness.
+ * Hmm.. will there be audible problems with "jagged volumes" if I
+ * put the volume envelope outside of the inner loop... So I'll keep at
+ * least the envelope progression counter code inside.
+ */
+#define NINNERLOOP 8
 
 /** I just realized that unsigned ints will nicely loop around
  * (overflow) and as such they model an oscillator's phase pretty
- * nicely. Can I use them for other stuff as well.
+ * nicely. Can I use them for other stuff as well? Seem fit for
+ * envelopes with only a little extra (clamping and stop flag)
  */
 typedef struct counter {
   unsigned int val;
   unsigned int delta;
 } counter;
 
-/* Total number of "counters", i.e., oscillators/operators. */
-#define NCOUNTERS 64
+#define SYNTI2_NPARAMS 128
 
-/* Total number of envelopes */
-#define NENVS 128
+#define NVOICES (NCOUNTERS/2)
 
-
-/* Number of inner loop iterations (frame evaluations) between
- * evaluating "slow-motion stuff" such as MIDI input and
- * envelopes. Must be a divisor of the buffer length. Example: 48000/8
- * would yield 6000 Hz (or faster than midi wire rate) responsiveness.
- * Hmm.. will there be audible problems with "jagged volumes"...
- */
-#define NINNERLOOP 8
-
-#define MAX_COUNTER UINT_MAX
+typedef struct synti2_part {
+  int par[SYNTI2_NPARAMS];  /* The sound parameters*/
+  int voiceofkey[128];  /* Which note has triggered which voice*/
+} synti2_part;
 
 struct synti2_synth {
-  float note2freq[128]; /* pre-computed frequencies of notes... */
+  float note2freq[128]; /* pre-computed frequencies of notes... Tuning
+			   systems would be easy to change - just
+			   compute a different table here (?)..*/
+
+  /* TODO: Reduce number of constants, i.e., make 2*VOICE etc. */
+
+  int voiceatpart[NVOICES];  /* which part has triggered each "voice";
+				-1 (should we use zero instead?) means
+				that the voice is not alive. */
 
   /* Oscillators are now modeled by integer counters (phase). */
   counter c[NCOUNTERS];
   float fc[NCOUNTERS];   /* store the values as floats right away. */
 
-  /* Envelope progression also modeled by integer counters. */
+  /* Envelope progression also modeled by integer counters. Not much
+   * difference between oscillators and envelopes!!
+   */
   counter eprog[NENVS];
   float feprog[NCOUNTERS];   /* store the values as floats right away. */
 

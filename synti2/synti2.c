@@ -234,7 +234,15 @@ synti2_do_noteoff(synti2_synth *s, int part, int note, int vel){
 
 /** FIXME: Think about data model.. aim at maximal sparsity but enough
     expressive range. Maximum obtainable with below is 
-    (127+1.27+0.0127)*63 = 8 081.8101 */
+    (127+1.27+0.0127)*63 = 8 081.8101 
+
+    SysEx format (planned; FIXME: implement!) 
+
+    F0 ?? [storeAddrMSB] [storeAddr2LSB] [inputStride] ... data ... F7
+
+
+    
+*/
 static
 void
 synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){

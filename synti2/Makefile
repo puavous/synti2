@@ -9,7 +9,7 @@ CFLAGS = -O3 -g -Wall -pedantic
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -DULTRASMALL -nostdlib
+HCFLAGS = -Os -g -DULTRASMALL -nostdlib
 
 # Used the following the last time.. but now they don't seem to help much
 # at least with the first versions..
@@ -43,10 +43,10 @@ tinytest: sdltest.c synti2.c selfextr.stub Makefile
 	$(CC) $(HCFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c
 	$(CC) $(HCFLAGS) -c -o synti2.o synti2.c
 
-	$(CC) -o $@.payload sdltest.o synti2.o  \
+	$(CC) -o $@.unstripped.payload sdltest.o synti2.o  \
 	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
 
-	strip $(STRIPOPT) $@.payload
+	strip $(STRIPOPT) -o $@.payload $@.unstripped.payload
 	cat selfextr.stub > $@
 	gzip -n9 <$@.payload >> $@
 	chmod ugo+x $@

@@ -54,7 +54,7 @@ synti2_conts_store(synti2_conts *control,
  */
 /*TODO: Design the patch format properly. */
 #define SYNTI2_IENVS 0
-#define SYNTI2_NPARAMS 128
+#define SYNTI2_NPARAMS 40
 
 /* Length of envelope data block [supagain] [reserved] K1T&L K2T&L K3T&L K4T&L K5T&L */
 /* (order of knees might be different??) FIXME: Think about this .. make envs simpler?*/

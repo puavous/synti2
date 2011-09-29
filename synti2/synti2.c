@@ -55,8 +55,6 @@ typedef struct counter {
   unsigned int delta;
 } counter;
 
-#define SYNTI2_NPARAMS 128
-
 typedef struct synti2_part {
   int voiceofkey[128];  /* Which note has triggered which voice*/
 } synti2_part;
@@ -101,12 +99,6 @@ struct synti2_synth {
   /* Throw-away test stuff:*/
   long int global_framesdone;
 };
-
-const float hack_examplesound[SYNTI2_NPARAMS] = 
-  {0.01, 1.00,   0.1, 0.5,   1.27, 0.05,   0.00, 0.05,   0.20, 0.0,
-   0.000, 1.27,   0.02, 0.1,   0.03, 0.0,   0.00, 0.00,   0.02, 0.0,
-   0.00, 36.00,   0.02, 24.0,   0.07, 0.0,   0.00, 0.0,   0.02, 0.0,
-   0.000, 1.27,   0.2, 0.4,   0.4, 0.1,   0.40, 0.2,   0.20, 0.1, };
 
 /** Creates a controller "object". Could be integrated within the synth itself?*/
 synti2_conts * synti2_conts_create(){
@@ -166,7 +158,7 @@ synti2_synth *
 synti2_create(unsigned long sr)
 {
   synti2_synth * s;
-  int ii, ic;
+  int ii;
 
   s = calloc (1, sizeof(synti2_synth));
   if (s == NULL) return s;
@@ -184,13 +176,14 @@ synti2_create(unsigned long sr)
     s->partofvoice[ii] = -1;
   }
 
-  /* Hack with the example sound*/
+  /* Hack with the example sound
   //  for(ic=0; ic<NPARTS; ic++){
   for(ic=0; ic<1; ic++){
     for(ii=0; ii<SYNTI2_NPARAMS; ii++){
       s->patch[ic*SYNTI2_NPARAMS + ii] = hack_examplesound[ii];
     }
   }
+*/
 
   return s;
 }
@@ -239,6 +232,36 @@ synti2_do_noteoff(synti2_synth *s, int part, int note, int vel){
 }
 
 
+/** FIXME: Think about data model.. aim at maximal sparsity but enough
+    expressive range. Maximum obtainable with below is 
+    (127+1.27+0.0127)*63 = 8 081.8101 */
+static
+void
+synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
+  int ii, ir;
+  ir = 0;
+  /* Most common: range +0.00 to +1.27 */
+  for (ii = 0; ii<NPARTS * SYNTI2_NPARAMS; ii++){
+    s->patch[ii] = data[ir++] / 100.0;
+  }
+  /* If needed: add integer value in +0 to +127 */
+  for (ii = 0; ii<NPARTS*SYNTI2_NPARAMS; ii++){
+    s->patch[ii] += data[ir++];
+  }
+  /* If ever needed: add fractional in +0.0000 to +0.0127 */
+  for (ii = 0; ii<NPARTS*SYNTI2_NPARAMS; ii++){
+    s->patch[ii] += data[ir++] / 10000.0;
+  }
+  /* If needed: multiply by integer value in -64 to +63 */
+  for (ii = 0; ii<NPARTS*SYNTI2_NPARAMS; ii++){
+    // FIXME: Format of this needs some consideration!!
+    // s->patch[ii] *= (data[ir++] - 64);
+    //    jack_info("%04d: %6.2f",ii, s->patch[ii]);
+  }
+}
+
+
+
 /** Things may happen late or ahead of time. I don't know if that is
  *  what they call "jitter", but if it is, then this is where I jit
  *  and jat...
@@ -249,7 +272,7 @@ synti2_handleInput(synti2_synth *s,
                    synti2_conts *control,
                    int uptoframe){
     /* TODO: sane implementation */
-  unsigned char midibuf[1024];
+  unsigned char midibuf[102400];/*FIXME: THINK about limits and make checks!!*/
 
   while ((0 <= control->nextframe) && (control->nextframe <= uptoframe)){
     synti2_conts_get(control, midibuf);
@@ -257,6 +280,8 @@ synti2_handleInput(synti2_synth *s,
       synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);
     } else if ((midibuf[0] & 0xf0) == 0x80) {
       synti2_do_noteoff(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);
+    } else if (midibuf[0] == 0xf0){
+      synti2_do_receiveSysEx(s, midibuf+2);
     }else {
     }
   }
@@ -391,7 +416,7 @@ synti2_render(synti2_synth *s,
 	      synti2_smp_t *buffer,
 	      int nframes)
 {  
-  int iframe, ii, ic, iv;
+  int iframe, ii, iv;
   float interm;
   
   for (iframe=0; iframe<nframes; iframe += NINNERLOOP){

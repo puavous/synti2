@@ -64,7 +64,6 @@ process_audio (jack_nframes_t nframes)
 
   if (hack_first != 0) {
     hack_first = 0;
-    jack_info("Storing!");
     synti2_conts_store(global_cont, 0, hack_patch_sysex, hack_patch_sysex_length);
   }
   

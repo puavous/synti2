@@ -268,7 +268,7 @@ synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
   stride = data[6]; stride <<= 7; stride += data[7];
   data += 8;
   
-  jack_info("Receiving! Offset %d Length %d", offset, stride);
+  //jack_info("Receiving! Offset %d Length %d", offset, stride);
   /* Process data: */
   for (ir=0; ir<stride; ir++){
     decoded  = (*(data + 0*stride)) * 0.01;  /* hundredths*/
@@ -280,7 +280,6 @@ synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
     decoded += adjust_nib * 0.001;           /* thousandths*/
     if (sign_nib>0) decoded = -decoded;      /* sign. */
 
-    jack_info("%d: %f",offset, decoded);
     s->patch[offset++] = decoded;
     data++;
   }

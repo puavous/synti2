@@ -21,6 +21,11 @@ synti2_synth *st;
 
 static long frame = 0;
 
+/* Test patch from the hack script: */
+extern unsigned char hack_patch_sysex[];
+extern int hack_patch_sysex_length;
+
+
 /**
  * Process sound with our own synthesis, then convert to SDL format.
  * TODO: Can we rely that we SDL really gave the requested format?
@@ -32,10 +37,17 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   
   unsigned char hackbuf[80];
 
+  static int hack_first = 1;
+
   static unsigned char hack_note = 0;
   
   /* Make some test events.. */
   synti2_conts_reset(global_cont);
+
+  if (hack_first != 0) {
+    hack_first = 0;
+    synti2_conts_store(global_cont, 0, hack_patch_sysex, hack_patch_sysex_length);
+  }
 
   if ((rand() * (1.0/RAND_MAX)) < 0.053/4){
     hackbuf[0] = 0x90;

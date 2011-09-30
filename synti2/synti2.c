@@ -233,20 +233,58 @@ synti2_do_noteoff(synti2_synth *s, int part, int note, int vel){
 
 
 /** FIXME: Think about data model.. aim at maximal sparsity but enough
-    expressive range. Maximum obtainable with below is 
-    (127+1.27+0.0127)*63 = 8 081.8101 
+    expressive range. If it turns out that the 1/1000 accuracy is very
+    seldom required, then it could be worthwhile to store everything
+    in the much simpler format of 4*7 = 28-bit signed integer
+    representing (decimal) hundredths. Even then most parameters would
+    only have the least-significant 7bit set?
 
     SysEx format (planned; FIXME: implement!) 
 
-    F0 ?? [storeAddrMSB] [storeAddr2LSB] [inputStride] ... data ... F7
+    F0 00 00 00 [storeAddrMSB] [storeAddr2LSB] [inputLengthMSB] [inputLengthLSB]
+    ... data LLSBs... 
+    ... data LMSBs... 
+    ... data MLSBs... 
+    ... data MMSBs... 
+    F7
 
-
-    
+    Length is also the stride for value encoding.
 */
 static
 void
 synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
-  int ii, ir;
+  int offset, stride;
+  unsigned char adjust_byte, adjust_nib, sign_nib;
+
+  int ir;
+  float decoded;
+
+  /* FIXME: Manufacturer ID check.. length check; checksums :) could
+   * have checks.. :) but checks are for chicks?
+   */
+
+  /* Process header: */
+  offset = data[4]; offset <<= 7; offset += data[5];
+  stride = data[6]; stride <<= 7; stride += data[7];
+  data += 8;
+  
+  jack_info("Receiving! Offset %d Length %d", offset, stride);
+  /* Process data: */
+  for (ir=0; ir<stride; ir++){
+    decoded  = (*(data + 0*stride)) * 0.01;  /* hundredths*/
+    decoded += (*(data + 1*stride));         /* wholes */
+    decoded += (*(data + 2*stride)) * 100.0; /* hundreds*/
+    adjust_byte = *(data + 3*stride);
+    adjust_nib = adjust_byte & 0x0f;
+    sign_nib = adjust_byte >> 4;
+    decoded += adjust_nib * 0.001;           /* thousandths*/
+    if (sign_nib>0) decoded = -decoded;      /* sign. */
+
+    jack_info("%d: %f",offset, decoded);
+    s->patch[offset++] = decoded;
+    data++;
+  }
+#if 0
   ir = 0;
   /* Most common: range +0.00 to +1.27 */
   for (ii = 0; ii<NPARTS * SYNTI2_NPARAMS; ii++){
@@ -260,12 +298,18 @@ synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
   for (ii = 0; ii<NPARTS*SYNTI2_NPARAMS; ii++){
     s->patch[ii] += data[ir++] / 10000.0;
   }
-  /* If needed: multiply by integer value in -64 to +63 */
+  /* If needed: multiply by integer value in -64 to +63 
+     (sign extend from 7 to 8 bits; 0 has no effect. */
   for (ii = 0; ii<NPARTS*SYNTI2_NPARAMS; ii++){
     // FIXME: Format of this needs some consideration!!
-    // s->patch[ii] *= (data[ir++] - 64);
+    usc = data[ir++];
+    if (usc==0) continue;
+    if (usc>=0x40) s->patch[ii] *= (-0x40 + (usc & 0x3f));
+    else s->patch[ii] *= usc;
     //    jack_info("%04d: %6.2f",ii, s->patch[ii]);
   }
+#endif
+  /* Could check that there is F7 in the end :)*/
 }
 
 
@@ -289,7 +333,7 @@ synti2_handleInput(synti2_synth *s,
     } else if ((midibuf[0] & 0xf0) == 0x80) {
       synti2_do_noteoff(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);
     } else if (midibuf[0] == 0xf0){
-      synti2_do_receiveSysEx(s, midibuf+2);
+      synti2_do_receiveSysEx(s, midibuf);
     }else {
     }
   }

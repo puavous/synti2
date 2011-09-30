@@ -1,7 +1,8 @@
-#include "synti2.h"
 #include <math.h>
 #include <limits.h>
 #include <stdlib.h>
+
+#include "synti2.h"
 
 struct synti2_conts {
   int i;
@@ -27,44 +28,56 @@ struct synti2_conts {
 /* Total number of envelopes */
 #define NENVS (NVOICES * NENVPERVOICE)
 
-/* Maximum value of the counter type */
+/* Maximum value of the counter type. Depends on C implementation, so use limits.h */
 #define MAX_COUNTER UINT_MAX
 
-/* Number of inner loop iterations (frame evaluations) between
+/* Number of inner loop iterations (audio frame evaluations) between
  * evaluating "slow-motion stuff" such as MIDI input and
  * envelopes. Must be a divisor of the buffer length. Example: 48000/8
  * would yield 6000 Hz (or faster than midi wire rate) responsiveness.
- * Hmm.. will there be audible problems with "jagged volumes" if I
- * put the volume envelope outside of the inner loop... So I'll keep at
- * least the envelope progression counter code inside.
+ * Hmm.. there is an audible problem with "jagged volume" (producing a
+ * pitched artefact) if the volume envelope is outside of the inner
+ * loop... So I'll keep at least the envelope progression counter code
+ * inside. Same must be true for panning which is essentially a volume
+ * env. Could it be that pitch or filter envelopes could be outside?
+ * TODO: test..
  */
 #define NINNERLOOP 8
 
-/* TODO: Think about the whole envelope madness... */
+/* TODO: Think about the whole envelope madness... use LFOs instead of
+ * looping envelopes?
+ */
 #define TRIGGERSTAGE 6
 
 
 
-/** I just realized that unsigned ints will nicely loop around
+/** I finally realized that unsigned ints will nicely loop around
  * (overflow) and as such they model an oscillator's phase pretty
  * nicely. Can I use them for other stuff as well? Seem fit for
- * envelopes with only a little extra (clamping and stop flag)
+ * envelopes with only a little extra (clamping and stop flag). Could
+ * I use just one huge counter bank for everything? TODO: Try out, and
+ * also think if it is more efficient to put values and deltas in
+ * different arrays. Probably, if you think of a possible assembler
+ * implementation with multimedia vector instructions(?).
  */
 typedef struct counter {
   unsigned int val;
   unsigned int delta;
 } counter;
 
+/** TODO: Not much is inside the part structure. Is it necessary at
+ *  all? It will have controller values, though..
+ */
 typedef struct synti2_part {
   int voiceofkey[128];  /* Which note has triggered which voice*/
 } synti2_part;
 
 struct synti2_synth {
-  float note2freq[128]; /* pre-computed frequencies of notes... Tuning
-			   systems would be easy to change - just
-			   compute a different table here (?)..*/
-
-  /* TODO: Reduce number of constants, i.e., make 2*VOICE etc. */
+  float infranotes[128]; /* TODO: This space could be used for LFO's */
+  float note2freq[128];  /* pre-computed frequencies of notes... Tuning
+			    systems would be easy to change - just
+			    compute a different table here (?)..*/
+  float ultranotes[128]; /* TODO: This space could be used for noises? */
 
   /* Oscillators are now modeled by integer counters (phase). */
   counter c[NCOUNTERS];
@@ -85,26 +98,31 @@ struct synti2_synth {
 
   int partofvoice[NVOICES];  /* which part has triggered each "voice";
 				-1 (should we use zero instead?) means
-				that the voice is not alive. */
+				that the voice is free to re-occupy. */
 
   int note[NVOICES];
   int velocity[NVOICES];
 
-  /* The parts. Sixteen as in the MIDI standard. */
+  /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   float patch[NPARTS * SYNTI2_NPARAMS];  /* The sound parameters per part*/
 
   unsigned long sr;
 
   /* Throw-away test stuff:*/
-  long int global_framesdone;
+  long int global_framesdone;  /*NOTE: This is basically just a counter, too! */
 };
 
-/** Creates a controller "object". Could be integrated within the synth itself?*/
+/** Creates a controller "object". Could be integrated within the
+ * synth itself?  For the final 4k version (synti-kaksinen:)),
+ * everything will probably have to be crushed into the same unit
+ * anyway, created at once, and glued together with holy spirit.
+ */
 synti2_conts * synti2_conts_create(){
   return calloc(1, sizeof(synti2_conts));
 }
 
+/** Get the next MIDI command */
 static void 
 synti2_conts_get(synti2_conts *control, 
 		 unsigned char *midibuf)
@@ -117,8 +135,9 @@ synti2_conts_get(synti2_conts *control,
   control->nextframe = control->frame[control->i];
 }
 
-/** Get ready to store new controls. Must be called after reading all
-    messages for a block, and before writing new ones. */
+/** Get ready to store new events. Must be called after each audio
+ * block, before writing new events.
+ */
 void 
 synti2_conts_reset(synti2_conts *control)
 {
@@ -127,7 +146,9 @@ synti2_conts_reset(synti2_conts *control)
   control->nextframe = -1;
 }
 
-/** Must be called once before calling any gets */
+/** Must be called once before calling any gets (rewinds internal
+ * pointers).
+ */
 void 
 synti2_conts_start(synti2_conts *control)
 {
@@ -135,6 +156,7 @@ synti2_conts_start(synti2_conts *control)
   control->ibuf = 0;
 }
 
+/** Store a MIDI event. Raw MIDI data, like in the jack MIDI system.*/
 void 
 synti2_conts_store(synti2_conts *control,
 		   int frame,
@@ -154,6 +176,8 @@ synti2_conts_store(synti2_conts *control,
   control->frame[control->i] = -1; /* Marks the (new) end. */
 }
 
+
+/** Allocate and initialize a new synth instance. */
 synti2_synth *
 synti2_create(unsigned long sr)
 {
@@ -167,23 +191,19 @@ synti2_create(unsigned long sr)
   /* Create a note-to-frequency look-up table (cents need interpolation). 
    * TODO: Which is more efficient / small code: linear interpolation 
    * on every eval or make a lookup table on the cent scale...
+   *
+   * Idea: I could have negative notes for LFO's and upper octaves to
+   * the ultrasound for weird aliasing/noise kinda stuff... just make
+   * a bigger table here and let the pitch envelopes go beyond the
+   * beyond!
    */
   for(ii=0; ii<128; ii++){
     s->note2freq[ii] = 440.0 * pow(2.0, ((float)ii - 69.0) / 12.0 );
   }
 
   for(ii=0; ii<NVOICES; ii++){
-    s->partofvoice[ii] = -1;
+    s->partofvoice[ii] = -1;     /* Could I make this 0 somehow? */
   }
-
-  /* Hack with the example sound
-  //  for(ic=0; ic<NPARTS; ic++){
-  for(ic=0; ic<1; ic++){
-    for(ii=0; ii<SYNTI2_NPARAMS; ii++){
-      s->patch[ic*SYNTI2_NPARAMS + ii] = hack_examplesound[ii];
-    }
-  }
-*/
 
   return s;
 }
@@ -195,11 +215,22 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
 {
   int freevoice, ie;
   /* note on */
+
+  /* FIXME: Unimplemented plan: if patch is monophonic, always use the
+   * voice corresponding to the part number. Otherwise, if that
+   * primary voice is occupied, find a free voice starting from index
+   * 17. This way, there is always one voice available per channel for
+   * mono patches, and it will become more deterministic to know where
+   * things happen, for possible visualization needs (but there is
+   * evil resource wasting when the song uses less than 16 parts!
+   * maybe some kind of free voice stack could be implemented with not
+   * too much code...)
+   */
   for(freevoice=0; freevoice < NVOICES; freevoice++){
     if (s->partofvoice[freevoice] < 0) break;
   }
   if (freevoice==NVOICES) return; /* Cannot play new note! */
-  /* (Could actually force the last voice to play anyway!!) */
+  /* (Could actually force the last voice to play anyway!?) */
   
   s->part[part].voiceofkey[note] = freevoice;
   s->partofvoice[freevoice] = part;
@@ -227,7 +258,7 @@ synti2_do_noteoff(synti2_synth *s, int part, int note, int vel){
     s->estage[voice][ie] = 2;      /* skip to end */
     s->eprog[voice][ie].delta = 0; /* skip to end */
     s->eprog[voice][ie].val = 0;   /* must skip also value!! FIXME: think(?)*/
-    s->sustain[voice] = 0;               /* don't renew loop. */
+    s->sustain[voice] = 0;         /* don't renew loop. */
   }
 }
 
@@ -238,6 +269,15 @@ synti2_do_noteoff(synti2_synth *s, int part, int note, int vel){
     in the much simpler format of 4*7 = 28-bit signed integer
     representing (decimal) hundredths. Even then most parameters would
     only have the least-significant 7bit set?
+
+    FIXME: If the song sequence data is finally read from SMF, then
+    there will already be a subroutine that reads variable length
+    values (the time deltas) which could be re-used here. But what
+    about accuracy then?
+
+    FIXME: Think about nonlinear parameter range. For example x^2 -
+    usually accuracy is critical for the smaller parameter values. But
+    no... pitch envelopes need to be accurate on a wide range!!
 
     SysEx format (planned; FIXME: implement!) 
 
@@ -283,31 +323,6 @@ synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
     s->patch[offset++] = decoded;
     data++;
   }
-#if 0
-  ir = 0;
-  /* Most common: range +0.00 to +1.27 */
-  for (ii = 0; ii<NPARTS * SYNTI2_NPARAMS; ii++){
-    s->patch[ii] = data[ir++] / 100.0;
-  }
-  /* If needed: add integer value in +0 to +127 */
-  for (ii = 0; ii<NPARTS*SYNTI2_NPARAMS; ii++){
-    s->patch[ii] += data[ir++];
-  }
-  /* If ever needed: add fractional in +0.0000 to +0.0127 */
-  for (ii = 0; ii<NPARTS*SYNTI2_NPARAMS; ii++){
-    s->patch[ii] += data[ir++] / 10000.0;
-  }
-  /* If needed: multiply by integer value in -64 to +63 
-     (sign extend from 7 to 8 bits; 0 has no effect. */
-  for (ii = 0; ii<NPARTS*SYNTI2_NPARAMS; ii++){
-    // FIXME: Format of this needs some consideration!!
-    usc = data[ir++];
-    if (usc==0) continue;
-    if (usc>=0x40) s->patch[ii] *= (-0x40 + (usc & 0x3f));
-    else s->patch[ii] *= usc;
-    //    jack_info("%04d: %6.2f",ii, s->patch[ii]);
-  }
-#endif
   /* Could check that there is F7 in the end :)*/
 }
 
@@ -321,9 +336,10 @@ static
 void
 synti2_handleInput(synti2_synth *s, 
                    synti2_conts *control,
-                   int uptoframe){
-    /* TODO: sane implementation */
-  unsigned char midibuf[102400];/*FIXME: THINK about limits and make checks!!*/
+                   int uptoframe)
+{
+  /* TODO: sane implementation */
+  unsigned char midibuf[20000];/*FIXME: THINK about limits and make checks!!*/
 
   while ((0 <= control->nextframe) && (control->nextframe <= uptoframe)){
     synti2_conts_get(control, midibuf);
@@ -334,6 +350,7 @@ synti2_handleInput(synti2_synth *s,
     } else if (midibuf[0] == 0xf0){
       synti2_do_receiveSysEx(s, midibuf);
     }else {
+      /* Other MIDI messages are silently ignored. */
     }
   }
 }
@@ -345,6 +362,10 @@ synti2_evalEnvelopes(synti2_synth *s){
   int ie, iv;
   unsigned int detect;
   /* A counter is triggered just by setting delta positive. */
+  /* FIXME: Here could be a good place for some pointer arithmetics
+   * instead of this index madness [iv][ie] ... Also see if this and
+   * the code for the main oscillators could be combined.
+   */
   for(iv=0;iv<NVOICES; iv++){
     for(ie=0;ie<NENVPERVOICE; ie++){
       if (s->eprog[iv][ie].delta == 0) continue;  /* stopped.. not running*/
@@ -360,14 +381,20 @@ synti2_evalEnvelopes(synti2_synth *s){
       s->fenv[iv][ie] = (1.0 - s->feprog[iv][ie]) * s->feprev[iv][ie] 
 	+ s->feprog[iv][ie] * s->fegoal[iv][ie];
     }
+    /* TODO: Observe that for this kind of rotating counter c
+       interpreted as x \in [0,1], it is easy to get 1-x since it is
+       just -c in the integer domain (?). Useable fact? */
     /* When delta==0, the counter has gone a full cycle and stopped at
-     * the maximum floating value, 1.0 and the envelope output stands
-     * at the goal value ("set point"). */
+     * the maximum floating value, 1.0, and the envelope output stands
+     * at the goal value ("set point").
+     */
   }
 }
 
 
-/* Advance the oscillator counters. Consider using the xmms assembly for these? */
+/* Advance the oscillator counters. Consider using the xmms assembly
+ * for these? Try to combine with the envelope counter code somehow..
+ */
 static 
 void
 synti2_evalCounters(synti2_synth *s){
@@ -466,14 +493,13 @@ synti2_render(synti2_synth *s,
 	      synti2_conts *control, 
 	      synti2_smp_t *buffer,
 	      int nframes)
-{  
+{
   int iframe, ii, iv;
   float interm;
   
   for (iframe=0; iframe<nframes; iframe += NINNERLOOP){
-    /* Outer loop for tihngs that are allowed some jitter: */
-    /* Envelopes couldn't be evaluated here because vol envelope makes
-     * evil (=very audible) jig jag 
+    /* Outer loop for things that are allowed some jitter. (further
+     * elaboration in comments near the definition of NINNERLOOP).
      */
 
     /* Handle MIDI-ish controls if there are more of them waiting. */
@@ -484,7 +510,7 @@ synti2_render(synti2_synth *s,
     /* Inner loop runs the oscillators and audio generation. */
     for(ii=0;ii<NINNERLOOP;ii++){
 
-      /* Could I put all counter upds in one big awesomely parallel loop */
+      /* Could I put all counter upds in one big awesomely parallel loop? */
       synti2_evalEnvelopes(s);
       synti2_evalCounters(s);
       
@@ -496,9 +522,9 @@ synti2_render(synti2_synth *s,
 	/* Produce sound :) First modulator, then carrier*/
         /* Worth using a wavetable? Probably.. Could do the first just
 	   by bit-shifting the counter... */
-	interm  = sin(2*M_PI* s->fc[iv*2+1]);
+	interm  = sin(2*M_PI * s->fc[iv*2+1]);
         interm *= (s->velocity[iv]/128.0) * (s->fenv[iv][1]);
-	interm  = sin(2*M_PI* (s->fc[iv*2+0] + interm));
+	interm  = sin(2*M_PI * (s->fc[iv*2+0] + interm));
 	interm *= s->fenv[iv][0];
 	buffer[iframe+ii] += interm;
       }

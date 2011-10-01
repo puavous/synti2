@@ -8,11 +8,14 @@
 #  Knee1         Knee2         Knee3         Knee4         Knee5
 #  Time  Level   Time  Level   Time  Level   Time  Level   Time  Level
    0.01 1.00   0.10 0.50   3.00 0.00   0.00 0.00   0.10 0.00
-   0.00 2.27   0.60 0.80   1.25 0.05   3.00 0.00   2.02 0.00
+   0.00 2.27   0.60 0.80   1.25 0.05   3.00 0.00   0.10 0.00
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
 
+# Should set one envelope as "master" - sound dies with it.
+
 # Other patch data.. Hmm.. playground as of now:
+
 
 # Padding to get a power-of-two length for the instrument patch.
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00

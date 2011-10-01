@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
       synti2_conts_store(global_cont, 0, 
                          hack_patch_sysex, hack_patch_sysex_length);
     } else {
-      /*  synti2_player_render(global_player, global_cont, nframes);*/
+      synti2_player_render(global_player, global_cont, frames_at_once);
     }
     
     synti2_conts_start(global_cont);

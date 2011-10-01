@@ -218,7 +218,12 @@ synti2_player_do_event(synti2_conts *control, int frame, unsigned char *midibuf)
 		      and do a midi importer to my own local
 		      format! */
   int vlenlen;
+
+  /* FIXME: The events can be also running statuses!! Must handle
+     those (or filter out with a tool program)! */
   /* The easy ones.. normal midi control.. */
+  //printf("Next up: %02x %02x %02x %02x \n", midibuf[0], midibuf[1], midibuf[2], midibuf[3]); fflush(stdout);
+
   if ((0xc0 <= midibuf[0]) && (midibuf[0] < 0xe0)){
     length = 2; /* ... or is the third parameter sent even if not used? */
     synti2_conts_store(control, frame, midibuf, length);
@@ -241,7 +246,7 @@ synti2_player_do_event(synti2_conts *control, int frame, unsigned char *midibuf)
 	vlenlen = varlength(midibuf + 2, &length);
 	length += vlenlen + 2;
 	break;
-      case 0x50: /* End of Track*/
+      case 0x2f: /* End of Track*/
 	/* FIXME: Should stop playback.. */
 	length = -1; /* This way, the same event will keep on appearing... hack. */
 	break;
@@ -282,7 +287,7 @@ synti2_player_render(synti2_player *pl,
   frame = 0;
 
   while (framestodo > 0) {
-    /*move = min(framestodo, pl->frames_to_next_tick);*/
+    //printf("todo: %d  to next: %d \n",framestodo,pl->frames_to_next_tick);fflush(stdout);
     move = (framestodo < pl->frames_to_next_tick)?framestodo:pl->frames_to_next_tick;
     frame += move; /* Is it possible to lose data on buffer boundary, btw..?*/
     framestodo -= move;
@@ -290,16 +295,19 @@ synti2_player_render(synti2_player *pl,
   
     /* When we hit a tick, process it: */
     if (pl->frames_to_next_tick == 0) /*FIXME: think. && (framestodo>0) ??? */ {
+      pl->frames_to_next_tick += pl->fpt;  /* remember to update.. */
       for (it=0; it < pl->ntracks; it++){
 	/* Everything that happens right now on this track: */
 	while (pl->deltaticks[it] == 0) {
 	  /* Process an event, and read next delta.*/
+	  //printf("track %d\n", it);
 	  efflen = synti2_player_do_event(control, frame, pl->track[it]);
-	  if (efflen >0){
+	  if (efflen > 0){
 	    pl->track[it] += efflen;
 	    pl->track[it] += varlength(pl->track[it],&(pl->deltaticks[it]));
 	  } else {
 	    /* Track has ended. */
+	    //printf("End of track %d reached.\n",it);fflush(stdout);
 	    pl->deltaticks[it] = -1; /*FIXME: What does this imply?*/
 	  }
 	}

@@ -127,6 +127,7 @@ struct synti2_player {
   int ntracks;  /* Number of tracks. */
   int tpq;      /* Ticks per quarter (no support for SMPTE). */
   int deltaticks[SYNTI2_MAX_SONGTRACKS];
+  int frames_to_next_tick;
   unsigned char *track [SYNTI2_MAX_SONGTRACKS];
   unsigned char data[SYNTI2_MAX_SONGBYTES];
 };
@@ -172,6 +173,7 @@ synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   /* Default BPM is 120. Convert to frames-per-tick - losing accuracy.*/
   pl->sr = samplerate;
   pl->fpt = (pl->sr * 60) / 120;
+  pl->frames_to_next_tick = 0; /* There will be a tick right away. */
 
   /* TODO: Should checks limits and file format!! (unless compiling for 4k) */
   /* Read and initialize a zong. (make a copy of the data - not necessary in 4k.) */
@@ -205,6 +207,59 @@ synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   return pl;
 }
 
+static
+int
+synti2_player_do_event(synti2_conts *control, int frame, unsigned char *midibuf)
+{
+  int length = 0;  /* length must be determined for all possible
+		      events, including those that are skipped. F*k
+		      there's going to be too much code in here!! I'm
+		      going to have to rewrite the sequencer again,
+		      and do a midi importer to my own local
+		      format! */
+  int vlenlen;
+  /* The easy ones.. normal midi control.. */
+  if ((0xc0 <= midibuf[0]) && (midibuf[0] < 0xe0)){
+    length = 2; /* ... or is the third parameter sent even if not used? */
+    synti2_conts_store(control, frame, midibuf, length);
+  } else if (/* (0x80 <= midibuf[0]) && */ (midibuf[0] < 0xf0)){
+    length = 3;
+    synti2_conts_store(control, frame, midibuf, length);
+  } else if (midibuf[0] >= 0xf0) {
+    switch (midibuf[0]){
+    case 0xf0:
+      vlenlen = varlength(midibuf + 2, &length);
+      *(midibuf+1+vlenlen) = 0xf7; /*FIXME: terrible hacks appear from the void.*/
+      synti2_conts_store(control, frame, midibuf+1+vlenlen, length);
+      length += vlenlen + 1;
+      break;
+    case 0xff:
+      /* Meta-event. Affects just our player's internal state. */
+      switch (midibuf[1]){
+      case 0x27: /* Set tempo */
+	/* FIXME: Implement!.. */
+	vlenlen = varlength(midibuf + 2, &length);
+	length += vlenlen + 2;
+	break;
+      case 0x50: /* End of Track*/
+	/* FIXME: Should stop playback.. */
+	length = -1; /* This way, the same event will keep on appearing... hack. */
+	break;
+      default:
+	vlenlen = varlength(midibuf + 2, &length);
+	length += vlenlen + 2;
+      }
+      break;
+      //default:
+      /* Should die, in fact. */
+    }
+  } else {
+    /* Should die, in fact. */
+  }
+  return length;
+}
+
+
 /** render some frames of control data for the synth, keeping track of
  * song position. This will do the store()s as if the song was played
  * live.
@@ -218,16 +273,34 @@ synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
 void
 synti2_player_render(synti2_player *pl, 
 		     synti2_conts *control,
-		     int frames)
+		     int framestodo)
 {
   int it;
   //  int minframes = frames;
-  for (it=0; it < pl->ntracks; it++){
-    
+
+  int move, frame;
+  frame = 0;
+
+  while (framestodo > 0) {
+    /*move = min(framestodo, pl->frames_to_next_tick);*/
+    move = (framestodo < pl->frames_to_next_tick)?framestodo:pl->frames_to_next_tick;
+    frame += move; /* Is it possible to lose data on buffer boundary, btw..?*/
+    framestodo -= move;
+    pl->frames_to_next_tick -= move;
+  
+    /* If we hit a tick, process it. Process each tick: */
+    if (pl->frames_to_next_tick == 0) /*FIXME: think. && (framestodo>0) ??? */ {
+      for (it=0; it < pl->ntracks; it++){
+	/* Everything that happens right now on this track: */
+	while (pl->deltaticks[it] == 0) {
+	  /* Process an event, and read next delta.*/
+	  synti2_player_do_event(control, frame, pl->track[it]);
+	  pl->track[it] += varlength(pl->track[it],&(pl->deltaticks[it]));
+	}
+      }
+    }
   }
 }
-
-
 /** Creates a controller "object". Could be integrated within the
  * synth itself?  For the final 4k version (synti-kaksinen:)),
  * everything will probably have to be crushed into the same unit

@@ -30,8 +30,11 @@ STRIPOPT = -s -R .comment \
 
 all: jacktest
 
+benchmark: benchmark.c synti2.c testdata.c Makefile
+	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm
+
 jacktest: jackmidi.c synti2.c testdata.c Makefile
-	$(CC) $(CFLAGS) -o testi jackmidi.c synti2.c  testdata.c \
+	$(CC) $(CFLAGS) -o testi jackmidi.c synti2.c testdata.c \
 		`pkg-config --cflags --libs jack` -lm
 
 testdata.c: patchbank.txt testi.mid hacktac.py Makefile

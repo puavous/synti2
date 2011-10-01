@@ -219,12 +219,14 @@ synti2_player_do_event(synti2_conts *control, int frame, unsigned char *midibuf)
 		      format! */
   int vlenlen;
 
-  /* FIXME: The events can be also running statuses!! Must handle
-     those (or filter out with a tool program)! */
   /* The easy ones.. normal midi control.. */
-  //printf("Next up: %02x %02x %02x %02x \n", midibuf[0], midibuf[1], midibuf[2], midibuf[3]); fflush(stdout);
+  //  printf("Next up: %02x %02x %02x %02x \n", midibuf[0], midibuf[1], midibuf[2], midibuf[3]); fflush(stdout);
 
-  if ((0xc0 <= midibuf[0]) && (midibuf[0] < 0xe0)){
+  if ((midibuf[0] < 0x80)){
+    //    printf("Running status.. can't handle, sry.\n"); fflush(stdout);
+    /* FIXME: The events can be also running statuses!! Must handle
+       those (or filter out with a tool program)! */
+  } else if ((0xc0 <= midibuf[0]) && (midibuf[0] < 0xe0)){
     length = 2; /* ... or is the third parameter sent even if not used? */
     synti2_conts_store(control, frame, midibuf, length);
   } else if (/* (0x80 <= midibuf[0]) && */ (midibuf[0] < 0xf0)){

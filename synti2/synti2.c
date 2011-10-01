@@ -172,7 +172,6 @@ synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
 
   /* Default BPM is 120. Convert to frames-per-tick - losing accuracy.*/
   pl->sr = samplerate;
-  pl->fpt = (pl->sr * 60) / 120;
   pl->frames_to_next_tick = 0; /* There will be a tick right away. */
 
   /* TODO: Should checks limits and file format!! (unless compiling for 4k) */
@@ -189,7 +188,7 @@ synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   pl->tpq = twobyte(r); r += 2;
   //if ((pl->tpq & 0x8000) != 0) {free(pl); return NULL; /*no support for SMPTE*/};
   /* Default BPM is 120. Convert to frames-per-tick - losing accuracy.*/
-  pl->fpt = (pl->sr * 60) / 120;
+  pl->fpt = (pl->sr * 60) / (120 * pl->tpq);
 
   for (it=0; it < pl->ntracks; it++){
     r += 4; /* skip header */
@@ -207,6 +206,7 @@ synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   return pl;
 }
 
+/** .. returns the effective length of this event. */
 static
 int
 synti2_player_do_event(synti2_conts *control, int frame, unsigned char *midibuf)
@@ -277,7 +277,7 @@ synti2_player_render(synti2_player *pl,
 {
   int it;
   //  int minframes = frames;
-
+  int efflen;
   int move, frame;
   frame = 0;
 
@@ -288,15 +288,22 @@ synti2_player_render(synti2_player *pl,
     framestodo -= move;
     pl->frames_to_next_tick -= move;
   
-    /* If we hit a tick, process it. Process each tick: */
+    /* When we hit a tick, process it: */
     if (pl->frames_to_next_tick == 0) /*FIXME: think. && (framestodo>0) ??? */ {
       for (it=0; it < pl->ntracks; it++){
 	/* Everything that happens right now on this track: */
 	while (pl->deltaticks[it] == 0) {
 	  /* Process an event, and read next delta.*/
-	  synti2_player_do_event(control, frame, pl->track[it]);
-	  pl->track[it] += varlength(pl->track[it],&(pl->deltaticks[it]));
+	  efflen = synti2_player_do_event(control, frame, pl->track[it]);
+	  if (efflen >0){
+	    pl->track[it] += efflen;
+	    pl->track[it] += varlength(pl->track[it],&(pl->deltaticks[it]));
+	  } else {
+	    /* Track has ended. */
+	    pl->deltaticks[it] = -1; /*FIXME: What does this imply?*/
+	  }
 	}
+	if (pl->deltaticks[it] > 0) pl->deltaticks[it]--;
       }
     }
   }

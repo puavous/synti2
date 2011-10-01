@@ -85,7 +85,7 @@ process_audio (jack_nframes_t nframes)
     }
   } else {
     /* FIXME: Only for testing; to be removed.. */
-    
+    synti2_player_render(global_player, global_cont, nframes);
   }
 
   synti2_conts_start(global_cont);

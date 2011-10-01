@@ -150,7 +150,7 @@ main (int argc, char *argv[])
   };
 
   /*hack. FIXME: remove.*/
-  global_player = synti2_player_create(hacksong_data, sr);
+  global_player = synti2_player_create(hacksong_data, hacksong_length, sr);
   if (global_player == NULL){
     fprintf(stderr, "Haist \n");
     goto error;

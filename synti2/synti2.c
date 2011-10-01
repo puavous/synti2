@@ -121,9 +121,12 @@ struct synti2_synth {
 #define SYNTI2_MAX_SONGTRACKS 32
 
 struct synti2_player {
+  int sr;       /* Sample rate. */
+  //int bpm;      /* Tempo (may vary). */
+  int fpt;      /* Frames per tick. Tempos will be inexact, sry! */
   int ntracks;  /* Number of tracks. */
-  int tpq;      /* Ticks per quarter (no support for SMPTE) */
-  int delta[SYNTI2_MAX_SONGTRACKS];
+  int tpq;      /* Ticks per quarter (no support for SMPTE). */
+  int deltaticks[SYNTI2_MAX_SONGTRACKS];
   unsigned char *track [SYNTI2_MAX_SONGTRACKS];
   unsigned char data[SYNTI2_MAX_SONGBYTES];
 };
@@ -158,27 +161,33 @@ fourbyte(unsigned char *r){
 
 /** Load and initialize a song. */
 synti2_player *
-synti2_player_create(unsigned char * songdata, int samplerate){
+synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   unsigned char *r;
-  int format;
+  int format, ii, it, chunksize;
   synti2_player *pl;
-  int it, chunksize;
 
   pl = calloc(1, sizeof(synti2_player));
   if (pl == NULL) return pl;
-  
+
+  /* Default BPM is 120. Convert to frames-per-tick - losing accuracy.*/
+  pl->sr = samplerate;
+  pl->fpt = (pl->sr * 60) / 120;
+
   /* TODO: Should checks limits and file format!! (unless compiling for 4k) */
-  /* Read and initialize a zong. */
-  r = songdata;
-  printf("%s\n", songdata);
+  /* Read and initialize a zong. (make a copy of the data - not necessary in 4k.) */
+  for (ii=0;ii<datalen;ii++){
+    pl->data[ii] = songdata[ii];
+  }
+
+  r = pl->data;
   r += 8; /*Just skip header; TODO: I want at least a midi "distiller"
 	    to rid of what I don't need!*/
   format = twobyte(r); r += 2;
   pl->ntracks = twobyte(r); r += 2;
   pl->tpq = twobyte(r); r += 2;
-
   //if ((pl->tpq & 0x8000) != 0) {free(pl); return NULL; /*no support for SMPTE*/};
-  //printf("format %d ntracks %d timediv %d\n", format, ntracks, timediv); fflush(stdout);
+  /* Default BPM is 120. Convert to frames-per-tick - losing accuracy.*/
+  pl->fpt = (pl->sr * 60) / 120;
 
   for (it=0; it < pl->ntracks; it++){
     r += 4; /* skip header */
@@ -187,17 +196,35 @@ synti2_player_create(unsigned char * songdata, int samplerate){
     r += chunksize;
   }
 
+  /* The first deltas: */
+  for (it=0; it < pl->ntracks; it++){
+    /* Store delta and go directly to start of event data: */
+    pl->track[it] += varlength(pl->track[it], &(pl->deltaticks[it]));
+  }
+  
   return pl;
 }
 
 /** render some frames of control data for the synth, keeping track of
  * song position. This will do the store()s as if the song was played
  * live.
+ *
+ * Upon entry: each track's delta is known. each track's pointer
+ * points to the first byte of actual event data.
+ *
+ * Upon exit: each track's delta has been updated, if necessary. each
+ * track's pointer points to the first byte of actual event data.
  */
 void
-synti2_player_render(synti2_player *player, 
-		    synti2_conts *control,
-		     int frames){
+synti2_player_render(synti2_player *pl, 
+		     synti2_conts *control,
+		     int frames)
+{
+  int it;
+  //  int minframes = frames;
+  for (it=0; it < pl->ntracks; it++){
+    
+  }
 }
 
 

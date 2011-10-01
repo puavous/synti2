@@ -29,7 +29,9 @@ synti2_render(synti2_synth *s,
 
 /** Load and initialize a song. */
 synti2_player *
-synti2_player_create(unsigned char * songdata, int samplerate);
+synti2_player_create(unsigned char * songdata, 
+		     int datalen, 
+		     int samplerate);
 
 /** Render some frames of control data for the synth, keeping track of
  * song position. This will do the store()s as if the song was played

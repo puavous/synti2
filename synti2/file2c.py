@@ -10,8 +10,7 @@ length = len(data)
 
 print
 print "/* Song data converted from file '%s': */"%infname
-print "unsigned int %s_length = %d"%(sys.argv[2],length)
-print "unsigned char %s_data = {"%(sys.argv[2])
+print "unsigned int %s_length = %d;"%(sys.argv[2],length)
+print "unsigned char %s_data[%d] = {"%(sys.argv[2],length)
 print string.join(map(lambda x: "0x%02x,"%x ,  data))
-
 print "};"

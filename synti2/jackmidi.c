@@ -30,6 +30,13 @@ char * client_name = "beeper";
 
 synti2_conts *global_cont;
 synti2_synth *global_synth;
+synti2_player *global_player;
+
+/* FIXME: remove, after this works properly in the SDL test*/
+int global_hack_playeronly = 0;
+extern unsigned char hacksong_data[];
+extern unsigned int hacksong_length;
+
 
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
@@ -67,13 +74,18 @@ process_audio (jack_nframes_t nframes)
     synti2_conts_store(global_cont, 0, hack_patch_sysex, hack_patch_sysex_length);
   }
   
-  nev = jack_midi_get_event_count(midi_in_buffer);
-  for (i=0;i<nev;i++){
-    if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-      synti2_conts_store(global_cont, ev.time, ev.buffer, ev.size);
-    } else {
-      break;
+  if (global_hack_playeronly == 0) {
+    nev = jack_midi_get_event_count(midi_in_buffer);
+    for (i=0;i<nev;i++){
+      if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
+	synti2_conts_store(global_cont, ev.time, ev.buffer, ev.size);
+      } else {
+	break;
+      }
     }
+  } else {
+    /* FIXME: Only for testing; to be removed.. */
+    
   }
 
   synti2_conts_start(global_cont);
@@ -99,6 +111,10 @@ int
 main (int argc, char *argv[])
 {
   jack_status_t status;
+
+  if ((argc >= 2) && (strcmp(argv[1],"-p")==0)){
+    global_hack_playeronly = 1;
+  }
 
   /*printf("Length = %d",hack_patch_sysex_length); fflush(stdout);
   printf("Buf = %d %d %d %d",hack_patch_sysex[0],
@@ -133,6 +149,12 @@ main (int argc, char *argv[])
     goto error;
   };
 
+  /*hack. FIXME: remove.*/
+  global_player = synti2_player_create(hacksong_data, sr);
+  if (global_player == NULL){
+    fprintf(stderr, "Haist \n");
+    goto error;
+  }
   
   /* Now we activate our new client. */
   if (jack_activate (client)) {

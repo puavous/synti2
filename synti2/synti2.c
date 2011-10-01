@@ -2,6 +2,9 @@
 #include <limits.h>
 #include <stdlib.h>
 
+/* For debug prints: */
+#include <stdio.h>
+
 #include "synti2.h"
 
 struct synti2_conts {
@@ -112,6 +115,91 @@ struct synti2_synth {
   /* Throw-away test stuff:*/
   long int global_framesdone;  /*NOTE: This is basically just a counter, too! */
 };
+
+
+#define SYNTI2_MAX_SONGBYTES 30000
+#define SYNTI2_MAX_SONGTRACKS 32
+
+struct synti2_player {
+  int ntracks;  /* Number of tracks. */
+  int tpq;      /* Ticks per quarter (no support for SMPTE) */
+  int delta[SYNTI2_MAX_SONGTRACKS];
+  unsigned char *track [SYNTI2_MAX_SONGTRACKS];
+  unsigned char data[SYNTI2_MAX_SONGBYTES];
+};
+
+/** Reads a MIDI variable length number. */
+static 
+int
+varlength(const unsigned char * source, int * dest){
+  int nread;
+  unsigned char byte;
+  *dest = 0;
+  for (nread=1; nread<=4; nread++){
+    byte = *source++;
+    *dest += (byte & 0x7f);
+    if ((byte >> 7) == 0) return nread;
+  }
+  return 0; /* Longer than 4 bytes! Wrong input! FIXME: die. */
+}
+
+static 
+int 
+twobyte(unsigned char *r){
+  return (r[0] * 0x100) + r[1];
+}
+
+static 
+int 
+fourbyte(unsigned char *r){
+  return (r[0] * 0x1000000) + (r[1] * 0x10000) + (r[2] * 0x100) + r[3];
+}
+
+
+/** Load and initialize a song. */
+synti2_player *
+synti2_player_create(unsigned char * songdata, int samplerate){
+  unsigned char *r;
+  int format;
+  synti2_player *pl;
+  int it, chunksize;
+
+  pl = calloc(1, sizeof(synti2_player));
+  if (pl == NULL) return pl;
+  
+  /* TODO: Should checks limits and file format!! (unless compiling for 4k) */
+  /* Read and initialize a zong. */
+  r = songdata;
+  printf("%s\n", songdata);
+  r += 8; /*Just skip header; TODO: I want at least a midi "distiller"
+	    to rid of what I don't need!*/
+  format = twobyte(r); r += 2;
+  pl->ntracks = twobyte(r); r += 2;
+  pl->tpq = twobyte(r); r += 2;
+
+  //if ((pl->tpq & 0x8000) != 0) {free(pl); return NULL; /*no support for SMPTE*/};
+  //printf("format %d ntracks %d timediv %d\n", format, ntracks, timediv); fflush(stdout);
+
+  for (it=0; it < pl->ntracks; it++){
+    r += 4; /* skip header */
+    chunksize = fourbyte(r); r += 4; /* Fixme: chunk includes header? */     
+    pl->track[it] = r;
+    r += chunksize;
+  }
+
+  return pl;
+}
+
+/** render some frames of control data for the synth, keeping track of
+ * song position. This will do the store()s as if the song was played
+ * live.
+ */
+void
+synti2_player_render(synti2_player *player, 
+		    synti2_conts *control,
+		     int frames){
+}
+
 
 /** Creates a controller "object". Could be integrated within the
  * synth itself?  For the final 4k version (synti-kaksinen:)),

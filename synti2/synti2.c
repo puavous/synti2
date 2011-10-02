@@ -52,8 +52,8 @@ struct synti2_conts {
  */
 #define TRIGGERSTAGE 6
 
-#define WAVETABLE_SIZE 32768
-#define WSINE 0
+#define WAVETABLE_SIZE 0x10000
+#define WAVETABLE_BITMASK 0xffff
 
 /** I finally realized that unsigned ints will nicely loop around
  * (overflow) and as such they model an oscillator's phase pretty
@@ -732,15 +732,11 @@ synti2_render(synti2_synth *s,
       for(iv=0;iv<NVOICES;iv++){
 	// if (s->partofvoice[iv] < 0) continue; /* Unsounding. FIXME: (f1) */
 	/* Produce sound :) First modulator, then carrier*/
-        /* Worth using a wavetable? Probably.. Could do the first just
+        /* Worth using a wavetable? Definitely.. Could do the first just
 	   by bit-shifting the counter... */
-	interm  = s->wave[(int)(s->fc[iv*2+1] * WAVETABLE_SIZE) % WAVETABLE_SIZE];
+	interm  = s->wave[(unsigned int)(s->fc[iv*2+1] * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
         interm *= (s->velocity[iv]/128.0) * (s->fenv[iv][1]);
-
-	//printf("%f\n",s->fc[iv*2+0] + interm);
-	//printf("%d\n",(int)((s->fc[iv*2+0] + interm) * WAVETABLE_SIZE) % WAVETABLE_SIZE);
-	interm  = s->wave[(unsigned int)((s->fc[iv*2+0] + interm) * WAVETABLE_SIZE) % WAVETABLE_SIZE];
-	//interm  = sin(2*M_PI * (s->fc[iv*2+0] + interm));
+	interm  = s->wave[(unsigned int)((s->fc[iv*2+0] + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
 	interm *= s->fenv[iv][0];
 	buffer[iframe+ii] += interm;
       }

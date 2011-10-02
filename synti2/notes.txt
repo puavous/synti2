@@ -1,0 +1,39 @@
+Early version using sin() -function:
+
+-rwxrwxr-x. 1 nieminen nieminen  5967 Oct  2 15:19 tinytest
+-rwxrwxr-x. 1 nieminen nieminen 12320 Oct  2 15:19 tinytest.payload
+-rwxrwxr-x. 1 nieminen nieminen 40612 Oct  2 15:19 tinytest.unstripped.payload
+
+real	0m2.352s
+user	0m2.331s
+sys	0m0.003s
+
+
+Early version using wavetable for sinewave (4096 byte wavetab):
+
+-rwxrwxr-x. 1 nieminen nieminen  6037 Oct  2 15:41 tinytest
+-rwxrwxr-x. 1 nieminen nieminen 12448 Oct  2 15:41 tinytest.payload
+-rwxrwxr-x. 1 nieminen nieminen 41084 Oct  2 15:41 tinytest.unstripped.payload
+
+real	0m0.500s
+user	0m0.490s
+sys	0m0.000s
+
+
+-> NO, NO, NOo DOUBT ABOUT IT! WAVETABLE IS THE WAY TO GO!!
+
+4096 not enough. Low notes sound baad.
+
+Early version using wavetable for sinewave (32768 byte wavetab):
+
+-rwxrwxr-x. 1 nieminen nieminen  6041 Oct  2 16:01 tinytest
+-rwxrwxr-x. 1 nieminen nieminen 12448 Oct  2 16:01 tinytest.payload
+-rwxrwxr-x. 1 nieminen nieminen 41084 Oct  2 16:01 tinytest.unstripped.payload
+
+real	0m0.510s
+user	0m0.497s
+sys	0m0.001s
+
+The sound is good enough for my own ears with 32k look-up
+table.. Compressed code is 74 bytes longer, (but) I'll buy it because
+of the dramatic performance gain!!

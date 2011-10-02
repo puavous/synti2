@@ -73,4 +73,4 @@ clean:
 	-rm *~ *.o
 
 veryclean: clean
-	-rm *.payload testi sdltest tinytest piippitesti testdata.c
+	-rm *.payload testi sdltest tinytest piippitesti benchmark testdata.c 

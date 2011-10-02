@@ -30,10 +30,13 @@ STRIPOPT = -s -R .comment \
 
 all: jacktest
 
-benchmark: benchmark.c synti2.c testdata.c Makefile
+misssify: misssify.c Makefile
+	$(CC) $(CFLAGS) -o missify missify.c -lm
+
+benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm
 
-jacktest: jackmidi.c synti2.c testdata.c Makefile
+jacktest: jackmidi.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o testi jackmidi.c synti2.c testdata.c \
 		`pkg-config --cflags --libs jack` -lm
 
@@ -41,12 +44,12 @@ testdata.c: patchbank.txt testi.mid hacktac.py Makefile
 	python hacktac.py < patchbank.txt > testdata.c
 	python file2c.py testi.mid hacksong >> testdata.c
 
-sdltest: sdltest.c synti2.c Makefile
+sdltest: sdltest.c synti2.c synti2.h Makefile
 
 	$(CC) $(CFLAGS) -o sdltest sdltest.c synti2.c \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
-tinytest: sdltest.c synti2.c testdata.c selfextr.stub Makefile
+tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub Makefile
 # hacking
 	$(CC) $(HCFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c 
 	$(CC) $(HCFLAGS) -c -o synti2.o synti2.c

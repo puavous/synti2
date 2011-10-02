@@ -22,8 +22,10 @@ struct synti2_conts {
 /* Multitimbrality */
 #define NPARTS 16
 
+#define NOSCILLATORS 4
+
 /* Total number of "counters", i.e., oscillators/operators. */
-#define NCOUNTERS (NVOICES * 2)
+#define NCOUNTERS (NVOICES * NOSCILLATORS)
 
 /* Multitimbrality */
 #define NENVPERVOICE 4
@@ -730,17 +732,21 @@ synti2_render(synti2_synth *s,
       buffer[iframe+ii] = 0.0;
 
       for(iv=0;iv<NVOICES;iv++){
-	// if (s->partofvoice[iv] < 0) continue; /* Unsounding. FIXME: (f1) */
-	/* Produce sound :) First modulator, then carrier*/
+        // if (s->partofvoice[iv] < 0) continue; /* Unsounding. FIXME: (f1) */
+        /* Produce sound :) First modulator, then carrier*/
         /* Worth using a wavetable? Definitely.. Could do the first just
-	   by bit-shifting the counter... */
-	interm  = s->wave[(unsigned int)(s->fc[iv*2+1] * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
+           by bit-shifting the counter... */
+        interm  = s->wave[(unsigned int)(s->fc[iv*2+1] * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
+        interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
         interm *= (s->velocity[iv]/128.0) * (s->fenv[iv][1]);
-	interm  = s->wave[(unsigned int)((s->fc[iv*2+0] + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
-	interm *= s->fenv[iv][0];
-	buffer[iframe+ii] += interm;
-      }
+        interm  = s->wave[(unsigned int)((s->fc[iv*2+0] + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
+        interm *= s->fenv[iv][0];
+        buffer[iframe+ii] += interm;
+      }      
       buffer[iframe+ii] /= NVOICES;
+      
+      //buffer[iframe+ii] = sin(32*buffer[iframe+ii]); /* Hack! beautiful too!*/
+      //buffer[iframe+ii] = tanh(16*buffer[iframe+ii]); /* Hack! beautiful too!*/
     }
   }
   s->global_framesdone += nframes;

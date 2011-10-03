@@ -147,7 +147,9 @@ varlength(const unsigned char * source, int * dest){
   for (nread=1; nread<=4; nread++){
     byte = *source++;
     *dest += (byte & 0x7f);
-    if ((byte >> 7) == 0) return nread;
+    if ((byte & 0x80) == 0)
+      return nread; 
+    else *dest <<= 7;
   }
   return 0; /* Longer than 4 bytes! Wrong input! FIXME: die. */
 }

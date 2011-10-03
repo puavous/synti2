@@ -36,6 +36,50 @@
  *
  * - Turn percussion tracks to binary beat patterns.
  *
+ * - Observe: Percussive instruments need no note-off.
+ *
+ */
+
+/*
+ * Misss data format ideas:
+ *
+ * <songheader> <layer>+
+ * <layer> = <layerheader> <layerdata>
+ * <layerheader> = <length> <tickmultiplier> <type> <part#> <parameters>
+ * <layerdata> = <event>+
+ * <event> = <delta><byte>+
+ *
+ * ... more or less so... and... 
+ *
+ * Types of layers:
+ *
+ *  - 0x8 note off
+ *        <delta>
+ *  - 0x9 note on with variable velocity
+ *        <delta><note#><velocity>
+ *  - 0x1 note on with constant velocity (given as a parameter)
+ *        <delta><note#>
+ *  - 0x2 note on with constant pitch (given as a parameter)
+ *        <delta><velocity>
+ *  - 0x3 note on with constant pitch and velocity (given as parameters)
+ *        <delta>
+ *
+ *  OR... TODO: think if note on and note velocity could be separated?
+ *              suppose they could.. could have accented beats and
+ *              velocity ramps with little-ish overhead?
+ *
+ *  - 0xB controller instantaneous
+ *        <delta><value>
+ *  - 0x4 controller ramp from-to/during
+ *        <delta><value1><delta2><value2>
+ *  - 0x5 pitch bend ramp from-to/during (overload controller?)
+ *        <delta><bend1><delta2><bend2>
+ *  - 0xf sysex
+ *        <delta><sysex>
+ *
+ *  - 0x6 0x7 0xA 0xC 0xD 0xE reserved.
+ *
+ *  Type and part fit in one byte.
  */
 
 #include<stdlib.h>

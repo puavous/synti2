@@ -67,18 +67,19 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   synti2_conts_store(global_cont, 10, hackbuf, 3);
   */
 
-  synti2_player_render(global_player, global_cont, len/2);
+  synti2_player_render(global_player, global_cont, len/4);
 
   synti2_conts_start(global_cont);
 
   /* Call our own synth engine and convert samples to native type (SDL) */
+  /* Lengths are now hacked - will have stereo output from synti2.*/
   synti2_render(st, global_cont,
-		audiobuf, len/2); /* 4 = 2 bytes times 2 channels. */
+		audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
 
   frame += len/4;
   for(i=0;i<len/2;i+=2){
-    ((Sint16*)stream)[i+0] = (Sint16)(audiobuf[i+0]*vol); 
-    ((Sint16*)stream)[i+1] = (Sint16)(audiobuf[i+1]*vol);
+    ((Sint16*)stream)[i+0] = (Sint16)(audiobuf[i/2]*vol); 
+    ((Sint16*)stream)[i+1] = (Sint16)(audiobuf[i/2]*vol);
   }
 }
 

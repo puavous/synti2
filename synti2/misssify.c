@@ -72,12 +72,15 @@
  *        <delta><value>
  *  - 0x4 controller ramp from-to/during
  *        <delta><value1><delta2><value2>
- *  - 0x5 pitch bend ramp from-to/during (overload controller?)
+ *  - 0x5 pitch bend ramp from-to/during (or re-use controller ramp?
+ *        DEFINITELY! because our values can be var-length which is 
+ *        very natural for pitch bend MSB when needed..)
  *        <delta><bend1><delta2><bend2>
  *  - 0xf sysex
  *        <delta><sysex>
  *
- *  - 0x6 0x7 0xA 0xC 0xD 0xE reserved.
+ *  - 0x6 0x7 0xA 0xC 0xD 0xE reserved. 0x5 probably too.
+ *    Maybe could use the 4th bit of type nibble for something else?
  *
  *  Type and part fit in one byte.
  */

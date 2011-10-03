@@ -30,8 +30,10 @@ STRIPOPT = -s -R .comment \
 
 all: jacktest
 
+tools: misssify
+
 misssify: misssify.c Makefile
-	$(CC) $(CFLAGS) -o missify missify.c -lm
+	$(CC) $(CFLAGS) -o misssify misssify.c
 
 benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm

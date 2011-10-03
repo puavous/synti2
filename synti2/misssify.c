@@ -41,29 +41,34 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<getopt.h>
+#include<string.h>
 
-/* -- an insert-only binary tree -- */
+/* -- linked list of timed events (easy to add, merge, and iterate
+      linearly from beginning to end) -- */
 /* Plan this here; move to a separate unit soon..*/
 
-typedef struct instree_node instree_node;
+typedef struct evlist_node evlist_node;
 
-struct instree_node{
-  unsigned int key;
-  void *value;
-  instree_node *left;
-  instree_node *right;
+struct evlist_node{
+  unsigned int tick;
+  void *data;
+  evlist_node *next;
 };
 
 #define MAX_NODES 0x10000
 
-/* One for each possible two-byte combination... */
-instree_node *trees[0x10000];
-
-/* Linear pool of nodes. */
-typedef struct instree{
-  instree_node nodepool[MAX_NODES];
+/** Event layers. Linear pool of nodes. Data pointers can be data(?)*/
+typedef struct events{
+  evlist_node nodepool[MAX_NODES];
   int nextfree;
-} instree;
+
+  /* One list for each possible two-byte combination (status byte and
+   * first parameter)... We'll be doing a maximal filtering job later
+   * on.. maybe?
+   */
+  evlist_node *head[0x10000];
+} events;
+
 
 #define MAX_STRINGLENGTH 200
 
@@ -79,19 +84,32 @@ typedef struct misssify_options{
 #define MAX_DATA 0x1000000
 
 unsigned char dinput[MAX_DATA];
+int dinput_size;
 unsigned char dmidi[MAX_DATA];
 unsigned char dmisss[MAX_DATA];
-
+int dmisss_size;
 
 /** Interprets command line.
  *
  * TODO: Implement this; so far only example code from the GNU manual.
+ *
+ * TODO (later): learn to use argp instead of getopt..
  */
 static
 void
 misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
   int c;
   static int local_verbose; /* must know address on compile time. */
+  /* Defaults for some values:*/
+  strncpy(opt->outfname, "test.misss", MAX_STRINGLENGTH);
+  /* Aah, but this will only fail possibly for user input:
+  if (strlen(str) >= MAX_STRINGLENGTH){
+    fprintf(stderr, "File path too long. %s", str);
+    exit(0);
+  }
+  */
+  opt->infname[0]='\0';
+
   while (1){
     static struct option long_options[] =
       {
@@ -165,30 +183,64 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
   if (opt->verbose)
     puts ("verbose flag is set");
   
-  /* Print any remaining command line arguments (not options). */
-  if (optind < argc) {
-    printf ("non-option ARGV-elements: ");
-    while (optind < argc)
-      printf ("%s ", argv[optind++]);
-    putchar ('\n');
+  /* Remaining command line arguments (not options); we must have
+     input file name. */
+  if (optind >= argc){
+    fprintf(stderr, "Input file name must be given!\n");
+    exit(0);
+  }
+  if (strlen(argv[optind]) >= MAX_STRINGLENGTH){
+    fprintf(stderr, "Output file path too long. Will use default! %s\n", argv[argc]);
+  } else {
+    strncpy(opt->infname, argv[optind], MAX_STRINGLENGTH);
   }
 }
 
+static
+int
+file_read(const char fname[], unsigned char *buf, int bufsz){
+  FILE *f;
+  int count;
+  f = fopen(fname, "r");
+  count = fread(buf, 1, bufsz, f);
+  if (count==bufsz){
+    fprintf(stderr, "Buffer full while reading file %s\n", fname);
+    fclose(f);
+    exit(0);
+  }
+  fclose(f);
+  return count;
+}
+
+static
+void
+file_write(const char fname[], const unsigned char *buf, size_t bufsz){
+  FILE *f;
+  /* FIXME: Should test exceptions! */
+  f = fopen(fname, "w");
+  fwrite(buf,1,bufsz,f);
+  fclose(f);
+}
+
+
 
 int main(int argc, char *argv[]){
-  instree *events_original;
-  instree *events_misssified;
+  events *ev_original;
+  events *ev_misssified;
   misssify_options opt;
-  events_original = calloc(1, sizeof(instree));
-  events_misssified = calloc(1, sizeof(instree));
+  ev_original = calloc(1, sizeof(events));
+  ev_misssified = calloc(1, sizeof(events));
 
   misssify_options_parse(&opt, argc, argv);
-  // file_read(opt.infname, dinput);
-  // completemidi(events_original, dinput, dmidi);
-  // do_misssify(events_original, events_misssified, dmisss);
-  // file_writemisss(opt.outfname, events_misssified);
+  dinput_size = file_read(opt.infname, dinput, MAX_DATA);
+  /* 
+     deconstruct_midi(events_original, dinput, dmidi);
+     construct_misss(events_original, events_misssified, dmisss);
+  */
+  /*FIXME: Hack..*/ memcpy(dmisss, dinput, dmisss_size = dinput_size);
+  file_write(opt.outfname, dmisss, dmisss_size);
 
-  free(events_original);
-  free(events_misssified);
+  free(ev_original);
+  free(ev_misssified);
   return 0;
 }

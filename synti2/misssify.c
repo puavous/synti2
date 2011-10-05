@@ -103,11 +103,16 @@ struct evlist_node{
 };
 
 #define MAX_NODES 0x10000
+#define MAX_DATA 0x1000000
+#define MAX_STRINGLENGTH 200
 
 /** Event layers. Linear pool of nodes. Data pointers can be data(?)*/
 typedef struct events{
   evlist_node nodepool[MAX_NODES];
-  int nextfree;
+  unsigned char datapool[MAX_DATA];
+  int next_free_node;
+  int next_free_data;
+  
 
   /* One list for each possible two-byte combination (status byte and
    * first parameter)... We'll be doing a maximal filtering job later
@@ -116,8 +121,7 @@ typedef struct events{
   evlist_node *head[0x10000];
 } events;
 
-
-#define MAX_STRINGLENGTH 200
+/* events_add */
 
 /* Options for MIDI mutilation. */
 typedef struct misssify_options{
@@ -127,8 +131,6 @@ typedef struct misssify_options{
   int options_valid;
 } misssify_options;
 
-
-#define MAX_DATA 0x1000000
 
 unsigned char dinput[MAX_DATA];
 int dinput_size;
@@ -269,6 +271,75 @@ file_write(const char fname[], const unsigned char *buf, size_t bufsz){
   fclose(f);
 }
 
+/** Reads a 4-byte MIDI number. */
+static 
+unsigned int
+smf_read_4byte(const unsigned char * source){
+  return source[0] * 0x1000000 + source[1] * 0x10000 + source[2] *0x100 + source[3];
+}
+
+/** Reads a 2-byte MIDI number. 
+ * FIXME: should combine as smf_read_bytes(source, nbytes)!*/
+static 
+unsigned int
+smf_read_2byte(const unsigned char * source){
+  return source[0] *0x100 + source[1];
+}
+
+
+
+/** Reads a MIDI variable length number. */
+static 
+int
+smf_read_varlength(const unsigned char * source, int * dest){
+  int nread;
+  unsigned char byte;
+  *dest = 0;
+  for (nread=1; nread<=4; nread++){
+    byte = *source++;
+    *dest += (byte & 0x7f);
+    if ((byte & 0x80) == 0)
+      return nread; 
+    else *dest <<= 7;
+  }
+  fprintf(stderr,
+          "A varlength number longer than 4 bytes. Something is wrong; sorry.\n"); 
+  exit(2);
+  return 0; 
+}
+
+
+static
+void
+deconstruct_from_midi(events *ev_original, 
+                      unsigned char *dinput, 
+                      misssify_options *opt)
+{
+  /* TODO: these to a struct(?): FIXME: Yes, put these to a struct:*/
+  int chunk_size = 0;
+  int ntracks_total = 0;
+  int ntracks_read = 0;
+  int ntracks_alien = 0;
+  int smf_format = 0;
+  int time_division = 0;
+  /* Verify MIDI Header */
+  if (memcmp(dinput,"MThd",4) != 0) {
+    fprintf(stderr, "Data doesn't begin with SMF header! Exiting.\n"); exit(1);
+  }
+  dinput += 4;
+  chunk_size = smf_read_4byte(dinput); dinput += 4;
+  if (chunk_size != 6) {
+    fprintf(stderr, "Header chunk length unexpected (%d).", chunk_size);
+  }
+  smf_format = smf_read_2byte(dinput); dinput += 2;
+  ntracks_total = smf_read_2byte(dinput); dinput += 2;
+  time_division = smf_read_2byte(dinput); dinput += 2;
+  if (opt->verbose){
+    fprintf(stderr, 
+            "SMF header: format %d ; ntracks %d ; time_division 0x%04x (=%d)\n",
+            smf_format, ntracks_total, time_division, time_division);
+  }
+}
 
 
 int main(int argc, char *argv[]){
@@ -280,8 +351,10 @@ int main(int argc, char *argv[]){
 
   misssify_options_parse(&opt, argc, argv);
   dinput_size = file_read(opt.infname, dinput, MAX_DATA);
+  deconstruct_from_midi(ev_original, dinput, &opt);
+     
   /* 
-     deconstruct_midi(events_original, dinput, dmidi);
+     filter_events(?)??
      construct_misss(events_original, events_misssified, dmisss);
   */
   /*FIXME: Hack..*/ memcpy(dmisss, dinput, dmisss_size = dinput_size);

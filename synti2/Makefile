@@ -33,7 +33,7 @@ all: jacktest
 tools: misssify
 
 misssify: misssify.c Makefile
-	$(CC) $(CFLAGS) -Wextra -Werror -o misssify misssify.c
+	$(CC) $(CFLAGS) -Wextra -o misssify misssify.c
 
 benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm

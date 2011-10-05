@@ -309,6 +309,26 @@ smf_read_varlength(const unsigned char * source, int * dest){
   return 0; 
 }
 
+static
+int
+deconstruct_track(events *evs, 
+                  unsigned char *dinput, 
+                  misssify_options *opt)
+{
+  int chunk_size = 0;
+  chunk_size = smf_read_4byte(dinput+4);
+  if (memcmp(dinput,"MTrk",4) != 0) {
+    if (opt->verbose)
+      fprintf(stderr, "Alien chunk type (\"%4s\"). Skipping\n", dinput);
+    // info->ntracks_alien++;
+  }
+  if (opt->verbose)
+    fprintf(stderr, "Chunk type (\"%4s\"). Length %d \n", dinput, chunk_size);
+  dinput += 8; /* Move past type and size, to first event (which must exist) */
+  
+  return chunk_size;
+}
+
 
 static
 void
@@ -323,6 +343,7 @@ deconstruct_from_midi(events *ev_original,
   int ntracks_alien = 0;
   int smf_format = 0;
   int time_division = 0;
+  int itrack = 0;
   /* Verify MIDI Header */
   if (memcmp(dinput,"MThd",4) != 0) {
     fprintf(stderr, "Data doesn't begin with SMF header! Exiting.\n"); exit(1);
@@ -339,6 +360,8 @@ deconstruct_from_midi(events *ev_original,
     fprintf(stderr, 
             "SMF header: format %d ; ntracks %d ; time_division 0x%04x (=%d)\n",
             smf_format, ntracks_total, time_division, time_division);
+    fprintf(stderr,
+            "I'm not a MIDI validator, so I'm not checking file consistency!\n");
   }
   if (smf_format > 1) {
     fprintf(stderr,
@@ -349,6 +372,21 @@ deconstruct_from_midi(events *ev_original,
     fprintf(stderr,
             "Midi file is in SMPTE time format, which is not supported, sorry.\n");
     exit(1);
+  }
+  dinput += (chunk_size - 6); /* Spec says the header 'could' be longer.*/
+
+  /* TODO: For a more complete reader, this could be a proper time to
+   * read tempo map... (or later... think?). But Synti2 shall not be
+   * burdened with tempo changes, so that'll be a task for some later
+   * project...
+   */
+  for (itrack=0; itrack<ntracks_total; itrack++){
+    if (opt->verbose){
+      fprintf(stderr, "Processing track %d/%d (index=%d)\n", 
+              itrack+1, ntracks_total, itrack);
+    }
+    chunk_size = deconstruct_track(ev_original, dinput, opt);
+    dinput += 4 + 4 + chunk_size; /*<type(4b)><length(4b)><event(chunk_size)>+*/
   }
 }
 

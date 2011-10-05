@@ -124,6 +124,17 @@ typedef struct events{
 /* events_add */
 
 /* Options for MIDI mutilation. */
+typedef struct smf_info{
+  int ntracks_total;
+  int ntracks_read;
+  int ntracks_alien;
+  int smf_format;
+  int time_division;
+} smf_info;
+
+
+
+/* Options for MIDI mutilation. */
 typedef struct misssify_options{
   char infname[MAX_STRINGLENGTH+1];
   char outfname[MAX_STRINGLENGTH+1];
@@ -311,6 +322,7 @@ smf_read_varlength(const unsigned char * source, int * dest){
 static
 int
 deconstruct_track(events *evs, 
+                  smf_info *info,
                   unsigned char *dinput, 
                   misssify_options *opt)
 {
@@ -319,7 +331,7 @@ deconstruct_track(events *evs,
   if (memcmp(dinput,"MTrk",4) != 0) {
     if (opt->verbose)
       fprintf(stderr, "Alien chunk type (\"%4s\"). Skipping\n", dinput);
-    // info->ntracks_alien++;
+      info->ntracks_alien++;
   }
   if (opt->verbose)
     fprintf(stderr, "Chunk type (\"%4s\"). Length %d \n", dinput, chunk_size);
@@ -332,16 +344,12 @@ deconstruct_track(events *evs,
 static
 void
 deconstruct_from_midi(events *ev_original, 
+                      smf_info *info,
                       unsigned char *dinput, 
                       misssify_options *opt)
 {
   /* TODO: these to a struct(?): FIXME: Yes, put these to a struct:*/
   int chunk_size = 0;
-  int ntracks_total = 0;
-  int ntracks_read = 0;
-  int ntracks_alien = 0;
-  int smf_format = 0;
-  int time_division = 0;
   int itrack = 0;
   /* Verify MIDI Header */
   if (memcmp(dinput,"MThd",4) != 0) {
@@ -352,22 +360,24 @@ deconstruct_from_midi(events *ev_original,
   if (chunk_size != 6) {
     fprintf(stderr, "Header chunk length unexpected (%d).", chunk_size);
   }
-  smf_format = smf_read_int(dinput,2); dinput += 2;
-  ntracks_total = smf_read_int(dinput,2); dinput += 2;
-  time_division = smf_read_int(dinput,2); dinput += 2;
+  info->smf_format = smf_read_int(dinput,2); dinput += 2;
+  info->ntracks_total = smf_read_int(dinput,2); dinput += 2;
+  info->time_division = smf_read_int(dinput,2); dinput += 2;
   if (opt->verbose){
     fprintf(stderr, 
             "SMF header: format %d ; ntracks %d ; time_division 0x%04x (=%d)\n",
-            smf_format, ntracks_total, time_division, time_division);
+            info->smf_format, info->ntracks_total, info->time_division, 
+            info->time_division);
     fprintf(stderr,
             "I'm not a MIDI validator, so I'm not checking file consistency!\n");
   }
-  if (smf_format > 1) {
+  if (info->smf_format > 1) {
     fprintf(stderr,
-            "Midi file is Type %d but only Type 0 and 1 are supported, sorry.\n");
+            "Midi file is Type %d but only Type 0 and 1 are supported, sorry.\n",
+            info->smf_format);
     exit(1);
   }
-  if (time_division & 0x8000) {
+  if (info->time_division & 0x8000) {
     fprintf(stderr,
             "Midi file is in SMPTE time format, which is not supported, sorry.\n");
     exit(1);
@@ -379,12 +389,12 @@ deconstruct_from_midi(events *ev_original,
    * burdened with tempo changes, so that'll be a task for some later
    * project...
    */
-  for (itrack=0; itrack<ntracks_total; itrack++){
+  for (itrack=0; itrack < info->ntracks_total; itrack++){
     if (opt->verbose){
       fprintf(stderr, "Processing track %d/%d (index=%d)\n", 
-              itrack+1, ntracks_total, itrack);
+              itrack+1, info->ntracks_total, itrack);
     }
-    chunk_size = deconstruct_track(ev_original, dinput, opt);
+    chunk_size = deconstruct_track(ev_original, info, dinput, opt);
     dinput += 4 + 4 + chunk_size; /*<type(4b)><length(4b)><event(chunk_size)>+*/
   }
 }
@@ -394,12 +404,13 @@ int main(int argc, char *argv[]){
   events *ev_original;
   events *ev_misssified;
   misssify_options opt;
+  smf_info info;
   ev_original = calloc(1, sizeof(events));
   ev_misssified = calloc(1, sizeof(events));
 
   misssify_options_parse(&opt, argc, argv);
   dinput_size = file_read(opt.infname, dinput, MAX_DATA);
-  deconstruct_from_midi(ev_original, dinput, &opt);
+  deconstruct_from_midi(ev_original, &info, dinput, &opt);
      
   /* 
      filter_events(?)??

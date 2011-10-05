@@ -748,7 +748,7 @@ synti2_render(synti2_synth *s,
       buffer[iframe+ii] /= NVOICES;
       
       //buffer[iframe+ii] = sin(32*buffer[iframe+ii]); /* Hack! beautiful too!*/
-      //buffer[iframe+ii] = tanh(16*buffer[iframe+ii]); /* Hack! beautiful too!*/
+      buffer[iframe+ii] = tanh(16*buffer[iframe+ii]); /* Hack! beautiful too!*/
     }
   }
   s->global_framesdone += nframes;

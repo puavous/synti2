@@ -116,20 +116,124 @@ typedef struct smf_events{
   int n_stored;
   int n_unknown; /*hmm... let's see.. maybe there won't be any use for this(?)*/
 
-  int last_status; /* Needed when a track contains running status
-                      information; must read from one track at a
-                      time. */
+  unsigned char last_status; /* Needed when a track contains running
+                      status information; must read from one track at
+                      a time. */
+  unsigned char last_par1; /* For example note or CC#*/
   /* One list for each possible two-byte combination (status byte and
    * first parameter)... We'll be doing a maximal filtering job later
    * on.. maybe?
    */
   evlist_node *head[0x10000];
+  evlist_node *iter[0x10000];
 } smf_events;
 
-/* smf_events_deepcpy_data */
-/* smf_events_event_from_midi */
 
-/* smf_events_add */
+/** Reads a number of 'bytecount' bytes from MIDI data. */
+static 
+unsigned int
+smf_read_int(const unsigned char * source, int bytecount){
+  int i, res;
+  res = 0;
+  for (i=0;i<bytecount;i++){
+    res <<= 8;
+    res += source[i];
+  }
+  return res;
+}
+
+
+
+/** Reads a MIDI variable length number. Stores the value into the
+ *   destination given as a pointer.  Returns number of bytes read.
+ *
+ * FIXME: In C you can return structs, right? Then should return
+ * {value, len} -pairs!
+ */
+static 
+int
+smf_read_varlength(const unsigned char * source, int * dest){
+  int nread;
+  unsigned char byte;
+  *dest = 0;
+  for (nread=1; nread<=4; nread++){
+    byte = *source++;
+    *dest += (byte & 0x7f);
+    if ((byte & 0x80) == 0)
+      return nread; 
+    else *dest <<= 7;
+  }
+  fprintf(stderr,
+          "A varlength number longer than 4 bytes. Something is wrong; sorry.\n"); 
+  exit(2);
+  return 0; 
+}
+
+
+
+
+
+static
+void
+smf_events_rewind_iter(smf_events *evs, int status){
+  evs->iter[status] = evs->head[status];
+}
+
+static
+void
+smf_events_rewind_all_iters(smf_events *evs){
+  int i;
+  for (i=0;i<0x10000; i++){
+    smf_events_rewind_iter(evs, i);
+  }
+}
+
+/* smf_events_deepcpy_data */
+/* smf_events_merge */
+
+static
+int
+smf_event_contents_from_midi(smf_events *evs, unsigned char *data){
+  int vlval, vllen;
+  switch(evs->last_status >> 4){
+  case 0:
+    fprintf(stderr, "Looks like a bug; sorry.\n"); /*assert status>0, actually.*/
+    exit(1);
+  case 8: case 9: case 0xa: case 0xb:
+    return 2; /* FIXME: Implement. */
+  case 0xc: case 0xd:
+    return 1; /* FIXME: Implement. */
+  case 0xe:
+    return 2; /* FIXME: Implement. */
+  }
+  /* Now we know that the status is actually either SysEx or Meta*/
+  if ((evs->last_status == 0xF0) || evs->last_status == 0xF7){
+    vllen = smf_read_varlength(data, &vlval);
+    return vllen + vlval;
+    /* FIXME: Implement. */
+  } else if (evs->last_status == 0xFF) {
+    vllen = smf_read_varlength(data+1, &vlval);
+    return 1 + vllen + vlval;
+    /* FIXME: Implement. */
+  } else {
+    fprintf(stderr, "Status 0x%x Looks like a bug; sorry.\n",evs->last_status);
+    exit(1);
+  }
+}
+
+static
+int
+smf_events_event_from_midi(smf_events *evs, unsigned char *data, int tick){
+  /*FIXME: implement*/
+  if(data[0] >= 0x80){
+    /* Complete status, update the status field. */
+    evs->last_status = data[0];
+    return 1 + smf_event_contents_from_midi(evs, data+1);
+  }
+  /* Data may continue also with previous "running" status. */
+  return smf_event_contents_from_midi(evs, data);
+}
+
 
 /* Options for MIDI mutilation. */
 typedef struct smf_info{
@@ -265,6 +369,8 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
   }
 }
 
+
+
 static
 int
 file_read(const char fname[], unsigned char *buf, int bufsz){
@@ -281,6 +387,8 @@ file_read(const char fname[], unsigned char *buf, int bufsz){
   return count;
 }
 
+
+
 static
 void
 file_write(const char fname[], const unsigned char *buf, size_t bufsz){
@@ -292,42 +400,6 @@ file_write(const char fname[], const unsigned char *buf, size_t bufsz){
 }
 
 
-/** Reads a number of 'bytecount' bytes from MIDI data. */
-static 
-unsigned int
-smf_read_int(const unsigned char * source, int bytecount){
-  int i, res;
-  res = 0;
-  for (i=0;i<bytecount;i++){
-    res <<= 8;
-    res += source[i];
-  }
-  return res;
-}
-
-
-
-/** Reads a MIDI variable length number. Stores the value into the
- *   destination given as a pointer.  Returns number of bytes read.
- */
-static 
-int
-smf_read_varlength(const unsigned char * source, int * dest){
-  int nread;
-  unsigned char byte;
-  *dest = 0;
-  for (nread=1; nread<=4; nread++){
-    byte = *source++;
-    *dest += (byte & 0x7f);
-    if ((byte & 0x80) == 0)
-      return nread; 
-    else *dest <<= 7;
-  }
-  fprintf(stderr,
-          "A varlength number longer than 4 bytes. Something is wrong; sorry.\n"); 
-  exit(2);
-  return 0; 
-}
 
 static
 int
@@ -352,6 +424,8 @@ deconstruct_track(smf_events *evs,
     fprintf(stderr, "Chunk type (\"%4s\"). Length %d \n", dinput, chunk_size);
   dinput += 8; /* Move past type and size, to first event (which must exist) */
 
+  smf_events_rewind_all_iters(evs);
+
   /*chunk_size = read_a_track_chunk();*/
   iread=0;
   for(;;){
@@ -359,6 +433,7 @@ deconstruct_track(smf_events *evs,
       fprintf(stderr, 
               "Invalid chunk: data beyond the reported size (%d) \n",
               chunk_size);
+      return chunk_size;
     }
     iread += smf_read_varlength(&(dinput[iread]), &time_delta);
     time_actual += time_delta;
@@ -371,6 +446,11 @@ deconstruct_track(smf_events *evs,
       }
       break;
     }
+    /*printf("%d at tick %d : Next up: 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x\n", 
+           iread, time_actual, dinput[iread], dinput[iread+1], dinput[iread+2], 
+           dinput[iread+3], dinput[iread+4], dinput[iread+5], dinput[iread+6]);
+    */
+    iread += smf_events_event_from_midi(evs, &(dinput[iread]), time_actual);
   }
   return chunk_size;
 }

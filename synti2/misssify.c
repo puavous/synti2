@@ -272,19 +272,18 @@ file_write(const char fname[], const unsigned char *buf, size_t bufsz){
   fclose(f);
 }
 
-/** Reads a 4-byte MIDI number. */
-static 
-unsigned int
-smf_read_4byte(const unsigned char * source){
-  return source[0] * 0x1000000 + source[1] * 0x10000 + source[2] *0x100 + source[3];
-}
 
-/** Reads a 2-byte MIDI number. 
- * FIXME: should combine as smf_read_bytes(source, nbytes)!*/
+/** Reads a number of 'bytecount' bytes from MIDI data. */
 static 
 unsigned int
-smf_read_2byte(const unsigned char * source){
-  return source[0] *0x100 + source[1];
+smf_read_int(const unsigned char * source, int bytecount){
+  int i, res;
+  res = 0;
+  for (i=0;i<bytecount;i++){
+    res <<= 8;
+    res += source[i];
+  }
+  return res;
 }
 
 
@@ -316,7 +315,7 @@ deconstruct_track(events *evs,
                   misssify_options *opt)
 {
   int chunk_size = 0;
-  chunk_size = smf_read_4byte(dinput+4);
+  chunk_size = smf_read_int(dinput+4, 4);
   if (memcmp(dinput,"MTrk",4) != 0) {
     if (opt->verbose)
       fprintf(stderr, "Alien chunk type (\"%4s\"). Skipping\n", dinput);
@@ -349,13 +348,13 @@ deconstruct_from_midi(events *ev_original,
     fprintf(stderr, "Data doesn't begin with SMF header! Exiting.\n"); exit(1);
   }
   dinput += 4;
-  chunk_size = smf_read_4byte(dinput); dinput += 4;
+  chunk_size = smf_read_int(dinput, 4); dinput += 4;
   if (chunk_size != 6) {
     fprintf(stderr, "Header chunk length unexpected (%d).", chunk_size);
   }
-  smf_format = smf_read_2byte(dinput); dinput += 2;
-  ntracks_total = smf_read_2byte(dinput); dinput += 2;
-  time_division = smf_read_2byte(dinput); dinput += 2;
+  smf_format = smf_read_int(dinput,2); dinput += 2;
+  ntracks_total = smf_read_int(dinput,2); dinput += 2;
+  time_division = smf_read_int(dinput,2); dinput += 2;
   if (opt->verbose){
     fprintf(stderr, 
             "SMF header: format %d ; ntracks %d ; time_division 0x%04x (=%d)\n",

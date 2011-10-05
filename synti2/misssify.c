@@ -113,7 +113,8 @@ typedef struct events{
   int next_free_node;
   int next_free_data;
   
-
+  int n_stored;
+  int n_unknown;
   /* One list for each possible two-byte combination (status byte and
    * first parameter)... We'll be doing a maximal filtering job later
    * on.. maybe?
@@ -299,7 +300,9 @@ smf_read_int(const unsigned char * source, int bytecount){
 
 
 
-/** Reads a MIDI variable length number. */
+/** Reads a MIDI variable length number. Stores the value into the
+ *   destination given as a pointer.  Returns number of bytes read.
+ */
 static 
 int
 smf_read_varlength(const unsigned char * source, int * dest){
@@ -327,16 +330,41 @@ deconstruct_track(events *evs,
                   misssify_options *opt)
 {
   int chunk_size = 0;
+  int iread = 0;
+  int time_delta = 0;
+  int time_actual = 0;
   chunk_size = smf_read_int(dinput+4, 4);
   if (memcmp(dinput,"MTrk",4) != 0) {
-    if (opt->verbose)
+    if (opt->verbose){
       fprintf(stderr, "Alien chunk type (\"%4s\"). Skipping\n", dinput);
-      info->ntracks_alien++;
+    }
+    info->ntracks_alien++;
+    return chunk_size;
   }
   if (opt->verbose)
     fprintf(stderr, "Chunk type (\"%4s\"). Length %d \n", dinput, chunk_size);
   dinput += 8; /* Move past type and size, to first event (which must exist) */
-  
+
+  /*chunk_size = read_a_track_chunk();*/
+  iread=0;
+  for(;;){
+    if(iread>chunk_size){
+      fprintf(stderr, 
+              "Invalid chunk: data beyond the reported size (%d) \n",
+              chunk_size);
+    }
+    iread += smf_read_varlength(&(dinput[iread]), &time_delta);
+    time_actual += time_delta;
+    if ((dinput[iread] == 0xff) 
+        && (dinput[iread+1] == 0x2f) 
+        && (dinput[iread+2] == 0x00)){
+      if (opt->verbose){
+        fprintf(stderr, 
+                "Normal end of track. Stored (FIXME) events out of (FIXME) total.\n");
+      }
+      break;
+    }
+  }
   return chunk_size;
 }
 

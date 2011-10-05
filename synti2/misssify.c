@@ -129,122 +129,6 @@ typedef struct smf_events{
 } smf_events;
 
 
-/** Reads a number of 'bytecount' bytes from MIDI data. */
-static 
-unsigned int
-smf_read_int(const unsigned char * source, int bytecount){
-  int i, res;
-  res = 0;
-  for (i=0;i<bytecount;i++){
-    res <<= 8;
-    res += source[i];
-  }
-  return res;
-}
-
-
-
-/** Reads a MIDI variable length number. Stores the value into the
- *   destination given as a pointer.  Returns number of bytes read.
- *
- * FIXME: In C you can return structs, right? Then should return
- * {value, len} -pairs!
- */
-static 
-int
-smf_read_varlength(const unsigned char * source, int * dest){
-  int nread;
-  unsigned char byte;
-  *dest = 0;
-  for (nread=1; nread<=4; nread++){
-    byte = *source++;
-    *dest += (byte & 0x7f);
-    if ((byte & 0x80) == 0)
-      return nread; 
-    else *dest <<= 7;
-  }
-  fprintf(stderr,
-          "A varlength number longer than 4 bytes. Something is wrong; sorry.\n"); 
-  exit(2);
-  return 0; 
-}
-
-
-
-
-
-static
-void
-smf_events_rewind_iter(smf_events *evs, int status){
-  evs->iter[status] = evs->head[status];
-}
-
-static
-void
-smf_events_rewind_all_iters(smf_events *evs){
-  int i;
-  for (i=0;i<0x10000; i++){
-    smf_events_rewind_iter(evs, i);
-  }
-}
-
-/* smf_events_deepcpy_data */
-/* smf_events_merge */
-
-static
-int
-smf_event_contents_from_midi(smf_events *evs, unsigned char *data){
-  int vlval, vllen;
-  switch(evs->last_status >> 4){
-  case 0:
-    fprintf(stderr, "Looks like a bug; sorry.\n"); /*assert status>0, actually.*/
-    exit(1);
-  case 8: case 9: case 0xa: case 0xb:
-    return 2; /* FIXME: Implement. */
-  case 0xc: case 0xd:
-    return 1; /* FIXME: Implement. */
-  case 0xe:
-    return 2; /* FIXME: Implement. */
-  }
-  /* Now we know that the status is actually either SysEx or Meta*/
-  if ((evs->last_status == 0xF0) || evs->last_status == 0xF7){
-    vllen = smf_read_varlength(data, &vlval);
-    return vllen + vlval;
-    /* FIXME: Implement. */
-  } else if (evs->last_status == 0xFF) {
-    vllen = smf_read_varlength(data+1, &vlval);
-    return 1 + vllen + vlval;
-    /* FIXME: Implement. */
-  } else {
-    fprintf(stderr, "Status 0x%x Looks like a bug; sorry.\n",evs->last_status);
-    exit(1);
-  }
-}
-
-static
-int
-smf_events_event_from_midi(smf_events *evs, unsigned char *data, int tick){
-  /*FIXME: implement*/
-  if(data[0] >= 0x80){
-    /* Complete status, update the status field. */
-    evs->last_status = data[0];
-    return 1 + smf_event_contents_from_midi(evs, data+1);
-  }
-  /* Data may continue also with previous "running" status. */
-  return smf_event_contents_from_midi(evs, data);
-}
-
-
-/* Options for MIDI mutilation. */
-typedef struct smf_info{
-  int ntracks_total;
-  int ntracks_read;
-  int ntracks_alien;
-  int smf_format;
-  int time_division;
-} smf_info;
-
-
 
 /* Options for MIDI mutilation. */
 typedef struct misssify_options{
@@ -255,11 +139,25 @@ typedef struct misssify_options{
 } misssify_options;
 
 
+
+/* Information about the midi file and the process. */
+typedef struct smf_info{
+  int ntracks_total;
+  int ntracks_read;
+  int ntracks_alien;
+  int smf_format;
+  int time_division;
+} smf_info;
+
+
+
 unsigned char dinput[MAX_DATA];
 int dinput_size;
 unsigned char dmidi[MAX_DATA];
 unsigned char dmisss[MAX_DATA];
 int dmisss_size;
+
+
 
 /** Interprets command line.
  *
@@ -371,32 +269,109 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
 
 
 
-static
-int
-file_read(const char fname[], unsigned char *buf, int bufsz){
-  FILE *f;
-  int count;
-  f = fopen(fname, "r");
-  count = fread(buf, 1, bufsz, f);
-  if (count==bufsz){
-    fprintf(stderr, "Buffer full while reading file %s\n", fname);
-    fclose(f);
-    exit(0);
+/** Reads a number of 'bytecount' bytes from MIDI data. */
+static 
+unsigned int
+smf_read_int(const unsigned char * source, int bytecount){
+  int i, res;
+  res = 0;
+  for (i=0;i<bytecount;i++){
+    res <<= 8;
+    res += source[i];
   }
-  fclose(f);
-  return count;
+  return res;
 }
+
+
+
+/** Reads a MIDI variable length number. Stores the value into the
+ *   destination given as a pointer.  Returns number of bytes read.
+ *
+ * FIXME: In C you can return structs, right? Then should return
+ * {value, len} -pairs!
+ */
+static 
+int
+smf_read_varlength(const unsigned char * source, int * dest){
+  int nread;
+  unsigned char byte;
+  *dest = 0;
+  for (nread=1; nread<=4; nread++){
+    byte = *source++;
+    *dest += (byte & 0x7f);
+    if ((byte & 0x80) == 0)
+      return nread; 
+    else *dest <<= 7;
+  }
+  fprintf(stderr,
+          "A varlength number longer than 4 bytes. Something is wrong; sorry.\n"); 
+  exit(2);
+  return 0; 
+}
+
+
 
 
 
 static
 void
-file_write(const char fname[], const unsigned char *buf, size_t bufsz){
-  FILE *f;
-  /* FIXME: Should test exceptions! */
-  f = fopen(fname, "w");
-  fwrite(buf,1,bufsz,f);
-  fclose(f);
+smf_events_rewind_iter(smf_events *evs, int status){
+  evs->iter[status] = evs->head[status];
+}
+
+static
+void
+smf_events_rewind_all_iters(smf_events *evs){
+  int i;
+  for (i=0;i<0x10000; i++){
+    smf_events_rewind_iter(evs, i);
+  }
+}
+
+/* smf_events_deepcpy_data */
+/* smf_events_merge */
+
+static
+int
+smf_event_contents_from_midi(smf_events *evs, unsigned char *data){
+  int vlval, vllen;
+  switch(evs->last_status >> 4){
+  case 0:
+    fprintf(stderr, "Looks like a bug; sorry.\n"); /*assert status>0, actually.*/
+    exit(1);
+  case 8: case 9: case 0xa: case 0xb:
+    return 2; /* FIXME: Implement. */
+  case 0xc: case 0xd:
+    return 1; /* FIXME: Implement. */
+  case 0xe:
+    return 2; /* FIXME: Implement. */
+  }
+  /* Now we know that the status is actually either SysEx or Meta*/
+  if ((evs->last_status == 0xF0) || evs->last_status == 0xF7){
+    vllen = smf_read_varlength(data, &vlval);
+    return vllen + vlval;
+    /* FIXME: Implement. */
+  } else if (evs->last_status == 0xFF) {
+    vllen = smf_read_varlength(data+1, &vlval);
+    return 1 + vllen + vlval;
+    /* FIXME: Implement. */
+  } else {
+    fprintf(stderr, "Status 0x%x Looks like a bug; sorry.\n",evs->last_status);
+    exit(1);
+  }
+}
+
+static
+int
+smf_events_event_from_midi(smf_events *evs, unsigned char *data, int tick){
+  /*FIXME: implement*/
+  if(data[0] >= 0x80){
+    /* Complete status, update the status field. */
+    evs->last_status = data[0];
+    return 1 + smf_event_contents_from_midi(evs, data+1);
+  }
+  /* Data may continue also with previous "running" status. */
+  return smf_event_contents_from_midi(evs, data);
 }
 
 
@@ -456,6 +431,7 @@ deconstruct_track(smf_events *evs,
 }
 
 
+
 static
 void
 deconstruct_from_midi(smf_events *ev_original, 
@@ -512,6 +488,36 @@ deconstruct_from_midi(smf_events *ev_original,
     chunk_size = deconstruct_track(ev_original, info, dinput, opt);
     dinput += 4 + 4 + chunk_size; /*<type(4b)><length(4b)><event(chunk_size)>+*/
   }
+}
+
+
+
+static
+int
+file_read(const char fname[], unsigned char *buf, int bufsz){
+  FILE *f;
+  int count;
+  f = fopen(fname, "r");
+  count = fread(buf, 1, bufsz, f);
+  if (count==bufsz){
+    fprintf(stderr, "Buffer full while reading file %s\n", fname);
+    fclose(f);
+    exit(0);
+  }
+  fclose(f);
+  return count;
+}
+
+
+
+static
+void
+file_write(const char fname[], const unsigned char *buf, size_t bufsz){
+  FILE *f;
+  /* FIXME: Should test exceptions! */
+  f = fopen(fname, "w");
+  fwrite(buf,1,bufsz,f);
+  fclose(f);
 }
 
 

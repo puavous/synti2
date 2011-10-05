@@ -229,8 +229,9 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
      and ‘--brief’ as they are encountered,
      we report the final status resulting from them. */
   opt->verbose = local_verbose;
-  if (opt->verbose)
-    puts ("verbose flag is set");
+  if (opt->verbose){
+    fprintf(stderr, "Verbose on. I'll start talking to stderr.\n");
+  }
   
   /* Remaining command line arguments (not options); we must have
      input file name. */
@@ -338,6 +339,16 @@ deconstruct_from_midi(events *ev_original,
     fprintf(stderr, 
             "SMF header: format %d ; ntracks %d ; time_division 0x%04x (=%d)\n",
             smf_format, ntracks_total, time_division, time_division);
+  }
+  if (smf_format > 1) {
+    fprintf(stderr,
+            "Midi file is Type %d but only Type 0 and 1 are supported, sorry.\n");
+    exit(1);
+  }
+  if (time_division & 0x8000) {
+    fprintf(stderr,
+            "Midi file is in SMPTE time format, which is not supported, sorry.\n");
+    exit(1);
   }
 }
 

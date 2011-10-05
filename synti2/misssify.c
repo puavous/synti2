@@ -90,6 +90,10 @@
 #include<getopt.h>
 #include<string.h>
 
+#define MAX_NODES 0x10000
+#define MAX_DATA 0x1000000
+#define MAX_STRINGLENGTH 200
+
 /* -- linked list of timed events (easy to add, merge, and iterate
       linearly from beginning to end) -- */
 /* Plan this here; move to a separate unit soon..*/
@@ -102,27 +106,30 @@ struct evlist_node{
   evlist_node *next;
 };
 
-#define MAX_NODES 0x10000
-#define MAX_DATA 0x1000000
-#define MAX_STRINGLENGTH 200
-
 /** Event layers. Linear pool of nodes. Data pointers can be data(?)*/
-typedef struct events{
+typedef struct smf_events{
   evlist_node nodepool[MAX_NODES];
   unsigned char datapool[MAX_DATA];
   int next_free_node;
   int next_free_data;
   
   int n_stored;
-  int n_unknown;
+  int n_unknown; /*hmm... let's see.. maybe there won't be any use for this(?)*/
+
+  int last_status; /* Needed when a track contains running status
+                      information; must read from one track at a
+                      time. */
   /* One list for each possible two-byte combination (status byte and
    * first parameter)... We'll be doing a maximal filtering job later
    * on.. maybe?
    */
   evlist_node *head[0x10000];
-} events;
+} smf_events;
 
-/* events_add */
+/* smf_events_deepcpy_data */
+/* smf_events_event_from_midi */
+
+/* smf_events_add */
 
 /* Options for MIDI mutilation. */
 typedef struct smf_info{
@@ -324,7 +331,7 @@ smf_read_varlength(const unsigned char * source, int * dest){
 
 static
 int
-deconstruct_track(events *evs, 
+deconstruct_track(smf_events *evs, 
                   smf_info *info,
                   unsigned char *dinput, 
                   misssify_options *opt)
@@ -371,7 +378,7 @@ deconstruct_track(events *evs,
 
 static
 void
-deconstruct_from_midi(events *ev_original, 
+deconstruct_from_midi(smf_events *ev_original, 
                       smf_info *info,
                       unsigned char *dinput, 
                       misssify_options *opt)
@@ -429,12 +436,12 @@ deconstruct_from_midi(events *ev_original,
 
 
 int main(int argc, char *argv[]){
-  events *ev_original;
-  events *ev_misssified;
+  smf_events *ev_original;
+  smf_events *ev_misssified;
   misssify_options opt;
   smf_info info;
-  ev_original = calloc(1, sizeof(events));
-  ev_misssified = calloc(1, sizeof(events));
+  ev_original = calloc(1, sizeof(smf_events));
+  ev_misssified = calloc(1, sizeof(smf_events));
 
   misssify_options_parse(&opt, argc, argv);
   dinput_size = file_read(opt.infname, dinput, MAX_DATA);

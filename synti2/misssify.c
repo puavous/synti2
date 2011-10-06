@@ -338,8 +338,9 @@ smf_events_rewind_all_iters(smf_events *evs){
 /* smf_events_merge */
 
 /* Merges a midi event to its appropriate location. Must store events
- * in chronological order after rewinding evs. Datalen must be given
- * as the midi spec says.
+ * in chronological order after rewinding evs. Datalen must be the
+ * number of bytes that follow the status byte (the byte itself
+ * excluded from the count).
  */
 static
 void
@@ -348,30 +349,42 @@ smf_events_merge_new(smf_events *evs,
                      int datalen,
                      unsigned int tick)
 {
-  int extended_status = evs->last_status * 0x100 + (*data);
+  int extended_status;
   evlist_node *newnode;
-  unsigned char *newdata;
+
+  int storelen;
+
+  extended_status = evs->last_status * 0x100 + (*data);
+  storelen = datalen - 1;
 
   if (tick < (evs->iter[extended_status])->tick){
     fprintf(stderr, "Event ordering error. Skipping event!");
     return;
   }
   
-  /* FIXME: intelligible error message */
-  if (evs->next_free_node == MAX_NODES) exit(32);
-  newnode = &(evs->nodepool[evs->next_free_node++]);
-
-  /* if there is just 1 byte of data, it is already in extended_status */
-  if (datalen > 1){
-    if (evs->next_free_data == MAX_DATA) exit(31);
-    newdata = &(evs->datapool[evs->next_free_data]);
-    evs->next_free_data += (datalen-1);
-    memcpy(newdata, data, datalen-1);
-  } else {
-    newdata = NULL;
+  if (MAX_DATA - evs->next_free_data < (storelen)){
+    fprintf(stderr, "Out of data space. Recompile me with larger constants.");
+    exit(32);
   }
+
+  if (evs->next_free_node == MAX_NODES){
+    fprintf(stderr, "Out of node space. Recompile me with larger constants.");
+    exit(32);
+  }
+
+  newnode = &(evs->nodepool[evs->next_free_node++]);
   newnode->tick = tick;
-  newnode->data = newdata;
+
+  /* if there is just 1 byte of data, it is already in
+     extended_status, in which case storelen is 0 and nothing gets
+     copied. */
+  if (storelen > 0){
+    newnode->data = &(evs->datapool[evs->next_free_data]);
+    evs->next_free_data += (storelen);
+    memcpy(newnode->data, data, storelen);
+  } else {
+    newnode->data = NULL;
+  }
 
   /* Find insert location. */
   while((evs->iter[extended_status]->next != NULL)
@@ -398,27 +411,25 @@ smf_event_contents_from_midi(smf_events *evs,
     fprintf(stderr, "Looks like a bug; sorry.\n"); /*assert status>0, actually.*/
     exit(1);
   case 8: case 9: case 0xa: case 0xb:
-    smf_events_merge_new(evs,data,2,tick);
-    return 2;
+    smf_events_merge_new(evs,data,2,tick); return 2;
   case 0xc: case 0xd:
-    smf_events_merge_new(evs,data,1,tick);
-    return 1;
+    smf_events_merge_new(evs,data,1,tick); return 1;
   case 0xe:
-    smf_events_merge_new(evs,data,2,tick);
-    return 2;
+    smf_events_merge_new(evs,data,2,tick); return 2;
   }
   /* Now we know that the status is actually either SysEx or Meta*/
   if ((evs->last_status == 0xF0) || evs->last_status == 0xF7){
-    /* SysEx */
-    fprintf(stderr, "SysEx messages are not yet processed at all; sorry\n");
+    /* SysEx FIXME: test... */
+    fprintf(stderr, "SysEx feature is not yet tested; sorry\n");
     vllen = smf_read_varlength(data, &vlval);
+    smf_events_merge_new(evs,data-1,vlval+1,tick); /* tweak to save whole length. */
     return vllen + vlval;
-    /* FIXME: Implement. */
   } else if (evs->last_status == 0xFF) {
-    fprintf(stderr, "Meta events not yet processed at all; sorry\n");
+    /* Meta event. Just a long batch of whatever; the 'extended
+     * status' will contain the meta event type. FIXME: Test. */
     vllen = smf_read_varlength(data+1, &vlval);
+    smf_events_merge_new(evs,data+1,vlval,tick);
     return 1 + vllen + vlval;
-    /* FIXME: Implement. */
   } else {
     fprintf(stderr, "Status 0x%x Looks like a bug; sorry.\n",evs->last_status);
     exit(1);

@@ -104,6 +104,7 @@ struct evlist_node{
   unsigned int tick;
   void *data;
   evlist_node *next;
+  /* TODO(?): int orig_track; // from which track */
 };
 
 /** Event layers. Linear pool of nodes. Data pointers can be data(?)*/
@@ -148,6 +149,11 @@ typedef struct smf_info{
   int ntracks_alien;
   int smf_format;
   int time_division;
+
+  float bpm;
+  int timesig;
+  int bpm_initialized;
+  int timesig_initialized;
 } smf_info;
 
 
@@ -393,18 +399,23 @@ smf_event_contents_from_midi(smf_events *evs,
     exit(1);
   case 8: case 9: case 0xa: case 0xb:
     smf_events_merge_new(evs,data,2,tick);
-    return 2; /* FIXME: Implement. */
+    return 2;
   case 0xc: case 0xd:
-    return 1; /* FIXME: Implement. */
+    smf_events_merge_new(evs,data,1,tick);
+    return 1;
   case 0xe:
-    return 2; /* FIXME: Implement. */
+    smf_events_merge_new(evs,data,2,tick);
+    return 2;
   }
   /* Now we know that the status is actually either SysEx or Meta*/
   if ((evs->last_status == 0xF0) || evs->last_status == 0xF7){
+    /* SysEx */
+    fprintf(stderr, "SysEx messages are not yet processed at all; sorry\n");
     vllen = smf_read_varlength(data, &vlval);
     return vllen + vlval;
     /* FIXME: Implement. */
   } else if (evs->last_status == 0xFF) {
+    fprintf(stderr, "Meta events not yet processed at all; sorry\n");
     vllen = smf_read_varlength(data+1, &vlval);
     return 1 + vllen + vlval;
     /* FIXME: Implement. */

@@ -113,6 +113,7 @@ typedef struct smf_events{
   int next_free_node;
   int next_free_data;
   
+  int n_total;
   int n_stored;
   int n_unknown; /*hmm... let's see.. maybe there won't be any use for this(?)*/
 
@@ -124,7 +125,7 @@ typedef struct smf_events{
    * first parameter)... We'll be doing a maximal filtering job later
    * on.. maybe?
    */
-  evlist_node *head[0x10000];
+  evlist_node head[0x10000];  /* Zero init -> tick 0, null data, null next */
   evlist_node *iter[0x10000];
 } smf_events;
 
@@ -311,12 +312,11 @@ smf_read_varlength(const unsigned char * source, int * dest){
 
 
 
-
-
+/** Extended status contains status byte and first data byte. */
 static
 void
-smf_events_rewind_iter(smf_events *evs, int status){
-  evs->iter[status] = evs->head[status];
+smf_events_rewind_iter(smf_events *evs, int extended_status){
+  evs->iter[extended_status] = evs->head + extended_status;
 }
 
 static
@@ -328,18 +328,71 @@ smf_events_rewind_all_iters(smf_events *evs){
   }
 }
 
-/* smf_events_deepcpy_data */
+/* smf_events_deepcpy_data */ /* actually memcpy does this.. */
 /* smf_events_merge */
+
+/* Merges a midi event to its appropriate location. Must store events
+ * in chronological order after rewinding evs. Datalen must be given
+ * as the midi spec says.
+ */
+static
+void
+smf_events_merge_new(smf_events *evs,
+                     unsigned char *data,
+                     int datalen,
+                     unsigned int tick)
+{
+  int extended_status = evs->last_status * 0x100 + (*data);
+  evlist_node *newnode;
+  unsigned char *newdata;
+
+  if (tick < (evs->iter[extended_status])->tick){
+    fprintf(stderr, "Event ordering error. Skipping event!");
+    return;
+  }
+  
+  /* FIXME: intelligible error message */
+  if (evs->next_free_node == MAX_NODES) exit(32);
+  newnode = &(evs->nodepool[evs->next_free_node++]);
+
+  /* if there is just 1 byte of data, it is already in extended_status */
+  if (datalen > 1){
+    if (evs->next_free_data == MAX_DATA) exit(31);
+    newdata = &(evs->datapool[evs->next_free_data]);
+    evs->next_free_data += (datalen-1);
+    memcpy(newdata, data, datalen-1);
+  } else {
+    newdata = NULL;
+  }
+  newnode->tick = tick;
+  newnode->data = newdata;
+
+  /* Find insert location. */
+  while((evs->iter[extended_status]->next != NULL)
+        && (evs->iter[extended_status]->next->tick < tick)){
+    evs->iter[extended_status]++;
+  }
+
+  /* Iterator now points to node after which the insertion is to be made. */
+  newnode->next = evs->iter[extended_status]->next;
+  evs->iter[extended_status]->next = newnode;
+  evs->iter[extended_status] = newnode; /* don't change ordering of incoming data */
+  evs->n_stored++;
+}
 
 static
 int
-smf_event_contents_from_midi(smf_events *evs, unsigned char *data){
+smf_event_contents_from_midi(smf_events *evs, 
+                             unsigned char *data, 
+                             unsigned int tick)
+{
   int vlval, vllen;
   switch(evs->last_status >> 4){
   case 0:
     fprintf(stderr, "Looks like a bug; sorry.\n"); /*assert status>0, actually.*/
     exit(1);
   case 8: case 9: case 0xa: case 0xb:
+    smf_events_merge_new(evs,data,2,tick);
     return 2; /* FIXME: Implement. */
   case 0xc: case 0xd:
     return 1; /* FIXME: Implement. */
@@ -361,17 +414,18 @@ smf_event_contents_from_midi(smf_events *evs, unsigned char *data){
   }
 }
 
+
+
 static
 int
 smf_events_event_from_midi(smf_events *evs, unsigned char *data, int tick){
-  /*FIXME: implement*/
   if(data[0] >= 0x80){
     /* Complete status, update the status field. */
     evs->last_status = data[0];
-    return 1 + smf_event_contents_from_midi(evs, data+1);
+    return 1 + smf_event_contents_from_midi(evs, data+1, tick);
   }
   /* Data may continue also with previous "running" status. */
-  return smf_event_contents_from_midi(evs, data);
+  return smf_event_contents_from_midi(evs, data, tick);
 }
 
 
@@ -412,12 +466,14 @@ deconstruct_track(smf_events *evs,
     }
     iread += smf_read_varlength(&(dinput[iread]), &time_delta);
     time_actual += time_delta;
+    evs->n_total++;
     if ((dinput[iread] == 0xff) 
         && (dinput[iread+1] == 0x2f) 
         && (dinput[iread+2] == 0x00)){
       if (opt->verbose){
         fprintf(stderr, 
-                "Normal end of track. Stored (FIXME) events out of (FIXME) total.\n");
+                "Normal end of track. Stored %d events out of %d total.\n",
+                evs->n_stored, evs->n_total);
       }
       break;
     }

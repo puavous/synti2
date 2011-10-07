@@ -40,55 +40,12 @@
  *
  */
 
-/*
- * Misss data format ideas:
- *
- * <songheader> <layer>+
- * <layer> = <layerheader> <layerdata>
- * <layerheader> = <length> <tickmultiplier> <type> <part#> <parameters>
- * <layerdata> = <event>+
- * <event> = <delta><byte>+
- *
- * ... more or less so... and... 
- *
- * Types of layers:
- *
- *  - 0x8 note off
- *        <delta>
- *  - 0x9 note on with variable velocity
- *        <delta><note#><velocity>
- *  - 0x1 note on with constant velocity (given as a parameter)
- *        <delta><note#>
- *  - 0x2 note on with constant pitch (given as a parameter)
- *        <delta><velocity>
- *  - 0x3 note on with constant pitch and velocity (given as parameters)
- *        <delta>
- *
- *  OR... TODO: think if note on and note velocity could be separated?
- *              suppose they could.. could have accented beats and
- *              velocity ramps with little-ish overhead?
- *
- *  - 0xB controller instantaneous
- *        <delta><value>
- *  - 0x4 controller ramp from-to/during
- *        <delta><value1><delta2><value2>
- *  - 0x5 pitch bend ramp from-to/during (or re-use controller ramp?
- *        DEFINITELY! because our values can be var-length which is 
- *        very natural for pitch bend MSB when needed..)
- *        <delta><bend1><delta2><bend2>
- *  - 0xf sysex
- *        <delta><sysex>
- *
- *  - 0x6 0x7 0xA 0xC 0xD 0xE reserved. 0x5 probably too.
- *    Maybe could use the 4th bit of type nibble for something else?
- *
- *  Type and part fit in one byte.
- */
-
 #include<stdlib.h>
 #include<stdio.h>
 #include<getopt.h>
 #include<string.h>
+
+#include "misss.h"
 
 #define MAX_NODES 0x10000
 #define MAX_DATA 0x1000000
@@ -103,12 +60,15 @@ typedef struct evlist_node evlist_node;
 struct evlist_node{
   unsigned int tick;
   void *data;
+  int datalen;
   evlist_node *next;
   /* TODO(?): int orig_track; // from which track */
   /* TODO(?): int orig_seqid; // on which designated sequence (FF 00 02 ...) */
 };
 
-/** Event layers. Linear pool of nodes. Data pointers can be data(?)*/
+/** Event layers (complete deconstruction). Linear pool of nodes. Deep
+ *  copy of data bytes.
+ */
 typedef struct smf_events{
   evlist_node nodepool[MAX_NODES];
   unsigned char datapool[MAX_DATA];
@@ -130,6 +90,34 @@ typedef struct smf_events{
   evlist_node head[0x10000];  /* Zero init -> tick 0, null data, null next */
   evlist_node *iter[0x10000];
 } smf_events;
+
+/** MIDI-like Interface for Synti2 Software Synthesizer, MISSS.
+ *
+ * Event layers. Linear pool of nodes. Data pointers can be data(?)
+ *
+ * Just a data string? Or should it in fact be a C-compilable ASCII
+ * string already?
+ */
+typedef struct misss_events{
+  unsigned char datapool[MAX_DATA];
+  int ind;
+} misss_events;
+
+/* TODO(?): put into its own module? */
+typedef struct misss_info{
+  int tempo; /* FIXME: what would be a suitable unit? */
+} misss_info;
+
+#if 0
+// Blaaa.. it would be very similar to smf_events... should combine somehow..
+typedef struct misss_events{
+  evlist_node nodepool[MAX_NODES];
+  unsigned char datapool[MAX_DATA];
+  int next_free_node;
+  int next_free_data;
+
+} misss_events;
+#endif
 
 
 
@@ -328,7 +316,7 @@ smf_read_varlength(const unsigned char * source, int * dest){
 /** Extended status contains status byte and first data byte. */
 static
 void
-smf_events_rewind_iter(smf_events *evs, int extended_status){
+smf_events_iter_rewind(smf_events *evs, int extended_status){
   evs->iter[extended_status] = evs->head + extended_status;
 }
 
@@ -337,12 +325,68 @@ void
 smf_events_rewind_all_iters(smf_events *evs){
   int i;
   for (i=0;i<0x10000; i++){
-    smf_events_rewind_iter(evs, i);
+    smf_events_iter_rewind(evs, i);
   }
 }
 
+static int smf_events_iter_past_end(smf_events *evs, int extended_status){
+  return evs->iter[extended_status] == NULL;
+}
+
+static void smf_events_iter_next(smf_events *evs, int extended_status){
+  evs->iter[extended_status] = evs->iter[extended_status]->next;
+}
+
+static
+void
+smf_events_iter_tofirst(smf_events *evs, int extended_status){
+  smf_events_iter_rewind(evs, extended_status);
+  smf_events_iter_next(evs, extended_status);
+}
+
+static int smf_events_get_next_tick(smf_events *evs, int extended_status){
+  if (evs->iter[extended_status]->next == NULL) return 0;
+  else return evs->iter[extended_status]->next->tick;
+}
+
+static int smf_events_get_current_tick(smf_events *evs, int extended_status){
+  return evs->iter[extended_status]->tick;
+}
+
+
+static
+void
+smf_events_skip_all_before_tick(smf_events *evs, int extended_status, int tick){
+  while((evs->iter[extended_status]->next != NULL)
+        && (smf_events_get_next_tick(evs, extended_status) < tick)){
+    smf_events_iter_next(evs, extended_status); //evs->iter[extended_status]++;
+  }
+}
+
+static
+void
+smf_events_printcontents(smf_events *evs, FILE *fto){
+  int i;
+  evlist_node *p;
+  for (i=0x0000; i<0x10000; i++){
+    if ((p = evs->head[i].next) != NULL){
+      fprintf(fto, "Events %04x at ticks:", i);
+      for (;p != NULL; p=p->next){
+        fprintf(fto, " %d", p->tick);
+      }
+      fprintf(fto, "\n");
+    }
+  }
+}
+
+
 /* smf_events_deepcpy_data */ /* actually memcpy does this.. */
-/* smf_events_merge */
+
+/* plaah smf_events_merge_at_iter(smf_events *evs,
+                         unsigned char *data,
+                         int datalen,
+                         unsigned int tick); */
+
 
 /* Merges a midi event to its appropriate location. Must store events
  * in chronological order after rewinding evs. Datalen must be the
@@ -352,24 +396,23 @@ smf_events_rewind_all_iters(smf_events *evs){
 static
 void
 smf_events_merge_new(smf_events *evs,
+                     int extended_status,
                      unsigned char *data,
                      int datalen,
                      unsigned int tick)
 {
-  int extended_status;
   evlist_node *newnode;
+  //int storelen;
 
-  int storelen;
-
-  extended_status = evs->last_status * 0x100 + (*data);
-  storelen = datalen - 1;
+  //storelen = datalen - 1;
 
   if (tick < (evs->iter[extended_status])->tick){
-    fprintf(stderr, "Event ordering error. Skipping event!");
+    fprintf(stderr, "Event ordering error. %d < %d Skipping event!\n", 
+            tick, evs->iter[extended_status]->tick);
     return;
   }
   
-  if (MAX_DATA - evs->next_free_data < (storelen)){
+  if (MAX_DATA - evs->next_free_data < (datalen)){
     fprintf(stderr, "Out of data space. Recompile me with larger constants.");
     exit(32);
   }
@@ -381,30 +424,51 @@ smf_events_merge_new(smf_events *evs,
 
   newnode = &(evs->nodepool[evs->next_free_node++]);
   newnode->tick = tick;
+  newnode->datalen = datalen;
 
   /* if there is just 1 byte of data, it is already in
      extended_status, in which case storelen is 0 and nothing gets
      copied. */
-  if (storelen > 0){
+  if (datalen > 0){
     newnode->data = &(evs->datapool[evs->next_free_data]);
-    evs->next_free_data += (storelen);
-    memcpy(newnode->data, data, storelen);
+    evs->next_free_data += (datalen);
+    memcpy(newnode->data, data, datalen);
   } else {
     newnode->data = NULL;
   }
 
   /* Find insert location. */
-  while((evs->iter[extended_status]->next != NULL)
-        && (evs->iter[extended_status]->next->tick < tick)){
-    evs->iter[extended_status]++;
-  }
+  smf_events_skip_all_before_tick(evs, extended_status, tick);
 
   /* Iterator now points to node after which the insertion is to be made. */
   newnode->next = evs->iter[extended_status]->next;
   evs->iter[extended_status]->next = newnode;
-  evs->iter[extended_status] = newnode; /* don't change ordering of incoming data */
+  smf_events_iter_next(evs, extended_status); /* don't reverse order */
   evs->n_stored++;
 }
+
+
+
+/** Merges a list from ev_from with a list from ev_to; result remains in ev_to.*/
+static
+void
+smf_events_merge_lists(smf_events *ev_from, smf_events *ev_to, int s_from, int s_to){
+  int tickF;
+  smf_events_iter_rewind(ev_to, s_to);
+  
+  for(smf_events_iter_tofirst(ev_from, s_from);
+      !smf_events_iter_past_end(ev_from, s_from);
+      smf_events_iter_next(ev_from, s_from)) {
+    tickF = smf_events_get_current_tick(ev_from, s_from);
+    
+    smf_events_skip_all_before_tick(ev_to, s_to, tickF);
+    smf_events_merge_new(ev_to, s_to, 
+                         ev_from->iter[s_from]->data, 
+                         ev_from->iter[s_from]->datalen, 
+                         tickF);
+  } 
+}
+
 
 static
 int
@@ -413,29 +477,33 @@ smf_event_contents_from_midi(smf_events *evs,
                              unsigned int tick)
 {
   int vlval, vllen;
+  int extended_status;
+  extended_status = evs->last_status * 0x100 + (*data);
+
   switch(evs->last_status >> 4){
   case 0:
     fprintf(stderr, "Looks like a bug; sorry.\n"); /*assert status>0, actually.*/
     exit(1);
   case 8: case 9: case 0xa: case 0xb:
-    smf_events_merge_new(evs,data,2,tick); return 2;
+    smf_events_merge_new(evs,extended_status,data-1,3,tick); return 2;
   case 0xc: case 0xd:
-    smf_events_merge_new(evs,data,1,tick); return 1;
+    smf_events_merge_new(evs,extended_status,data-1,2,tick); return 1;
   case 0xe:
-    smf_events_merge_new(evs,data,2,tick); return 2;
+    smf_events_merge_new(evs,extended_status,data-1,3,tick); return 2;
   }
   /* Now we know that the status is actually either SysEx or Meta*/
   if ((evs->last_status == 0xF0) || evs->last_status == 0xF7){
     /* SysEx FIXME: test... */
     fprintf(stderr, "SysEx feature is not yet tested; sorry\n");
     vllen = smf_read_varlength(data, &vlval);
-    smf_events_merge_new(evs,data-1,vlval+1,tick); /* tweak to save whole length. */
+    extended_status = evs->last_status * 0x100 + (*(data-1));
+    smf_events_merge_new(evs,extended_status,data-2,vlval+2,tick); /* tweak to save whole length. */
     return vllen + vlval;
   } else if (evs->last_status == 0xFF) {
     /* Meta event. Just a long batch of whatever; the 'extended
      * status' will contain the meta event type. FIXME: Test. */
     vllen = smf_read_varlength(data+1, &vlval);
-    smf_events_merge_new(evs,data,vlval+1,tick);
+    smf_events_merge_new(evs,extended_status,data-1,vlval+2,tick);
     return 1 + vllen + vlval;
   } else {
     fprintf(stderr, "Status 0x%x Looks like a bug; sorry.\n",evs->last_status);
@@ -607,7 +675,160 @@ deconstruct_from_midi(smf_events *ev_original,
             info->timesig.numerator, info->timesig.denominator,
             info->usec_per_q);
   } 
+}
 
+/* For simplicity, use the varlength of SMF.*/
+static
+int
+misss_encode_varlength(int value, unsigned char *dest){
+  unsigned char bytes[4];
+  int i, vllen;
+  /* to 7 bit pieces: */
+  bytes[0] = (value >> 21) & 0x7f;
+  bytes[1] = (value >> 14) & 0x7f;
+  bytes[2] = (value >> 7) & 0x7f;
+  bytes[3] = (value >> 0) & 0x7f;
+  /* Set the continuation bits where needed: */
+  vllen = 0;
+  for(i=0;i<3;i++){
+    if ((vllen > 0) || (bytes[i] != 0)) vllen += 1;
+    if (vllen > 0) *(dest++) = bytes[i] | 0x80;
+  }
+  vllen += 1; 
+  *(dest++) = bytes[3];
+  return vllen; 
+}
+
+static
+void
+misss_events_write_bytes(misss_events *ev_misss, 
+                         int length, 
+                         const unsigned char *source)
+{
+  memcpy(&(ev_misss->datapool[ev_misss->ind]), source, length);
+  ev_misss->ind += length;
+}
+
+
+static
+void
+misss_events_write_byte(misss_events *ev_misss, unsigned char byte){
+  ev_misss->datapool[ev_misss->ind++] = byte;
+}
+
+
+static
+void
+misss_events_write_layer_header(misss_events *ev_misss, 
+                                int number_of_events,
+                                int layer_type,
+                                int layer_channel){
+  //ev_misss->datapool[ev_misss->ind++] = (layer_type<<4) + layer_channel;
+  ev_misss->ind += misss_encode_varlength(number_of_events, 
+                                          &(ev_misss->datapool[ev_misss->ind]));
+  //  misss_events_write_varlength();
+  misss_events_write_byte(ev_misss, layer_channel);
+  misss_events_write_byte(ev_misss, layer_type);
+}
+
+static
+void
+misss_events_write_header(misss_events *ev_misss, int tempo){
+  ev_misss->datapool[ev_misss->ind++] = tempo;
+}
+
+
+static
+void
+misss_events_write_notestuff(misss_events *ev_misss, 
+                             smf_events *ev_from, 
+                             int s_from,
+                             int default_pitch,
+                             int default_velocity){
+  unsigned char *tmpbuf;
+  int i, tick_prev, tick_now, tick_delta;
+  int chan = 0;
+
+  tmpbuf = malloc(MAX_DATA * sizeof(unsigned char));
+
+  i = 0;
+  tick_prev = 0;
+
+  for(smf_events_iter_tofirst(ev_from, s_from);
+      !smf_events_iter_past_end(ev_from, s_from);
+      smf_events_iter_next(ev_from, s_from)) {
+    tick_now = smf_events_get_current_tick(ev_from, s_from);
+    tick_delta = tick_now - tick_prev;
+    tick_prev = tick_now;
+
+    i += misss_encode_varlength(tick_delta, &(tmpbuf[i]));
+    
+    /* FIXME: method for digMidiByte(...)*/
+
+    if (default_pitch < 0)
+      tmpbuf[i++] = ((unsigned char*)(ev_from->iter[s_from]->data))[1]; /* Note */
+    
+    if (default_velocity < 0)
+      tmpbuf[i++] = ((unsigned char*)(ev_from->iter[s_from]->data))[2]; /* Velocity */
+  } 
+  // FIXME: Can only do channel 0 as of yet:
+  if ((default_pitch >= 0) && (default_velocity >= 0)){
+    misss_events_write_layer_header(ev_misss,i, MISSS_LAYER_NOTES_CVEL_CPITCH, chan);
+    misss_events_write_byte(ev_misss, default_velocity);
+    misss_events_write_byte(ev_misss, default_pitch);
+  } else if (default_velocity >= 0){
+    misss_events_write_layer_header(ev_misss, i, MISSS_LAYER_NOTES_CVEL, chan);
+    misss_events_write_byte(ev_misss, default_velocity);
+  } else if (default_pitch >= 0){
+    misss_events_write_layer_header(ev_misss, i, MISSS_LAYER_NOTES_CPITCH, chan);
+    misss_events_write_byte(ev_misss, default_pitch);
+  } else {
+    misss_events_write_layer_header(ev_misss, i, MISSS_LAYER_NOTES, chan);
+  }
+  /* And then the rest of the data. */
+  misss_events_write_bytes(ev_misss, i, tmpbuf);
+
+  free(tmpbuf);
+}
+
+
+/* Assumes a fresh ev_misss */
+static
+void
+construct_misss(smf_events *ev_original, 
+                misss_events *ev_misss, 
+                smf_info *info, 
+                misssify_options *opt)
+{
+  int ilayer;
+  int ichan, inote;
+  int s_from, s_noteon_to, s_noteoff_to;
+  smf_events *ev_intermediate;
+  ev_intermediate = calloc(1, sizeof(smf_events));
+
+  //smf_events_rewind_all_iters(ev_original);
+  ilayer = 0; /* Store to adjacent layers starting from 0?*/
+  /* FIXME: preliminary as of yet. */
+  /* Merge note-ons. FIXME: Channel per layer */
+
+  for(ichan=0;ichan<15;ichan++){
+    s_noteon_to = ichan;
+    s_noteoff_to = 16+ichan;
+    for(inote=0;inote<128;inote++){
+      /* FIXME: make this proper. Organize the intermediate store... */
+      s_from = (0x90 + ichan) * 0x100 + inote;
+      smf_events_merge_lists(ev_original, ev_intermediate, s_from, s_noteon_to);
+
+      s_from = (0x80 + ichan) * 0x100 + inote;
+      smf_events_merge_lists(ev_original, ev_intermediate, s_from, s_noteoff_to);
+    }
+  }
+
+  smf_events_printcontents(ev_intermediate, stdout);
+  misss_events_write_header(ev_misss, 120); /* FIXME! */
+  misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, -1);
+  misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0010, -1, 0);
+  free(ev_intermediate);
 }
 
 
@@ -643,7 +864,7 @@ file_write(const char fname[], const unsigned char *buf, size_t bufsz){
 
 int main(int argc, char *argv[]){
   smf_events *ev_original;
-  smf_events *ev_misssified;
+  misss_events *ev_misssified;
   misssify_options opt;
   smf_info *info;
   ev_original = calloc(1, sizeof(smf_events));
@@ -654,30 +875,17 @@ int main(int argc, char *argv[]){
   dinput_size = file_read(opt.infname, dinput, MAX_DATA);
   deconstruct_from_midi(ev_original, info, dinput, &opt);
   
-  #if 0
-  int i;
-  evlist_node *p;
-  for (i=0x0000; i<0x10000; i++){
-    if ((p = ev_original->head[i].next) != NULL){
-      printf("Events %04x at ticks:", i);
-      for (;p != NULL; p=p->next){
-        printf(" %d", p->tick);
-      }
-      printf("\n");
-    }
-  }
-  #endif
+  smf_events_printcontents(ev_original, stdout);
   
   /* 
      filter_events(?)??
   */
-  /*construct_misss(events_original, events_misssified, dmisss);*/
+  construct_misss(ev_original, ev_misssified, info, &opt);
 
-  /*FIXME: Hack..*/ memcpy(dmisss, dinput, dmisss_size = dinput_size);
-
-  file_write(opt.outfname, dmisss, dmisss_size);
+  file_write(opt.outfname, ev_misssified->datapool, ev_misssified->ind);
 
   free(ev_original);
   free(ev_misssified);
+  free(info);
   return 0;
 }

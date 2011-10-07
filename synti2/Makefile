@@ -42,9 +42,10 @@ jacktest: jackmidi.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o testi jackmidi.c synti2.c testdata.c \
 		`pkg-config --cflags --libs jack` -lm
 
-testdata.c: patchbank.txt testi.mid hacktac.py Makefile
+testdata.c: patchbank.txt testi.mid hacktac.py misssify Makefile
 	python hacktac.py < patchbank.txt > testdata.c
-	python file2c.py testi.mid hacksong >> testdata.c
+	./misssify testi.mid
+	python file2c.py test.misss hacksong >> testdata.c
 
 sdltest: sdltest.c synti2.c synti2.h Makefile
 

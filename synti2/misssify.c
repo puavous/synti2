@@ -734,6 +734,7 @@ misss_events_write_layer_header(misss_events *ev_misss,
 static
 void
 misss_events_write_header(misss_events *ev_misss, int tempo){
+  ev_misss->datapool[ev_misss->ind++] = 196; /* FIXME! FIIIXMEEE!*/
   ev_misss->datapool[ev_misss->ind++] = tempo;
 }
 
@@ -746,12 +747,13 @@ misss_events_write_notestuff(misss_events *ev_misss,
                              int default_pitch,
                              int default_velocity){
   unsigned char *tmpbuf;
-  int i, tick_prev, tick_now, tick_delta;
+  int i, nev, tick_prev, tick_now, tick_delta;
   int chan = 0;
 
   tmpbuf = malloc(MAX_DATA * sizeof(unsigned char));
 
-  i = 0;
+  i = 0; 
+  nev = 0;
   tick_prev = 0;
 
   for(smf_events_iter_tofirst(ev_from, s_from);
@@ -762,6 +764,8 @@ misss_events_write_notestuff(misss_events *ev_misss,
     tick_prev = tick_now;
 
     i += misss_encode_varlength(tick_delta, &(tmpbuf[i]));
+
+    nev++;
     
     /* FIXME: method for digMidiByte(...)*/
 
@@ -773,17 +777,17 @@ misss_events_write_notestuff(misss_events *ev_misss,
   } 
   // FIXME: Can only do channel 0 as of yet:
   if ((default_pitch >= 0) && (default_velocity >= 0)){
-    misss_events_write_layer_header(ev_misss,i, MISSS_LAYER_NOTES_CVEL_CPITCH, chan);
+    misss_events_write_layer_header(ev_misss,nev, MISSS_LAYER_NOTES_CVEL_CPITCH, chan);
     misss_events_write_byte(ev_misss, default_velocity);
     misss_events_write_byte(ev_misss, default_pitch);
   } else if (default_velocity >= 0){
-    misss_events_write_layer_header(ev_misss, i, MISSS_LAYER_NOTES_CVEL, chan);
+    misss_events_write_layer_header(ev_misss, nev, MISSS_LAYER_NOTES_CVEL, chan);
     misss_events_write_byte(ev_misss, default_velocity);
   } else if (default_pitch >= 0){
-    misss_events_write_layer_header(ev_misss, i, MISSS_LAYER_NOTES_CPITCH, chan);
+    misss_events_write_layer_header(ev_misss, nev, MISSS_LAYER_NOTES_CPITCH, chan);
     misss_events_write_byte(ev_misss, default_pitch);
   } else {
-    misss_events_write_layer_header(ev_misss, i, MISSS_LAYER_NOTES, chan);
+    misss_events_write_layer_header(ev_misss, nev, MISSS_LAYER_NOTES, chan);
   }
   /* And then the rest of the data. */
   misss_events_write_bytes(ev_misss, i, tmpbuf);
@@ -825,9 +829,10 @@ construct_misss(smf_events *ev_original,
   }
 
   smf_events_printcontents(ev_intermediate, stdout);
-  misss_events_write_header(ev_misss, 120); /* FIXME! */
+  misss_events_write_header(ev_misss, 120); /* FIXME! should come from info */
   misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, -1);
   misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0010, -1, 0);
+  misss_events_write_byte(ev_misss, 0); /* Zero length indicates end of file. */
   free(ev_intermediate);
 }
 

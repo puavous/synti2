@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "synti2.h"
+#include "misss.h"
 
 struct synti2_conts {
   int i;
@@ -124,17 +125,37 @@ struct synti2_synth {
 
 #define SYNTI2_MAX_SONGBYTES 30000
 #define SYNTI2_MAX_SONGTRACKS 32
+#define SYNTI2_MAX_SONGEVENTS 15000
+
+/* Events shall form a singly linked list. */
+typedef struct synti2_player_ev synti2_player_ev;
+
+struct synti2_player_ev {
+  unsigned char *data;
+  synti2_player_ev *next;
+  unsigned int frame;
+  int len;
+};
 
 struct synti2_player {
   int sr;       /* Sample rate. */
   //int bpm;      /* Tempo (may vary). */
-  int fpt;      /* Frames per tick. Tempos will be inexact, sry! */
+  float fpt;      /* Frames per tick. Tempos will be inexact, sry! */
   int ntracks;  /* Number of tracks. */
   int tpq;      /* Ticks per quarter (no support for SMPTE). */
   int deltaticks[SYNTI2_MAX_SONGTRACKS];
-  int frames_to_next_tick;
-  unsigned char *track [SYNTI2_MAX_SONGTRACKS];
+  //int frames_to_next_tick;
+  int frames_done;
+  //unsigned char *track [SYNTI2_MAX_SONGTRACKS];
+
   unsigned char data[SYNTI2_MAX_SONGBYTES];
+  int idata;
+
+  /* Only playable events. The first will be at evpool[0]! */
+  synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
+  synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
+  synti2_player_ev *insloc;
+  int nextfree;
 };
 
 /** Reads a MIDI variable length number. */
@@ -167,164 +188,169 @@ fourbyte(unsigned char *r){
 }
 
 
+static
+void
+synti2_player_reset_insert(synti2_player *pl){
+  pl->insloc = pl->evpool; /* The first one. */
+}
+
+
+static
+void
+synti2_player_event_add(synti2_player *pl, int frame, unsigned char *src, int n){
+  synti2_player_ev *ev_new;
+  int dcopy;
+  while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
+    pl->insloc = pl->insloc->next;
+  }
+  ev_new = &(pl->evpool[pl->nextfree++]);
+
+  ev_new->data = pl->data + pl->idata; /* Next pointer from the data pool. */
+  ev_new->next = pl->insloc->next;
+  ev_new->frame = frame;
+  ev_new->len = n;
+  pl->insloc->next = ev_new;
+  for(dcopy=0;dcopy<n;dcopy++){
+    pl->data[pl->idata++] = src[dcopy];
+  }
+}
+
+/** Returns a pointer to one past end. */
+static
+unsigned char *
+synti2_player_merge_chunk(synti2_player *pl, unsigned char *r, int n_events)
+{
+  int ii;
+  int chan, type, frame, tickdelta;
+  unsigned char *par;
+  //synti2_player_ev *insloc;
+  unsigned char tmpbuf[4] = {0,0,0,0};
+
+  chan = *r++;
+  type = *r++;
+  par = r;
+  frame = 0;
+  synti2_player_reset_insert(pl); /* Re-start merging from frame 0. */
+  //printf("Type %d on chan %d. par 1=%d par 2=%d\n", type, chan, par[0], par[1]);
+
+  /* add number of parameters to r! */
+  if (type == MISSS_LAYER_NOTES_CPITCH) r++;
+  else if (type == MISSS_LAYER_NOTES_CVEL) r++;
+  else if (type == MISSS_LAYER_NOTES_CVEL_CPITCH) r += 2;
+
+
+  for(ii=0; ii<n_events; ii++){
+    r += varlength(r, &tickdelta);
+    frame += pl->fpt * tickdelta;
+    //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
+    //synti2_player_merge_event(pl, );
+    if (type == MISSS_LAYER_NOTES_CVEL_CPITCH){
+      tmpbuf[1] = par[0]; /* Constant pitch is a layer parameter */
+      tmpbuf[2] = par[1]; /* Constant velocity is the 2nd layer parameter */
+    } else if (type == MISSS_LAYER_NOTES_CVEL){
+      tmpbuf[1] = *r++;   /* Pitch given here */
+      tmpbuf[2] = par[0]; /* Constant velocity is a layer parameter */
+    } else if  (type == MISSS_LAYER_NOTES_CPITCH){
+      tmpbuf[1] = par[0]; /* Constant pitch is a layer parameter */
+      tmpbuf[2] = *r++;   /* Velocity given here */
+    } else if (type == MISSS_LAYER_NOTES){
+      tmpbuf[1] = *r++;   /* Pitch given here */
+      tmpbuf[2] = *r++;   /* Velocity given here */
+    } else {
+      /* Not yet implemented. FIXME: implement? */
+      switch (type){
+      case MISSS_LAYER_CONTROLLER_RESETS:
+      case MISSS_LAYER_CONTROLLER_RAMPS:
+      case MISSS_LAYER_SYSEX_OR_ARBITRARY:
+      case MISSS_LAYER_NOTHING_AS_OF_YET:
+      default:
+        break;
+      }
+    }
+    if ((type == MISSS_LAYER_NOTES_CVEL_CPITCH)
+        || (type == MISSS_LAYER_NOTES_CPITCH)
+        || (type == MISSS_LAYER_NOTES_CVEL)
+        || (type == MISSS_LAYER_NOTES)){
+      if (tmpbuf[2] == 0){
+        tmpbuf[0] = 0x80 + chan; /* MIDI Note off. (hack) */
+      } else {
+        tmpbuf[0] = 0x90 + chan; /* MIDI Note on. */
+      }
+      synti2_player_event_add(pl, frame, tmpbuf, 3); /* Now it is a complete msg. */
+    }
+  }
+  return r;
+}
+
 /** Load and initialize a song. */
 synti2_player *
 synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   unsigned char *r;
-  int format, ii, it, chunksize;
+  int chunksize;
   synti2_player *pl;
 
   pl = calloc(1, sizeof(synti2_player));
-  if (pl == NULL) return pl;
+  if (pl == NULL) return pl;  /* TODO: Omit these checks with a 4k target... */
 
-  /* Default BPM is 120. Convert to frames-per-tick - losing accuracy.*/
   pl->sr = samplerate;
-  pl->frames_to_next_tick = 0; /* There will be a tick right away. */
 
-  /* TODO: Should checks limits and file format!! (unless compiling for 4k) */
-  /* Read and initialize a zong. (make a copy of the data - not necessary in 4k.) */
-  for (ii=0;ii<datalen;ii++){
-    pl->data[ii] = songdata[ii];
+  /* Initialize an "empty" "head event": */
+  //pl->evpool[0].next = pl->evpool + 1;
+  pl->nextfree++;
+  /* This would "rewind" the song: */
+  pl->playloc = pl->evpool;
+  //pl->frames_to_next_tick = 0; /* There will be a tick right away. zero init!*/
+
+  r = songdata;
+  pl->tpq = *r++; /* Ticks per quarter note */
+  pl->fpt = (float)pl->sr * 60 / (*(r++)) / pl->tpq; /* Tempo converted to
+                                       frames-per-tick. FIXME:  */
+
+  r += varlength(r, &chunksize);
+  //printf("Read chunksize %d \n", chunksize);fflush(stdout);
+  while(chunksize > 0){
+    /* read a chunk... TODO: put this to a subroutine.. */
+    r = synti2_player_merge_chunk(pl, r, chunksize);
+    /* move on to next chunk. */
+    r += varlength(r, &chunksize);
+    //printf("Read chunksize %d \n", chunksize);fflush(stdout);
+
   }
 
-  r = pl->data;
-  r += 8; /*Just skip header; TODO: I want at least a midi "distiller"
-	    to rid of what I don't need!*/
-  format = twobyte(r); r += 2;
-  pl->ntracks = twobyte(r); r += 2;
-  pl->tpq = twobyte(r); r += 2;
-  //if ((pl->tpq & 0x8000) != 0) {free(pl); return NULL; /*no support for SMPTE*/};
-  /* Default BPM is 120. Convert to frames-per-tick - losing accuracy.*/
-  pl->fpt = (pl->sr * 60) / (120 * pl->tpq);
-
-  for (it=0; it < pl->ntracks; it++){
-    r += 4; /* skip header */
-    chunksize = fourbyte(r); r += 4; /* Fixme: chunk includes header? */     
-    pl->track[it] = r;
-    r += chunksize;
-  }
-
-  /* The first deltas: */
-  for (it=0; it < pl->ntracks; it++){
-    /* Store delta and go directly to start of event data: */
-    pl->track[it] += varlength(pl->track[it], &(pl->deltaticks[it]));
-  }
-  
   return pl;
 }
 
-/** .. returns the effective length of this event. */
-static
-int
-synti2_player_do_event(synti2_conts *control, int frame, unsigned char *midibuf)
-{
-  int length = 0;  /* length must be determined for all possible
-		      events, including those that are skipped. F*k
-		      there's going to be too much code in here!! I'm
-		      going to have to rewrite the sequencer again,
-		      and do a midi importer to my own local
-		      format! */
-  int vlenlen;
-
-  /* The easy ones.. normal midi control.. */
-  //  printf("Next up: %02x %02x %02x %02x \n", midibuf[0], midibuf[1], midibuf[2], midibuf[3]); fflush(stdout);
-
-  if ((midibuf[0] < 0x80)){
-    //    printf("Running status.. can't handle, sry.\n"); fflush(stdout);
-    /* FIXME: The events can be also running statuses!! Must handle
-       those (or filter out with a tool program)! */
-  } else if ((0xc0 <= midibuf[0]) && (midibuf[0] < 0xe0)){
-    length = 2; /* ... or is the third parameter sent even if not used? */
-    synti2_conts_store(control, frame, midibuf, length);
-  } else if (/* (0x80 <= midibuf[0]) && */ (midibuf[0] < 0xf0)){
-    length = 3;
-    synti2_conts_store(control, frame, midibuf, length);
-  } else if (midibuf[0] >= 0xf0) {
-    switch (midibuf[0]){
-    case 0xf0:
-      vlenlen = varlength(midibuf + 2, &length);
-      *(midibuf+1+vlenlen) = 0xf7; /*FIXME: terrible hacks appear from the void.*/
-      synti2_conts_store(control, frame, midibuf+1+vlenlen, length);
-      length += vlenlen + 1;
-      break;
-    case 0xff:
-      /* Meta-event. Affects just our player's internal state. */
-      switch (midibuf[1]){
-      case 0x27: /* Set tempo */
-	/* FIXME: Implement!.. */
-	vlenlen = varlength(midibuf + 2, &length);
-	length += vlenlen + 2;
-	break;
-      case 0x2f: /* End of Track*/
-	/* FIXME: Should stop playback.. */
-	length = -1; /* This way, the same event will keep on appearing... hack. */
-	break;
-      default:
-	vlenlen = varlength(midibuf + 2, &length);
-	length += vlenlen + 2;
-      }
-      break;
-      //default:
-      /* Should die, in fact. */
-    }
-  } else {
-    /* Should die, in fact. */
-  }
-  return length;
-}
 
 
-/** render some frames of control data for the synth, keeping track of
- * song position. This will do the store()s as if the song was played
- * live.
+/** Renders some frames of control data for the synth, keeping track
+ * of song position. This will do the store()s as if the song was
+ * played live. The dirty work of figuring out event timing has been
+ * done by the song loader, so we just float in here.
  *
- * Upon entry: each track's delta is known. each track's pointer
- * points to the first byte of actual event data.
- *
- * Upon exit: each track's delta has been updated, if necessary. each
- * track's pointer points to the first byte of actual event data.
+ * Upon entry (and all times): pl->next points to the next event to be
+ * played. pl->frames_done indicates how far the sequence has been
+ * played.
  */
 void
 synti2_player_render(synti2_player *pl, 
 		     synti2_conts *control,
 		     int framestodo)
 {
-  int it;
-  //  int minframes = frames;
-  int efflen;
-  int move, frame;
-  frame = 0;
-
-  while (framestodo > 0) {
-    //printf("todo: %d  to next: %d \n",framestodo,pl->frames_to_next_tick);fflush(stdout);
-    move = (framestodo < pl->frames_to_next_tick)?framestodo:pl->frames_to_next_tick;
-    frame += move; /* Is it possible to lose data on buffer boundary, btw..?*/
-    framestodo -= move;
-    pl->frames_to_next_tick -= move;
+  //synti2_player_ev *ev_now;
+  unsigned int upto_frames = pl->frames_done + framestodo;
   
-    /* When we hit a tick, process it: */
-    if (pl->frames_to_next_tick == 0) /*FIXME: think. && (framestodo>0) ??? */ {
-      pl->frames_to_next_tick += pl->fpt;  /* remember to update.. */
-      for (it=0; it < pl->ntracks; it++){
-	/* Everything that happens right now on this track: */
-	while (pl->deltaticks[it] == 0) {
-	  /* Process an event, and read next delta.*/
-	  //printf("track %d\n", it);
-	  efflen = synti2_player_do_event(control, frame, pl->track[it]);
-	  if (efflen > 0){
-	    pl->track[it] += efflen;
-	    pl->track[it] += varlength(pl->track[it],&(pl->deltaticks[it]));
-	  } else {
-	    /* Track has ended. */
-	    //printf("End of track %d reached.\n",it);fflush(stdout);
-	    pl->deltaticks[it] = -1; /*FIXME: What does this imply?*/
-	  }
-	}
-	if (pl->deltaticks[it] > 0) pl->deltaticks[it]--;
-      }
-    }
+  while((pl->playloc->next != NULL) 
+        && (pl->playloc->next->frame < upto_frames )) {
+    pl->playloc = pl->playloc->next;
+    
+	  synti2_conts_store(control, 
+                       pl->playloc->frame - pl->frames_done, 
+                       pl->playloc->data,
+                       pl->playloc->len);    
   }
+  pl->frames_done = upto_frames;
 }
+
 /** Creates a controller "object". Could be integrated within the
  * synth itself?  For the final 4k version (synti-kaksinen:)),
  * everything will probably have to be crushed into the same unit
@@ -381,9 +407,12 @@ synti2_conts_store(synti2_conts *control,
   }
   control->frame[control->i] = frame;
   control->msglen[control->i] = len;
+  //printf(" Frame %08d (length %d): ",frame, len);
   for (i=0;i<len;i++){
     control->buf[control->ibuf++] = midibuf[i];
+    //printf(" %02x",midibuf[i]);
   }
+  //printf("\n");
   control->i++;
   control->frame[control->i] = -1; /* Marks the (new) end. */
 }

@@ -105,6 +105,7 @@ struct evlist_node{
   void *data;
   evlist_node *next;
   /* TODO(?): int orig_track; // from which track */
+  /* TODO(?): int orig_seqid; // on which designated sequence (FF 00 02 ...) */
 };
 
 /** Event layers. Linear pool of nodes. Data pointers can be data(?)*/
@@ -141,6 +142,12 @@ typedef struct misssify_options{
 } misssify_options;
 
 
+typedef struct timesig_t{
+  unsigned char numerator;
+  unsigned char denominator; /* as a power of two */
+  unsigned char metroclocks;
+  unsigned char notation32nds;
+} timesig_t;
 
 /* Information about the midi file and the process. */
 typedef struct smf_info{
@@ -150,9 +157,9 @@ typedef struct smf_info{
   int smf_format;
   int time_division;
 
-  float bpm;
-  int timesig;
-  int bpm_initialized;
+  int usec_per_q;
+  timesig_t timesig;
+  int tempo_initialized;
   int timesig_initialized;
 } smf_info;
 
@@ -428,7 +435,7 @@ smf_event_contents_from_midi(smf_events *evs,
     /* Meta event. Just a long batch of whatever; the 'extended
      * status' will contain the meta event type. FIXME: Test. */
     vllen = smf_read_varlength(data+1, &vlval);
-    smf_events_merge_new(evs,data+1,vlval,tick);
+    smf_events_merge_new(evs,data,vlval+1,tick);
     return 1 + vllen + vlval;
   } else {
     fprintf(stderr, "Status 0x%x Looks like a bug; sorry.\n",evs->last_status);
@@ -520,6 +527,9 @@ deconstruct_from_midi(smf_events *ev_original,
   /* TODO: these to a struct(?): FIXME: Yes, put these to a struct:*/
   int chunk_size = 0;
   int itrack = 0;
+  evlist_node *p;
+  timesig_t deftimesig = {4,2,24,24};
+
   /* Verify MIDI Header */
   if (memcmp(dinput,"MThd",4) != 0) {
     fprintf(stderr, "Data doesn't begin with SMF header! Exiting.\n"); exit(1);
@@ -566,6 +576,38 @@ deconstruct_from_midi(smf_events *ev_original,
     chunk_size = deconstruct_track(ev_original, info, dinput, opt);
     dinput += 4 + 4 + chunk_size; /*<type(4b)><length(4b)><event(chunk_size)>+*/
   }
+
+  /* A polite software would handle FF 20 (MIDI channel prefix) or
+   * warn if any of those have been omitted..
+   */
+
+  /* We'll just look for the first events describing tempo and time signature. */
+  if ((p = ev_original->head[0xff58].next) != NULL){
+    if (opt->verbose) fprintf(stderr, "Using first timesig. \n");
+    info->timesig = *((timesig_t*)((unsigned char *)p->data+1));
+    info->timesig_initialized = 1;
+  } else {
+    info->timesig = deftimesig;
+  }
+  if ((p=ev_original->head[0xff51].next) != NULL){
+    if (opt->verbose) fprintf(stderr, "Using first tempo. \n");
+    info->usec_per_q = smf_read_int((unsigned char *)p->data+1, 3);
+    info->tempo_initialized = 1;
+  } else {
+    info->usec_per_q = 500000;
+  }
+  if ((info->timesig_initialized != 1) || (info->timesig_initialized != 1)){
+    if (opt->verbose){
+      fprintf(stderr, "Defaults used in timing information. \n");
+    }
+  }
+  if (opt->verbose){
+    fprintf(stderr,
+            "Timesig %d/(2^%d)   usecpq %d\n", 
+            info->timesig.numerator, info->timesig.denominator,
+            info->usec_per_q);
+  } 
+
 }
 
 
@@ -603,19 +645,36 @@ int main(int argc, char *argv[]){
   smf_events *ev_original;
   smf_events *ev_misssified;
   misssify_options opt;
-  smf_info info;
+  smf_info *info;
   ev_original = calloc(1, sizeof(smf_events));
   ev_misssified = calloc(1, sizeof(smf_events));
-
+  info = calloc(1, sizeof(smf_info));
+  
   misssify_options_parse(&opt, argc, argv);
   dinput_size = file_read(opt.infname, dinput, MAX_DATA);
-  deconstruct_from_midi(ev_original, &info, dinput, &opt);
-     
+  deconstruct_from_midi(ev_original, info, dinput, &opt);
+  
+  #if 0
+  int i;
+  evlist_node *p;
+  for (i=0x0000; i<0x10000; i++){
+    if ((p = ev_original->head[i].next) != NULL){
+      printf("Events %04x at ticks:", i);
+      for (;p != NULL; p=p->next){
+        printf(" %d", p->tick);
+      }
+      printf("\n");
+    }
+  }
+  #endif
+  
   /* 
      filter_events(?)??
-     construct_misss(events_original, events_misssified, dmisss);
   */
+  /*construct_misss(events_original, events_misssified, dmisss);*/
+
   /*FIXME: Hack..*/ memcpy(dmisss, dinput, dmisss_size = dinput_size);
+
   file_write(opt.outfname, dmisss, dmisss_size);
 
   free(ev_original);

@@ -139,19 +139,18 @@ struct synti2_player_ev {
 
 struct synti2_player {
   int sr;       /* Sample rate. */
-  //int bpm;      /* Tempo (may vary). */
-  float fpt;      /* Frames per tick. Tempos will be inexact, sry! */
+  float fpt;    /* Frames per tick. Tempos will be inexact, sry! */
   int ntracks;  /* Number of tracks. */
   int tpq;      /* Ticks per quarter (no support for SMPTE). */
   int deltaticks[SYNTI2_MAX_SONGTRACKS];
-  //int frames_to_next_tick;
   int frames_done;
-  //unsigned char *track [SYNTI2_MAX_SONGTRACKS];
 
   unsigned char data[SYNTI2_MAX_SONGBYTES];
   int idata;
 
   /* Only playable events. The first will be at evpool[0]! */
+  /* TODO: Realtime MIDI input could be uniform if we "create a new
+     player" for each time window? */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
   synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
   synti2_player_ev *insloc;
@@ -173,18 +172,6 @@ varlength(const unsigned char * source, int * dest){
     else *dest <<= 7;
   }
   return 0; /* Longer than 4 bytes! Wrong input! FIXME: die. */
-}
-
-static 
-int 
-twobyte(unsigned char *r){
-  return (r[0] * 0x100) + r[1];
-}
-
-static 
-int 
-fourbyte(unsigned char *r){
-  return (r[0] * 0x1000000) + (r[1] * 0x10000) + (r[2] * 0x100) + r[3];
 }
 
 
@@ -215,7 +202,7 @@ synti2_player_event_add(synti2_player *pl, int frame, unsigned char *src, int n)
   }
 }
 
-/** Returns a pointer to one past end. */
+/** Returns a pointer to one past end of read in input data, i.e., next byte. */
 static
 unsigned char *
 synti2_player_merge_chunk(synti2_player *pl, unsigned char *r, int n_events)
@@ -296,11 +283,8 @@ synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   pl->sr = samplerate;
 
   /* Initialize an "empty" "head event": */
-  //pl->evpool[0].next = pl->evpool + 1;
   pl->nextfree++;
-  /* This would "rewind" the song: */
-  pl->playloc = pl->evpool;
-  //pl->frames_to_next_tick = 0; /* There will be a tick right away. zero init!*/
+  pl->playloc = pl->evpool; /* This would "rewind" the song */
 
   r = songdata;
   r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */
@@ -621,14 +605,14 @@ synti2_evalEnvelopes(synti2_synth *s){
       detect = s->eprog[iv][ie].val;
       s->eprog[iv][ie].val += s->eprog[iv][ie].delta; /* counts from 0 to MAX */
       if (s->eprog[iv][ie].val < detect){  /* Detect overflow */
-	s->eprog[iv][ie].delta = 0;  /* Counter stops after full cycle   */
-	s->feprog[iv][ie] = 1.0;     /* and the floating value is clamped */ 
-	s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
+        s->eprog[iv][ie].delta = 0;  /* Counter stops after full cycle   */
+        s->feprog[iv][ie] = 1.0;     /* and the floating value is clamped */ 
+        s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
       } else {
-	s->feprog[iv][ie] = ((float) s->eprog[iv][ie].val) / MAX_COUNTER;
+        s->feprog[iv][ie] = ((float) s->eprog[iv][ie].val) / MAX_COUNTER;
       }
       s->fenv[iv][ie] = (1.0 - s->feprog[iv][ie]) * s->feprev[iv][ie] 
-	+ s->feprog[iv][ie] * s->fegoal[iv][ie];
+        + s->feprog[iv][ie] * s->fegoal[iv][ie];
     }
     /* TODO: Observe that for this kind of rotating counter c
        interpreted as x \in [0,1], it is easy to get 1-x since it is
@@ -664,7 +648,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
   float nextgoal;
   float nexttime;
   int stagesum;
-
+  
   for(iv=0; iv<NVOICES; iv++){
     part = s->partofvoice[iv];
     if (part<0) continue;
@@ -678,26 +662,27 @@ synti2_updateEnvelopeStages(synti2_synth *s){
       if (s->eprog[iv][ie].delta == 0){
         s->estage[iv][ie]--; /* Go to next stage (one smaller ind) */
         if (s->estage[iv][ie] == 0) continue; /* Newly ended one.. no more knees. */
-	if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)) s->estage[iv][ie] = 3;
+        if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)) s->estage[iv][ie] = 3;
         nexttime = s->patch[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = s->patch[ipastend - s->estage[iv][ie] * 2 + 1];
         s->feprev[iv][ie] = s->fenv[iv][ie];
         s->fegoal[iv][ie] = nextgoal;
-	if (nexttime <= 0.0){
-	  s->eprog[iv][ie].val = 1; /* hack for "no time". will be 0 after an eval. */
-	  s->eprog[iv][ie].delta = MAX_COUNTER;
-	} else {
-	  s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
-	}
-	/*
-	  if (ie==0)
-	  jack_info("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) ", 
-	  iv, ie, part, s->estage[iv][ie], s->feprev[iv][ie], 
-	  s->fegoal[iv][ie], 
-	  nexttime, s->eprog[iv][ie].delta);
-	*/
+        if (nexttime <= 0.0){
+          s->eprog[iv][ie].val = 1; /* hack for "no time". will be 0 after an eval. */
+          s->eprog[iv][ie].delta = MAX_COUNTER;
+        } else {
+          s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
+        }
+        /*
+          if (ie==0)
+          jack_info("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) ", 
+          iv, ie, part, s->estage[iv][ie], s->feprev[iv][ie], 
+          s->fegoal[iv][ie], 
+          nexttime, s->eprog[iv][ie].delta);
+        */
       }
       /* FIXME: just simple LFO stuff instead of this hack of a looping envelope?*/
+      /* FIXME: Or make looping optional by a simple sound parameter... */
       stagesum += s->estage[iv][ie];
     }
     if (stagesum == 0){
@@ -723,14 +708,14 @@ synti2_updateFrequencies(synti2_synth *s){
     freq = interm * s->note2freq[note];
     
     s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
-
+    
     /* modulator pitch; Hack. FIXME: */
     notemod = s->note[iv] + s->fenv[iv][3];   // HACK!!
     /* should make a floor (does it? check spec)*/
     note = notemod;
     interm = (1.0 + 0.05946 * (notemod - note)); /* +cents.. */
     freq = interm * s->note2freq[note];
-
+    
     s->c[iv*2+1].delta = (freq) / s->sr * MAX_COUNTER; /*hack test*/
     //s->c[2].delta = freq / s->sr * MAX_COUNTER; /* hack test */
   }
@@ -739,9 +724,9 @@ synti2_updateFrequencies(synti2_synth *s){
 
 void
 synti2_render(synti2_synth *s, 
-	      synti2_conts *control, 
-	      synti2_smp_t *buffer,
-	      int nframes)
+              synti2_conts *control, 
+              synti2_smp_t *buffer,
+              int nframes)
 {
   int iframe, ii, iv;
   float interm;
@@ -750,7 +735,7 @@ synti2_render(synti2_synth *s,
     /* Outer loop for things that are allowed some jitter. (further
      * elaboration in comments near the definition of NINNERLOOP).
      */
-
+    
     /* Handle MIDI-ish controls if there are more of them waiting. */
     synti2_handleInput(s, control, iframe + NINNERLOOP);
     synti2_updateEnvelopeStages(s); /* move on if need be. */
@@ -758,14 +743,14 @@ synti2_render(synti2_synth *s,
     
     /* Inner loop runs the oscillators and audio generation. */
     for(ii=0;ii<NINNERLOOP;ii++){
-
+      
       /* Could I put all counter upds in one big awesomely parallel loop? */
       synti2_evalEnvelopes(s);
       synti2_evalCounters(s);
       
       /* Getting more realistic soon: */
       buffer[iframe+ii] = 0.0;
-
+      
       for(iv=0;iv<NVOICES;iv++){
         // if (s->partofvoice[iv] < 0) continue; /* Unsounding. FIXME: (f1) */
         /* Produce sound :) First modulator, then carrier*/
@@ -781,7 +766,7 @@ synti2_render(synti2_synth *s,
       buffer[iframe+ii] /= NVOICES;
       
       //buffer[iframe+ii] = sin(32*buffer[iframe+ii]); /* Hack! beautiful too!*/
-      buffer[iframe+ii] = tanh(16*buffer[iframe+ii]); /* Hack! beautiful too!*/
+      //buffer[iframe+ii] = tanh(16*buffer[iframe+ii]); /* Hack! beautiful too!*/
     }
   }
   s->global_framesdone += nframes;

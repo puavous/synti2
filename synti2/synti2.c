@@ -622,7 +622,9 @@ synti2_updateEnvelopeStages(synti2_synth *s){
       if (s->eprog[iv][ie].delta == 0){
         s->estage[iv][ie]--; /* Go to next stage (one smaller ind) */
         if (s->estage[iv][ie] == 0) continue; /* Newly ended one.. no more knees. */
-        if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)) s->estage[iv][ie] = 3;
+        /* Loop happens here (FIXME: make it proper): */
+        //if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0))
+        //  s->estage[iv][ie] = 3;
         nexttime = s->patch[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = s->patch[ipastend - s->estage[iv][ie] * 2 + 1];
         s->feprev[iv][ie] = s->fenv[iv][ie];

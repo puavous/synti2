@@ -133,6 +133,8 @@ typedef struct misssify_options{
   int verbose;
   int options_valid;
   int desired_timediv; /* desired value of timediv */
+  int override_all_velocities; /*0 or common velocity for every note on. */
+  int trash_all_noteoffs; /* if only note-ons suffice for everything.. */
 } misssify_options;
 
 
@@ -199,14 +201,15 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
         {"add",     no_argument,       0, 'a'},
         {"append",  no_argument,       0, 'b'},
         {"delete",  required_argument, 0, 'd'},
-        {"create",  required_argument, 0, 'c'},
+        {"velocity-all",  required_argument, 0, 'l'},
+        {"only-on", no_argument, 0, 'o'},
         {"tpq",     required_argument, 0, 'p'},
         {0, 0, 0, 0} /* marks the end of options */
       };
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    c = getopt_long (argc, argv, "abc:d:p:",
+    c = getopt_long (argc, argv, "ab:d:l:op:",
                      long_options, &option_index);
     
     /* Detect the end of the options. */
@@ -239,6 +242,17 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
         
       case 'd':
         printf ("option -d with value `%s'\n", optarg);
+        break;
+
+      case 'l':
+        opt->override_all_velocities = atoi(optarg);
+        printf ("All velocities will be %d (given as string '%s')\n", 
+                opt->override_all_velocities, optarg);
+        break;
+
+      case 'o':
+        opt->trash_all_noteoffs = 1;
+        printf ("No note-offs will be written on *any* part. \n");
         break;
         
       case 'p':
@@ -408,8 +422,25 @@ smf_events_recompute_ticks(smf_events *evs,
 }
 
 
+/* FIXME: Mein gott.. these would be so easy to do as filter
+ * and map functions.. 
+ */
+static
+void
+smf_events_reset_all_velocities(smf_events *evs, int vel)
+{
+  int i;
+  evlist_node *p;
 
-/* smf_events_deepcpy_data */ /* actually memcpy does this.. */
+  for (i=0x9000; i<0x9fff; i++){ /*see.. there's a filter */
+    for (p = evs->head[i].next; p != NULL; p=p->next){
+      ((unsigned char*)(p->data))[2]=vel; /*.. and there's a map. */ 
+      /*and we're in a list. */
+    }
+  }
+}
+
+
 
 /* plaah smf_events_merge_at_iter(smf_events *evs,
                          unsigned char *data,
@@ -858,6 +889,7 @@ construct_misss(smf_events *ev_original,
     }
   }
 
+  /* Handle global wishes */
   if (opt->desired_timediv > 0){
     smf_events_recompute_ticks(ev_intermediate, 
                                info->time_division,
@@ -865,10 +897,23 @@ construct_misss(smf_events *ev_original,
     info->time_division = opt->desired_timediv;
   }
 
+  if (opt->override_all_velocities > 0){
+    smf_events_reset_all_velocities(ev_intermediate, 
+                                    opt->override_all_velocities);
+  }
+
+
   /*smf_events_printcontents(ev_intermediate, stdout);*/
   misss_events_write_header(ev_misss, info);
-  misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, -1);
-  misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0010, -1, 0);
+  if (opt->override_all_velocities > 0){
+    misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, 
+                                 opt->override_all_velocities);
+  } else {
+    misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, -1);
+  }
+  if (opt->trash_all_noteoffs == 0){
+    misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0010, -1, 0);
+  }
   misss_events_write_byte(ev_misss, 0); /* Zero length indicates end of file. */
   free(ev_intermediate);
 }

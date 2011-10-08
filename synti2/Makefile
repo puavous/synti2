@@ -39,7 +39,7 @@ benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm
 
 jacktest: jackmidi.c synti2.c synti2.h testdata.c Makefile
-	$(CC) $(CFLAGS) -o testi jackmidi.c synti2.c testdata.c \
+	$(CC) $(CFLAGS) -DJACK_MIDI -o testi jackmidi.c synti2.c testdata.c \
 		`pkg-config --cflags --libs jack` -lm
 
 testdata.c: patchbank.txt testi.mid hacktac.py misssify Makefile

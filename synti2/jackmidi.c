@@ -59,40 +59,13 @@ process_audio (jack_nframes_t nframes)
   sample_t *bufferL = (sample_t *) jack_port_get_buffer (output_portL, nframes);
   sample_t *bufferR = (sample_t *) jack_port_get_buffer (output_portR, nframes);
 
-  void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
-  
-  jack_midi_event_t ev;
-  jack_nframes_t nev;
-
-  static int hack_first = 1;
-
   /* Transform MIDI messages from native type (jack) to our own format */
-  synti2_conts_reset(global_cont);
-
-  if (hack_first != 0) {
-    hack_first = 0;
-    synti2_conts_store(global_cont, 0, hack_patch_sysex, hack_patch_sysex_length);
+  if (global_hack_playeronly == 0){
+    synti2_player_init_from_jack_midi(global_player, inmidi_port, nframes);
   }
-  
-  if (global_hack_playeronly == 0) {
-    nev = jack_midi_get_event_count(midi_in_buffer);
-    for (i=0;i<nev;i++){
-      if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-	synti2_conts_store(global_cont, ev.time, ev.buffer, ev.size);
-      } else {
-	break;
-      }
-    }
-  } else {
-    /* FIXME: Only for testing; to be removed.. */
-    synti2_player_render(global_player, global_cont, nframes);
-  }
-
-  synti2_conts_start(global_cont);
 
   /* Call our own synth engine and convert samples to native type (jack) */
-  synti2_render(global_synth, global_cont,
-		global_buffer, nframes); 
+  synti2_render(global_synth, global_player, global_buffer, nframes); 
   for (i=0;i<nframes;i++){
     bufferL[i] = global_buffer[i];
     bufferR[i] = global_buffer[i];
@@ -143,14 +116,14 @@ main (int argc, char *argv[])
 
   /* My own soft synth to be created. */
   global_synth = synti2_create(sr);
-  global_cont = synti2_conts_create();
-  if ((global_synth == NULL) || (global_cont == NULL)){
+  if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");
     goto error;
   };
+  synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
 
   /*hack. FIXME: remove.*/
-  global_player = synti2_player_create(hacksong_data, hacksong_length, sr);
+  global_player = synti2_player_create(hacksong_data, sr);
   if (global_player == NULL){
     fprintf(stderr, "Haist \n");
     goto error;
@@ -162,7 +135,7 @@ main (int argc, char *argv[])
     goto error;
   }
   
-  /* install a signal handler to properly quits jack client */
+  /* install a signal handler to properly quit jack client */
 #ifdef WIN32
   signal(SIGINT, signal_handler);
   signal(SIGABRT, signal_handler);

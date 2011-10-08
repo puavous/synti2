@@ -19,10 +19,16 @@ synti2_create(unsigned long sr); /* Sample rate could be variable ??*/
  */
 void
 synti2_render(synti2_synth *s, 
-	      synti2_conts *control, 
+	      synti2_player *pl, 
 	      synti2_smp_t *buffer,
 	      int nframes);
 
+/** Immediately transfers data with SysEx. This is a hack for making
+ *  default instrument sounds for testing, and this will go away later
+ *  (FIXME: make this go away...)
+ */
+void
+synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data);
 
 
 /* ------- Sequencer interface for a pre-composed song -------- */
@@ -30,7 +36,6 @@ synti2_render(synti2_synth *s,
 /** Load and initialize a song. */
 synti2_player *
 synti2_player_create(unsigned char * songdata, 
-		     int datalen, 
 		     int samplerate);
 
 /** Render some frames of control data for the synth, keeping track of
@@ -43,28 +48,19 @@ synti2_player_render(synti2_player *player,
 		    int frames);
 
 
-
 /* ------- Realtime control interface ------- */
 
-/** Create a MIDI control mediator */
-synti2_conts * 
-synti2_conts_create();
-
-/** Get ready to store new controls. Must be called after reading all
-    messages for a block, and before writing new ones. */
-void 
-synti2_conts_reset(synti2_conts *control);
-
-/** Must be called once before calling any gets */
-void 
-synti2_conts_start(synti2_conts *control);
-
-/** Store a raw midi command */
-void 
-synti2_conts_store(synti2_conts *control,
-		   int frame,
-		   unsigned char *midibuf,
-		   int len);
+#ifdef JACK_MIDI
+#include <jack/jack.h>
+#include <jack/midiport.h>
+/** Creates a future for the player object that will repeat the next
+ *  nframes of midi data from a jack audio connection kit midi port.
+ */
+void
+synti2_player_init_from_jack_midi(synti2_player *player,
+                                  jack_port_t *inmidi_port,
+                                  jack_nframes_t nframes);
+#endif
 
 
 

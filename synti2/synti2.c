@@ -8,6 +8,11 @@
 #include "synti2.h"
 #include "misss.h"
 
+#ifdef JACK_MIDI
+#include "jack/jack.h"
+#include "jack/midiport.h"
+#endif
+
 struct synti2_conts {
   int i;
   int ibuf;
@@ -124,7 +129,6 @@ struct synti2_synth {
 
 
 #define SYNTI2_MAX_SONGBYTES 30000
-#define SYNTI2_MAX_SONGTRACKS 32
 #define SYNTI2_MAX_SONGEVENTS 15000
 
 /* Events shall form a singly linked list. */
@@ -138,12 +142,10 @@ struct synti2_player_ev {
 };
 
 struct synti2_player {
-  int sr;       /* Sample rate. */
-  float fpt;    /* Frames per tick. Tempos will be inexact, sry! */
-  int ntracks;  /* Number of tracks. */
-  int tpq;      /* Ticks per quarter (no support for SMPTE). */
-  int deltaticks[SYNTI2_MAX_SONGTRACKS];
-  int frames_done;
+  int sr;           /* Sample rate. */
+  float fpt;        /* Frames per tick. Tempos will be inexact, sry! */
+  int tpq;          /* Ticks per quarter (no support for SMPTE). */
+  int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
 
   unsigned char data[SYNTI2_MAX_SONGBYTES];
   int idata;
@@ -269,141 +271,87 @@ synti2_player_merge_chunk(synti2_player *pl, unsigned char *r, int n_events)
   return r;
 }
 
-/** Load and initialize a song. */
-synti2_player *
-synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
-  unsigned char *r;
+#ifdef JACK_MIDI
+#include <errno.h>
+/** Creates a future for the player object that will repeat the next
+ *  nframes of midi data from a jack audio connection kit midi port.
+ *
+ * ... If need be.. this could be made into merging function on top of
+ * the sequence being played.. but I won't bother for today's
+ * purposes...
+ */
+void
+synti2_player_init_from_jack_midi(synti2_player *pl,
+                                  jack_port_t *inmidi_port,
+                                  jack_nframes_t nframes)
+{
+  jack_midi_event_t ev;
+  jack_nframes_t i, nev;
+  void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
+
+  /* Re-initialize, and overwrite any former data. */
+  pl->nextfree = 1;
+  pl->playloc = pl->evpool; /* This would "rewind" the song */
+  pl->insloc = pl->evpool; /* This would "rewind" the song */
+  pl->idata = 0;
+  pl->playloc->next = NULL; /* This effects the deletion of previous msgs. */
+  
+  nev = jack_midi_get_event_count(midi_in_buffer);
+  for (i=0;i<nev;i++){
+    if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
+      synti2_player_event_add(pl, 
+                              pl->frames_done + ev.time, 
+                              ev.buffer, 
+                              ev.size);
+    } else {
+      break;
+    }
+  }
+}
+#endif
+
+/** Load and initialize a song. Assumes a freshly created player object! */
+static
+void
+synti2_player_init_from_misss(synti2_player *pl, unsigned char *r)
+{
   int chunksize;
   int uspq;
-  synti2_player *pl;
-
-  pl = calloc(1, sizeof(synti2_player));
-  if (pl == NULL) return pl;  /* TODO: Omit these checks with a 4k target... */
-
-  pl->sr = samplerate;
-
   /* Initialize an "empty" "head event": */
   pl->nextfree++;
   pl->playloc = pl->evpool; /* This would "rewind" the song */
-
-  r = songdata;
+  
   r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */
-  //pl->tpq = *r++;
-  r += varlength(r, &uspq);  /* Ticks per quarter note */
-  //pl->fpt = (float)pl->sr * 60 / (*(r++)) / pl->tpq; /* Tempo converted to
-  //                                     frames-per-tick. FIXME:  */
-  pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0);
-
+  r += varlength(r, &uspq);       /* Microseconds per quarter note */
+  pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0); /* frames-per-tick */
+  /* TODO: Think about accuracy vs. code size */
+  
   r += varlength(r, &chunksize);
-  //printf("Read chunksize %d \n", chunksize);fflush(stdout);
-  while(chunksize > 0){
-    /* read a chunk... TODO: put this to a subroutine.. */
-    r = synti2_player_merge_chunk(pl, r, chunksize);
-    /* move on to next chunk. */
-    r += varlength(r, &chunksize);
-    //printf("Read chunksize %d \n", chunksize);fflush(stdout);
-
+  while(chunksize > 0){ /*printf("Read chunksize %d \n", chunksize);*/
+    r = synti2_player_merge_chunk(pl, r, chunksize); /* read a chunk... */
+    r += varlength(r, &chunksize);                   /* move on to next chunk. */    
   }
+}
 
+
+/** Creates a player object. Initial songdata is optional. */
+synti2_player *
+synti2_player_create(unsigned char * songdata, int samplerate){
+  synti2_player *pl;
+  
+  pl = calloc(1, sizeof(synti2_player));
+  
+#ifndef ULTRASMALL
+  if (pl == NULL) return pl;
+#endif
+  
+  pl->sr = samplerate;
+  
+  if (songdata != NULL) synti2_player_init_from_misss(pl, songdata);
+  
   return pl;
 }
 
-
-
-/** Renders some frames of control data for the synth, keeping track
- * of song position. This will do the store()s as if the song was
- * played live. The dirty work of figuring out event timing has been
- * done by the song loader, so we just float in here.
- *
- * Upon entry (and all times): pl->next points to the next event to be
- * played. pl->frames_done indicates how far the sequence has been
- * played.
- */
-void
-synti2_player_render(synti2_player *pl, 
-		     synti2_conts *control,
-		     int framestodo)
-{
-  //synti2_player_ev *ev_now;
-  unsigned int upto_frames = pl->frames_done + framestodo;
-  
-  while((pl->playloc->next != NULL) 
-        && (pl->playloc->next->frame < upto_frames )) {
-    pl->playloc = pl->playloc->next;
-    
-	  synti2_conts_store(control, 
-                       pl->playloc->frame - pl->frames_done, 
-                       pl->playloc->data,
-                       pl->playloc->len);    
-  }
-  pl->frames_done = upto_frames;
-}
-
-/** Creates a controller "object". Could be integrated within the
- * synth itself?  For the final 4k version (synti-kaksinen:)),
- * everything will probably have to be crushed into the same unit
- * anyway, created at once, and glued together with holy spirit.
- */
-synti2_conts * synti2_conts_create(){
-  return calloc(1, sizeof(synti2_conts));
-}
-
-/** Get the next MIDI command */
-static void 
-synti2_conts_get(synti2_conts *control, 
-		 unsigned char *midibuf)
-{
-  int i;
-  for (i=0;i < control->msglen[control->i]; i++){
-    midibuf[i] = control->buf[control->ibuf++];
-  }
-  control->i++;
-  control->nextframe = control->frame[control->i];
-}
-
-/** Get ready to store new events. Must be called after each audio
- * block, before writing new events.
- */
-void 
-synti2_conts_reset(synti2_conts *control)
-{
-  control->i = 0;
-  control->ibuf = 0;
-  control->nextframe = -1;
-}
-
-/** Must be called once before calling any gets (rewinds internal
- * pointers).
- */
-void 
-synti2_conts_start(synti2_conts *control)
-{
-  control->i = 0;
-  control->ibuf = 0;
-}
-
-/** Store a MIDI event. Raw MIDI data, like in the jack MIDI system.*/
-void 
-synti2_conts_store(synti2_conts *control,
-		   int frame,
-		   unsigned char *midibuf,
-		   int len)
-{
-  int i;
-  if (control->nextframe < 0){
-    control->nextframe = frame;
-  }
-  control->frame[control->i] = frame;
-  control->msglen[control->i] = len;
-  //printf(" Frame %08d (length %d): ",frame, len);
-  for (i=0;i<len;i++){
-    control->buf[control->ibuf++] = midibuf[i];
-    //printf(" %02x",midibuf[i]);
-  }
-  //printf("\n");
-  control->i++;
-  control->frame[control->i] = -1; /* Marks the (new) end. */
-}
 
 
 /** Allocate and initialize a new synth instance. */
@@ -523,7 +471,7 @@ synti2_do_noteoff(synti2_synth *s, int part, int note, int vel){
 
     Length is also the stride for value encoding.
 */
-static
+//FIXME (?): static
 void
 synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
   int offset, stride;
@@ -561,21 +509,35 @@ synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
 
 
 
-/** Things may happen late or ahead of time. I don't know if that is
+/** Handles input that comes from the stored list of song events.
+ *
+ * Renders some frames of control data for the synth, keeping track
+ * of song position. This will do the store()s as if the song was
+ * played live. The dirty work of figuring out event timing has been
+ * done by the song loader, so we just float in here.
+ *
+ * Upon entry (and all times): pl->next points to the next event to be
+ * played. pl->frames_done indicates how far the sequence has been
+ * played.
+ *
+ *  Things may happen late or ahead of time. I don't know if that is
  *  what they call "jitter", but if it is, then this is where I jit
  *  and jat...
  */
 static
 void
 synti2_handleInput(synti2_synth *s, 
-                   synti2_conts *control,
-                   int uptoframe)
+                   synti2_player *pl,
+                   int upto_frames)
 {
   /* TODO: sane implementation */
-  unsigned char midibuf[20000];/*FIXME: THINK about limits and make checks!!*/
+  unsigned char *midibuf;
 
-  while ((0 <= control->nextframe) && (control->nextframe <= uptoframe)){
-    synti2_conts_get(control, midibuf);
+  while((pl->playloc->next != NULL) 
+        && (pl->playloc->next->frame < upto_frames )) {
+    pl->playloc = pl->playloc->next;
+
+    midibuf = pl->playloc->data;
     if ((midibuf[0] & 0xf0) == 0x90){
       synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);
     } else if ((midibuf[0] & 0xf0) == 0x80) {
@@ -586,7 +548,10 @@ synti2_handleInput(synti2_synth *s,
       /* Other MIDI messages are silently ignored. */
     }
   }
+  pl->frames_done = upto_frames;
 }
+
+
 
 /** TODO: Implement better? */
 static
@@ -723,8 +688,8 @@ synti2_updateFrequencies(synti2_synth *s){
 
 
 void
-synti2_render(synti2_synth *s, 
-              synti2_conts *control, 
+synti2_render(synti2_synth *s,
+              synti2_player *pl,
               synti2_smp_t *buffer,
               int nframes)
 {
@@ -737,7 +702,7 @@ synti2_render(synti2_synth *s,
      */
     
     /* Handle MIDI-ish controls if there are more of them waiting. */
-    synti2_handleInput(s, control, iframe + NINNERLOOP);
+    synti2_handleInput(s, pl, s->global_framesdone + iframe + NINNERLOOP);
     synti2_updateEnvelopeStages(s); /* move on if need be. */
     synti2_updateFrequencies(s);    /* frequency upd. */
     

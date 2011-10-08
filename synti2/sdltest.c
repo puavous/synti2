@@ -16,7 +16,6 @@
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
 float audiobuf[AUDIOBUFSIZE];
 
-synti2_conts *global_cont;
 synti2_synth *st;
 synti2_player *global_player;
 
@@ -38,42 +37,9 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   int i;
   float vol = 10000.0;
   
-  unsigned char hackbuf[80];
-
-  static int hack_first = 1;
-
-  static unsigned char hack_note = 0;
-  
-  /* Make some test events.. */
-  synti2_conts_reset(global_cont);
-
-  if (hack_first != 0) {
-    hack_first = 0;
-    synti2_conts_store(global_cont, 0, hack_patch_sysex, hack_patch_sysex_length);
-  }
-
-  /*
-  if ((rand() * (1.0/RAND_MAX)) < 0.053/4){
-    hackbuf[0] = 0x90;
-    hack_note = 0x10 + (rand() * (1.0/RAND_MAX))*0x20;
-    hackbuf[1] = hack_note;
-    hackbuf[2] = frame / 8000 % 0x80;
-  } else if ((rand() * (1.0/RAND_MAX)) < 0.0535 / 4) {
-    if (hack_note != 0){
-      hackbuf[0] = 0x80;   hackbuf[1] = hack_note;   hackbuf[2] = 0x7f;
-      hack_note = 0;
-    }
-  }
-  synti2_conts_store(global_cont, 10, hackbuf, 3);
-  */
-
-  synti2_player_render(global_player, global_cont, len/4);
-
-  synti2_conts_start(global_cont);
-
   /* Call our own synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
-  synti2_render(st, global_cont,
+  synti2_render(st, global_player,
 		audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
 
   frame += len/4;
@@ -139,8 +105,8 @@ static void main2(int sdl_flags){
 
   /* Checks of possible failures?*/
   st = synti2_create(MY_SAMPLERATE);
-  global_cont = synti2_conts_create();
-  global_player = synti2_player_create(hacksong_data, hacksong_length, MY_SAMPLERATE);
+  synti2_do_receiveSysEx(st, hack_patch_sysex); /* hack.. */
+  global_player = synti2_player_create(hacksong_data, MY_SAMPLERATE);
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);

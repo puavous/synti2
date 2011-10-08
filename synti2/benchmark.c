@@ -33,37 +33,24 @@ int main(int argc, char *argv[])
   int iframe;
   unsigned int sr = 48000;
   int frames_at_once = 128;
-  static int firsttime = 1;
 
   /* My own soft synth to be created. */
   global_synth = synti2_create(sr);
-  global_cont = synti2_conts_create();
-  if ((global_synth == NULL) || (global_cont == NULL)){
+  if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");
     exit(1);
-  };
+  }
+  synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
 
   /*hack. FIXME: remove.*/
-  global_player = synti2_player_create(hacksong_data, hacksong_length, sr);
+  global_player = synti2_player_create(hacksong_data, sr);
   if (global_player == NULL){
     fprintf(stderr, "No player could be made \n");
     exit(1);
   }
 
-
   for(iframe=0; iframe < sr * BENCHMARK_SECONDS; iframe += frames_at_once){
-    synti2_conts_reset(global_cont);
-    
-    if (firsttime != 0) {
-      firsttime = 0;
-      synti2_conts_store(global_cont, 0, 
-                         hack_patch_sysex, hack_patch_sysex_length);
-    } else {
-      synti2_player_render(global_player, global_cont, frames_at_once);
-    }
-    
-    synti2_conts_start(global_cont);
-    synti2_render(global_synth, global_cont,
+    synti2_render(global_synth, global_player,
                   global_buffer, frames_at_once); 
   }
   return 0;

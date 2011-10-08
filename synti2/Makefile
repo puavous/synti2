@@ -33,7 +33,7 @@ all: jacktest
 tools: misssify
 
 misssify: misssify.c Makefile
-	$(CC) $(CFLAGS) -Wextra -o misssify misssify.c
+	$(CC) $(CFLAGS) -Wextra -o misssify misssify.c -lm
 
 benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm
@@ -44,7 +44,7 @@ jacktest: jackmidi.c synti2.c synti2.h testdata.c Makefile
 
 testdata.c: patchbank.txt testi.mid hacktac.py misssify Makefile
 	python hacktac.py < patchbank.txt > testdata.c
-	./misssify testi.mid
+	./misssify --tpq 12 testi.mid
 	python file2c.py test.misss hacksong >> testdata.c
 
 sdltest: sdltest.c synti2.c synti2.h Makefile

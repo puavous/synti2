@@ -28,7 +28,7 @@
  * + Only one BPM value allowed throughout the song; no tempo map,
  *   sry. (No need to compute much during the playback).
  *
- * - Use lower parts-per-quarter setting, and quantize notes as
+ * + Use lower parts-per-quarter setting, and quantize notes as
  *   needed. The variable-length delta idea is useful as it is.
  *
  * - Decimate velocities
@@ -45,6 +45,8 @@
 #include<stdio.h>
 #include<getopt.h>
 #include<string.h>
+
+#include<math.h>
 
 #include "misss.h"
 
@@ -110,7 +112,9 @@ typedef struct misss_info{
 } misss_info;
 
 #if 0
-// Blaaa.. it would be very similar to smf_events... should combine somehow..
+
+       Blaaa.. it would be very similar to smf_events... should combine somehow..
+
 typedef struct misss_events{
   evlist_node nodepool[MAX_NODES];
   unsigned char datapool[MAX_DATA];
@@ -128,6 +132,7 @@ typedef struct misssify_options{
   char outfname[MAX_STRINGLENGTH+1];
   int verbose;
   int options_valid;
+  int desired_timediv; /* desired value of timediv */
 } misssify_options;
 
 
@@ -195,13 +200,13 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
         {"append",  no_argument,       0, 'b'},
         {"delete",  required_argument, 0, 'd'},
         {"create",  required_argument, 0, 'c'},
-        {"file",    required_argument, 0, 'f'},
+        {"tpq",     required_argument, 0, 'p'},
         {0, 0, 0, 0} /* marks the end of options */
       };
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    c = getopt_long (argc, argv, "abc:d:f:",
+    c = getopt_long (argc, argv, "abc:d:p:",
                      long_options, &option_index);
     
     /* Detect the end of the options. */
@@ -236,8 +241,10 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
         printf ("option -d with value `%s'\n", optarg);
         break;
         
-      case 'f':
-        printf ("option -f with value `%s'\n", optarg);
+      case 'p':
+        opt->desired_timediv = atoi(optarg);
+        printf ("Desired timediv is %d (given as string '%s')\n", 
+                opt->desired_timediv, optarg);
         break;
         
       case '?':
@@ -360,7 +367,7 @@ void
 smf_events_skip_all_before_tick(smf_events *evs, int extended_status, int tick){
   while((evs->iter[extended_status]->next != NULL)
         && (smf_events_get_next_tick(evs, extended_status) < tick)){
-    smf_events_iter_next(evs, extended_status); //evs->iter[extended_status]++;
+    smf_events_iter_next(evs, extended_status);
   }
 }
 
@@ -379,6 +386,27 @@ smf_events_printcontents(smf_events *evs, FILE *fto){
     }
   }
 }
+
+static
+void
+smf_events_recompute_ticks(smf_events *evs, 
+                           int timediv_old,
+                           int timediv_new)
+{
+  float ntick, tdiv;
+  int i;
+  evlist_node *p;
+
+  tdiv = (float) timediv_old / timediv_new;
+  for (i=0x0000; i<0x10000; i++){
+    for (p = evs->head[i].next; p != NULL; p=p->next){
+      ntick = p->tick / tdiv;
+      ntick = floor(ntick + 0.5); /* to closest possible tick.. */
+      p->tick = ntick;
+    }
+  }
+}
+
 
 
 /* smf_events_deepcpy_data */ /* actually memcpy does this.. */
@@ -403,9 +431,6 @@ smf_events_merge_new(smf_events *evs,
                      unsigned int tick)
 {
   evlist_node *newnode;
-  //int storelen;
-
-  //storelen = datalen - 1;
 
   if (tick < (evs->iter[extended_status])->tick){
     fprintf(stderr, "Event ordering error. %d < %d Skipping event!\n", 
@@ -731,7 +756,6 @@ misss_events_write_layer_header(misss_events *ev_misss,
                                 int number_of_events,
                                 int layer_type,
                                 int layer_channel){
-  //ev_misss->datapool[ev_misss->ind++] = (layer_type<<4) + layer_channel;
   misss_events_write_varlength(ev_misss, number_of_events);
   misss_events_write_byte(ev_misss, layer_channel);
   misss_events_write_byte(ev_misss, layer_type);
@@ -781,7 +805,7 @@ misss_events_write_notestuff(misss_events *ev_misss,
     if (default_velocity < 0)
       tmpbuf[i++] = ((unsigned char*)(ev_from->iter[s_from]->data))[2]; /* Velocity */
   } 
-  // FIXME: Can only do channel 0 as of yet:
+  /* FIXME: Can only do channel 0 as of yet: */
   if ((default_pitch >= 0) && (default_velocity >= 0)){
     misss_events_write_layer_header(ev_misss,nev, MISSS_LAYER_NOTES_CVEL_CPITCH, chan);
     misss_events_write_byte(ev_misss, default_velocity);
@@ -816,7 +840,7 @@ construct_misss(smf_events *ev_original,
   smf_events *ev_intermediate;
   ev_intermediate = calloc(1, sizeof(smf_events));
 
-  //smf_events_rewind_all_iters(ev_original);
+  /*smf_events_rewind_all_iters(ev_original);*/
   ilayer = 0; /* Store to adjacent layers starting from 0?*/
   /* FIXME: preliminary as of yet. */
   /* Merge note-ons. FIXME: Channel per layer */
@@ -834,7 +858,14 @@ construct_misss(smf_events *ev_original,
     }
   }
 
-  smf_events_printcontents(ev_intermediate, stdout);
+  if (opt->desired_timediv > 0){
+    smf_events_recompute_ticks(ev_intermediate, 
+                               info->time_division,
+                               opt->desired_timediv);
+    info->time_division = opt->desired_timediv;
+  }
+
+  /*smf_events_printcontents(ev_intermediate, stdout);*/
   misss_events_write_header(ev_misss, info);
   misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, -1);
   misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0010, -1, 0);
@@ -876,27 +907,29 @@ file_write(const char fname[], const unsigned char *buf, size_t bufsz){
 int main(int argc, char *argv[]){
   smf_events *ev_original;
   misss_events *ev_misssified;
-  misssify_options opt;
   smf_info *info;
+  misssify_options *opt;
   ev_original = calloc(1, sizeof(smf_events));
-  ev_misssified = calloc(1, sizeof(smf_events));
+  ev_misssified = calloc(1, sizeof(misss_events));
   info = calloc(1, sizeof(smf_info));
+  opt = calloc(1, sizeof(misssify_options));
   
-  misssify_options_parse(&opt, argc, argv);
-  dinput_size = file_read(opt.infname, dinput, MAX_DATA);
-  deconstruct_from_midi(ev_original, info, dinput, &opt);
+  misssify_options_parse(opt, argc, argv);
+  dinput_size = file_read(opt->infname, dinput, MAX_DATA);
+  deconstruct_from_midi(ev_original, info, dinput, opt);
   
-  smf_events_printcontents(ev_original, stdout);
+  /*smf_events_printcontents(ev_original, stdout);*/
   
   /* 
      filter_events(?)??
   */
-  construct_misss(ev_original, ev_misssified, info, &opt);
+  construct_misss(ev_original, ev_misssified, info, opt);
 
-  file_write(opt.outfname, ev_misssified->datapool, ev_misssified->ind);
+  file_write(opt->outfname, ev_misssified->datapool, ev_misssified->ind);
 
   free(ev_original);
   free(ev_misssified);
   free(info);
+  free(opt);
   return 0;
 }

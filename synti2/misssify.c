@@ -839,8 +839,8 @@ misss_events_write_notestuff(misss_events *ev_misss,
   /* FIXME: Can only do channel 0 as of yet: */
   if ((default_pitch >= 0) && (default_velocity >= 0)){
     misss_events_write_layer_header(ev_misss,nev, MISSS_LAYER_NOTES_CVEL_CPITCH, chan);
-    misss_events_write_byte(ev_misss, default_velocity);
-    misss_events_write_byte(ev_misss, default_pitch);
+    misss_events_write_byte(ev_misss, default_pitch);    /*Pitch 1st*/
+    misss_events_write_byte(ev_misss, default_velocity); /*Velocity 2nd*/
   } else if (default_velocity >= 0){
     misss_events_write_layer_header(ev_misss, nev, MISSS_LAYER_NOTES_CVEL, chan);
     misss_events_write_byte(ev_misss, default_velocity);

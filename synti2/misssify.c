@@ -716,6 +716,13 @@ misss_events_write_byte(misss_events *ev_misss, unsigned char byte){
   ev_misss->datapool[ev_misss->ind++] = byte;
 }
 
+static
+void
+misss_events_write_varlength(misss_events *ev_misss, int data){
+  ev_misss->ind += misss_encode_varlength(data,&(ev_misss->datapool[ev_misss->ind]));
+}
+
+
 
 static
 void
@@ -724,18 +731,16 @@ misss_events_write_layer_header(misss_events *ev_misss,
                                 int layer_type,
                                 int layer_channel){
   //ev_misss->datapool[ev_misss->ind++] = (layer_type<<4) + layer_channel;
-  ev_misss->ind += misss_encode_varlength(number_of_events, 
-                                          &(ev_misss->datapool[ev_misss->ind]));
-  //  misss_events_write_varlength();
+  misss_events_write_varlength(ev_misss, number_of_events);
   misss_events_write_byte(ev_misss, layer_channel);
   misss_events_write_byte(ev_misss, layer_type);
 }
 
 static
 void
-misss_events_write_header(misss_events *ev_misss, int tempo){
-  ev_misss->datapool[ev_misss->ind++] = 196; /* FIXME! FIIIXMEEE!*/
-  ev_misss->datapool[ev_misss->ind++] = tempo;
+misss_events_write_header(misss_events *ev_misss, smf_info *info){
+  misss_events_write_varlength(ev_misss, info->time_division);
+  misss_events_write_varlength(ev_misss, info->usec_per_q);
 }
 
 
@@ -829,7 +834,7 @@ construct_misss(smf_events *ev_original,
   }
 
   smf_events_printcontents(ev_intermediate, stdout);
-  misss_events_write_header(ev_misss, 120); /* FIXME! should come from info */
+  misss_events_write_header(ev_misss, info);
   misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, -1);
   misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0010, -1, 0);
   misss_events_write_byte(ev_misss, 0); /* Zero length indicates end of file. */

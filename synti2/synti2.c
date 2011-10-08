@@ -287,6 +287,7 @@ synti2_player *
 synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   unsigned char *r;
   int chunksize;
+  int uspq;
   synti2_player *pl;
 
   pl = calloc(1, sizeof(synti2_player));
@@ -302,9 +303,12 @@ synti2_player_create(unsigned char * songdata, int datalen, int samplerate){
   //pl->frames_to_next_tick = 0; /* There will be a tick right away. zero init!*/
 
   r = songdata;
-  pl->tpq = *r++; /* Ticks per quarter note */
-  pl->fpt = (float)pl->sr * 60 / (*(r++)) / pl->tpq; /* Tempo converted to
-                                       frames-per-tick. FIXME:  */
+  r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */
+  //pl->tpq = *r++;
+  r += varlength(r, &uspq);  /* Ticks per quarter note */
+  //pl->fpt = (float)pl->sr * 60 / (*(r++)) / pl->tpq; /* Tempo converted to
+  //                                     frames-per-tick. FIXME:  */
+  pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0);
 
   r += varlength(r, &chunksize);
   //printf("Read chunksize %d \n", chunksize);fflush(stdout);

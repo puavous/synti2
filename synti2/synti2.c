@@ -8,19 +8,15 @@
 #include "synti2.h"
 #include "misss.h"
 
+
+/* Synti2 can be compiled as a Jack-MIDI compatible real-time soft
+ * synth. Jack headers are not necessary otherwise...
+ */
 #ifdef JACK_MIDI
 #include "jack/jack.h"
 #include "jack/midiport.h"
+#include <errno.h>
 #endif
-
-struct synti2_conts {
-  int i;
-  int ibuf;
-  int nextframe;            /* TODO: Necessary field? */
-  int frame[20000];         /*FIXME: think about limits */
-  int msglen[20000];        /*FIXME: think about limits */
-  unsigned char buf[20000]; /*FIXME: think about limits */
-};
 
 /* Polyphony */
 #define NVOICES 32
@@ -39,7 +35,7 @@ struct synti2_conts {
 /* Total number of envelopes */
 #define NENVS (NVOICES * NENVPERVOICE)
 
-/* Maximum value of the counter type. Depends on C implementation, so use limits.h */
+/* Maximum value of the counter type depends on C implementation, so use limits.h */
 #define MAX_COUNTER UINT_MAX
 
 /* Number of inner loop iterations (audio frame evaluations) between
@@ -69,7 +65,7 @@ struct synti2_conts {
  * envelopes with only a little extra (clamping and stop flag). Could
  * I use just one huge counter bank for everything? TODO: Try out, and
  * also think if it is more efficient to put values and deltas in
- * different arrays. Probably, if you think of a possible assembler
+ * separate arrays. Probably, if you think of a possible assembler
  * implementation with multimedia vector instructions(?).
  */
 typedef struct counter {
@@ -93,7 +89,7 @@ struct synti2_synth {
 
   float wave[WAVETABLE_SIZE];
 
-  /* Oscillators are now modeled by integer counters (phase). */
+  /* Oscillators are now modeled as integer counters (phase). */
   counter c[NCOUNTERS];
   float fc[NCOUNTERS];   /* store the values as floats right away. */
 
@@ -131,7 +127,8 @@ struct synti2_synth {
 #define SYNTI2_MAX_SONGBYTES 30000
 #define SYNTI2_MAX_SONGEVENTS 15000
 
-/* Events shall form a singly linked list. */
+/* Events shall form a singly linked list. TODO: Is the list code too
+   complicated? Use just tables with O(n^2) pre-ordering instead?? */
 typedef struct synti2_player_ev synti2_player_ev;
 
 struct synti2_player_ev {
@@ -227,7 +224,6 @@ synti2_player_merge_chunk(synti2_player *pl, unsigned char *r, int n_events)
   else if (type == MISSS_LAYER_NOTES_CVEL) r++;
   else if (type == MISSS_LAYER_NOTES_CVEL_CPITCH) r += 2;
 
-
   for(ii=0; ii<n_events; ii++){
     r += varlength(r, &tickdelta);
     frame += pl->fpt * tickdelta;
@@ -272,7 +268,6 @@ synti2_player_merge_chunk(synti2_player *pl, unsigned char *r, int n_events)
 }
 
 #ifdef JACK_MIDI
-#include <errno.h>
 /** Creates a future for the player object that will repeat the next
  *  nframes of midi data from a jack audio connection kit midi port.
  *
@@ -329,7 +324,7 @@ synti2_player_init_from_misss(synti2_player *pl, unsigned char *r)
   r += varlength(r, &chunksize);
   while(chunksize > 0){ /*printf("Read chunksize %d \n", chunksize);*/
     r = synti2_player_merge_chunk(pl, r, chunksize); /* read a chunk... */
-    r += varlength(r, &chunksize);                   /* move on to next chunk. */    
+    r += varlength(r, &chunksize);                   /* move on to next chunk. */
   }
 }
 

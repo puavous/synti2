@@ -81,6 +81,9 @@ typedef struct synti2_part {
 } synti2_part;
 
 struct synti2_synth {
+  unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
+  /* Throw-away test stuff:*/
+  long int global_framesdone;  /*NOTE: This is basically just a counter, too! */
   float infranotes[128]; /* TODO: This space could be used for LFO's */
   float note2freq[128];  /* pre-computed frequencies of notes... Tuning
 			    systems would be easy to change - just
@@ -116,11 +119,6 @@ struct synti2_synth {
   /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   float patch[NPARTS * SYNTI2_NPARAMS];  /* The sound parameters per part*/
-
-  unsigned long sr;
-
-  /* Throw-away test stuff:*/
-  long int global_framesdone;  /*NOTE: This is basically just a counter, too! */
 };
 
 
@@ -140,20 +138,19 @@ struct synti2_player_ev {
 
 struct synti2_player {
   int sr;           /* Sample rate. */
-  float fpt;        /* Frames per tick. Tempos will be inexact, sry! */
+  int fpt;       /* Frames per tick. Tempos will be inexact, sry! */
   int tpq;          /* Ticks per quarter (no support for SMPTE). */
   int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
-
-  unsigned char data[SYNTI2_MAX_SONGBYTES];
-  int idata;
-
-  /* Only playable events. The first will be at evpool[0]! */
-  /* TODO: Realtime MIDI input could be uniform if we "create a new
-     player" for each time window? */
-  synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
   synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
   synti2_player_ev *insloc;
-  int nextfree;
+
+  int idata;        /* index of next free data location */
+  int nextfree;     /* index of next free event structure */
+
+  unsigned char data[SYNTI2_MAX_SONGBYTES];
+
+  /* Only playable events. The first will be at evpool[0]! */
+  synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
 };
 
 /** Reads a MIDI variable length number. */
@@ -204,13 +201,16 @@ synti2_player_event_add(synti2_player *pl, int frame, unsigned char *src, int n)
 /** Returns a pointer to one past end of read in input data, i.e., next byte. */
 static
 unsigned char *
-synti2_player_merge_chunk(synti2_player *pl, unsigned char *r, int n_events)
+synti2_player_merge_chunk(synti2_player *pl, 
+                          unsigned char *r, 
+                          int n_events)
 {
   int ii;
-  int chan, type, frame, tickdelta;
+  int chan, type;
+  int frame, tickdelta;
   unsigned char *par;
   //synti2_player_ev *insloc;
-  unsigned char tmpbuf[4] = {0,0,0,0};
+  unsigned char tmpbuf[4]; /* see that it gets initialized! */
 
   chan = *r++;
   type = *r++;
@@ -565,9 +565,9 @@ synti2_evalEnvelopes(synti2_synth *s){
       detect = s->eprog[iv][ie].val;
       s->eprog[iv][ie].val += s->eprog[iv][ie].delta; /* counts from 0 to MAX */
       if (s->eprog[iv][ie].val < detect){  /* Detect overflow */
+        s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
         s->eprog[iv][ie].delta = 0;  /* Counter stops after full cycle   */
         s->feprog[iv][ie] = 1.0;     /* and the floating value is clamped */ 
-        s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
       } else {
         s->feprog[iv][ie] = ((float) s->eprog[iv][ie].val) / MAX_COUNTER;
       }

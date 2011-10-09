@@ -18,6 +18,15 @@
 #include <errno.h>
 #endif
 
+/* If any foreign MIDI protocol is used, note-offs should be converted
+ * to our own protocol (also a MIDI variant) that note-on with zero
+ * velocity means a note-off.
+ */
+#ifdef JACK_MIDI
+#define DO_CONVERT_OFFS
+#endif
+
+
 /* Polyphony */
 #define NVOICES 32
 
@@ -232,6 +241,7 @@ synti2_player_merge_chunk(synti2_player *pl,
     //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
     //synti2_player_merge_event(pl, );
 
+    tmpbuf[0] = 0x90; /* Assume we're doing notes. */
     tmpbuf[1]= (par[0]==0xff) ? *r++ : par[0];
     tmpbuf[2]= (par[1]==0xff) ? *r++ : par[1];
 
@@ -246,11 +256,6 @@ synti2_player_merge_chunk(synti2_player *pl,
         break;
       }
     } else {
-      if (tmpbuf[2] == 0){
-        tmpbuf[0] = 0x80 + chan; /* MIDI Note off. (hack) */
-      } else {
-        tmpbuf[0] = 0x90 + chan; /* MIDI Note on. */
-      }
       synti2_player_event_add(pl, frame, tmpbuf, 3); /* Now it is a complete msg. */
     }
   }
@@ -284,6 +289,7 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
+
       synti2_player_event_add(pl, 
                               pl->frames_done + ev.time, 
                               ev.buffer, 
@@ -295,7 +301,7 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
 }
 #endif
 
-/** Load and initialize a song. Assumes a freshly created player object! */
+/** Load and initialize a song. Assumes a freshly created player object!*/
 static
 void
 synti2_player_init_from_misss(synti2_player *pl, unsigned char *r)
@@ -375,11 +381,28 @@ synti2_create(unsigned long sr)
 }
 
 
+/** Note on OR note off (upon velocity == 0) */
 static
 void
 synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
 {
-  int freevoice, ie;
+  int voice, ie;
+  /* note off */
+  if (vel==0){
+    voice = s->part[part].voiceofkey[note];
+    //s->part[part].voiceofkey[note] = -1;  /* key should no longer map to ... no... */
+    //if (voice < 0) return; /* FIXME: think.. */
+    /* TODO: release all envelopes.. */
+    for (ie=0; ie<NENVPERVOICE; ie++){
+      s->estage[voice][ie] = 2;      /* skip to end */
+      s->eprog[voice][ie].delta = 0; /* skip to end */
+      s->eprog[voice][ie].val = 0;   /* must skip also value!! FIXME: think(?)*/
+      s->sustain[voice] = 0;         /* don't renew loop. */
+    }
+    return; /* Note off is now handled. Otherwise do note on. */
+  }
+
+ 
   /* note on */
 
   /* FIXME: Unimplemented plan: if patch is monophonic, always use the
@@ -392,23 +415,23 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
    * maybe some kind of free voice stack could be implemented with not
    * too much code...)
    */
-  for(freevoice=0; freevoice < NVOICES; freevoice++){
-    if (s->partofvoice[freevoice] < 0) break;
+  for(voice=0; voice < NVOICES; voice++){
+    if (s->partofvoice[voice] < 0) break;
   }
-  if (freevoice==NVOICES) return; /* Cannot play new note! */
+  if (voice==NVOICES) return; /* Cannot play new note! */
   /* (Could actually force the last voice to play anyway!?) */
   
-  s->part[part].voiceofkey[note] = freevoice;
-  s->partofvoice[freevoice] = part;
-  s->note[freevoice] = note;
-  s->velocity[freevoice] = vel;
-  s->sustain[freevoice] = 1;  
+  s->part[part].voiceofkey[note] = voice;
+  s->partofvoice[voice] = part;
+  s->note[voice] = note;
+  s->velocity[voice] = vel;
+  s->sustain[voice] = 1;  
  
   /* TODO: trigger all envelopes according to patch data..  Just give
      a hint to the evaluator function.. */
   for (ie=0; ie<NENVPERVOICE; ie++){
-    s->estage[freevoice][ie] = TRIGGERSTAGE;
-    s->eprog[freevoice][ie].delta = 0;
+    s->estage[voice][ie] = TRIGGERSTAGE;
+    s->eprog[voice][ie].delta = 0;
   }
 }
 
@@ -525,8 +548,13 @@ synti2_handleInput(synti2_synth *s,
     midibuf = pl->playloc->data;
     if ((midibuf[0] & 0xf0) == 0x90){
       synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);
+
+#ifdef DO_CONVERT_OFFS
     } else if ((midibuf[0] & 0xf0) == 0x80) {
-      synti2_do_noteoff(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);
+      /* Convert any note-off to a note-on with velocity 0 here. */
+      synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], 0);
+#endif
+      
     } else if (midibuf[0] == 0xf0){
       synti2_do_receiveSysEx(s, midibuf);
     }else {

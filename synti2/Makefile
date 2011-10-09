@@ -45,6 +45,8 @@ jacktest: jackmidi.c synti2.c synti2.h testdata.c Makefile
 testdata.c: patchbank.txt testi.mid hacktac.py misssify Makefile
 	python hacktac.py < patchbank.txt > testdata.c
 	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
+#	./misssify --tpq 12 --only-on testi.mid
+#	./misssify --tpq 12 testi.mid
 	python file2c.py test.misss hacksong >> testdata.c
 
 sdltest: sdltest.c synti2.c synti2.h Makefile

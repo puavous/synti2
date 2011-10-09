@@ -58,8 +58,8 @@
  */
 /* Layer identifier nibbles 0-7 */
 #define MISSS_LAYER_NOTES 0x00
-#define MISSS_LAYER_NOTES_CPITCH 0x01
-#define MISSS_LAYER_NOTES_CVEL 0x02
+#define MISSS_LAYER_NOTES_CPITCH 0x02
+#define MISSS_LAYER_NOTES_CVEL 0x01
 #define MISSS_LAYER_NOTES_CVEL_CPITCH 0x03
 /* TODO: Do I need two different controller commands, or could I use
  * just one, somehow parameterized to be either reset or ramp each? */

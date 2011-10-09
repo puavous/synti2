@@ -837,22 +837,28 @@ misss_events_write_notestuff(misss_events *ev_misss,
       tmpbuf[i++] = ((unsigned char*)(ev_from->iter[s_from]->data))[2]; /* Velocity */
   } 
   /* FIXME: Can only do channel 0 as of yet: */
+  /* FIXME: I use -1 (==0xff) in the header as a marker for "no
+   *   parameter".  This might imply some things. Check if this is
+   *   OK. It seems to make the reader code more straightforward. AND
+   *   it looks like we're ending up with only one kind of note
+   *   layer!!!
+   */
   if ((default_pitch >= 0) && (default_velocity >= 0)){
     misss_events_write_layer_header(ev_misss,nev, MISSS_LAYER_NOTES_CVEL_CPITCH, chan);
     misss_events_write_byte(ev_misss, default_pitch);    /*Pitch 1st*/
     misss_events_write_byte(ev_misss, default_velocity); /*Velocity 2nd*/
   } else if (default_velocity >= 0){
     misss_events_write_layer_header(ev_misss, nev, MISSS_LAYER_NOTES_CVEL, chan);
-    misss_events_write_byte(ev_misss, 0); /* empty */
+    misss_events_write_byte(ev_misss, -1); /* empty */
     misss_events_write_byte(ev_misss, default_velocity); /* Vel 2nd */
   } else if (default_pitch >= 0){
     misss_events_write_layer_header(ev_misss, nev, MISSS_LAYER_NOTES_CPITCH, chan);
     misss_events_write_byte(ev_misss, default_pitch); /* Pitch 1st */
-    misss_events_write_byte(ev_misss, 0); /* empty */
+    misss_events_write_byte(ev_misss, -1); /* empty */
   } else {
     misss_events_write_layer_header(ev_misss, nev, MISSS_LAYER_NOTES, chan);
-    misss_events_write_byte(ev_misss, 0); /* empty */
-    misss_events_write_byte(ev_misss, 0); /* empty */
+    misss_events_write_byte(ev_misss, -1); /* empty */
+    misss_events_write_byte(ev_misss, -1); /* empty */
   }
   /* And then the rest of the data. */
   misss_events_write_bytes(ev_misss, i, tmpbuf);

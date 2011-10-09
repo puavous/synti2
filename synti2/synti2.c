@@ -139,20 +139,20 @@ struct synti2_player_ev {
 };
 
 struct synti2_player {
-  int sr;           /* Sample rate. */
+  synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
+  synti2_player_ev *insloc;
   int fpt;       /* Frames per tick. Tempos will be inexact, sry! */
   int tpq;          /* Ticks per quarter (no support for SMPTE). */
   int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
-  synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
-  synti2_player_ev *insloc;
+  int sr;           /* Sample rate. */
 
   int idata;        /* index of next free data location */
   int nextfree;     /* index of next free event structure */
 
-  unsigned char data[SYNTI2_MAX_SONGBYTES];
-
   /* Only playable events. The first will be at evpool[0]! */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
+  /* Data for events. */
+  unsigned char data[SYNTI2_MAX_SONGBYTES];
 };
 
 /** Reads a MIDI variable length number. */
@@ -207,13 +207,11 @@ synti2_player_merge_chunk(synti2_player *pl,
                           unsigned char *r, 
                           int n_events)
 {
-  int ii;
   char chan, type;
+  int ii;
   int frame, tickdelta;
   unsigned char *par;
-  //synti2_player_ev *insloc;
-  unsigned char tmpbuf[4]; /* see that it gets initialized! */
-  //static char radd[8] = {2,1,1,0,0,0,0,0};
+  unsigned char tmpbuf[3]; /* see that it gets initialized! */
 
   chan = *r++;
   type = *r++;
@@ -222,30 +220,28 @@ synti2_player_merge_chunk(synti2_player *pl,
   synti2_player_reset_insert(pl); /* Re-start merging from frame 0. */
   //printf("Type %d on chan %d. par 1=%d par 2=%d\n", type, chan, par[0], par[1]);
 
-  /* add number of parameters to r! */
-  //r += radd[type];
-  if (type == MISSS_LAYER_NOTES_CPITCH) r++;
-  else if (type == MISSS_LAYER_NOTES_CVEL) r++;
-  else if (type == MISSS_LAYER_NOTES_CVEL_CPITCH) r += 2;
-
+  /* Always two parameters.. makes reader code simpler with not too
+   * much storage overhead.
+   */
+  r += 2;   /* add number of parameters to r! */
 
   for(ii=0; ii<n_events; ii++){
     r += varlength(r, &tickdelta);
     frame += pl->fpt * tickdelta;
     //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
     //synti2_player_merge_event(pl, );
-    if (type == MISSS_LAYER_NOTES_CVEL_CPITCH){
-      tmpbuf[1] = par[0]; /* Constant pitch is a layer parameter */
-      tmpbuf[2] = par[1]; /* Constant velocity is the 2nd layer parameter */
-    } else if (type == MISSS_LAYER_NOTES_CVEL){
+    if (type == MISSS_LAYER_NOTES){
       tmpbuf[1] = *r++;   /* Pitch given here */
-      tmpbuf[2] = par[0]; /* Constant velocity is a layer parameter */
+      tmpbuf[2] = *r++;   /* Velocity given here */
     } else if  (type == MISSS_LAYER_NOTES_CPITCH){
       tmpbuf[1] = par[0]; /* Constant pitch is a layer parameter */
       tmpbuf[2] = *r++;   /* Velocity given here */
-    } else if (type == MISSS_LAYER_NOTES){
+    } else if (type == MISSS_LAYER_NOTES_CVEL){
       tmpbuf[1] = *r++;   /* Pitch given here */
-      tmpbuf[2] = *r++;   /* Velocity given here */
+      tmpbuf[2] = par[1]; /* Constant velocity is a layer parameter */
+    } else if (type == MISSS_LAYER_NOTES_CVEL_CPITCH){
+      tmpbuf[1] = par[0]; /* Constant pitch is a layer parameter */
+      tmpbuf[2] = par[1]; /* Constant velocity is the 2nd layer parameter */
     } else {
       /* Not yet implemented. FIXME: implement? */
       switch (type){
@@ -257,6 +253,7 @@ synti2_player_merge_chunk(synti2_player *pl,
         break;
       }
     }
+
     if ((type == MISSS_LAYER_NOTES_CVEL_CPITCH)
         || (type == MISSS_LAYER_NOTES_CPITCH)
         || (type == MISSS_LAYER_NOTES_CVEL)

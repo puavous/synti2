@@ -194,19 +194,23 @@ void
 synti2_player_event_add(synti2_player *pl, int frame, unsigned char *src, int n){
   synti2_player_ev *ev_new;
   int dcopy;
+  unsigned char *dst;
   while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
     pl->insloc = pl->insloc->next;
   }
   ev_new = &(pl->evpool[pl->nextfree++]);
 
-  ev_new->data = pl->data + pl->idata; /* Next pointer from the data pool. */
+  /* Next pointer from the data pool. */
+  dst = ev_new->data = pl->data + pl->idata;
+
+  /* Fill in the node: */
   ev_new->next = pl->insloc->next;
   ev_new->frame = frame;
   ev_new->len = n;
   pl->insloc->next = ev_new;
-  for(dcopy=0;dcopy<n;dcopy++){
-    pl->data[pl->idata++] = src[dcopy];
-  }
+
+  for(dcopy=0;dcopy<n;dcopy++) *dst++ = *src++;
+  pl->idata += n;  
 }
 
 /** Returns a pointer to one past end of read in input data, i.e., next byte. */

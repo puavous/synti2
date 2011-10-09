@@ -190,14 +190,16 @@ synti2_player_reset_insert(synti2_player *pl){
 }
 
 
+/** Adds an event to its correct location. Assumes that the
+ * pre-existing events are ordered.
+ */
 static
 void
 synti2_player_event_add(synti2_player *pl, 
                         int frame, 
-                        unsigned char *src, 
+                        const unsigned char *src, 
                         size_t n){
   synti2_player_ev *ev_new;
-  //int dcopy;
   unsigned char *dst;
   while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
     pl->insloc = pl->insloc->next;
@@ -494,6 +496,7 @@ synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
   //jack_info("Receiving! Offset %d Length %d", offset, stride);
   /* Process data: */
   for (ir=0; ir<stride; ir++){
+    /* FIXME: This is not going to work like this!! it is 120 bytes compressed!*/
     decoded  = (*(data + 0*stride)) * 0.01;  /* hundredths*/
     decoded += (*(data + 1*stride));         /* wholes */
     decoded += (*(data + 2*stride)) * 100.0; /* hundreds*/

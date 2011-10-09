@@ -153,11 +153,11 @@ struct synti2_player {
   synti2_player_ev *insloc;
   int fpt;       /* Frames per tick. Tempos will be inexact, sry! */
   int tpq;          /* Ticks per quarter (no support for SMPTE). */
+  synti2_player_ev *freeloc; /*pointer to next free event structure*/
   int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
   int sr;           /* Sample rate. */
 
   int idata;        /* index of next free data location */
-  int nextfree;     /* index of next free event structure */
 
   /* Only playable events. The first will be at evpool[0]! */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
@@ -202,7 +202,7 @@ synti2_player_event_add(synti2_player *pl,
   while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
     pl->insloc = pl->insloc->next;
   }
-  ev_new = &(pl->evpool[pl->nextfree++]);
+  ev_new = pl->freeloc++;
 
   /* Fill in the node: */
   ev_new->next = pl->insloc->next;
@@ -289,7 +289,7 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
   void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
 
   /* Re-initialize, and overwrite any former data. */
-  pl->nextfree = 1;
+  pl->freeloc = pl->evpool+1;
   pl->playloc = pl->evpool; /* This would "rewind" the song */
   pl->insloc = pl->evpool; /* This would "rewind" the song */
   pl->idata = 0;
@@ -318,7 +318,8 @@ synti2_player_init_from_misss(synti2_player *pl, unsigned char *r)
   int chunksize;
   int uspq;
   /* Initialize an "empty" "head event": */
-  pl->nextfree++;
+  pl->freeloc = pl->evpool + 1;
+
   pl->playloc = pl->evpool; /* This would "rewind" the song */
   
   r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */

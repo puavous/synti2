@@ -230,19 +230,15 @@ synti2_player_merge_chunk(synti2_player *pl,
     frame += pl->fpt * tickdelta;
     //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
     //synti2_player_merge_event(pl, );
-    if (type == MISSS_LAYER_NOTES){
-      tmpbuf[1] = *r++;   /* Pitch given here */
+    tmpbuf[1] = par[0]; /* Constant pitch 1st parameter (tentative) */
+    tmpbuf[2] = par[1]; /* Constant velocity 2nd parameter (tentative) */
+    if (type == MISSS_LAYER_NOTES_CPITCH){
       tmpbuf[2] = *r++;   /* Velocity given here */
-    } else if  (type == MISSS_LAYER_NOTES_CPITCH){
-      tmpbuf[1] = par[0]; /* Constant pitch is a layer parameter */
-      tmpbuf[2] = *r++;   /* Velocity given here */
-    } else if (type == MISSS_LAYER_NOTES_CVEL){
+    }
+    if (type == MISSS_LAYER_NOTES_CVEL){
       tmpbuf[1] = *r++;   /* Pitch given here */
-      tmpbuf[2] = par[1]; /* Constant velocity is a layer parameter */
-    } else if (type == MISSS_LAYER_NOTES_CVEL_CPITCH){
-      tmpbuf[1] = par[0]; /* Constant pitch is a layer parameter */
-      tmpbuf[2] = par[1]; /* Constant velocity is the 2nd layer parameter */
-    } else {
+    }
+    if (type > MISSS_LAYER_NOTES_CVEL_CPITCH){
       /* Not yet implemented. FIXME: implement? */
       switch (type){
       case MISSS_LAYER_CONTROLLER_RESETS:
@@ -252,12 +248,7 @@ synti2_player_merge_chunk(synti2_player *pl,
       default:
         break;
       }
-    }
-
-    if ((type == MISSS_LAYER_NOTES_CVEL_CPITCH)
-        || (type == MISSS_LAYER_NOTES_CPITCH)
-        || (type == MISSS_LAYER_NOTES_CVEL)
-        || (type == MISSS_LAYER_NOTES)){
+    } else {
       if (tmpbuf[2] == 0){
         tmpbuf[0] = 0x80 + chan; /* MIDI Note off. (hack) */
       } else {

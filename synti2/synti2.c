@@ -82,8 +82,6 @@ typedef struct synti2_part {
 
 struct synti2_synth {
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
-  /* Throw-away test stuff:*/
-  long int global_framesdone;  /*NOTE: This is basically just a counter, too! */
   float infranotes[128]; /* TODO: This space could be used for LFO's */
   float note2freq[128];  /* pre-computed frequencies of notes... Tuning
 			    systems would be easy to change - just
@@ -119,6 +117,10 @@ struct synti2_synth {
   /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   float patch[NPARTS * SYNTI2_NPARAMS];  /* The sound parameters per part*/
+
+  /* Throw-away test stuff:*/
+  long int global_framesdone;  /*NOTE: This is basically just a counter, too! */
+
 };
 
 

@@ -435,22 +435,6 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
   }
 }
 
-static
-void
-synti2_do_noteoff(synti2_synth *s, int part, int note, int vel){
-  int voice, ie;
-  voice = s->part[part].voiceofkey[note];
-  //s->part[part].voiceofkey[note] = -1;  /* key should no longer map to ... no... */
-  //if (voice < 0) return; /* FIXME: think.. */
-  /* TODO: release all envelopes.. */
-  for (ie=0; ie<NENVPERVOICE; ie++){
-    s->estage[voice][ie] = 2;      /* skip to end */
-    s->eprog[voice][ie].delta = 0; /* skip to end */
-    s->eprog[voice][ie].val = 0;   /* must skip also value!! FIXME: think(?)*/
-    s->sustain[voice] = 0;         /* don't renew loop. */
-  }
-}
-
 
 /** FIXME: Think about data model.. aim at maximal sparsity but enough
     expressive range. If it turns out that the 1/1000 accuracy is very

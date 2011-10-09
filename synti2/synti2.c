@@ -1,6 +1,7 @@
 #include <math.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* For debug prints: */
 #include <stdio.h>
@@ -191,17 +192,17 @@ synti2_player_reset_insert(synti2_player *pl){
 
 static
 void
-synti2_player_event_add(synti2_player *pl, int frame, unsigned char *src, int n){
+synti2_player_event_add(synti2_player *pl, 
+                        int frame, 
+                        unsigned char *src, 
+                        size_t n){
   synti2_player_ev *ev_new;
-  int dcopy;
+  //int dcopy;
   unsigned char *dst;
   while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
     pl->insloc = pl->insloc->next;
   }
   ev_new = &(pl->evpool[pl->nextfree++]);
-
-  /* Next pointer from the data pool. */
-  dst = ev_new->data = pl->data + pl->idata;
 
   /* Fill in the node: */
   ev_new->next = pl->insloc->next;
@@ -209,7 +210,11 @@ synti2_player_event_add(synti2_player *pl, int frame, unsigned char *src, int n)
   ev_new->len = n;
   pl->insloc->next = ev_new;
 
-  for(dcopy=0;dcopy<n;dcopy++) *dst++ = *src++;
+  /* Get next available space from the data pool, and copy the data.
+   * Using memcpy() seems to yield smaller code than a home-made loop.
+   */
+  dst = ev_new->data = pl->data + pl->idata;
+  memcpy(dst,src,n);  
   pl->idata += n;  
 }
 

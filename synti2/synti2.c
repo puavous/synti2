@@ -448,12 +448,13 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
 }
 
 
-/** FIXME: Think about data model.. aim at maximal sparsity but enough
-    expressive range. If it turns out that the 1/1000 accuracy is very
-    seldom required, then it could be worthwhile to store everything
-    in the much simpler format of 4*7 = 28-bit signed integer
-    representing (decimal) hundredths. Even then most parameters would
-    only have the least-significant 7bit set?
+/** FIXME: Think about data model.. aim at maximal
+    sparsity/compressibility but sufficient expressive range. If it
+    turns out that the 1/1000 accuracy is very seldom required, then
+    it could be worthwhile to store everything in the much simpler
+    format of 4*7 = 28-bit signed integer representing (decimal)
+    hundredths. Even then most parameters would only have the
+    least-significant 7bit set?
 
     FIXME: If the song sequence data is finally read from SMF, then
     there will already be a subroutine that reads variable length
@@ -474,42 +475,64 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
     F7
 
     Length is also the stride for value encoding.
+
+   FIXME: Manufacturer ID check.. length check; checksums :) could
+   have checks.. :) but checks are for chicks? Could also check that
+   there is F7 in the end :)
+   
+
 */
 //FIXME (?): static
 void
 synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
-  int offset, stride;
-  unsigned char adjust_byte, adjust_nib, sign_nib;
-
-  int ir;
-  float decoded;
-
-  /* FIXME: Manufacturer ID check.. length check; checksums :) could
-   * have checks.. :) but checks are for chicks?
-   */
-
-  /* Process header: */
-  offset = data[4]; offset <<= 7; offset += data[5];
-  stride = data[6]; stride <<= 7; stride += data[7];
-  data += 8;
+  int offset, stride, ir;
+  int a, b, c, adjust_byte;
+  int adjust_nib;
+  float decoded;  float *dst; unsigned char *rptr;
   
-  //jack_info("Receiving! Offset %d Length %d", offset, stride);
-  /* Process data: */
-  for (ir=0; ir<stride; ir++){
-    /* FIXME: This is not going to work like this!! it is 120 bytes compressed!*/
-    decoded  = (*(data + 0*stride)) * 0.01;  /* hundredths*/
-    decoded += (*(data + 1*stride));         /* wholes */
-    decoded += (*(data + 2*stride)) * 100.0; /* hundreds*/
-    adjust_byte = *(data + 3*stride);
-    adjust_nib = adjust_byte & 0x0f;
-    sign_nib = adjust_byte >> 4;
-    decoded += adjust_nib * 0.001;           /* thousandths*/
-    if (sign_nib>0) decoded = -decoded;      /* sign. */
+  /* Sysex header: */
+  data += 4; /* skip Manufacturer IDs n stuff*/
+  offset = *data++; offset <<= 7; offset += *data++;  /* store location  */
+  stride = *data++; stride <<= 7; stride += *data++;  /* length / stride */
 
-    s->patch[offset++] = decoded;
-    data++;
+  /* Sysex data: */
+  dst = s->patch + offset;
+  for (ir=0; ir<stride; ir++){
+    rptr = data++;
+    a = *rptr;
+    b = *(rptr += stride); 
+    c = *(rptr += stride);
+    adjust_byte = *(rptr += stride);
+    decoded = 0.01 * a + b + 100*c;
+
+#ifdef SUPER_ACCURATE_PATCHES
+    /* Sigh.. I wanted this, but letting go by default. */
+    adjust_nib = adjust_byte & 0x0f;
+    decoded += adjust_nib * 0.001;
+#endif
+
+    *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
   }
-  /* Could check that there is F7 in the end :)*/
+
+
+#if 0
+  /* TODO: Think about this... this becomes about 30 bytes shorter
+   code..  Maybe not worth it ?? Or maybe it is? Is there yet another
+   way to deliver the patch data accurately but with good
+   compressibility? */
+  int ir, a, stride, offset;  float *dst;
+
+  data += 4; /* skip IDs n stuff*/
+  data += varlength(data, &offset);
+  data += varlength(data, &stride);
+
+  dst = s->patch + offset;
+  for (ir=0; ir<stride; ir++){
+    data += varlength(data, &a);
+    a <<= 4; /* need sign bit. Effectively also multiplies by 2**4=16*/
+    *dst++ = a / 1600.0; /* Encoding in 100ths. */
+  }
+#endif
 }
 
 

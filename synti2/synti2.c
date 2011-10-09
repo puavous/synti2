@@ -208,11 +208,12 @@ synti2_player_merge_chunk(synti2_player *pl,
                           int n_events)
 {
   int ii;
-  int chan, type;
+  char chan, type;
   int frame, tickdelta;
   unsigned char *par;
   //synti2_player_ev *insloc;
   unsigned char tmpbuf[4]; /* see that it gets initialized! */
+  //static char radd[8] = {2,1,1,0,0,0,0,0};
 
   chan = *r++;
   type = *r++;
@@ -222,9 +223,11 @@ synti2_player_merge_chunk(synti2_player *pl,
   //printf("Type %d on chan %d. par 1=%d par 2=%d\n", type, chan, par[0], par[1]);
 
   /* add number of parameters to r! */
+  //r += radd[type];
   if (type == MISSS_LAYER_NOTES_CPITCH) r++;
   else if (type == MISSS_LAYER_NOTES_CVEL) r++;
   else if (type == MISSS_LAYER_NOTES_CVEL_CPITCH) r += 2;
+
 
   for(ii=0; ii<n_events; ii++){
     r += varlength(r, &tickdelta);

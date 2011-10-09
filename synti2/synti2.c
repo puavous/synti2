@@ -230,14 +230,22 @@ synti2_player_merge_chunk(synti2_player *pl,
     frame += pl->fpt * tickdelta;
     //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
     //synti2_player_merge_event(pl, );
+
+    //    tmpbuf[1] = (type & MISSS_LAYER_NOTES_CVEL)?
+#if 1
     tmpbuf[1] = par[0]; /* Constant pitch 1st parameter (tentative) */
     tmpbuf[2] = par[1]; /* Constant velocity 2nd parameter (tentative) */
     if (type == MISSS_LAYER_NOTES_CPITCH){
       tmpbuf[2] = *r++;   /* Velocity given here */
-    }
+    } 
     if (type == MISSS_LAYER_NOTES_CVEL){
       tmpbuf[1] = *r++;   /* Pitch given here */
     }
+    if (type == MISSS_LAYER_NOTES){
+      tmpbuf[1] = *r++;   /* Pitch given here */
+      tmpbuf[2] = *r++;   /* Vel given here */
+    }
+#endif
     if (type > MISSS_LAYER_NOTES_CVEL_CPITCH){
       /* Not yet implemented. FIXME: implement? */
       switch (type){

@@ -155,21 +155,21 @@ struct synti2_player {
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
 };
 
-/** Reads a MIDI variable length number. */
+/** Reads a MIDI variable length number. Advances the source pointer!! */
 static 
-int
-varlength(const unsigned char * source, int * dest){
+void
+varlength(const unsigned char **source, int * dest){
   int nread;
   unsigned char byte;
   *dest = 0;
   for (nread=1; nread<=4; nread++){
-    byte = *source++;
+    byte = *(*source)++;
     *dest += (byte & 0x7f);
     if ((byte & 0x80) == 0)
       return nread; 
     else *dest <<= 7;
   }
-  return 0; /* Longer than 4 bytes! Wrong input! FIXME: die. */
+  /* Longer than 4 bytes! Wrong input! FIXME: die. */
 }
 
 
@@ -230,7 +230,7 @@ synti2_player_merge_chunk(synti2_player *pl,
 
 
   for(ii=0; ii<n_events; ii++){
-    r += varlength(r, &tickdelta);
+    varlength(&r, &tickdelta);
     frame += pl->fpt * tickdelta;
     //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
     //synti2_player_merge_event(pl, );
@@ -321,15 +321,15 @@ synti2_player_init_from_misss(synti2_player *pl, unsigned char *r)
   pl->nextfree++;
   pl->playloc = pl->evpool; /* This would "rewind" the song */
   
-  r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */
-  r += varlength(r, &uspq);       /* Microseconds per quarter note */
+  varlength(&r, &(pl->tpq));  /* Ticks per quarter note */
+  varlength(&r, &uspq);       /* Microseconds per quarter note */
   pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0); /* frames-per-tick */
   /* TODO: Think about accuracy vs. code size */
   
-  r += varlength(r, &chunksize);
+  varlength(&r, &chunksize);
   while(chunksize > 0){ /*printf("Read chunksize %d \n", chunksize);*/
     r = synti2_player_merge_chunk(pl, r, chunksize); /* read a chunk... */
-    r += varlength(r, &chunksize);                   /* move on to next chunk. */
+    varlength(&r, &chunksize);                   /* move on to next chunk. */
   }
 }
 

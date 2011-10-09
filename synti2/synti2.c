@@ -250,11 +250,13 @@ synti2_player_merge_chunk(synti2_player *pl,
     //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
     //synti2_player_merge_event(pl, );
 
-    tmpbuf[0] = 0x90; /* Assume we're doing notes. */
-    tmpbuf[1]= (par[0]==0xff) ? *r++ : par[0];
-    tmpbuf[2]= (par[1]==0xff) ? *r++ : par[1];
-
-    if (type > MISSS_LAYER_NOTES_CVEL_CPITCH){
+    if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
+      tmpbuf[0] = 0x90; /* Assume we're doing notes. */
+      tmpbuf[1]= (par[0]==0xff) ? *r++ : par[0];
+      tmpbuf[2]= (par[1]==0xff) ? *r++ : par[1];
+      /* Now it is a complete msg. */
+      synti2_player_event_add(pl, frame, tmpbuf, 3); 
+    } else {
       /* Not yet implemented. FIXME: implement? */
       switch (type){
       case MISSS_LAYER_CONTROLLER_RESETS:
@@ -264,8 +266,6 @@ synti2_player_merge_chunk(synti2_player *pl,
       default:
         break;
       }
-    } else {
-      synti2_player_event_add(pl, frame, tmpbuf, 3); /* Now it is a complete msg. */
     }
   }
   return r;

@@ -146,7 +146,8 @@ static void main2(int sdl_flags){
    */
 
   /* It costs 23-35 bytes (compressed) to politely query the mode !!
-   * It is definitely worth the ease!
+   * It is definitely worth the ease! Oooh, but it won't work with a
+   * dual monitor setup! (tries to make fullscreen and crashes, afaik)
    */
   vid = SDL_GetVideoInfo();  /* get desktop mode */
 #if 1

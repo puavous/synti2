@@ -590,36 +590,37 @@ synti2_handleInput(synti2_synth *s,
 static
 void
 synti2_evalEnvelopes(synti2_synth *s){  
-  int ie, iv;
+  int ie;
   unsigned int detect;
-  /* A counter is triggered just by setting delta positive. */
   /* FIXME: Here could be a good place for some pointer arithmetics
-   * instead of this index madness [iv][ie] ... Also see if this and
-   * the code for the main oscillators could be combined.
+   * instead of this index madness [iv][ie] ... Not much was gained
+   * that way, though, on my first attempt. It helps a bit to use this
+   * [0][ie] version. 
+   * 
+   * FIXME: see if this and the code for the main oscillators could be
+   * combined.
    */
-  for(iv=0;iv<NVOICES; iv++){
-    for(ie=0;ie<NENVPERVOICE; ie++){
-      if (s->eprog[iv][ie].delta == 0) continue;  /* stopped.. not running*/
-      detect = s->eprog[iv][ie].val;
-      s->eprog[iv][ie].val += s->eprog[iv][ie].delta; /* counts from 0 to MAX */
-      if (s->eprog[iv][ie].val < detect){  /* Detect overflow */
-        s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
-        s->eprog[iv][ie].delta = 0;  /* Counter stops after full cycle   */
-        s->feprog[iv][ie] = 1.0;     /* and the floating value is clamped */ 
-      } else {
-        s->feprog[iv][ie] = ((float) s->eprog[iv][ie].val) / MAX_COUNTER;
-      }
-      s->fenv[iv][ie] = (1.0 - s->feprog[iv][ie]) * s->feprev[iv][ie] 
-        + s->feprog[iv][ie] * s->fegoal[iv][ie];
+
+  /* A counter is triggered just by setting delta positive. */
+  for(ie=0;ie<NVOICES*NENVPERVOICE; ie++){
+    if (s->eprog[0][ie].delta == 0) continue;  /* stopped.. not running*/
+    detect = s->eprog[0][ie].val;
+    s->eprog[0][ie].val += s->eprog[0][ie].delta; /* Count 0 to MAX*/
+    if (s->eprog[0][ie].val < detect){            /* Detect overflow*/
+      s->eprog[0][ie].val = MAX_COUNTER;          /* Clamp. */
+      s->eprog[0][ie].delta = 0;                  /* Stop after cycle*/
     }
-    /* TODO: Observe that for this kind of rotating counter c
-       interpreted as x \in [0,1], it is easy to get 1-x since it is
-       just -c in the integer domain (?). Useable fact? */
-    /* When delta==0, the counter has gone a full cycle and stopped at
-     * the maximum floating value, 1.0, and the envelope output stands
-     * at the goal value ("set point").
-     */
+    s->feprog[0][ie] = ((float) s->eprog[0][ie].val) / MAX_COUNTER;
+    s->fenv[0][ie] = (1.0 - s->feprog[0][ie]) * s->feprev[0][ie] 
+      + s->feprog[0][ie] * s->fegoal[0][ie];
   }
+  /* TODO: Observe that for this kind of rotating counter c
+     interpreted as x \in [0,1], it is easy to get 1-x since it is
+     just -c in the integer domain (?). Useable fact? */
+  /* When delta==0, the counter has gone a full cycle and stopped at
+   * the maximum floating value, 1.0, and the envelope output stands
+   * at the goal value ("set point").
+   */
 }
 
 
@@ -637,7 +638,13 @@ synti2_evalCounters(synti2_synth *s){
 }
 
 
-/** Updates envelope stages as the patch data dictates. */
+/** Updates envelope stages as the patch data dictates. 
+
+  FIXME: just simple LFO stuff instead of this hack of a looping envelope?
+
+  FIXME: Or make looping optional by a simple sound parameter... 
+
+*/
 static
 void
 synti2_updateEnvelopeStages(synti2_synth *s){
@@ -645,49 +652,49 @@ synti2_updateEnvelopeStages(synti2_synth *s){
   int part;
   float nextgoal;
   float nexttime;
-  int stagesum;
   
   for(iv=0; iv<NVOICES; iv++){
+    /* Consider note instance "completely finished" when envelope 0 is over: */
+    if (s->estage[iv][0] == 0) {
+      s->partofvoice[iv] = -1;
+    }
+
     part = s->partofvoice[iv];
     if (part<0) continue;
-    stagesum = 0;
+
     for (ie=0; ie<NENVPERVOICE; ie++){
       ipastend = part * SYNTI2_NPARAMS + SYNTI2_IENVS + (ie+1) * SYNTI2_NENVD;
       if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs. */
-      /* Think... delta==0 on a triggered envelope means endclamp?? 
-         NOTE: Need to set delta=0 upon note on!!
-         and estage == NSTAGES+1 or so (=6?) means go to attack.. */
-      if (s->eprog[iv][ie].delta == 0){
-        s->estage[iv][ie]--; /* Go to next stage (one smaller ind) */
-        if (s->estage[iv][ie] == 0) continue; /* Newly ended one.. no more knees. */
-        /* Loop happens here (FIXME: make it proper): */
+      /* Think... delta==0 on a triggered envelope means endclamp??
+         NOTE: Need to set delta=0 upon note on!! and estage ==
+         NSTAGES+1 or so (=6?) means go to attack.. */
+
+      /* Find next non-zero-timed knee (or end.) */
+      while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){
+        /* Loop should happen here (FIXME: make it proper): */
         //if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0))
-        //  s->estage[iv][ie] = 3;
+        //  s->estage[iv][ie] = /* FROM USER-GIVEN PATCH DATA! */;
+
         nexttime = s->patch[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = s->patch[ipastend - s->estage[iv][ie] * 2 + 1];
         s->feprev[iv][ie] = s->fenv[iv][ie];
         s->fegoal[iv][ie] = nextgoal;
-        if (nexttime <= 0.0){
-          s->eprog[iv][ie].val = 1; /* hack for "no time". will be 0 after an eval. */
-          s->eprog[iv][ie].delta = MAX_COUNTER;
+        if (nexttime <= 0.0) {
+          /*No time -> skip envelope knee. Force value to the new
+            level (next goal). Delta remains at 0, and we may skip many.*/
+          s->fenv[iv][ie] = s->fegoal[iv][ie];
         } else {
+          s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
           s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
         }
         /*
           if (ie==0)
           jack_info("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) ", 
-          iv, ie, part, s->estage[iv][ie], s->feprev[iv][ie], 
-          s->fegoal[iv][ie], 
-          nexttime, s->eprog[iv][ie].delta);
+                    iv, ie, part, s->estage[iv][ie], s->feprev[iv][ie], 
+                    s->fegoal[iv][ie], 
+                    nexttime, s->eprog[iv][ie].delta);
         */
       }
-      /* FIXME: just simple LFO stuff instead of this hack of a looping envelope?*/
-      /* FIXME: Or make looping optional by a simple sound parameter... */
-      stagesum += s->estage[iv][ie];
-    }
-    if (stagesum == 0){
-      /* Consider note instance "completely finished" when all envelopes are over: */
-      s->partofvoice[iv] = -1;
     }
   }
 }

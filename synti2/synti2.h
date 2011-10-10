@@ -12,7 +12,8 @@ typedef struct synti2_player synti2_player;
 
 /** Create a synth instance */
 synti2_synth *
-synti2_create(unsigned long sr); /* Sample rate could be variable ??*/
+synti2_create(unsigned long sr, 
+              const unsigned char * patch_sysex);
 
 /** Render some (stereo-interleaved) frames of audio to the output
  *  buffer.
@@ -27,8 +28,8 @@ synti2_render(synti2_synth *s,
  *  default instrument sounds for testing, and this will go away later
  *  (FIXME: make this go away...)
  */
-void
-synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data);
+//void
+//synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data);
 
 
 /* ------- Sequencer interface for a pre-composed song -------- */

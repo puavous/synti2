@@ -42,7 +42,7 @@ GLfloat snapshot[4*AUDIOBUFSIZE];
 static void sound_callback(void *udata, Uint8 *stream, int len)
 {
   int i;
-  float vol = 10000.0;
+  float vol = 20000.0;
   
   /* Call our own synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
@@ -54,7 +54,6 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
     ((Sint16*)stream)[i+0] = (Sint16)(audiobuf[i/2]*vol); 
     ((Sint16*)stream)[i+1] = (Sint16)(audiobuf[i/2]*vol);
   }
-
  
   /* FIXME: (Will do this time :)) I ended up with this very ugly way
      to get things happening on screen. Need to expose more of the
@@ -64,6 +63,7 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   }
 }
 
+#if 0
 /**
  * Some graphics
  */
@@ -110,6 +110,7 @@ static void render_scene_at_time(float time){
   }
   SDL_GL_SwapBuffers();
 }
+#endif
 
 /** Try to wrap it... */
 static void main2(int sdl_flags){
@@ -120,8 +121,7 @@ static void main2(int sdl_flags){
   float tnow;
 
   /* Checks of possible failures?*/
-  st = synti2_create(MY_SAMPLERATE);
-  synti2_do_receiveSysEx(st, hack_patch_sysex); /* hack.. */
+  st = synti2_create(MY_SAMPLERATE, hack_patch_sysex);
   global_player = synti2_player_create(hacksong_data, MY_SAMPLERATE);
 
   /* Do some SDL init stuff.. */
@@ -169,12 +169,15 @@ static void main2(int sdl_flags){
   {
     tnow = (double) frame / MY_SAMPLERATE;
     if (frame % AUDIOBUFSIZE == 0){
-      sound_callback(...FIXME...);
+      sound_callback(audbuffer, AUDIOBUFSIZE...FIXME...);
+      write_to_snd(fout, audbuffer, AUDIOBUFSIZE)
     }
-    if (frame % 50 == 0){
+    if (frame % (MY_SAMPLERATE/50) == 0){  /* 50 fps */
       teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE);
+      grab_screen_somehow_from_openGL_output(screenbuf);
+      write_image_to_disk_for_later_encoding(..);
     }
-    frame += AUDIOBUFSIZE;
+    frame ++; //= AUDIOBUFSIZE;
   } while (tnow <70.0);
 #endif
 
@@ -189,16 +192,16 @@ static void main2(int sdl_flags){
   do
   {
     tnow = (double) frame / MY_SAMPLERATE;
-    teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE);    /* From 'Teh 4k 3000' */
+    teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE); /* From 'Teh 4k 3000' */
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN && tnow <70.0);
 
-  /* Hmm... What happens if I don't free these? Will the world collapse!?*/
+  /* Hmm... What happens if I don't close these? Will the world collapse!?*/
 #ifndef ULTRASMALL
   SDL_CloseAudio();  /* Hmm.. Does SDL_Quit() do what this does? */
 #endif
 
-  SDL_Quit();  /* This must happen. Otherwise problems with exit.*/
+  SDL_Quit();  /* This must happen. Otherwise problems with exit!*/
 
 #ifndef ULTRASMALL
   free(st);
@@ -243,18 +246,7 @@ void _start()
 #else
   int main(int argc, char *argv[])
 {
-  int flags=SDL_OPENGL;
-  /* I took this from MakeIt4k code; wonder why the second 'w' test?
-   * (some platform compatibility? Why the first one not suffice?)
-   */
-  /*int flags=SDL_OPENGL|SDL_FULLSCREEN;*/
-  if(argc>1)
-    if(!strcmp(argv[1],"-w"))
-      flags-=SDL_FULLSCREEN;
-  if(argv[0][strlen(argv[0])-1]=='w')
-    flags-=SDL_FULLSCREEN;
-
-  main2(flags);
+  main2(SDL_OPENGL);
   return 0;
 }
 #endif

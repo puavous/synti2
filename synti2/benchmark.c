@@ -35,12 +35,12 @@ int main(int argc, char *argv[])
   int frames_at_once = 128;
 
   /* My own soft synth to be created. */
-  global_synth = synti2_create(sr);
+  global_synth = synti2_create(sr, hack_patch_sysex);
   if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");
     exit(1);
   }
-  synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
+  //  synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
 
   /*hack. FIXME: remove.*/
   global_player = synti2_player_create(hacksong_data, sr);

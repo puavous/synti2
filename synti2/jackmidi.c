@@ -115,12 +115,12 @@ main (int argc, char *argv[])
   sr = jack_get_sample_rate (client);
 
   /* My own soft synth to be created. */
-  global_synth = synti2_create(sr);
+  global_synth = synti2_create(sr, hack_patch_sysex);
   if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");
     goto error;
   };
-  synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
+  //synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
 
   /*hack. FIXME: remove.*/
   global_player = synti2_player_create(hacksong_data, sr);

@@ -348,25 +348,35 @@ synti2_player_create(unsigned char * songdata, int samplerate){
   if (pl == NULL) return pl;
 #endif
   
-  pl->sr = samplerate;
+  pl->sr = samplerate;  
   
   if (songdata != NULL) synti2_player_init_from_misss(pl, songdata);
   
   return pl;
 }
 
+static
+void
+synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data);
 
 
 /** Allocate and initialize a new synth instance. */
 synti2_synth *
-synti2_create(unsigned long sr)
+synti2_create(unsigned long sr, const unsigned char * patch_sysex)
 {
   synti2_synth * s;
   int ii;
 
   s = calloc (1, sizeof(synti2_synth));
+
+#ifndef ULTRASMALL
   if (s == NULL) return s;
+#endif
+
   s->sr = sr;
+
+  if (patch_sysex != NULL)
+    synti2_do_receiveSysEx(s, patch_sysex);
 
   /* Create a note-to-frequency look-up table (cents need interpolation). 
    * TODO: Which is more efficient / small code: linear interpolation 
@@ -482,7 +492,8 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
    
 
 */
-//FIXME (?): static
+
+static
 void
 synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
   int offset, stride, ir;

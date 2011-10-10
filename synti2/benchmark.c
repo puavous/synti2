@@ -14,7 +14,6 @@
 /* How many seconds to run the synth. */
 #define BENCHMARK_SECONDS 10
 
-synti2_conts *global_cont;
 synti2_synth *global_synth;
 synti2_player *global_player;
 

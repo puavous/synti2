@@ -77,6 +77,9 @@
  * also think if it is more efficient to put values and deltas in
  * separate arrays. Probably, if you think of a possible assembler
  * implementation with multimedia vector instructions(?).
+ *
+ * TODO: Think. Signed integers would overflow just as nicely. Could
+ * it be useful to model things in -1..1 range instead of 0..1 ?
  */
 typedef struct counter {
   unsigned int val;
@@ -444,6 +447,7 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
   /* (Could actually force the last voice to play anyway!?) */
 
   s->part[part].voiceofkey[note] = voice;
+  /* How much code for always referencing through [voice]? voice.note better?*/
   s->partofvoice[voice] = part;
   s->note[voice] = note;
   s->velocity[voice] = vel;

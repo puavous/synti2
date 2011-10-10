@@ -663,11 +663,11 @@ synti2_updateEnvelopeStages(synti2_synth *s){
     if (part<0) continue;
 
     for (ie=0; ie<NENVPERVOICE; ie++){
-      ipastend = part * SYNTI2_NPARAMS + SYNTI2_IENVS + (ie+1) * SYNTI2_NENVD;
       if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs.FIXME: needed?*/
       /* Think... delta==0 on a triggered envelope means endclamp??
          NOTE: Need to set delta=0 upon note on!! and estage ==
          NSTAGES+1 or so (=6?) means go to attack.. */
+      ipastend = part * SYNTI2_NPARAMS + SYNTI2_IENVS + (ie+1) * SYNTI2_NENVD;
 
       /* Find next non-zero-timed knee (or end.) */
       while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){

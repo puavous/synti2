@@ -664,16 +664,22 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 
     for (ie=0; ie<NENVPERVOICE; ie++){
       ipastend = part * SYNTI2_NPARAMS + SYNTI2_IENVS + (ie+1) * SYNTI2_NENVD;
-      if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs. */
+      if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs.FIXME: needed?*/
       /* Think... delta==0 on a triggered envelope means endclamp??
          NOTE: Need to set delta=0 upon note on!! and estage ==
          NSTAGES+1 or so (=6?) means go to attack.. */
 
       /* Find next non-zero-timed knee (or end.) */
       while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){
-        /* Loop should happen here (FIXME: make it proper): */
-        //if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0))
-        //  s->estage[iv][ie] = /* FROM USER-GIVEN PATCH DATA! */;
+
+#ifndef NO_LOOPING_ENVELOPES
+        /* Seems to yield 55 bytes of compressed code!! Whyyy so much? */
+        if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)){
+          /*jack_info("Env %d Reached stage %d, looping to %d", 
+            ie, s->estage[iv][ie], (int)s->patch[SYNTI2_IENVLOOP+ie]);*/
+          s->estage[iv][ie] += s->patch[SYNTI2_IENVLOOP+ie];
+        }
+#endif
 
         nexttime = s->patch[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = s->patch[ipastend - s->estage[iv][ie] * 2 + 1];
@@ -687,13 +693,14 @@ synti2_updateEnvelopeStages(synti2_synth *s){
           s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
           s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
         }
-        /*
-          if (ie==0)
+
+          /*
+            if ((iv==0) && (ie<2))
           jack_info("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) ", 
                     iv, ie, part, s->estage[iv][ie], s->feprev[iv][ie], 
                     s->fegoal[iv][ie], 
                     nexttime, s->eprog[iv][ie].delta);
-        */
+          */
       }
     }
   }
@@ -717,7 +724,7 @@ synti2_updateFrequencies(synti2_synth *s){
     s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
     
     /* modulator pitch; Hack. FIXME: */
-    notemod = s->note[iv] + s->fenv[iv][3];   // HACK!!
+    //notemod = s->note[iv] + s->fenv[iv][3];   // HACK!!
     /* should make a floor (does it? check spec)*/
     note = notemod;
     interm = (1.0 + 0.05946 * (notemod - note)); /* +cents.. */

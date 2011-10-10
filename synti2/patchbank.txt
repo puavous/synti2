@@ -1,24 +1,32 @@
 # Throw-away format for little-easier-than-plain-C testing of patching
 # approaches.
 
+# TODO: Think if there should be a "global envelope bank"? Noo.. would
+# be too different from a "usual synth interface" which I want to aim
+# at (in addition to any other goals)..
+
 # Global data (to be planned)
 
 # Patch 1 (loaded on part 1/16)
-# Four envelopes:  (could have even more?)
+# Four envelopes:  (could have even more? But is 4 enough??)
 #  Knee1         Knee2         Knee3         Knee4         Knee5
 #  Time  Level   Time  Level   Time  Level   Time  Level   Time  Level
-   0.01 1.00   0.10 0.50   3.00 0.00   0.00 0.00   0.10 0.00
-   0.00 2.27   0.60 0.80   1.25 0.05   3.00 0.00   0.10 0.00
+   0.00 0.00   0.00 0.00   0.01 1.00   0.04 0.60   1.10 0.00
+   0.00 2.27   0.64 0.80   0.64 0.05   0.64 0.27   2.10 0.00
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
 
-# Should set one envelope as "master" - sound dies with it.
+# Envelope 0 is "master" - sound dies with it. It is hardcoded as the
+# final amplitude envelope.
 
 # Other patch data.. Hmm.. playground as of now:
 
+# Envelope loop-how-many-stages-back for each envelope.
+# DANGER: all-zero times inside loop lead to infinite iteration!!!
+  0 2 0 0
 
 # Padding to get a power-of-two length for the instrument patch.
-   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+                           0.00 0.00   0.00 0.00   0.00 0.00
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
    0.00 0.00101   -1.00 0.00 
 

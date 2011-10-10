@@ -69,7 +69,10 @@ synti2_player_init_from_jack_midi(synti2_player *player,
  */
 /*TODO: Design the patch format properly. */
 #define SYNTI2_IENVS 0
-#define SYNTI2_NPARAMS 40
+#define SYNTI2_IENVLOOP 40
+
+#define SYNTI2_NPARAMS 41
+
 
 /* Length of envelope data block (K1T&L K2T&L K3T&L K4T&L K5T&L) */
 /* (order of knees might be different??) FIXME: Think about this .. make envs simpler?*/

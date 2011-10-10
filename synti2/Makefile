@@ -55,13 +55,15 @@ sdltest: sdltest.c synti2.c synti2.h Makefile
 	$(CC) $(CFLAGS) -o sdltest sdltest.c synti2.c \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
-tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub Makefile
+tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makefile
 # hacking
 	$(CC) $(HCFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c 
 	$(CC) $(HCFLAGS) -c -o synti2.o synti2.c
 	$(CC) $(HCFLAGS) -c -o testdata.o testdata.c
+	$(CC) $(HCFLAGS) -c -o teh4k_gfx.o teh4k_gfx.c
 
 	$(CC) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
+		teh4k_gfx.o \
 	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
 
 	strip $(STRIPOPT) -o $@.payload $@.unstripped.payload

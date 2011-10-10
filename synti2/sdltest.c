@@ -9,6 +9,10 @@
 
 #include "synti2.h"
 
+/* Try with the previous graphics.. */
+extern void teh4k_render_at_time(float time, float *data, size_t AUDIOBUFSIZE);
+
+
 #define MY_SAMPLERATE 48000
 #define AUDIOBUFSIZE  4096
 
@@ -26,6 +30,9 @@ extern unsigned char hack_patch_sysex[];
 extern int hack_patch_sysex_length;
 extern unsigned char hacksong_data[];
 extern unsigned int hacksong_length;
+
+/* Snapshot of audiodata, as was hacked for 'Teh 4k 3000': */
+GLfloat snapshot[4*AUDIOBUFSIZE];
 
 
 /**
@@ -46,6 +53,14 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   for(i=0;i<len/2;i+=2){
     ((Sint16*)stream)[i+0] = (Sint16)(audiobuf[i/2]*vol); 
     ((Sint16*)stream)[i+1] = (Sint16)(audiobuf[i/2]*vol);
+  }
+
+ 
+  /* FIXME: (Will do this time :)) I ended up with this very ugly way
+     to get things happening on screen. Need to expose more of the
+     synth state in future versions. */
+  if ((audiobuf[5]>0.05)||(frame > 48000*64)){
+    for (i=0;i<AUDIOBUFSIZE;i++) snapshot[i]=audiobuf[i]*20;
   }
 }
 
@@ -100,6 +115,7 @@ static void render_scene_at_time(float time){
 static void main2(int sdl_flags){
   SDL_Event event;
   SDL_AudioSpec aud;
+
   const SDL_VideoInfo * vid;
   float tnow;
 
@@ -119,21 +135,26 @@ static void main2(int sdl_flags){
   aud.userdata = NULL;     /* Would be nice to use? &mySoundData; */
   /* btw, if userdata is not used in the callback, can delete reference*/
 
+
   /* NULL 2nd param makes SDL automatically convert btw formats. Nice! */
   SDL_OpenAudio(&aud, NULL);   /* Returns <0 upon failure. Check fits 4k?*/
 
-  /* Necessary?? Long names take up bytes!! (anyhow call before modeset) 
-   * Actually, I think this should be quite unnecessary(?).
+  /* Necessary?? Long names take up bytes!! (anyhow call before
+   * modeset) Actually, I think this should be quite unnecessary(?):
+   *
+   * SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
    */
-  SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
 
-  /* It costs >35 bytes (compressed) to politely query the mode !! */
+  /* It costs 23-35 bytes (compressed) to politely query the mode !!
+   * It is definitely worth the ease!
+   */
   vid = SDL_GetVideoInfo();  /* get desktop mode */
-#if 0
-  SDL_SetVideoMode(vid->current_w, vid->current_h,32,
+#if 1
+  SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
 		   sdl_flags|SDL_FULLSCREEN); /* use it*/
-#endif
+#else
   SDL_SetVideoMode(640,400,32,sdl_flags);
+#endif
 
   /*SDL_SetVideoMode(1280,720,32,sdl_flags);*/
   /*SDL_SetVideoMode(1024,768,32,sdl_flags);*/
@@ -151,9 +172,9 @@ static void main2(int sdl_flags){
       sound_callback(...FIXME...);
     }
     if (frame % 50 == 0){
-      teh4k_render_at_time(tnow, snapshot);
+      teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE);
     }
-    frame++;
+    frame += AUDIOBUFSIZE;
   } while (tnow <70.0);
 #endif
 
@@ -168,16 +189,20 @@ static void main2(int sdl_flags){
   do
   {
     tnow = (double) frame / MY_SAMPLERATE;
-    render_scene_at_time(tnow);
+    teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE);    /* From 'Teh 4k 3000' */
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN && tnow <70.0);
 
-  SDL_CloseAudio();
-  SDL_Quit();
+  /* Hmm... What happens if I don't free these? Will the world collapse!?*/
+#ifndef ULTRASMALL
+  SDL_CloseAudio();  /* Hmm.. Does SDL_Quit() do what this does? */
+#endif
+
+  SDL_Quit();  /* This must happen. Otherwise problems with exit.*/
 
 #ifndef ULTRASMALL
   free(st);
-  free(global_cont);
+  free(global_player);
 #endif
 }
 

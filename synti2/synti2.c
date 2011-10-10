@@ -427,14 +427,11 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
    * maybe some kind of free voice stack could be implemented with not
    * too much code...)
    */
-#if 0
   for(voice=0; voice < NVOICES; voice++){
     if (s->partofvoice[voice] < 0) break;
   }
   if (voice==NVOICES) return; /* Cannot play new note! */
   /* (Could actually force the last voice to play anyway!?) */
-#endif
-  voice = part;
 
   s->part[part].voiceofkey[note] = voice;
   s->partofvoice[voice] = part;

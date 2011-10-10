@@ -7,6 +7,15 @@
 
 # Global data (to be planned)
 
+# Some two stereo effect lines would be nice.
+# Maybe just some sort of stereo delays..
+
+# Global parameters would be something like:
+#  Delay1                       Delay2
+#  length  feedback  LPcutoff   length  feedback  LPcutoff
+
+# Or... should the effects be abstracted as "imaginary part 17" etc.?
+
 # Patch 1 (loaded on part 1/16)
 # Four envelopes:  (could have even more? But is 4 enough??)
 #  Knee1         Knee2         Knee3         Knee4         Knee5

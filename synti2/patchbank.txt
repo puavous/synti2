@@ -20,10 +20,10 @@
 # Four envelopes:  (could have even more? But is 4 enough??)
 #  Knee1         Knee2         Knee3         Knee4         Knee5
 #  Time  Level   Time  Level   Time  Level   Time  Level   Time  Level
-   0.00 0.00   0.00 0.00   0.01 1.00   0.04 0.60   1.10 0.00
-   0.00 2.27   0.64 0.80   0.64 0.05   0.64 0.27   2.10 0.00
-   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
-   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00     0.01 1.00     0.04 0.64     4.00 0.02     0.04 0.00
+   0.00 2.27     0.64 0.80     0.64 0.05     0.64 0.27     2.10 0.00
+   0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00
+   0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00
 
 # Envelope 0 is "master" - sound dies with it. It is hardcoded as the
 # final amplitude envelope.
@@ -46,7 +46,7 @@
 # Padding to get a power-of-two length for the instrument patch.
 
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
-   0.00 0.00101   -1.00 0.00 
+   0.00 0.00  -1.00 0.00 
 
 ^ End of data for the throw-away converter
 

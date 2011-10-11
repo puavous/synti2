@@ -75,17 +75,29 @@
  * (overflow) and as such they model an oscillator's phase pretty
  * nicely. Can I use them for other stuff as well? Seem fit for
  * envelopes with only a little extra (clamping and stop flag). Could
- * I use just one huge counter bank for everything? TODO: Try out, and
- * also think if it is more efficient to put values and deltas in
- * separate arrays. Probably, if you think of a possible assembler
- * implementation with multimedia vector instructions(?).
+ * I use just one huge counter bank for everything? Looks that
+ * way. There seems to be a 30% speed hit for computing all the
+ * redundant stuff. But a little bit smaller code, and the source
+ * looks pretty nice too. TODO: think if it is more efficient to put
+ * values and deltas in separate arrays. Probably, if you think of a
+ * possible assembler implementation with multimedia vector
+ * instructions(?). Or maybe not? Look at the compiler output...
  *
  * TODO: Think. Signed integers would overflow just as nicely. Could
  * it be useful to model things in -1..1 range instead of 0..1 ?
+ *
+ * TODO: Maybe separate functions for oscillators and envelopes could
+ * still be used if they would compress nicely...
  */
 typedef struct counter {
   unsigned int val;
   unsigned int delta;
+  unsigned int detect;
+  float f;  /* current output value (interpolant) */
+  float ff;  /* current output value (1..0) */
+  float fr;  /* current output value (0..1) */
+  float aa; /* for interpolation start */
+  float bb; /* for interpolation end */
 } counter;
 
 /** TODO: Not much is inside the part structure. Is it necessary at
@@ -109,16 +121,13 @@ struct synti2_synth {
   /*float noise[WAVETABLE_SIZE]; Maybe?? */
 
   /* Oscillators are now modeled as integer counters (phase). */
-  counter c[NCOUNTERS];
-  float fc[NCOUNTERS];   /* store the values as floats right away. */
-
   /* Envelope progression also modeled by integer counters. Not much
    * difference between oscillators and envelopes!!
    */
+  /* Must be in this order and next to each other exactly!! Impl. specif?*/
+  counter c[NCOUNTERS];
   counter eprog[NVOICES][NENVPERVOICE];
-  float feprev[NVOICES][NENVPERVOICE];   /* previous value (for lin. interp.) */
-  float fegoal[NVOICES][NENVPERVOICE];   /* goal value (for lin. interp.) */
-  float fenv[NVOICES][NENVPERVOICE];     /* current output (of lin. interp.) */
+  counter framecount;
 
   /* Envelope stages just a table? TODO: think.*/
   int estage[NVOICES][NENVPERVOICE];
@@ -134,9 +143,6 @@ struct synti2_synth {
   /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   float patch[NPARTS * SYNTI2_NPARAMS];  /* The sound parameters per part*/
-
-  /* Throw-away test stuff:*/
-  long int global_framesdone;  /*NOTE: This is basically just a counter, too! */
 
 };
 
@@ -375,6 +381,7 @@ synti2_create(unsigned long sr, const unsigned char * patch_sysex)
   synti2_synth * s;
   int ii;
   float t;
+  counter *c;
 
   s = calloc (1, sizeof(synti2_synth));
 
@@ -383,6 +390,7 @@ synti2_create(unsigned long sr, const unsigned char * patch_sysex)
 #endif
 
   s->sr = sr;
+  s->framecount.delta = 1;
 
   if (patch_sysex != NULL)
     synti2_do_receiveSysEx(s, patch_sysex);
@@ -619,46 +627,6 @@ synti2_handleInput(synti2_synth *s,
 
 
 
-/** TODO: Implement better? */
-static
-void
-synti2_evalEnvelopes(synti2_synth *s){  
-  int ie;
-  unsigned int detect;
-  /* TODO: Here could be a good place for some pointer arithmetics
-   * instead of this index madness [iv][ie] ... Not much was gained
-   * that way, though, on my first attempt. It helps a bit to use this
-   * [0][ie] version. Maybe a cleaner code could be obtained,
-   * nevertheless :)
-   * 
-   * FIXME: see if this and the code for the main oscillators could be
-   * combined.
-   */
-
-  /* A counter is triggered just by setting delta positive. */
-  for(ie=0;ie<NVOICES*NENVPERVOICE; ie++){
-    if (s->eprog[0][ie].delta == 0) continue;  /* stopped.. not running*/
-    detect = s->eprog[0][ie].val;
-    s->eprog[0][ie].val += s->eprog[0][ie].delta; /* Count 0 to MAX*/
-    if (s->eprog[0][ie].val < detect){            /* Detect overflow*/
-      s->eprog[0][ie].val = MAX_COUNTER;          /* Clamp. */
-      s->eprog[0][ie].delta = 0;                  /* Stop after cycle*/
-    }
-
-    /* Linear interpolation using pre-computed "fall" and "rise" tables*/
-    s->fenv[0][ie] = 
-      s->fall[s->eprog[0][ie].val 
-              >> COUNTER_TO_TABLE_SHIFT] * s->feprev[0][ie] 
-      + s->rise[s->eprog[0][ie].val 
-                >> COUNTER_TO_TABLE_SHIFT] * s->fegoal[0][ie];    
-  }
-  /* When delta==0, the counter has gone a full cycle and stopped at
-   * the maximum floating value, 1.0, and the envelope output stands
-   * at the goal value ("set point").
-   */
-}
-
-
 /* Advance the oscillator counters. Consider using the xmms assembly
  * for these? Try to combine with the envelope counter code somehow..
  * Would be simple: Only difference is the detection and clamping!!
@@ -668,10 +636,27 @@ synti2_evalEnvelopes(synti2_synth *s){
 static 
 void
 synti2_evalCounters(synti2_synth *s){
-  int ic;
-  for(ic=0;ic<NCOUNTERS;ic++){
-    s->c[ic].val += s->c[ic].delta;
-    s->fc[ic] = s->rise[s->c[ic].val >> COUNTER_TO_TABLE_SHIFT];
+  counter *c;
+  unsigned int detect;
+  //  for(ic=0;ic<NCOUNTERS+NVOICES*NENVPERVOICE+1;ic++){
+  for(c = s->c; c <= &s->framecount; c++){
+    if (c->delta == 0) {continue;}  /* stopped.. not running*/
+    detect = c->val; 
+    c->val += c->delta;  /* Count 0 to MAX*/
+
+    if (c >= s->eprog) { /* Clamp only latter half of counters. */
+      if (c->val < detect){         /* Detect overflow*/
+        c->val = MAX_COUNTER;          /* Clamp. */
+        c->delta = 0;                  /* Stop after cycle*/
+      }
+    }
+
+    /* Linear interpolation using pre-computed "fall" and "rise"
+     * tables. Also, the oscillator phases will be the rise values.
+     */
+    c->fr = s->rise[c->val >> COUNTER_TO_TABLE_SHIFT];
+    c->ff = s->fall[c->val >> COUNTER_TO_TABLE_SHIFT];
+    c->f = c->ff * c->aa + c->fr * c->bb; 
   }
 }
 
@@ -723,12 +708,12 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 
         nexttime = s->patch[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = s->patch[ipastend - s->estage[iv][ie] * 2 + 1];
-        s->feprev[iv][ie] = s->fenv[iv][ie];
-        s->fegoal[iv][ie] = nextgoal;
+        s->eprog[iv][ie].aa = s->eprog[iv][ie].f;
+        s->eprog[iv][ie].bb = nextgoal;
         if (nexttime <= 0.0) {
           /*No time -> skip envelope knee. Force value to the new
             level (next goal). Delta remains at 0, and we may skip many.*/
-          s->fenv[iv][ie] = s->fegoal[iv][ie];
+          s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
         } else {
           s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
           s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
@@ -755,7 +740,7 @@ synti2_updateFrequencies(synti2_synth *s){
   float notemod, interm, freq;
   /* Frequency computation... where to put it after all? */
   for (iv=0; iv<NVOICES; iv++){
-    notemod = s->note[iv] + s->fenv[iv][2];   // HACK!!
+    notemod = s->note[iv] + s->eprog[iv][2].f;   // HACK!!
     /* should make a floor (does it? check spec)*/
     note = notemod;
     interm = (1.0 + 0.05946 * (notemod - note)); /* +cents.. */
@@ -791,7 +776,7 @@ synti2_render(synti2_synth *s,
      */
     
     /* Handle MIDI-ish controls if there are more of them waiting. */
-    synti2_handleInput(s, pl, s->global_framesdone + iframe + NINNERLOOP);
+    synti2_handleInput(s, pl, s->framecount.val + iframe + NINNERLOOP);
     synti2_updateEnvelopeStages(s); /* move on if need be. */
     synti2_updateFrequencies(s);    /* frequency upd. */
     
@@ -799,7 +784,7 @@ synti2_render(synti2_synth *s,
     for(ii=0;ii<NINNERLOOP;ii++){
       
       /* Could I put all counter upds in one big awesomely parallel loop? */
-      synti2_evalEnvelopes(s);
+      //synti2_evalEnvelopes(s);
       synti2_evalCounters(s);
       
       /* Getting more realistic soon: */
@@ -810,11 +795,11 @@ synti2_render(synti2_synth *s,
         /* Produce sound :) First modulator, then carrier*/
         /* Worth using a wavetable? Definitely.. Could do the first just
            by bit-shifting the counter... */
-        interm  = s->wave[(unsigned int)(s->fc[iv*2+1] * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
+        interm  = s->wave[(unsigned int)(s->c[iv*2+1].fr * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
         interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
-        interm *= (s->velocity[iv]/128.0) * (s->fenv[iv][1]);
-        interm  = s->wave[(unsigned int)((s->fc[iv*2+0] + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
-        interm *= s->fenv[iv][0];
+        interm *= (s->velocity[iv]/128.0) * (s->eprog[iv][1].f);
+        interm  = s->wave[(unsigned int)((s->c[iv*2+0].fr + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
+        interm *= s->eprog[iv][0].f;
         buffer[iframe+ii] += interm;
       }      
       buffer[iframe+ii] /= NVOICES;
@@ -823,5 +808,4 @@ synti2_render(synti2_synth *s,
       //buffer[iframe+ii] = tanh(16*buffer[iframe+ii]); /* Hack! beautiful too!*/
     }
   }
-  s->global_framesdone += nframes;
 }

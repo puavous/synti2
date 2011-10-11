@@ -92,7 +92,6 @@
 typedef struct counter {
   unsigned int val;
   unsigned int delta;
-  unsigned int detect;
   float f;  /* current output value (interpolant) */
   float ff;  /* current output value (1..0) */
   float fr;  /* current output value (0..1) */

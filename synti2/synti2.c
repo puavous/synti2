@@ -66,8 +66,10 @@
  */
 #define TRIGGERSTAGE 6
 
+/* The wavetable sizes and divisor-bitshift must be consistent. */
 #define WAVETABLE_SIZE 0x10000
 #define WAVETABLE_BITMASK 0xffff
+#define COUNTER_TO_TABLE_SHIFT 16
 
 /** I finally realized that unsigned ints will nicely loop around
  * (overflow) and as such they model an oscillator's phase pretty
@@ -114,7 +116,6 @@ struct synti2_synth {
    * difference between oscillators and envelopes!!
    */
   counter eprog[NVOICES][NENVPERVOICE];
-  //  float feprog[NVOICES][NENVPERVOICE];   /* store the values as floats right away. NEEDED?*/
   float feprev[NVOICES][NENVPERVOICE];   /* previous value (for lin. interp.) */
   float fegoal[NVOICES][NENVPERVOICE];   /* goal value (for lin. interp.) */
   float fenv[NVOICES][NENVPERVOICE];     /* current output (of lin. interp.) */
@@ -308,7 +309,6 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-      //pl->insloc->next->frame = -1;
       synti2_player_event_add(pl, 
                               pl->frames_done + ev.time, 
                               ev.buffer, 
@@ -327,7 +327,7 @@ synti2_player_init_from_misss(synti2_player *pl, unsigned char *r)
 {
   int chunksize;
   int uspq;
-  /* Initialize an "empty" "head event": */
+  /* Initialize an "empty" "head event": (really necessary?) */
   pl->freeloc = pl->evpool + 1;
 
   pl->playloc = pl->evpool; /* This would "rewind" the song */
@@ -374,6 +374,7 @@ synti2_create(unsigned long sr, const unsigned char * patch_sysex)
 {
   synti2_synth * s;
   int ii;
+  float t;
 
   s = calloc (1, sizeof(synti2_synth));
 
@@ -400,10 +401,9 @@ synti2_create(unsigned long sr, const unsigned char * patch_sysex)
   }
 
   for(ii=0; ii<NVOICES; ii++){
-    s->partofvoice[ii] = -1;     /* Could I make this 0 somehow? */
+    s->partofvoice[ii]--;     /* == -1 .. Could I make this 0 somehow? */
   }
 
-  float t;
   for(ii=0; ii<WAVETABLE_SIZE; ii++){
     //s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));
     t = (float)ii/(WAVETABLE_SIZE-1);
@@ -422,10 +422,10 @@ void
 synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
 {
   int voice, ie;
+
   /* note off */
   if (vel==0){
     voice = s->part[part].voiceofkey[note];
-    //s->part[part].voiceofkey[note] = -1;  /* key should no longer map to ... no... */
     //if (voice < 0) return; /* FIXME: think.. */
     /* TODO: release all envelopes.. */
     for (ie=0; ie<NENVPERVOICE; ie++){
@@ -450,10 +450,10 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
    * maybe some kind of free voice stack could be implemented with not
    * too much code...)
    */
-  for(voice=0; voice < NVOICES; voice++){
+  for(voice=0; voice < NVOICES-1; voice++){
     if (s->partofvoice[voice] < 0) break;
   }
-  if (voice==NVOICES) return; /* Cannot play new note! */
+  //if (voice==NVOICES) return; /* Cannot play new note! */
   /* (Could actually force the last voice to play anyway!?) */
 
   s->part[part].voiceofkey[note] = voice;
@@ -615,10 +615,11 @@ void
 synti2_evalEnvelopes(synti2_synth *s){  
   int ie;
   unsigned int detect;
-  /* FIXME: Here could be a good place for some pointer arithmetics
+  /* TODO: Here could be a good place for some pointer arithmetics
    * instead of this index madness [iv][ie] ... Not much was gained
    * that way, though, on my first attempt. It helps a bit to use this
-   * [0][ie] version. 
+   * [0][ie] version. Maybe a cleaner code could be obtained,
+   * nevertheless :)
    * 
    * FIXME: see if this and the code for the main oscillators could be
    * combined.
@@ -634,21 +635,13 @@ synti2_evalEnvelopes(synti2_synth *s){
       s->eprog[0][ie].delta = 0;                  /* Stop after cycle*/
     }
 
-    //    s->feprog[0][ie] = s->rise[s->eprog[0][ie].val >> 16]; /* FIXME: Arch dep!!!*/
-    s->fenv[0][ie] = s->fall[s->eprog[0][ie].val >> 16] * s->feprev[0][ie] 
-      + s->rise[s->eprog[0][ie].val >> 16] * s->fegoal[0][ie];
-    //    s->feprog[0][ie] = s->rise[s->eprog[0][ie].val / (MAX_COUNTER/WAVETABLE_SIZE)];
-
-    /*
-    s->feprog[0][ie] = ((float) s->eprog[0][ie].val) / MAX_COUNTER;
-    s->fenv[0][ie] = (1.0 - s->feprog[0][ie]) * s->feprev[0][ie] 
-      + s->feprog[0][ie] * s->fegoal[0][ie];
-    */
-
+    /* Linear interpolation using pre-computed "fall" and "rise" tables*/
+    s->fenv[0][ie] = 
+      s->fall[s->eprog[0][ie].val 
+              >> COUNTER_TO_TABLE_SHIFT] * s->feprev[0][ie] 
+      + s->rise[s->eprog[0][ie].val 
+                >> COUNTER_TO_TABLE_SHIFT] * s->fegoal[0][ie];    
   }
-  /* TODO: Observe that for this kind of rotating counter c
-     interpreted as x \in [0,1], it is easy to get 1-x since it is
-     just -c in the integer domain (?). Useable fact? */
   /* When delta==0, the counter has gone a full cycle and stopped at
    * the maximum floating value, 1.0, and the envelope output stands
    * at the goal value ("set point").
@@ -658,6 +651,9 @@ synti2_evalEnvelopes(synti2_synth *s){
 
 /* Advance the oscillator counters. Consider using the xmms assembly
  * for these? Try to combine with the envelope counter code somehow..
+ * Would be simple: Only difference is the detection and clamping!!
+ * counters = {framecount, osc1, osc2, ..., oscN, ev1, ev2, ..., evM}
+ * and an "if i>N".
  */
 static 
 void
@@ -665,8 +661,7 @@ synti2_evalCounters(synti2_synth *s){
   int ic;
   for(ic=0;ic<NCOUNTERS;ic++){
     s->c[ic].val += s->c[ic].delta;
-    //s->fc[ic] = (float) s->c[ic].val / MAX_COUNTER;
-    s->fc[ic] = s->rise[s->c[ic].val >> 16]; // FIXME: arch dep.
+    s->fc[ic] = s->rise[s->c[ic].val >> COUNTER_TO_TABLE_SHIFT];
   }
 }
 

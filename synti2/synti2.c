@@ -432,7 +432,7 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
       s->estage[voice][ie] = 2;      /* skip to end */
       s->eprog[voice][ie].delta = 0; /* skip to end */
       s->eprog[voice][ie].val = 0;   /* must skip also value!! FIXME: think(?)*/
-      s->sustain[voice] = 0;         /* don't renew loop. */
+      s->sustain[voice] = 0;         /* don't renew loop. FIXME: necessary only if loop is used.*/
     }
     return; /* Note off is now handled. Otherwise do note on. */
   }
@@ -516,6 +516,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data){
   
   /* Sysex header: */
   data += 4; /* skip Manufacturer IDs n stuff*/
+  /* FIXME: For 4k stuff these could be hardcoded!!:*/
   offset = *data++; offset <<= 7; offset += *data++;  /* store location  */
   stride = *data++; stride <<= 7; stride += *data++;  /* length / stride */
 
@@ -594,13 +595,22 @@ synti2_handleInput(synti2_synth *s,
 
 #ifdef DO_CONVERT_OFFS
     } else if ((midibuf[0] & 0xf0) == 0x80) {
-      /* Convert any note-off to a note-on with velocity 0 here. */
+      /* Convert any note-off to a note-on with velocity 0 here.
+       * Necessary only if you don't have control over the note-off
+       * protocol of the sender.
+       */
       synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], 0);
 #endif
-      
+
+#ifndef NO_SYSEX_RECEIVE
     } else if (midibuf[0] == 0xf0){
+      /* Receiving SysEx is nice, but not strictly necessary if the
+       * initial patch data is given upon creation.
+       */
       synti2_do_receiveSysEx(s, midibuf);
-    }else {
+#endif
+
+    } else {
       /* Other MIDI messages are silently ignored. */
     }
   }

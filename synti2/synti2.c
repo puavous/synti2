@@ -102,6 +102,9 @@ struct synti2_synth {
   float ultranotes[128]; /* TODO: This space could be used for noises? */
 
   float wave[WAVETABLE_SIZE];
+  float rise[WAVETABLE_SIZE];
+  float fall[WAVETABLE_SIZE];
+  /*float noise[WAVETABLE_SIZE]; Maybe?? */
 
   /* Oscillators are now modeled as integer counters (phase). */
   counter c[NCOUNTERS];
@@ -111,7 +114,7 @@ struct synti2_synth {
    * difference between oscillators and envelopes!!
    */
   counter eprog[NVOICES][NENVPERVOICE];
-  float feprog[NVOICES][NENVPERVOICE];   /* store the values as floats right away. */
+  //  float feprog[NVOICES][NENVPERVOICE];   /* store the values as floats right away. NEEDED?*/
   float feprev[NVOICES][NENVPERVOICE];   /* previous value (for lin. interp.) */
   float fegoal[NVOICES][NENVPERVOICE];   /* goal value (for lin. interp.) */
   float fenv[NVOICES][NENVPERVOICE];     /* current output (of lin. interp.) */
@@ -400,8 +403,13 @@ synti2_create(unsigned long sr, const unsigned char * patch_sysex)
     s->partofvoice[ii] = -1;     /* Could I make this 0 somehow? */
   }
 
+  float t;
   for(ii=0; ii<WAVETABLE_SIZE; ii++){
-    s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));
+    //s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));
+    t = (float)ii/(WAVETABLE_SIZE-1);
+    s->wave[ii] = sin(2*M_PI * t);
+    s->rise[ii] = t; 
+    s->fall[ii] = 1.0-t;
   }
 
   return s;
@@ -625,9 +633,18 @@ synti2_evalEnvelopes(synti2_synth *s){
       s->eprog[0][ie].val = MAX_COUNTER;          /* Clamp. */
       s->eprog[0][ie].delta = 0;                  /* Stop after cycle*/
     }
+
+    //    s->feprog[0][ie] = s->rise[s->eprog[0][ie].val >> 16]; /* FIXME: Arch dep!!!*/
+    s->fenv[0][ie] = s->fall[s->eprog[0][ie].val >> 16] * s->feprev[0][ie] 
+      + s->rise[s->eprog[0][ie].val >> 16] * s->fegoal[0][ie];
+    //    s->feprog[0][ie] = s->rise[s->eprog[0][ie].val / (MAX_COUNTER/WAVETABLE_SIZE)];
+
+    /*
     s->feprog[0][ie] = ((float) s->eprog[0][ie].val) / MAX_COUNTER;
     s->fenv[0][ie] = (1.0 - s->feprog[0][ie]) * s->feprev[0][ie] 
       + s->feprog[0][ie] * s->fegoal[0][ie];
+    */
+
   }
   /* TODO: Observe that for this kind of rotating counter c
      interpreted as x \in [0,1], it is easy to get 1-x since it is
@@ -648,7 +665,8 @@ synti2_evalCounters(synti2_synth *s){
   int ic;
   for(ic=0;ic<NCOUNTERS;ic++){
     s->c[ic].val += s->c[ic].delta;
-    s->fc[ic] = (float) s->c[ic].val / MAX_COUNTER;
+    //s->fc[ic] = (float) s->c[ic].val / MAX_COUNTER;
+    s->fc[ic] = s->rise[s->c[ic].val >> 16]; // FIXME: arch dep.
   }
 }
 

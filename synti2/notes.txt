@@ -37,3 +37,50 @@ sys	0m0.001s
 The sound is good enough for my own ears with 32k look-up
 table.. Compressed code is 74 bytes longer, (but) I'll buy it because
 of the dramatic performance gain!!
+
+
+
+------------------------------ Trying rise/fall wavetables
+
+
+Using t*a + (1-t)*b, t \in [0,1) yields these benchmarks:
+
+-rwxrwxr-x. 1 nieminen nieminen  4233 Oct 11 17:49 tinytest
+-rwxrwxr-x. 1 nieminen nieminen 10464 Oct 11 17:49 tinytest.payload
+-rwxrwxr-x. 1 nieminen nieminen 37466 Oct 11 17:49 tinytest.unstripped.payload
+
+real	0m0.754s
+user	0m0.743s
+sys	0m0.002s
+
+
+
+Computing wavetables "rise" and "fall" yields 31 bytes more:
+
+-rwxrwxr-x. 1 nieminen nieminen  4264 Oct 11 18:01 tinytest
+-rwxrwxr-x. 1 nieminen nieminen 10464 Oct 11 18:01 tinytest.payload
+-rwxrwxr-x. 1 nieminen nieminen 37602 Oct 11 18:01 tinytest.unstripped.payload
+
+real	0m0.757s
+user	0m0.744s
+sys	0m0.003s
+
+
+
+When float computations are replaced by "rise" and "fall" wavetables
+in both envelopes and oscillators, the situation is as follows:
+
+-rwxrwxr-x. 1 nieminen nieminen  4238 Oct 11 18:12 tinytest
+-rwxrwxr-x. 1 nieminen nieminen 10464 Oct 11 18:12 tinytest.payload
+-rwxrwxr-x. 1 nieminen nieminen 37434 Oct 11 18:12 tinytest.unstripped.payload
+
+real	0m0.601s
+user	0m0.593s
+sys	0m0.003s
+
+
+This is 5 bytes compressed code overhead against some 20% speed
+gain. I think it is worth it!! What is introduced, is a machine
+architecture dependence and requirement that wavetables are
+power-of-two long, because a bit-shift division is needed to achieve
+the small code.

@@ -28,7 +28,6 @@ jack_port_t *inmidi_port;
 unsigned long sr;
 char * client_name = "beeper";
 
-synti2_conts *global_cont;
 synti2_synth *global_synth;
 synti2_player *global_player;
 
@@ -63,9 +62,9 @@ process_audio (jack_nframes_t nframes)
   if (global_hack_playeronly == 0){
     synti2_player_init_from_jack_midi(global_player, inmidi_port, nframes);
   }
-
   /* Call our own synth engine and convert samples to native type (jack) */
   synti2_render(global_synth, global_player, global_buffer, nframes); 
+
   for (i=0;i<nframes;i++){
     bufferL[i] = global_buffer[i];
     bufferR[i] = global_buffer[i];

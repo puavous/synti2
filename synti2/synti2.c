@@ -209,6 +209,8 @@ synti2_player_event_add(synti2_player *pl,
   }
   ev_new = pl->freeloc++;
 
+  //jack_info("New event at %x", ev_new);
+
   /* Fill in the node: */
   ev_new->next = pl->insloc->next;
   ev_new->frame = frame;
@@ -220,7 +222,7 @@ synti2_player_event_add(synti2_player *pl,
    */
   dst = ev_new->data = pl->data + pl->idata;
   memcpy(dst,src,n);  
-  pl->idata += n;  
+  pl->idata += n;
 }
 
 /** Returns a pointer to one past end of read in input data, i.e., next byte. */
@@ -303,7 +305,7 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-
+      //pl->insloc->next->frame = -1;
       synti2_player_event_add(pl, 
                               pl->frames_done + ev.time, 
                               ev.buffer, 
@@ -360,7 +362,7 @@ synti2_player_create(unsigned char * songdata, int samplerate){
 
 static
 void
-synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data);
+synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data);
 
 
 /** Allocate and initialize a new synth instance. */
@@ -499,11 +501,10 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
 
 static
 void
-synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
+synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data){
   int offset, stride, ir;
   int a, b, c, adjust_byte;
-  int adjust_nib;
-  float decoded;  float *dst; unsigned char *rptr;
+  float decoded;  float *dst; const unsigned char *rptr;
   
   /* Sysex header: */
   data += 4; /* skip Manufacturer IDs n stuff*/
@@ -522,8 +523,7 @@ synti2_do_receiveSysEx(synti2_synth *s, unsigned char * data){
 
 #ifdef SUPER_ACCURATE_PATCHES
     /* Sigh.. I wanted this, but letting go by default. */
-    adjust_nib = adjust_byte & 0x0f;
-    decoded += adjust_nib * 0.001;
+    decoded += (adjust_byte & 0x0f) * 0.001;
 #endif
 
     *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
@@ -690,9 +690,10 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 #ifndef NO_LOOPING_ENVELOPES
         /* Seems to yield 55 bytes of compressed code!! Whyyy so much? */
         if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)){
-          /*jack_info("Env %d Reached stage %d, looping to %d", 
-            ie, s->estage[iv][ie], (int)s->patch[SYNTI2_IENVLOOP+ie]);*/
-          s->estage[iv][ie] += s->patch[SYNTI2_IENVLOOP+ie];
+          jack_info("Part %d: Env %d Reached stage %d, looping to %d", 
+                    part, ie, s->estage[iv][ie], 
+                    (int)s->patch[part*SYNTI2_NPARAMS + SYNTI2_IENVLOOP+ie]);
+          s->estage[iv][ie] += s->patch[part*SYNTI2_NPARAMS + SYNTI2_IENVLOOP+ie];
         }
 #endif
 

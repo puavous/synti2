@@ -690,9 +690,10 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 #ifndef NO_LOOPING_ENVELOPES
         /* Seems to yield 55 bytes of compressed code!! Whyyy so much? */
         if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)){
-          jack_info("Part %d: Env %d Reached stage %d, looping to %d", 
+          /*jack_info("Part %d: Env %d Reached stage %d, looping to %d", 
                     part, ie, s->estage[iv][ie], 
-                    (int)s->patch[part*SYNTI2_NPARAMS + SYNTI2_IENVLOOP+ie]);
+                    (int)s->patch[part*SYNTI2_NPARAMS 
+                    + SYNTI2_IENVLOOP+ie]);*/
           s->estage[iv][ie] += s->patch[part*SYNTI2_NPARAMS + SYNTI2_IENVLOOP+ie];
         }
 #endif

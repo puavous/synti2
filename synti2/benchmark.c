@@ -34,22 +34,15 @@ int main(int argc, char *argv[])
   int frames_at_once = 128;
 
   /* My own soft synth to be created. */
-  global_synth = synti2_create(sr, hack_patch_sysex);
+  global_synth = synti2_create(sr, hack_patch_sysex, hacksong_data);
   if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");
     exit(1);
   }
   //  synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
 
-  /*hack. FIXME: remove.*/
-  global_player = synti2_player_create(hacksong_data, sr);
-  if (global_player == NULL){
-    fprintf(stderr, "No player could be made \n");
-    exit(1);
-  }
-
   for(iframe=0; iframe < sr * BENCHMARK_SECONDS; iframe += frames_at_once){
-    synti2_render(global_synth, global_player,
+    synti2_render(global_synth, 
                   global_buffer, frames_at_once); 
   }
   return 0;

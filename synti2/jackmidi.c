@@ -60,10 +60,10 @@ process_audio (jack_nframes_t nframes)
 
   /* Transform MIDI messages from native type (jack) to our own format */
   if (global_hack_playeronly == 0){
-    synti2_player_init_from_jack_midi(global_player, inmidi_port, nframes);
+    synti2_read_jack_midi(global_synth, inmidi_port, nframes);
   }
   /* Call our own synth engine and convert samples to native type (jack) */
-  synti2_render(global_synth, global_player, global_buffer, nframes); 
+  synti2_render(global_synth, global_buffer, nframes); 
 
   for (i=0;i<nframes;i++){
     bufferL[i] = global_buffer[i];
@@ -114,19 +114,11 @@ main (int argc, char *argv[])
   sr = jack_get_sample_rate (client);
 
   /* My own soft synth to be created. */
-  global_synth = synti2_create(sr, hack_patch_sysex);
+  global_synth = synti2_create(sr, hack_patch_sysex, hacksong_data);
   if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");
     goto error;
   };
-  //synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
-
-  /*hack. FIXME: remove.*/
-  global_player = synti2_player_create(hacksong_data, sr);
-  if (global_player == NULL){
-    fprintf(stderr, "Haist \n");
-    goto error;
-  }
   
   /* Now we activate our new client. */
   if (jack_activate (client)) {

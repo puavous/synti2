@@ -7,28 +7,22 @@ typedef float synti2_smp_t;
 typedef struct synti2_synth synti2_synth;
 typedef struct synti2_player synti2_player;
 
-/* ------- Realtime synth interface ------- */
+/* ------- Realtime / pre-sequenced synth interface ------- */
 
 /** Create a synth instance */
 synti2_synth *
 synti2_create(unsigned long sr, 
-              const unsigned char * patch_sysex);
+              const unsigned char * patch_sysex, 
+              const unsigned char * songdata);
 
 /** Render some (stereo-interleaved) frames of audio to the output
  *  buffer.
  */
 void
 synti2_render(synti2_synth *s, 
-	      synti2_player *pl, 
 	      synti2_smp_t *buffer,
 	      int nframes);
 
-/* ------- Sequencer interface for a pre-composed song -------- */
-
-/** Load and initialize a song. */
-synti2_player *
-synti2_player_create(unsigned char * songdata, 
-		     int samplerate);
 
 /* ------- Realtime control interface ------- */
 
@@ -44,9 +38,9 @@ synti2_player_create(unsigned char * songdata,
  *  nframes of midi data from a jack audio connection kit midi port.
  */
 void
-synti2_player_init_from_jack_midi(synti2_player *player,
-                                  jack_port_t *inmidi_port,
-                                  jack_nframes_t nframes);
+synti2_read_jack_midi(synti2_synth *s,
+                      jack_port_t *inmidi_port,
+                      jack_nframes_t nframes);
 #endif
 
 

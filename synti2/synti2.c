@@ -45,8 +45,18 @@
 /* Total number of envelopes */
 #define NENVS (NVOICES * NENVPERVOICE)
 
-/* Maximum value of the counter type depends on C implementation, so use limits.h */
+
+
+/* Maximum value of the counter type depends on C implementation, so
+ * use limits.h
+ */
 #define MAX_COUNTER UINT_MAX
+/* The wavetable sizes and divisor-bitshift must be consistent. */
+#define WAVETABLE_SIZE 0x10000
+#define WAVETABLE_BITMASK 0xffff
+/* Hmm... is there some way to get the implementation-dependent
+   bit-count?*/
+#define COUNTER_TO_TABLE_SHIFT 16
 
 /* Number of inner loop iterations (audio frame evaluations) between
  * evaluating "slow-motion stuff" such as MIDI input and
@@ -65,11 +75,6 @@
  * looping envelopes?
  */
 #define TRIGGERSTAGE 6
-
-/* The wavetable sizes and divisor-bitshift must be consistent. */
-#define WAVETABLE_SIZE 0x10000
-#define WAVETABLE_BITMASK 0xffff
-#define COUNTER_TO_TABLE_SHIFT 16
 
 /** I finally realized that unsigned ints will nicely loop around
  * (overflow) and as such they model an oscillator's phase pretty
@@ -98,6 +103,38 @@ typedef struct counter {
   float aa; /* for interpolation start */
   float bb; /* for interpolation end */
 } counter;
+
+#define SYNTI2_MAX_SONGBYTES 30000
+#define SYNTI2_MAX_SONGEVENTS 15000
+
+/* Events shall form a singly linked list. TODO: Is the list code too
+   complicated? Use just tables with O(n^2) pre-ordering instead?? */
+typedef struct synti2_player_ev synti2_player_ev;
+
+struct synti2_player_ev {
+  unsigned char *data;
+  synti2_player_ev *next;
+  unsigned int frame;
+  int len;
+};
+
+struct synti2_player {
+  synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
+  synti2_player_ev *insloc;
+  int fpt;       /* Frames per tick. Tempos will be inexact, sry! */
+  int tpq;          /* Ticks per quarter (no support for SMPTE). */
+  synti2_player_ev *freeloc; /*pointer to next free event structure*/
+  int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
+  int sr;           /* Sample rate. */
+
+  int idata;        /* index of next free data location */
+
+  /* Only playable events. The first will be at evpool[0]! */
+  synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
+  /* Data for events. */
+  unsigned char data[SYNTI2_MAX_SONGBYTES];
+};
+
 
 /** TODO: Not much is inside the part structure. Is it necessary at
  *  all? It will have controller values, though..
@@ -143,39 +180,13 @@ struct synti2_synth {
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   float patch[NPARTS * SYNTI2_NPARAMS];  /* The sound parameters per part*/
 
+  /* I'll actually put the player inside the synthesizer. Should
+   * probably call it "sequencer" instead of "player"... ?
+   */
+  synti2_player pl;
 };
 
 
-#define SYNTI2_MAX_SONGBYTES 30000
-#define SYNTI2_MAX_SONGEVENTS 15000
-
-/* Events shall form a singly linked list. TODO: Is the list code too
-   complicated? Use just tables with O(n^2) pre-ordering instead?? */
-typedef struct synti2_player_ev synti2_player_ev;
-
-struct synti2_player_ev {
-  unsigned char *data;
-  synti2_player_ev *next;
-  unsigned int frame;
-  int len;
-};
-
-struct synti2_player {
-  synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
-  synti2_player_ev *insloc;
-  int fpt;       /* Frames per tick. Tempos will be inexact, sry! */
-  int tpq;          /* Ticks per quarter (no support for SMPTE). */
-  synti2_player_ev *freeloc; /*pointer to next free event structure*/
-  int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
-  int sr;           /* Sample rate. */
-
-  int idata;        /* index of next free data location */
-
-  /* Only playable events. The first will be at evpool[0]! */
-  synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
-  /* Data for events. */
-  unsigned char data[SYNTI2_MAX_SONGBYTES];
-};
 
 /** Reads a MIDI variable length number. */
 static 
@@ -194,12 +205,6 @@ varlength(const unsigned char * source, int * dest){
   return 0; /* Longer than 4 bytes! Wrong input! FIXME: die. */
 }
 
-
-static
-void
-synti2_player_reset_insert(synti2_player *pl){
-  pl->insloc = pl->evpool; /* The first one. */
-}
 
 
 /** Adds an event to its correct location. Assumes that the
@@ -238,20 +243,20 @@ synti2_player_event_add(synti2_player *pl,
 static
 unsigned char *
 synti2_player_merge_chunk(synti2_player *pl, 
-                          unsigned char *r, 
+                          const unsigned char *r, 
                           int n_events)
 {
   char chan, type;
   int ii;
   int frame, tickdelta;
-  unsigned char *par;
+  const unsigned char *par;
   unsigned char tmpbuf[3]; /* see that it gets initialized! */
 
   chan = *r++;
   type = *r++;
   par = r;
   frame = 0;
-  synti2_player_reset_insert(pl); /* Re-start merging from frame 0. */
+  pl->insloc = pl->evpool; /* Re-start merging from frame 0. */
 
   //printf("Type %d on chan %d. par 1=%d par 2=%d\n", type, chan, par[0], par[1]);
 
@@ -295,6 +300,7 @@ synti2_player_merge_chunk(synti2_player *pl,
  * the sequence being played.. but I won't bother for today's
  * purposes...
  */
+static
 void
 synti2_player_init_from_jack_midi(synti2_player *pl,
                                   jack_port_t *inmidi_port,
@@ -323,12 +329,22 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
     }
   }
 }
+
+
+/** Interface. */
+void
+synti2_read_jack_midi(synti2_synth *s,
+                      jack_port_t *inmidi_port,
+                      jack_nframes_t nframes)
+{
+  synti2_player_init_from_jack_midi(&(s->pl), inmidi_port, nframes);
+}
 #endif
 
 /** Load and initialize a song. Assumes a freshly created player object!*/
 static
 void
-synti2_player_init_from_misss(synti2_player *pl, unsigned char *r)
+synti2_player_init_from_misss(synti2_player *pl, const unsigned char *r)
 {
   int chunksize;
   int uspq;
@@ -350,23 +366,6 @@ synti2_player_init_from_misss(synti2_player *pl, unsigned char *r)
 }
 
 
-/** Creates a player object. Initial songdata is optional. */
-synti2_player *
-synti2_player_create(unsigned char * songdata, int samplerate){
-  synti2_player *pl;
-  
-  pl = calloc(1, sizeof(synti2_player));
-  
-#ifndef ULTRASMALL
-  if (pl == NULL) return pl;
-#endif
-  
-  pl->sr = samplerate;  
-  
-  if (songdata != NULL) synti2_player_init_from_misss(pl, songdata);
-  
-  return pl;
-}
 
 static
 void
@@ -375,12 +374,13 @@ synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data);
 
 /** Allocate and initialize a new synth instance. */
 synti2_synth *
-synti2_create(unsigned long sr, const unsigned char * patch_sysex)
+synti2_create(unsigned long sr, 
+              const unsigned char * patch_sysex, 
+              const unsigned char * songdata)
 {
   synti2_synth * s;
   int ii;
   float t;
-  counter *c;
 
   s = calloc (1, sizeof(synti2_synth));
 
@@ -393,6 +393,12 @@ synti2_create(unsigned long sr, const unsigned char * patch_sysex)
 
   if (patch_sysex != NULL)
     synti2_do_receiveSysEx(s, patch_sysex);
+
+  /* Initialize the player part. (Not much to be done...) */
+  s->pl.sr = sr; /* FIXME: Can be done away with ... */
+  if (songdata != NULL) synti2_player_init_from_misss(&(s->pl), songdata);
+
+  /* Initialize the rest of the synth. */
 
   /* Create a note-to-frequency look-up table (cents need interpolation). 
    * TODO: Which is more efficient / small code: linear interpolation 
@@ -586,11 +592,13 @@ synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data){
 static
 void
 synti2_handleInput(synti2_synth *s, 
-                   synti2_player *pl,
                    int upto_frames)
 {
   /* TODO: sane implementation */
   unsigned char *midibuf;
+  synti2_player *pl;
+
+  pl = &(s->pl);
 
   while((pl->playloc->next != NULL) 
         && (pl->playloc->next->frame < upto_frames )) {
@@ -762,12 +770,14 @@ synti2_updateFrequencies(synti2_synth *s){
 
 void
 synti2_render(synti2_synth *s,
-              synti2_player *pl,
               synti2_smp_t *buffer,
               int nframes)
 {
   int iframe, ii, iv;
   float interm;
+  synti2_player *pl;
+
+  pl = &(s->pl);
   
   for (iframe=0; iframe<nframes; iframe += NINNERLOOP){
     /* Outer loop for things that are allowed some jitter. (further
@@ -775,7 +785,7 @@ synti2_render(synti2_synth *s,
      */
     
     /* Handle MIDI-ish controls if there are more of them waiting. */
-    synti2_handleInput(s, pl, s->framecount.val + iframe + NINNERLOOP);
+    synti2_handleInput(s, s->framecount.val + iframe + NINNERLOOP);
     synti2_updateEnvelopeStages(s); /* move on if need be. */
     synti2_updateFrequencies(s);    /* frequency upd. */
     

@@ -21,7 +21,6 @@ extern void teh4k_render_at_time(float time, float *data, size_t AUDIOBUFSIZE);
 float audiobuf[AUDIOBUFSIZE];
 
 synti2_synth *st;
-synti2_player *global_player;
 
 static long frame = 0;
 
@@ -46,7 +45,7 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   
   /* Call our own synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
-  synti2_render(st, global_player,
+  synti2_render(st, 
 		audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
 
   frame += len/4;
@@ -121,8 +120,7 @@ static void main2(int sdl_flags){
   float tnow;
 
   /* Checks of possible failures?*/
-  st = synti2_create(MY_SAMPLERATE, hack_patch_sysex);
-  global_player = synti2_player_create(hacksong_data, MY_SAMPLERATE);
+  st = synti2_create(MY_SAMPLERATE, hack_patch_sysex, hacksong_data);
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
@@ -206,7 +204,6 @@ static void main2(int sdl_flags){
 
 #ifndef ULTRASMALL
   free(st);
-  free(global_player);
 #endif
 }
 

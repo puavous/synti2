@@ -145,6 +145,10 @@ typedef struct synti2_part {
 
 struct synti2_synth {
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
+  /* I'll actually put the player inside the synthesizer. Should
+   * probably call it "sequencer" instead of "player"... ?
+   */
+  synti2_player *pl;
   float infranotes[128]; /* TODO: This space could be used for LFO's */
   float note2freq[128];  /* pre-computed frequencies of notes... Tuning
 			    systems would be easy to change - just
@@ -180,10 +184,6 @@ struct synti2_synth {
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   float patch[NPARTS * SYNTI2_NPARAMS];  /* The sound parameters per part*/
 
-  /* I'll actually put the player inside the synthesizer. Should
-   * probably call it "sequencer" instead of "player"... ?
-   */
-  synti2_player pl;
 };
 
 
@@ -337,7 +337,7 @@ synti2_read_jack_midi(synti2_synth *s,
                       jack_port_t *inmidi_port,
                       jack_nframes_t nframes)
 {
-  synti2_player_init_from_jack_midi(&(s->pl), inmidi_port, nframes);
+  synti2_player_init_from_jack_midi(s->pl, inmidi_port, nframes);
 }
 #endif
 
@@ -383,20 +383,22 @@ synti2_create(unsigned long sr,
   float t;
 
   s = calloc (1, sizeof(synti2_synth));
+  s->pl = calloc (1, sizeof(synti2_player));
 
 #ifndef ULTRASMALL
   if (s == NULL) return s;
 #endif
 
+  /* Initialize the player part. (Not much to be done...) */
+  s->pl->sr = sr; /* FIXME: Could be done away with ? */
   s->sr = sr;
+  if (songdata != NULL) synti2_player_init_from_misss(s->pl, songdata);
+
   s->framecount.delta = 1;
 
   if (patch_sysex != NULL)
     synti2_do_receiveSysEx(s, patch_sysex);
 
-  /* Initialize the player part. (Not much to be done...) */
-  s->pl.sr = sr; /* FIXME: Can be done away with ... */
-  if (songdata != NULL) synti2_player_init_from_misss(&(s->pl), songdata);
 
   /* Initialize the rest of the synth. */
 
@@ -598,7 +600,7 @@ synti2_handleInput(synti2_synth *s,
   unsigned char *midibuf;
   synti2_player *pl;
 
-  pl = &(s->pl);
+  pl = s->pl;
 
   while((pl->playloc->next != NULL) 
         && (pl->playloc->next->frame < upto_frames )) {
@@ -777,7 +779,7 @@ synti2_render(synti2_synth *s,
   float interm;
   synti2_player *pl;
 
-  pl = &(s->pl);
+  pl = s->pl;
   
   for (iframe=0; iframe<nframes; iframe += NINNERLOOP){
     /* Outer loop for things that are allowed some jitter. (further

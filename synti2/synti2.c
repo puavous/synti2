@@ -144,11 +144,14 @@ typedef struct synti2_part {
 } synti2_part;
 
 struct synti2_synth {
+  /* I'll actually put the player inside the synthesizer. Should
+   * probably call it "sequencer" instead of "player"... ? Seems to
+   * yield smallest compressed code (with current function
+   * implementations) when the player is dynamically allocated and the
+   * pointer is stored as the very first field of the synth structure.
+   */
   synti2_player *pl;
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
-  /* I'll actually put the player inside the synthesizer. Should
-   * probably call it "sequencer" instead of "player"... ?
-   */
 
   float infranotes[128]; /* TODO: This space could be used for LFO's */
   float note2freq[128];  /* pre-computed frequencies of notes... Tuning

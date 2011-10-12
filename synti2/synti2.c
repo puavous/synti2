@@ -144,11 +144,12 @@ typedef struct synti2_part {
 } synti2_part;
 
 struct synti2_synth {
+  synti2_player *pl;
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
   /* I'll actually put the player inside the synthesizer. Should
    * probably call it "sequencer" instead of "player"... ?
    */
-  synti2_player *pl;
+
   float infranotes[128]; /* TODO: This space could be used for LFO's */
   float note2freq[128];  /* pre-computed frequencies of notes... Tuning
 			    systems would be easy to change - just
@@ -183,7 +184,6 @@ struct synti2_synth {
   /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   float patch[NPARTS * SYNTI2_NPARAMS];  /* The sound parameters per part*/
-
 };
 
 
@@ -289,7 +289,7 @@ synti2_player_merge_chunk(synti2_player *pl,
       }
     }
   }
-  return r;
+  return (unsigned char*) r;
 }
 
 #ifdef JACK_MIDI
@@ -383,10 +383,15 @@ synti2_create(unsigned long sr,
   float t;
 
   s = calloc (1, sizeof(synti2_synth));
+
+#ifndef ULTRASMALL
+  if (s == NULL) return NULL;
+#endif
+
   s->pl = calloc (1, sizeof(synti2_player));
 
 #ifndef ULTRASMALL
-  if (s == NULL) return s;
+  if (s->pl == NULL) {free(s); return NULL;}
 #endif
 
   /* Initialize the player part. (Not much to be done...) */

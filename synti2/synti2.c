@@ -232,14 +232,8 @@ synti2_player_event_add(synti2_player *pl,
   ev_new->next = pl->insloc->next;
   ev_new->frame = frame;
   ev_new->len = n;
+  ev_new->data = src;         /* SHALLOW COPY here.*/
   pl->insloc->next = ev_new;
-
-  /* Get next available space from the data pool, and copy the data.
-   * Using memcpy() seems to yield smaller code than a home-made loop.
-   */
-  dst = ev_new->data = pl->data + pl->idata;
-  memcpy(dst,src,n);  
-  pl->idata += n;
 }
 
 /** Returns a pointer to one past end of read in input data, i.e., next byte. */
@@ -253,7 +247,7 @@ synti2_player_merge_chunk(synti2_player *pl,
   int ii;
   int frame, tickdelta;
   const unsigned char *par;
-  unsigned char tmpbuf[3]; /* see that it gets initialized! */
+  unsigned char *msg;
 
   chan = *r++;
   type = *r++;
@@ -272,14 +266,17 @@ synti2_player_merge_chunk(synti2_player *pl,
     r += varlength(r, &tickdelta);
     frame += pl->fpt * tickdelta;
     //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
-    //synti2_player_merge_event(pl, );
+
+    /* Get next available spot from the data pool */
+    msg = pl->data + pl->idata;
 
     if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
-      tmpbuf[0] = 0x90; /* Assume we're doing notes. */
-      tmpbuf[1]= (par[0]==0xff) ? *r++ : par[0];
-      tmpbuf[2]= (par[1]==0xff) ? *r++ : par[1];
+      msg[0] = 0x90; /* Assume we're doing notes. */
+      msg[1]= (par[0]==0xff) ? *r++ : par[0];
+      msg[2]= (par[1]==0xff) ? *r++ : par[1];
       /* Now it is a complete msg. */
-      synti2_player_event_add(pl, frame, tmpbuf, 3); 
+      synti2_player_event_add(pl, frame, msg, 3); 
+      pl->idata += 3; /*Update the data pool top*/
     } else {
       /* Not yet implemented. FIXME: implement? */
       switch (type){
@@ -312,6 +309,7 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
   void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
+  unsigned char *msg;
 
   /* Re-initialize, and overwrite any former data. */
   pl->freeloc = pl->evpool+1;
@@ -323,9 +321,15 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
+
+      /* Get next available spot from the data pool */
+      msg = pl->data + pl->idata;
+      memcpy(msg,ev.buffer,ev.size);  /* deep copy here */
+      pl->idata += ev.size; /*Update the data pool top*/
+
       synti2_player_event_add(pl, 
                               pl->frames_done + ev.time, 
-                              ev.buffer, 
+                              msg, 
                               ev.size);
     } else {
       break;
@@ -358,7 +362,7 @@ synti2_player_init_from_misss(synti2_player *pl, const unsigned char *r)
   
   r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */
   r += varlength(r, &uspq);       /* Microseconds per quarter note */
-  pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0); /* frames-per-tick */
+  pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0f); /* frames-per-tick */
   /* TODO: Think about accuracy vs. code size */
   
   r += varlength(r, &chunksize);
@@ -420,7 +424,7 @@ synti2_create(unsigned long sr,
    * beyond!
    */
   for(ii=0; ii<128; ii++){
-    s->note2freq[ii] = 440.0 * pow(2.0, ((float)ii - 69.0) / 12.0 );
+    s->note2freq[ii] = 440.0f * powf(2.0f, ((float)ii - 69.0f) / 12.0f );
   }
 
   for(ii=0; ii<NVOICES; ii++){
@@ -430,9 +434,9 @@ synti2_create(unsigned long sr,
   for(ii=0; ii<WAVETABLE_SIZE; ii++){
     //s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));
     t = (float)ii/(WAVETABLE_SIZE-1);
-    s->wave[ii] = sin(2*M_PI * t);
+    s->wave[ii] = sinf(2*M_PI * t);
     s->rise[ii] = t; 
-    s->fall[ii] = 1.0-t;
+    s->fall[ii] = 1.0f-t;
   }
 
   return s;
@@ -551,11 +555,11 @@ synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data){
     b = *(rptr += stride); 
     c = *(rptr += stride);
     adjust_byte = *(rptr += stride);
-    decoded = 0.01 * a + b + 100*c;
+    decoded = 0.01f * a + b + 100*c;
 
 #ifdef SUPER_ACCURATE_PATCHES
     /* Sigh.. I wanted this, but letting go by default. */
-    decoded += (adjust_byte & 0x0f) * 0.001;
+    decoded += (adjust_byte & 0x0f) * 0.001f;
 #endif
 
     *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
@@ -577,7 +581,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data){
   for (ir=0; ir<stride; ir++){
     data += varlength(data, &a);
     a <<= 4; /* need sign bit. Effectively also multiplies by 2**4=16*/
-    *dst++ = a / 1600.0; /* Encoding in 100ths. */
+    *dst++ = a / 1600.0f; /* Encoding in 100ths. */
   }
 #endif
 }
@@ -727,7 +731,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
         nextgoal = s->patch[ipastend - s->estage[iv][ie] * 2 + 1];
         s->eprog[iv][ie].aa = s->eprog[iv][ie].f;
         s->eprog[iv][ie].bb = nextgoal;
-        if (nexttime <= 0.0) {
+        if (nexttime <= 0.0f) {
           /*No time -> skip envelope knee. Force value to the new
             level (next goal). Delta remains at 0, and we may skip many.*/
           s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
@@ -760,7 +764,7 @@ synti2_updateFrequencies(synti2_synth *s){
     notemod = s->note[iv] + s->eprog[iv][2].f;   // HACK!!
     /* should make a floor (does it? check spec)*/
     note = notemod;
-    interm = (1.0 + 0.05946 * (notemod - note)); /* +cents.. */
+    interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
     freq = interm * s->note2freq[note];
     
     s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
@@ -769,7 +773,7 @@ synti2_updateFrequencies(synti2_synth *s){
     //notemod = s->note[iv] + s->fenv[iv][3];   // HACK!!
     /* should make a floor (does it? check spec)*/
     note = notemod;
-    interm = (1.0 + 0.05946 * (notemod - note)); /* +cents.. */
+    interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
     freq = interm * s->note2freq[note];
     
     s->c[iv*2+1].delta = (freq) / s->sr * MAX_COUNTER; /*hack test*/
@@ -807,7 +811,7 @@ synti2_render(synti2_synth *s,
       synti2_evalCounters(s);
       
       /* Getting more realistic soon: */
-      buffer[iframe+ii] = 0.0;
+      buffer[iframe+ii] = 0.0f;
       
       for(iv=0;iv<NVOICES;iv++){
         // if (s->partofvoice[iv] < 0) continue; /* Unsounding. FIXME: (f1) */
@@ -816,7 +820,7 @@ synti2_render(synti2_synth *s,
            by bit-shifting the counter... */
         interm  = s->wave[(unsigned int)(s->c[iv*2+1].fr * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
         interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
-        interm *= (s->velocity[iv]/128.0) * (s->eprog[iv][1].f);
+        interm *= (s->velocity[iv]/128.0f) * (s->eprog[iv][1].f);
         interm  = s->wave[(unsigned int)((s->c[iv*2+0].fr + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
         interm *= s->eprog[iv][0].f;
         buffer[iframe+ii] += interm;

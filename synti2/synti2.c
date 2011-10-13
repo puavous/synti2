@@ -112,7 +112,7 @@ typedef struct counter {
 typedef struct synti2_player_ev synti2_player_ev;
 
 struct synti2_player_ev {
-  unsigned char *data;
+  const unsigned char *data;
   synti2_player_ev *next;
   unsigned int frame;
   int len;
@@ -220,19 +220,16 @@ synti2_player_event_add(synti2_player *pl,
                         const unsigned char *src, 
                         size_t n){
   synti2_player_ev *ev_new;
-  unsigned char *dst;
   while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
     pl->insloc = pl->insloc->next;
   }
   ev_new = pl->freeloc++;
 
-  //jack_info("New event at %x", ev_new);
-
   /* Fill in the node: */
+  ev_new->data = src;         /* SHALLOW COPY here.*/
   ev_new->next = pl->insloc->next;
   ev_new->frame = frame;
   ev_new->len = n;
-  ev_new->data = src;         /* SHALLOW COPY here.*/
   pl->insloc->next = ev_new;
 }
 
@@ -255,8 +252,6 @@ synti2_player_merge_chunk(synti2_player *pl,
   frame = 0;
   pl->insloc = pl->evpool; /* Re-start merging from frame 0. */
 
-  //printf("Type %d on chan %d. par 1=%d par 2=%d\n", type, chan, par[0], par[1]);
-
   /* Always two parameters.. makes reader code simpler with not too
    * much storage overhead.
    */
@@ -265,13 +260,11 @@ synti2_player_merge_chunk(synti2_player *pl,
   for(ii=0; ii<n_events; ii++){
     r += varlength(r, &tickdelta);
     frame += pl->fpt * tickdelta;
-    //printf("Tickdelta = %d. Frame %d\n", tickdelta, frame);
 
-    /* Get next available spot from the data pool */
-    msg = pl->data + pl->idata;
+    msg = pl->data + pl->idata; /* Get next available data pool spot */
 
     if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
-      msg[0] = 0x90; /* Assume we're doing notes. */
+      msg[0] = 0x90; /* MIDI Note on. */
       msg[1]= (par[0]==0xff) ? *r++ : par[0];
       msg[2]= (par[1]==0xff) ? *r++ : par[1];
       /* Now it is a complete msg. */
@@ -308,15 +301,15 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
 {
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
-  void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
   unsigned char *msg;
+  void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
 
   /* Re-initialize, and overwrite any former data. */
   pl->freeloc = pl->evpool+1;
   pl->playloc = pl->evpool; /* This would "rewind" the song */
   pl->insloc = pl->evpool; /* This would "rewind" the song */
   pl->idata = 0;
-  pl->playloc->next = NULL; /* This effects the deletion of previous msgs. */
+  pl->playloc->next = NULL; /* This effects the deletion of previous msgs.*/
   
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
@@ -359,7 +352,7 @@ synti2_player_init_from_misss(synti2_player *pl, const unsigned char *r)
   pl->freeloc = pl->evpool + 1;
 
   pl->playloc = pl->evpool; /* This would "rewind" the song */
-  
+
   r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */
   r += varlength(r, &uspq);       /* Microseconds per quarter note */
   pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0f); /* frames-per-tick */
@@ -609,7 +602,7 @@ synti2_handleInput(synti2_synth *s,
                    int upto_frames)
 {
   /* TODO: sane implementation */
-  unsigned char *midibuf;
+  const unsigned char *midibuf;
   synti2_player *pl;
 
   pl = s->pl;
@@ -770,14 +763,14 @@ synti2_updateFrequencies(synti2_synth *s){
     s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
     
     /* modulator pitch; Hack. FIXME: */
-    //notemod = s->note[iv] + s->fenv[iv][3];   // HACK!!
+    /*notemod = s->note[iv] + s->fenv[iv][3];   // HACK!! */
     /* should make a floor (does it? check spec)*/
     note = notemod;
     interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
     freq = interm * s->note2freq[note];
     
     s->c[iv*2+1].delta = (freq) / s->sr * MAX_COUNTER; /*hack test*/
-    //s->c[2].delta = freq / s->sr * MAX_COUNTER; /* hack test */
+    /*s->c[2].delta = freq / s->sr * MAX_COUNTER; */
   }
 }
 
@@ -807,17 +800,15 @@ synti2_render(synti2_synth *s,
     for(ii=0;ii<NINNERLOOP;ii++){
       
       /* Could I put all counter upds in one big awesomely parallel loop? */
-      //synti2_evalEnvelopes(s);
-      synti2_evalCounters(s);
+      synti2_evalCounters(s);  /* .. apparently yes ..*/
       
       /* Getting more realistic soon: */
       buffer[iframe+ii] = 0.0f;
       
       for(iv=0;iv<NVOICES;iv++){
-        // if (s->partofvoice[iv] < 0) continue; /* Unsounding. FIXME: (f1) */
+        /* if (s->partofvoice[iv] < 0) continue; Unsounding. FIXME: how? */
         /* Produce sound :) First modulator, then carrier*/
-        /* Worth using a wavetable? Definitely.. Could do the first just
-           by bit-shifting the counter... */
+        /* Wavetable definitely! Could bit-shift the counter... */
         interm  = s->wave[(unsigned int)(s->c[iv*2+1].fr * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
         interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
         interm *= (s->velocity[iv]/128.0f) * (s->eprog[iv][1].f);

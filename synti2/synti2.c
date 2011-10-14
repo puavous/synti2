@@ -194,6 +194,7 @@ struct synti2_synth {
 /** Reads a MIDI variable length number. */
 static 
 int
+__attribute__ ((noinline))
 varlength(const unsigned char * source, int * dest){
   int nread;
   unsigned char byte;
@@ -358,10 +359,8 @@ synti2_player_init_from_misss(synti2_player *pl, const unsigned char *r)
   pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0f); /* frames-per-tick */
   /* TODO: Think about accuracy vs. code size */
   
-  r += varlength(r, &chunksize);
-  while(chunksize > 0){ /*printf("Read chunksize %d \n", chunksize);*/
+  for(r += varlength(r, &chunksize); chunksize > 0; r += varlength(r, &chunksize)){
     r = synti2_player_merge_chunk(pl, r, chunksize); /* read a chunk... */
-    r += varlength(r, &chunksize);                   /* move on to next chunk. */
   }
 }
 
@@ -395,7 +394,7 @@ synti2_create(unsigned long sr,
 #endif
 
   /* Initialize the player part. (Not much to be done...) */
-  s->pl->sr = sr; /* FIXME: Could be done away with ? */
+  s->pl->sr = sr;
   s->sr = sr;
   if (songdata != NULL) synti2_player_init_from_misss(s->pl, songdata);
 
@@ -791,7 +790,6 @@ synti2_render(synti2_synth *s,
      * elaboration in comments near the definition of NINNERLOOP).
      */
     
-    /* Handle MIDI-ish controls if there are more of them waiting. */
     synti2_handleInput(s, s->framecount.val + iframe + NINNERLOOP);
     synti2_updateEnvelopeStages(s); /* move on if need be. */
     synti2_updateFrequencies(s);    /* frequency upd. */

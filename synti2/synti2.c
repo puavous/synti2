@@ -9,6 +9,7 @@
 #include "synti2.h"
 #include "misss.h"
 
+typedef unsigned char byte_t; 
 
 /* Synti2 can be compiled as a Jack-MIDI compatible real-time soft
  * synth. Jack headers are not necessary otherwise...
@@ -48,7 +49,7 @@
 
 
 /* Maximum value of the counter type depends on C implementation, so
- * use limits.h
+ * use limits.h -- TODO: Actually should probably use C99 and stdint.h !
  */
 #define MAX_COUNTER UINT_MAX
 /* The wavetable sizes and divisor-bitshift must be consistent. */
@@ -95,6 +96,7 @@
  * still be used if they would compress nicely...
  */
 typedef struct counter {
+  unsigned int detect;
   unsigned int val;
   unsigned int delta;
   float f;  /* current output value (interpolant) */
@@ -112,7 +114,7 @@ typedef struct counter {
 typedef struct synti2_player_ev synti2_player_ev;
 
 struct synti2_player_ev {
-  const unsigned char *data;
+  const byte_t *data;
   synti2_player_ev *next;
   unsigned int frame;
   int len;
@@ -132,7 +134,7 @@ struct synti2_player {
   /* Only playable events. The first will be at evpool[0]! */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
   /* Data for events. */
-  unsigned char data[SYNTI2_MAX_SONGBYTES];
+  byte_t data[SYNTI2_MAX_SONGBYTES];
 };
 
 
@@ -195,9 +197,9 @@ struct synti2_synth {
 static 
 int
 __attribute__ ((noinline))
-varlength(const unsigned char * source, int * dest){
+varlength(const byte_t * source, int * dest){
   int nread;
-  unsigned char byte;
+  byte_t byte;
   *dest = 0;
   for (nread=1; nread<=4; nread++){
     byte = *source++;
@@ -218,7 +220,7 @@ static
 void
 synti2_player_event_add(synti2_player *pl, 
                         int frame, 
-                        const unsigned char *src, 
+                        const byte_t *src, 
                         size_t n){
   synti2_player_ev *ev_new;
   while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
@@ -236,16 +238,16 @@ synti2_player_event_add(synti2_player *pl,
 
 /** Returns a pointer to one past end of read in input data, i.e., next byte. */
 static
-unsigned char *
+byte_t *
 synti2_player_merge_chunk(synti2_player *pl, 
-                          const unsigned char *r, 
+                          const byte_t *r, 
                           int n_events)
 {
   char chan, type;
   int ii;
   int frame, tickdelta;
-  const unsigned char *par;
-  unsigned char *msg;
+  const byte_t *par;
+  byte_t *msg;
 
   chan = *r++;
   type = *r++;
@@ -283,7 +285,7 @@ synti2_player_merge_chunk(synti2_player *pl,
       }
     }
   }
-  return (unsigned char*) r;
+  return (byte_t*) r;
 }
 
 #ifdef JACK_MIDI
@@ -302,13 +304,13 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
 {
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
-  unsigned char *msg;
+  byte_t *msg;
   void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
 
   /* Re-initialize, and overwrite any former data. */
-  pl->freeloc = pl->evpool+1;
   pl->playloc = pl->evpool; /* This would "rewind" the song */
   pl->insloc = pl->evpool; /* This would "rewind" the song */
+  pl->freeloc = pl->evpool+1;
   pl->idata = 0;
   pl->playloc->next = NULL; /* This effects the deletion of previous msgs.*/
   
@@ -345,7 +347,7 @@ synti2_read_jack_midi(synti2_synth *s,
 /** Load and initialize a song. Assumes a freshly created player object!*/
 static
 void
-synti2_player_init_from_misss(synti2_player *pl, const unsigned char *r)
+synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
 {
   int chunksize;
   int uspq;
@@ -368,14 +370,14 @@ synti2_player_init_from_misss(synti2_player *pl, const unsigned char *r)
 
 static
 void
-synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data);
+synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data);
 
 
 /** Allocate and initialize a new synth instance. */
 synti2_synth *
 synti2_create(unsigned long sr, 
-              const unsigned char * patch_sysex, 
-              const unsigned char * songdata)
+              const byte_t * patch_sysex, 
+              const byte_t * songdata)
 {
   synti2_synth * s;
   int ii;
@@ -528,10 +530,10 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
 
 static
 void
-synti2_do_receiveSysEx(synti2_synth *s, const unsigned char * data){
+synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
   int offset, stride, ir;
   int a, b, c, adjust_byte;
-  float decoded;  float *dst; const unsigned char *rptr;
+  float decoded;  float *dst; const byte_t *rptr;
   
   /* Sysex header: */
   data += 4; /* skip Manufacturer IDs n stuff*/
@@ -601,7 +603,7 @@ synti2_handleInput(synti2_synth *s,
                    int upto_frames)
 {
   /* TODO: sane implementation */
-  const unsigned char *midibuf;
+  const byte_t *midibuf;
   synti2_player *pl;
 
   pl = s->pl;
@@ -654,11 +656,11 @@ synti2_evalCounters(synti2_synth *s){
   //  for(ic=0;ic<NCOUNTERS+NVOICES*NENVPERVOICE+1;ic++){
   for(c = s->c; c <= &s->framecount; c++){
     if (c->delta == 0) {continue;}  /* stopped.. not running*/
-    detect = c->val; 
+    c->detect = c->val; 
     c->val += c->delta;  /* Count 0 to MAX*/
 
     if (c >= s->eprog) { /* Clamp only latter half of counters. */
-      if (c->val < detect){         /* Detect overflow*/
+      if (c->val < c->detect){         /* Detect overflow*/
         c->val = MAX_COUNTER;          /* Clamp. */
         c->delta = 0;                  /* Stop after cycle*/
       }

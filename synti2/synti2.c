@@ -35,17 +35,13 @@ typedef unsigned char byte_t;
 /* Multitimbrality */
 #define NPARTS 16
 
-#define NOSCILLATORS 4
+/* Sound bank size (FIXME: separate the concept of patch and part!)*/
 
 /* Total number of "counters", i.e., oscillators/operators. */
 #define NCOUNTERS (NVOICES * NOSCILLATORS)
 
-/* Multitimbrality */
-#define NENVPERVOICE 4
-
 /* Total number of envelopes */
 #define NENVS (NVOICES * NENVPERVOICE)
-
 
 
 /* Maximum value of the counter type depends on C implementation, so
@@ -72,10 +68,9 @@ typedef unsigned char byte_t;
  */
 #define NINNERLOOP 8
 
-/* TODO: Think about the whole envelope madness... use LFOs instead of
- * looping envelopes?
- */
-#define TRIGGERSTAGE 6
+#define SYNTI2_MAX_SONGBYTES 30000
+#define SYNTI2_MAX_SONGEVENTS 15000
+
 
 /** I finally realized that unsigned ints will nicely loop around
  * (overflow) and as such they model an oscillator's phase pretty
@@ -106,11 +101,11 @@ typedef struct counter {
   float bb; /* for interpolation end */
 } counter;
 
-#define SYNTI2_MAX_SONGBYTES 30000
-#define SYNTI2_MAX_SONGEVENTS 15000
-
 /* Events shall form a singly linked list. TODO: Is the list code too
-   complicated? Use just tables with O(n^2) pre-ordering instead?? */
+ * complicated? Use just tables with O(n^2) pre-ordering instead??
+ * Hmm.. after some futile attempts, I was unable to squeeze a smaller
+ * code from any other approach, so I'm leaving the list as it is now.
+ */
 typedef struct synti2_player_ev synti2_player_ev;
 
 struct synti2_player_ev {
@@ -122,8 +117,9 @@ struct synti2_player_ev {
 
 struct synti2_player {
   synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
-  synti2_player_ev *insloc;
-  int fpt;       /* Frames per tick. Tempos will be inexact, sry! */
+  synti2_player_ev *insloc;  /* (one loc yielded larger exe on my first try)*/
+  int fpt;          /* Frames per tick. Tempos will be inexact, sry! */
+                    /* Hmm: Could I use some "automagic" tick counter? */
   int tpq;          /* Ticks per quarter (no support for SMPTE). */
   synti2_player_ev *freeloc; /*pointer to next free event structure*/
   int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
@@ -138,11 +134,20 @@ struct synti2_player {
 };
 
 
+/* The patch. The way things sound. */
+typedef struct synti2_patch {
+  int ipar3[SYNTI2_I3_NPARS];
+  int ipar7[SYNTI2_I7_NPARS];
+  float fpar[SYNTI2_F_NPARS];
+} synti2_patch;
+
 /** TODO: Not much is inside the part structure. Is it necessary at
  *  all? It will have controller values, though..
  */
 typedef struct synti2_part {
-  int voiceofkey[128];  /* Which note has triggered which voice*/
+  int voiceofkey[128];  /* Which note has triggered which voice */
+                        /* TODO: disable multiple triggering(?) */
+  int patch; /* Which patch is selected for this part. */
 } synti2_part;
 
 struct synti2_synth {
@@ -188,7 +193,7 @@ struct synti2_synth {
 
   /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
-  float patch[NPARTS * SYNTI2_NPARAMS];  /* The sound parameters per part*/
+  synti2_patch patch[NPATCHES];   /* The sound parameters per part*/
 };
 
 
@@ -540,6 +545,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
   /* FIXME: For 4k stuff these could be hardcoded!!:*/
   offset = *data++; offset <<= 7; offset += *data++;  /* store location  */
   stride = *data++; stride <<= 7; stride += *data++;  /* length / stride */
+
 
   /* Sysex data: */
   dst = s->patch + offset;

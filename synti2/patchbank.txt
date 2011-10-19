@@ -16,17 +16,19 @@
 
 # Or... should the effects be abstracted as "imaginary part 17" etc.?
 
+##############  Patch data 
+
+#
 # Patch 1 (loaded on part 1/16)
+#
+
 # Four envelopes:  (could have even more? But is 4 enough??)
 #  Knee1         Knee2         Knee3         Knee4         Knee5
 #  Time  Level   Time  Level   Time  Level   Time  Level   Time  Level
    0.00 0.00     0.01 1.00     0.04 0.64     4.00 0.02     0.04 0.00
    0.00 2.27     0.64 0.80     0.64 0.05     0.64 0.27     2.10 0.00
    0.00 0.00     0.00 0.00     0.00 24.0     0.01 0.00     2.10 0.00
-   0.00 2.27     0.64 0.80     0.64 0.05     0.64 0.27     2.10 0.00
-
-# Envelope 0 is "master" - sound dies with it. It is hardcoded as the
-# final amplitude envelope.
+   0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00
 
 # Other patch data.. Hmm.. playground as of now:
 
@@ -34,19 +36,45 @@
 # DANGER: all-zero times inside loop lead to infinite iteration!!!
   0 2 0 0
 
-# IDs of envelopes that affect different stuff (final volume 
-# should be always zero.. or should it? zero for others means? )
-#         osc4          osc3          osc2          
-#         amp*  pitch+  amp*  pitch+  amp*  pitch+  
-          3     4       2     0       1     0
+# Assignment of envelopes to sound parameters:
+#           "Lifetime"  Amp1  Amp2  Amp3  Amp4  AmpNois
+                     0     0     0     0     0        0
 
-# Then the oscillator 1 output:
-# amp*  pitch+
+# HMm: too much code from using lifetime as parameter!! Not worth it!
+
+# Pitch1 Pitch2 Pitch3 Pitch4  FiltC FiltR  Pan  Res. Res. Res.
+       3      3      3      3      2     0    0     0    0    0
+
+# Source Levels (before multiplicative amplitude envelope)
+# Losc4  Losc3  Losc2  Losc1 Lnoise
+   1.00  0.00   0.00   0.00  0.00
+
+# Detune/Relative fundamental pitch
+#                                osc4  osc3 osc2  osc1  Res.
+                                 0.00 0.00  0.00  0.00  0.00
+
+# Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
+# Think about using the rise and fall wavetables to their full
+# capacity here... more than in (vs * rise[vel<<9] + (1-vs)) * ampl
+
+# osc4  osc3  osc2  osc1 noise   FiltC
+   0.00 1.00  0.50  0.00  0.00    0.00
+
+# Pitch note follow ratio (FIXME: Can make zero default? fall[]?)
+#                                        osc1  osc2  osc3  osc4
+                                         1.00  1.00  1.00  1.00
 
 # Padding to get a power-of-two length for the instrument patch.
+# hmmm.. why power of two? Well, just in case some bit-shifting..
+
 
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
-   0.00 0.00  -1.00 0.00 
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   
+
+#128 parameters. Too many?
 
 
    0.01 1.00   0.10 0.50   1.27 0.05   0.00 0.05   0.20 0.0

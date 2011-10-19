@@ -51,8 +51,18 @@ synti2_read_jack_midi(synti2_synth *s,
 /*TODO: Design the patch format properly. */
 #define SYNTI2_IENVS 0
 #define SYNTI2_IENVLOOP 40
+#define SYNTI2_IELIFE 44
+#define SYNTI2_IEAMP1 45
+#define SYNTI2_IEAMP2 46
+#define SYNTI2_IEAMP3 47
+#define SYNTI2_IEAMP4 48
+#define SYNTI2_IEAMPN 49
+#define SYNTI2_IEPIT1 50
+#define SYNTI2_IEPIT2 51
+#define SYNTI2_IEPIT3 52
+#define SYNTI2_IEPIT4 53
 
-#define SYNTI2_NPARAMS 64
+#define SYNTI2_NPARAMS 128
 
 
 /* Length of envelope data block (K1T&L K2T&L K3T&L K4T&L K5T&L) */

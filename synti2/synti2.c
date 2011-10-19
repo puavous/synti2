@@ -752,26 +752,25 @@ static
 void
 synti2_updateFrequencies(synti2_synth *s){
   int iv, note;
+  int iosc;
   float notemod, interm, freq;
+  int ipat;
+
   /* Frequency computation... where to put it after all? */
   for (iv=0; iv<NVOICES; iv++){
-    notemod = s->note[iv] + s->eprog[iv][2].f;   // HACK!!
-    /* should make a floor (does it? check spec)*/
-    note = notemod;
-    interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
-    freq = interm * s->note2freq[note];
-    
-    s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
-    
-    /* modulator pitch; Hack. FIXME: */
-    /*notemod = s->note[iv] + s->fenv[iv][3];   // HACK!! */
-    /* should make a floor (does it? check spec)*/
-    note = notemod;
-    interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
-    freq = interm * s->note2freq[note];
-    
-    s->c[iv*2+1].delta = (freq) / s->sr * MAX_COUNTER; /*hack test*/
-    /*s->c[2].delta = freq / s->sr * MAX_COUNTER; */
+    ipat = s->partofvoice[iv]*SYNTI2_NPARAMS;
+    for (iosc=0; iosc<NOSCILLATORS; iosc++){
+      /* TODO: Pitch-note follow ratio .. */
+      /* FIXME: The idea of using float parameters dies here
+         - too much code from the conversion to array indices!!*/
+      notemod = s->note[iv] + s->eprog[iv][(int)s->patch[ipat+SYNTI2_IEPIT1+iosc]].f;
+      /* should make a floor (does it? check spec)*/
+      note = notemod;
+      interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
+      freq = interm * s->note2freq[note];
+      
+      s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;
+    }
   }
 }
 

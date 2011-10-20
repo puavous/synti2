@@ -788,11 +788,9 @@ synti2_updateFrequencies(synti2_synth *s){
     pat = s->patch + s->partofvoice[iv];
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
       /* TODO: Pitch-note follow ratio .. */
-      /* FIXME: The idea of using float parameters dies here
-         - too much code from the conversion to array indices!!*/
+      /* TODO: How much size gain from absolutely hard-coding envelopes n stuff?*/
       notemod = s->note[iv] + s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
-      /* should make a floor (does it? check spec)*/
-      note = notemod;
+      note = notemod; /* should make a floor (does it? check spec)*/
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
       freq = interm * s->note2freq[note];
       s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;

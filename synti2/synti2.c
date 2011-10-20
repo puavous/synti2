@@ -795,11 +795,7 @@ synti2_updateFrequencies(synti2_synth *s){
       note = notemod;
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
       freq = interm * s->note2freq[note];
-      
-      // Should be like this... but hmm.. not really working yet for some reason..
-      //      s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;
-      s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
-      s->c[iv*2+1].delta = freq / s->sr * MAX_COUNTER;
+      s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;
     }
   }
 }
@@ -812,6 +808,7 @@ synti2_render(synti2_synth *s,
 {
   int iframe, ii, iv;
   float interm;
+  int wtoffs;
   synti2_player *pl;
 
   pl = s->pl;
@@ -838,10 +835,12 @@ synti2_render(synti2_synth *s,
         /* if (s->partofvoice[iv] < 0) continue; Unsounding. FIXME: how? */
         /* Produce sound :) First modulator, then carrier*/
         /* Wavetable definitely! Could bit-shift the counter... */
-        interm  = s->wave[(unsigned int)(s->c[iv*2+1].fr * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
+        wtoffs = (unsigned int)(s->c[iv*NOSCILLATORS+1].fr * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
+        interm  = s->wave[wtoffs];
         interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
         interm *= (s->velocity[iv]/128.0f) * (s->eprog[iv][1].f);
-        interm  = s->wave[(unsigned int)((s->c[iv*2+0].fr + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK];
+        wtoffs = (unsigned int)((s->c[iv*NOSCILLATORS+0].fr + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
+        interm  = s->wave[wtoffs];
         interm *= s->eprog[iv][0].f;
         buffer[iframe+ii] += interm;
       }      

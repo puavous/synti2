@@ -36,6 +36,7 @@ typedef unsigned char byte_t;
 #define NPARTS 16
 
 /* Sound bank size (FIXME: separate the concept of patch and part!)*/
+#define NPATCHES 16
 
 /* Total number of "counters", i.e., oscillators/operators. */
 #define NCOUNTERS (NVOICES * NOSCILLATORS)
@@ -536,19 +537,36 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
 static
 void
 synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
-  int offset, stride, ir;
+  int opcode, offset, ir;
   int a, b, c, adjust_byte;
-  float decoded;  float *dst; const byte_t *rptr;
+  synti2_patch *pat;
+  float decoded;  
+  float *dst; 
+  static int stride = SYNTI2_F_NPARS; /* Constant, how to do?*/
+  const byte_t *rptr;
   
   /* Sysex header: */
   data += 4; /* skip Manufacturer IDs n stuff*/
-  /* FIXME: For 4k stuff these could be hardcoded!!:*/
-  offset = *data++; offset <<= 7; offset += *data++;  /* store location  */
-  stride = *data++; stride <<= 7; stride += *data++;  /* length / stride */
-
+  /* FIXME: For 4k stuff these could be hardcoded!!?:*/
+  /* Overall, these could be streamlined a bit*/
+  opcode = *data++; opcode <<= 7; opcode += *data++;  /* what to do */
+  offset = *data++; offset <<= 7; offset += *data++;  /* in where */
 
   /* Sysex data: */
-  dst = s->patch + offset;
+  /* As of yet, offset==patch index. FIXME: Maybe more elaborate addressing? */
+
+  pat = s->patch + offset;
+
+  for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
+    pat->ipar3[ir] = *data >> 3;
+    pat->ipar3[ir+1] = (*data++) & 0x7;
+  }
+
+  for(ir=0;ir<SYNTI2_I7_NPARS; ir++){
+    pat->ipar7[ir] = *data++;
+  }
+
+  //dst = pat->fpar;
   for (ir=0; ir<stride; ir++){
     rptr = data++;
     a = *rptr;
@@ -562,7 +580,8 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
     decoded += (adjust_byte & 0x0f) * 0.001f;
 #endif
 
-    *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+    //    *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+    pat->fpar[ir] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
   }
 
 
@@ -696,6 +715,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
   int part;
   float nextgoal;
   float nexttime;
+  synti2_patch *pat;
   
   for(iv=0; iv<NVOICES; iv++){
     /* Consider note instance "completely finished" when envelope 0 is over: */
@@ -705,13 +725,14 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 
     part = s->partofvoice[iv];
     if (part<0) continue;
+    pat = s->patch + s->part[part].patch; /* Oh, the levels of indirection!(TODO:?)*/
 
     for (ie=0; ie<NENVPERVOICE; ie++){
       if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs.FIXME: needed?*/
       /* Think... delta==0 on a triggered envelope means endclamp??
          NOTE: Need to set delta=0 upon note on!! and estage ==
          NSTAGES+1 or so (=6?) means go to attack.. */
-      ipastend = part * SYNTI2_NPARAMS + SYNTI2_IENVS + (ie+1) * SYNTI2_NENVD;
+      ipastend = SYNTI2_F_ENVS + (ie+1) * SYNTI2_NENVD;
 
       /* Find next non-zero-timed knee (or end.) */
       while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){
@@ -723,12 +744,12 @@ synti2_updateEnvelopeStages(synti2_synth *s){
                     part, ie, s->estage[iv][ie], 
                     (int)s->patch[part*SYNTI2_NPARAMS 
                     + SYNTI2_IENVLOOP+ie]);*/
-          s->estage[iv][ie] += s->patch[part*SYNTI2_NPARAMS + SYNTI2_IENVLOOP+ie];
+          s->estage[iv][ie] += pat->ipar3[SYNTI2_I3_ELOOP1+ie];
         }
 #endif
 
-        nexttime = s->patch[ipastend - s->estage[iv][ie] * 2 + 0];
-        nextgoal = s->patch[ipastend - s->estage[iv][ie] * 2 + 1];
+        nexttime = pat->fpar[ipastend - s->estage[iv][ie] * 2 + 0];
+        nextgoal = pat->fpar[ipastend - s->estage[iv][ie] * 2 + 1];
         s->eprog[iv][ie].aa = s->eprog[iv][ie].f;
         s->eprog[iv][ie].bb = nextgoal;
         if (nexttime <= 0.0f) {
@@ -760,22 +781,25 @@ synti2_updateFrequencies(synti2_synth *s){
   int iv, note;
   int iosc;
   float notemod, interm, freq;
-  int ipat;
+  synti2_patch *pat;
 
   /* Frequency computation... where to put it after all? */
   for (iv=0; iv<NVOICES; iv++){
-    ipat = s->partofvoice[iv]*SYNTI2_NPARAMS;
+    pat = s->patch + s->partofvoice[iv];
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
       /* TODO: Pitch-note follow ratio .. */
       /* FIXME: The idea of using float parameters dies here
          - too much code from the conversion to array indices!!*/
-      notemod = s->note[iv] + s->eprog[iv][(int)s->patch[ipat+SYNTI2_IEPIT1+iosc]].f;
+      notemod = s->note[iv] + s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
       /* should make a floor (does it? check spec)*/
       note = notemod;
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
       freq = interm * s->note2freq[note];
       
-      s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;
+      // Should be like this... but hmm.. not really working yet for some reason..
+      //      s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;
+      s->c[iv*2].delta = freq / s->sr * MAX_COUNTER;
+      s->c[iv*2+1].delta = freq / s->sr * MAX_COUNTER;
     }
   }
 }

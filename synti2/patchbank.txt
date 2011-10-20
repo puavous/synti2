@@ -35,7 +35,7 @@
 # Noise necessary as a distinct source?
 #
 # Life  Amp1  Amp2  Amp3  Amp4  AmpN  Pit1  Pit2  Pit3  Pit4
-     0     0     0     0     0     0     0     0     0     0
+     0     0     0     0     0     0     3     3     3     3
 
 # Envelope loop-how-many-stages-back for each envelope.
 # DANGER: all-zero times inside loop lead to infinite iteration!!!

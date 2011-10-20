@@ -77,7 +77,7 @@ for L in sys.stdin.readlines():
 int3_data = data[0:16]
 int7_data = data[16:32]
 float_data = data[32:(32+128)]
-totlen = 16+16+(4*128)
+totlen = 9+16+16+(4*128)
 
 
 int3_to_write = synti2_encode3s(int3_data)

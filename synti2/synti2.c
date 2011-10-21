@@ -189,6 +189,9 @@ struct synti2_synth {
 				-1 (should we use zero instead?) means
 				that the voice is free to re-occupy. */
 
+  synti2_patch *patchofvoice[NVOICES];  /* which patch is sounding; */
+
+
   int note[NVOICES];
   int velocity[NVOICES];
 
@@ -486,6 +489,7 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
   s->part[part].voiceofkey[note] = voice;
   /* How much code for always referencing through [voice]? voice.note better?*/
   s->partofvoice[voice] = part;
+  s->patchofvoice[voice] = s->patch + part; // FIXME: s->part[part].patch
   s->note[voice] = note;
   s->velocity[voice] = vel;
   s->sustain[voice] = 1;  
@@ -555,56 +559,58 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
   /* Sysex data: */
   /* As of yet, offset==patch index. FIXME: Maybe more elaborate addressing? */
 
-  pat = s->patch + offset;
+  //pat = s->patch + offset;
 
-  for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
-    pat->ipar3[ir] = *data >> 3;
-    pat->ipar3[ir+1] = (*data++) & 0x7;
-  }
+  for(pat = s->patch + offset; *data != 0xf7; pat++){
 
-  for(ir=0;ir<SYNTI2_I7_NPARS; ir++){
-    pat->ipar7[ir] = *data++;
-  }
+    for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
+      pat->ipar3[ir] = *data >> 3;
+      pat->ipar3[ir+1] = (*data++) & 0x7;
+    }
 
-  //dst = pat->fpar;
-  for (ir=0; ir<stride; ir++){
-    rptr = data++;
-    a = *rptr;
-    b = *(rptr += stride); 
-    c = *(rptr += stride);
-    adjust_byte = *(rptr += stride);
-    decoded = 0.01f * a + b + 100*c;
+    for(ir=0;ir<SYNTI2_I7_NPARS; ir++){
+      pat->ipar7[ir] = *data++;
+    }
 
+    //dst = pat->fpar;
+    for (ir=0; ir<stride; ir++){
+      rptr = data++;
+      a = *rptr;
+      b = *(rptr += stride); 
+      c = *(rptr += stride);
+      adjust_byte = *(rptr += stride);
+      decoded = 0.01f * a + b + 100*c;
+      
 #ifdef SUPER_ACCURATE_PATCHES
-    /* Sigh.. I wanted this, but letting go by default. */
-    decoded += (adjust_byte & 0x0f) * 0.001f;
+      /* Sigh.. I wanted this, but letting go by default. */
+      decoded += (adjust_byte & 0x0f) * 0.001f;
 #endif
-
-    //    *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
-    pat->fpar[ir] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
-  }
-
-
+      
+      //    *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+      pat->fpar[ir] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+    }
+    data += 3*stride;
+    
 #if 0
-  /* TODO: Think about this... this becomes about 30 bytes shorter
-   code..  Maybe not worth it ?? Or maybe it is? Is there yet another
-   way to deliver the patch data accurately but with good
-   compressibility? */
-  int ir, a, stride, offset;  float *dst;
-
-  data += 4; /* skip IDs n stuff*/
-  data += varlength(data, &offset);
-  data += varlength(data, &stride);
-
-  dst = s->patch + offset;
-  for (ir=0; ir<stride; ir++){
-    data += varlength(data, &a);
-    a <<= 4; /* need sign bit. Effectively also multiplies by 2**4=16*/
-    *dst++ = a / 1600.0f; /* Encoding in 100ths. */
-  }
+    /* TODO: Think about this... this becomes about 30 bytes shorter
+       code..  Maybe not worth it ?? Or maybe it is? Is there yet another
+       way to deliver the patch data accurately but with good
+       compressibility? */
+    int ir, a, stride, offset;  float *dst;
+    
+    data += 4; /* skip IDs n stuff*/
+    data += varlength(data, &offset);
+    data += varlength(data, &stride);
+    
+    dst = s->patch + offset;
+    for (ir=0; ir<stride; ir++){
+      data += varlength(data, &a);
+      a <<= 4; /* need sign bit. Effectively also multiplies by 2**4=16*/
+      *dst++ = a / 1600.0f; /* Encoding in 100ths. */
+    }
 #endif
+  }
 }
-
 
 
 /** Handles input that comes from the stored list of song events.
@@ -725,7 +731,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 
     part = s->partofvoice[iv];
     if (part<0) continue;
-    pat = s->patch + s->part[part].patch; /* Oh, the levels of indirection!(TODO:?)*/
+    pat = s->patchofvoice[iv]; /* Oh, the levels of indirection!(TODO:?)*/
 
     for (ie=0; ie<NENVPERVOICE; ie++){
       if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs.FIXME: needed?*/
@@ -785,7 +791,9 @@ synti2_updateFrequencies(synti2_synth *s){
 
   /* Frequency computation... where to put it after all? */
   for (iv=0; iv<NVOICES; iv++){
-    pat = s->patch + s->partofvoice[iv];
+    pat = s->patchofvoice[iv]; /* Oh, the levels of indirection!(TODO:?)*/
+    if (pat==NULL) continue;
+
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
       /* TODO: Pitch-note follow ratio .. */
       /* TODO: How much size gain from absolutely hard-coding envelopes n stuff?*/

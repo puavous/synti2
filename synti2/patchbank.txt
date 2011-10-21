@@ -25,9 +25,9 @@
 
 ##############  Patch data 
 
-#
+#########################################
 # Patch 1
-#
+#########################################
 
 # 3-bit integer parameters:
 
@@ -44,6 +44,84 @@
 # Padding (unused)
                              0     0
 
+# 7-bit integer parameters:
+#
+# (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
+
+# So far only padding:
+
+    0 0 0 0 0 0 0 0 0 0 
+    0 0 0 0 0 0
+
+
+# Floating point parameters:
+# Four envelopes:  (could have even more? But is 4 enough??)
+#  Knee1         Knee2         Knee3         Knee4         Knee5
+#  Time  Level   Time  Level   Time  Level   Time  Level   Time  Level
+   0.00 0.00     1.01 1.00     0.04 0.64     4.00 0.02     0.04 0.00
+   0.00 2.27     0.64 0.80     0.64 0.05     0.64 0.27     2.10 0.00
+   0.00 0.00     0.00 0.00     0.00 24.0     0.03 0.00     0.03 0.00
+   0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00
+
+# Detune/Relative fundamental pitch (added to "note from keyboard")
+# FIXME: This might be better as a normal CC -> MIDI-controllability
+# osc1  osc2  osc3  osc4  Res.
+  0.00  0.00  12.00  12.00  0.00
+
+# Source Levels (before multiplicative amplitude envelope)
+#                 Losc4  Losc3  Losc2  Losc1 Lnoise
+                   1.00  0.00   0.00   0.00  0.00
+
+# Other patch data.. Hmm.. playground as of now:
+
+
+# Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
+# Think about using the rise and fall wavetables to their full
+# capacity here... more than in (vs * rise[vel<<9] + (1-vs)) * ampl
+
+# osc4  osc3  osc2  osc1 noise   FiltC
+   0.00 1.00  0.50  0.00  0.00    0.00
+
+# Pitch note follow ratio (FIXME: Can make zero default? fall[]?)
+#                                        osc1  osc2  osc3  osc4
+                                         1.00  1.00  1.00  1.00
+
+# Padding to get a power-of-two length for the instrument patch.
+# hmmm.. why power of two? Well, just in case some bit-shifting..
+
+
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   
+
+#128 parameters. Too many?
+
+
+======== 
+
+
+#########################################
+# Patch 2
+#########################################
+
+# 3-bit integer parameters:
+
+# Envelope selection
+# Noise necessary as a distinct source?
+#
+# Life  Amp1  Amp2  Amp3  Amp4  AmpN  Pit1  Pit2  Pit3  Pit4
+     0     0     0     0     0     0     2     2     3     3
+
+# Envelope loop-how-many-stages-back for each envelope.
+# DANGER: all-zero times inside loop lead to infinite iteration!!!
+  0 2 0 0
+
+# Padding (unused)
+                             0     0
 
 # 7-bit integer parameters:
 #
@@ -75,9 +153,84 @@
 
 # Other patch data.. Hmm.. playground as of now:
 
-# Pitch1 Pitch2 Pitch3 Pitch4  FiltC FiltR  Pan  Res. Res. Res.
-       3      1      3      3      2     0    0     0    0    0
 
+# Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
+# Think about using the rise and fall wavetables to their full
+# capacity here... more than in (vs * rise[vel<<9] + (1-vs)) * ampl
+
+# osc4  osc3  osc2  osc1 noise   FiltC
+   0.00 1.00  0.50  0.00  0.00    0.00
+
+# Pitch note follow ratio (FIXME: Can make zero default? fall[]?)
+#                                        osc1  osc2  osc3  osc4
+                                         1.00  1.00  1.00  1.00
+
+# Padding to get a power-of-two length for the instrument patch.
+# hmmm.. why power of two? Well, just in case some bit-shifting..
+
+
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   
+
+#128 parameters. Too many?
+
+
+======== 
+
+
+#########################################
+# Patch 3
+#########################################
+
+# 3-bit integer parameters:
+
+# Envelope selection
+# Noise necessary as a distinct source?
+#
+# Life  Amp1  Amp2  Amp3  Amp4  AmpN  Pit1  Pit2  Pit3  Pit4
+     0     0     0     0     0     0     2     2     3     3
+
+# Envelope loop-how-many-stages-back for each envelope.
+# DANGER: all-zero times inside loop lead to infinite iteration!!!
+  0 2 0 0
+
+# Padding (unused)
+                             0     0
+
+# 7-bit integer parameters:
+#
+# (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
+
+# So far only padding:
+
+    0 0 0 0 0 0 0 0 0 0 
+    0 0 0 0 0 0
+
+
+# Floating point parameters:
+# Four envelopes:  (could have even more? But is 4 enough??)
+#  Knee1         Knee2         Knee3         Knee4         Knee5
+#  Time  Level   Time  Level   Time  Level   Time  Level   Time  Level
+   0.00 0.00     0.01 1.00     0.04 0.64     4.00 0.02     0.04 0.00
+   0.00 2.27     0.64 0.80     0.64 0.05     0.64 0.27     2.10 0.00
+   0.00 0.00     0.00 0.00     0.00 24.0     0.03 0.00     0.03 0.00
+   0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00
+
+# Detune/Relative fundamental pitch (added to "note from keyboard")
+# FIXME: This might be better as a normal CC -> MIDI-controllability
+# osc1  osc2  osc3  osc4  Res.
+  0.00  0.00  12.00  12.00  0.00
+
+# Source Levels (before multiplicative amplitude envelope)
+#                 Losc4  Losc3  Losc2  Losc1 Lnoise
+                   1.00  0.00   0.00   0.00  0.00
+
+# Other patch data.. Hmm.. playground as of now:
 
 
 # Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
@@ -100,9 +253,95 @@
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
    0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   
 
 #128 parameters. Too many?
+
+
+======== 
+
+
+#########################################
+# Patch 4
+#########################################
+
+# 3-bit integer parameters:
+
+# Envelope selection
+# Noise necessary as a distinct source?
+#
+# Life  Amp1  Amp2  Amp3  Amp4  AmpN  Pit1  Pit2  Pit3  Pit4
+     0     0     0     0     0     0     2     2     3     3
+
+# Envelope loop-how-many-stages-back for each envelope.
+# DANGER: all-zero times inside loop lead to infinite iteration!!!
+  0 2 0 0
+
+# Padding (unused)
+                             0     0
+
+# 7-bit integer parameters:
+#
+# (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
+
+# So far only padding:
+
+    0 0 0 0 0 0 0 0 0 0 
+    0 0 0 0 0 0
+
+
+# Floating point parameters:
+# Four envelopes:  (could have even more? But is 4 enough??)
+#  Knee1         Knee2         Knee3         Knee4         Knee5
+#  Time  Level   Time  Level   Time  Level   Time  Level   Time  Level
+   0.00 0.00     0.01 1.00     0.04 0.64     4.00 0.02     0.04 0.00
+   0.00 2.27     0.64 0.80     0.64 0.05     0.64 0.27     2.10 0.00
+   0.00 0.00     0.00 0.00     0.00 24.0     0.03 0.00     0.03 0.00
+   0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00
+
+# Detune/Relative fundamental pitch (added to "note from keyboard")
+# FIXME: This might be better as a normal CC -> MIDI-controllability
+# osc1  osc2  osc3  osc4  Res.
+  0.00  0.00  12.00  12.00  0.00
+
+# Source Levels (before multiplicative amplitude envelope)
+#                 Losc4  Losc3  Losc2  Losc1 Lnoise
+                   1.00  0.00   0.00   0.00  0.00
+
+# Other patch data.. Hmm.. playground as of now:
+
+
+# Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
+# Think about using the rise and fall wavetables to their full
+# capacity here... more than in (vs * rise[vel<<9] + (1-vs)) * ampl
+
+# osc4  osc3  osc2  osc1 noise   FiltC
+   0.00 1.00  0.50  0.00  0.00    0.00
+
+# Pitch note follow ratio (FIXME: Can make zero default? fall[]?)
+#                                        osc1  osc2  osc3  osc4
+                                         1.00  1.00  1.00  1.00
+
+# Padding to get a power-of-two length for the instrument patch.
+# hmmm.. why power of two? Well, just in case some bit-shifting..
+
+
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00
+   0.00 0.00   0.00 0.00   0.00 0.00   0.00 0.00   
+
+#128 parameters. Too many?
+
+
+
+^ End of data for the throw-away converter
+
+
 
 
    0.01 1.00   0.10 0.50   1.27 0.05   0.00 0.05   0.20 0.0

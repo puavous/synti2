@@ -818,6 +818,7 @@ synti2_render(synti2_synth *s,
   float interm;
   int wtoffs;
   synti2_player *pl;
+  synti2_patch *pat;
 
   pl = s->pl;
   
@@ -840,6 +841,10 @@ synti2_render(synti2_synth *s,
       buffer[iframe+ii] = 0.0f;
       
       for(iv=0;iv<NVOICES;iv++){
+
+        /* Hmm.. these not needed if we hardcode the patch algorithm!! */
+        pat = s->patchofvoice[iv];
+        if (pat==NULL) continue;
         /* if (s->partofvoice[iv] < 0) continue; Unsounding. FIXME: how? */
         /* Produce sound :) First modulator, then carrier*/
         /* Wavetable definitely! Could bit-shift the counter... */
@@ -847,10 +852,10 @@ synti2_render(synti2_synth *s,
         interm  = s->wave[wtoffs];
         //interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
         interm *= (s->velocity[iv]/128.0f);  /* Velocity sensitivity */
-        interm *= (s->eprog[iv][1].f);
+        interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP2]].f);
         wtoffs = (unsigned int)((s->c[iv*NOSCILLATORS+0].fr + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
         interm  = s->wave[wtoffs];
-        interm *= s->eprog[iv][0].f;
+        interm *= s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1]].f;
         buffer[iframe+ii] += interm;
       }      
       buffer[iframe+ii] /= NVOICES;

@@ -93,6 +93,11 @@ synti2_read_jack_midi(synti2_synth *s,
   FIXME: Think about this .. make envs simpler?
 */
 
+#define SYNTI2_F_DT1 40
+#define SYNTI2_F_DT2 41
+#define SYNTI2_F_DT3 42
+#define SYNTI2_F_DT4 43
+
 
 #define SYNTI2_F_NPARS 128
 

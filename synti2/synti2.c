@@ -789,7 +789,9 @@ synti2_updateFrequencies(synti2_synth *s){
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
       /* TODO: Pitch-note follow ratio .. */
       /* TODO: How much size gain from absolutely hard-coding envelopes n stuff?*/
-      notemod = s->note[iv] + s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
+      notemod = s->note[iv] 
+        + s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f
+        + pat->fpar[SYNTI2_F_DT1+iosc];
       note = notemod; /* should make a floor (does it? check spec)*/
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
       freq = interm * s->note2freq[note];
@@ -835,8 +837,9 @@ synti2_render(synti2_synth *s,
         /* Wavetable definitely! Could bit-shift the counter... */
         wtoffs = (unsigned int)(s->c[iv*NOSCILLATORS+1].fr * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
         interm  = s->wave[wtoffs];
-        interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
-        interm *= (s->velocity[iv]/128.0f) * (s->eprog[iv][1].f);
+        //interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
+        interm *= (s->velocity[iv]/128.0f);  /* Velocity sensitivity */
+        interm *= (s->eprog[iv][1].f);
         wtoffs = (unsigned int)((s->c[iv*NOSCILLATORS+0].fr + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
         interm  = s->wave[wtoffs];
         interm *= s->eprog[iv][0].f;

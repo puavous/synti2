@@ -50,7 +50,7 @@ synti2_read_jack_midi(synti2_synth *s,
  */
 
 /* Sound structure. Must be consistent with all the below parameters! */
-#define NENVPERVOICE 4
+#define NENVPERVOICE 6
 #define NOSCILLATORS 4
 
 /* TODO: Think about the whole envelope madness... use LFOs instead of
@@ -93,11 +93,27 @@ synti2_read_jack_midi(synti2_synth *s,
   FIXME: Think about this .. make envs simpler?
 */
 
-#define SYNTI2_F_DT1 40
-#define SYNTI2_F_DT2 41
-#define SYNTI2_F_DT3 42
-#define SYNTI2_F_DT4 43
-
+#define SYNTI2_F_DT1 60
+#define SYNTI2_F_DT2 61
+#define SYNTI2_F_DT3 62
+#define SYNTI2_F_DT4 63
+#define SYNTI2_F_xxx 64
+#define SYNTI2_F_LV1 65
+#define SYNTI2_F_LV2 66
+#define SYNTI2_F_LV3 67
+#define SYNTI2_F_LV4 68
+#define SYNTI2_F_LVN 69
+#define SYNTI2_F_VS1 70
+#define SYNTI2_F_VS2 71
+#define SYNTI2_F_VS3 72
+#define SYNTI2_F_VS4 73
+#define SYNTI2_F_VSN 74
+#define SYNTI2_F_VSC 75
+#define SYNTI2_F_PF1 76
+#define SYNTI2_F_PF2 77
+#define SYNTI2_F_PF3 78
+#define SYNTI2_F_PF4 79
+#define SYNTI2_F_PFN 80
 
 #define SYNTI2_F_NPARS 128
 

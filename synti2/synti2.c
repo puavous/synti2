@@ -91,7 +91,7 @@ typedef unsigned char byte_t;
  * TODO: Maybe separate functions for oscillators and envelopes could
  * still be used if they would compress nicely...
  */
-typedef struct counter {
+typedef struct {
   unsigned int detect;
   unsigned int val;
   unsigned int delta;
@@ -119,7 +119,7 @@ struct synti2_player_ev {
 struct synti2_player {
   synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
   synti2_player_ev *insloc;  /* (one loc yielded larger exe on my first try)*/
-  int fpt;          /* Frames per tick. Tempos will be inexact, sry! */
+  int fpt;          /* Frames per tick. integer => tempos inexact, sry! */
                     /* Hmm: Could I use some "automagic" tick counter? */
   int tpq;          /* Ticks per quarter (no support for SMPTE). */
   synti2_player_ev *freeloc; /*pointer to next free event structure*/
@@ -186,8 +186,8 @@ struct synti2_synth {
   int sustain[NVOICES];
 
   int partofvoice[NVOICES];  /* which part has triggered each "voice";
-				-1 (should we use zero instead?) means
-				that the voice is free to re-occupy. */
+                                -1 (should we use zero instead?) means
+                                that the voice is free to re-occupy. */
 
   synti2_patch *patchofvoice[NVOICES];  /* which patch is sounding; */
 

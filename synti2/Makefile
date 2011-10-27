@@ -9,10 +9,10 @@ CFLAGS = -O3 -g -Wall -pedantic
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL \
+HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL   -DNO_LOOPING_ENVELOPES \
 	-DNO_SYSEX_RECEIVE -nostdlib
 
-#  -DNO_LOOPING_ENVELOPES
+
 
 # Used the following the last time.. but now they don't seem to help much
 # at least with the first versions..
@@ -48,6 +48,7 @@ jacktest: jackmidi.c synti2.c synti2.h testdata.c Makefile
 testdata.c: patchbank.txt testi.mid hacktac.py misssify Makefile
 	python hacktac.py < patchbank.txt > testdata.c
 	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
+#	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
 #	./misssify --tpq 12 --only-on testi.mid
 #	./misssify --tpq 12 testi.mid
 #	./misssify testi.mid

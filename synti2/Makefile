@@ -9,8 +9,10 @@ CFLAGS = -O3 -g -Wall -pedantic
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL -DNO_LOOPING_ENVELOPES \
+HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL \
 	-DNO_SYSEX_RECEIVE -nostdlib
+
+#  -DNO_LOOPING_ENVELOPES
 
 # Used the following the last time.. but now they don't seem to help much
 # at least with the first versions..

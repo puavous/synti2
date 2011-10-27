@@ -42,7 +42,7 @@ typedef unsigned char byte_t;
 #define NCOUNTERS (NVOICES * NOSCILLATORS)
 
 /* Total number of envelopes */
-#define NENVS (NVOICES * NENVPERVOICE)
+#define NENVS (NVOICES * (NENVPERVOICE+1))
 
 
 /* Maximum value of the counter type depends on C implementation, so
@@ -178,11 +178,11 @@ struct synti2_synth {
    */
   /* Must be in this order and next to each other exactly!! Impl. specif?*/
   counter c[NCOUNTERS];
-  counter eprog[NVOICES][NENVPERVOICE];
+  counter eprog[NVOICES][NENVPERVOICE+1];
   counter framecount;
 
   /* Envelope stages just a table? TODO: think.*/
-  int estage[NVOICES][NENVPERVOICE];
+  int estage[NVOICES][NENVPERVOICE+1];
   int sustain[NVOICES];
 
   int partofvoice[NVOICES];  /* which part has triggered each "voice";
@@ -458,7 +458,7 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
     voice = s->part[part].voiceofkey[note];
     //if (voice < 0) return; /* FIXME: think.. */
     /* TODO: release all envelopes.. */
-    for (ie=0; ie<NENVPERVOICE; ie++){
+    for (ie=0; ie<=NENVPERVOICE; ie++){
       s->estage[voice][ie] = 2;      /* skip to end */
       s->eprog[voice][ie].delta = 0; /* skip to end */
       s->eprog[voice][ie].val = 0;   /* must skip also value!! FIXME: think(?)*/
@@ -496,7 +496,7 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
  
   /* TODO: trigger all envelopes according to patch data..  Just give
      a hint to the evaluator function.. */
-  for (ie=0; ie<NENVPERVOICE; ie++){
+  for (ie=0; ie<=NENVPERVOICE; ie++){
     s->estage[voice][ie] = TRIGGERSTAGE;
     s->eprog[voice][ie].delta = 0;
   }
@@ -587,7 +587,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
 #endif
       
       //    *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
-      pat->fpar[ir] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+      pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
     }
     data += 3*stride;
     
@@ -722,10 +722,10 @@ synti2_updateEnvelopeStages(synti2_synth *s){
   float nextgoal;
   float nexttime;
   synti2_patch *pat;
-  
+
   for(iv=0; iv<NVOICES; iv++){
-    /* Consider note instance "completely finished" when envelope 0 is over: */
-    if (s->estage[iv][0] == 0) {
+    /* Consider note instance "completely finished" when envelope 1 is over: */
+    if (s->estage[iv][1] == 0) {
       s->partofvoice[iv] = -1;
     }
 
@@ -733,7 +733,8 @@ synti2_updateEnvelopeStages(synti2_synth *s){
     if (part<0) continue;
     pat = s->patchofvoice[iv]; /* Oh, the levels of indirection!(TODO:?)*/
 
-    for (ie=0; ie<NENVPERVOICE; ie++){
+    for (ie=1; ie<=NENVPERVOICE; ie++){
+      //printf("At %d voice %d env %d\n", s->framecount.val, iv,ie); fflush(stdout);
       if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs.FIXME: needed?*/
       /* Think... delta==0 on a triggered envelope means endclamp??
          NOTE: Need to set delta=0 upon note on!! and estage ==
@@ -766,14 +767,10 @@ synti2_updateEnvelopeStages(synti2_synth *s){
           s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
           s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
         }
-
-          /*
-            if ((iv==0) && (ie<2))
-          jack_info("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) ", 
-                    iv, ie, part, s->estage[iv][ie], s->feprev[iv][ie], 
-                    s->fegoal[iv][ie], 
-                    nexttime, s->eprog[iv][ie].delta);
-          */
+        /*if ((iv==0) && (ie<2))
+          printf("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) \n", 
+                    iv, ie, part, s->estage[iv][ie], s->eprog[iv][ie].aa, 
+                    s->eprog[iv][ie].bb, nexttime, s->eprog[iv][ie].delta);*/
       }
     }
   }

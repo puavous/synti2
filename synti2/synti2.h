@@ -75,6 +75,8 @@ synti2_read_jack_midi(synti2_synth *s,
 #define SYNTI2_I3_ELOOP2 11
 #define SYNTI2_I3_ELOOP3 12
 #define SYNTI2_I3_ELOOP4 13
+#define SYNTI2_I3_ELOOP5 14
+#define SYNTI2_I3_ELOOP6 15
 
 
 /*FIXME: We could have some wavetable info here! */

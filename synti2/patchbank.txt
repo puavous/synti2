@@ -35,20 +35,19 @@
 # Noise necessary as a distinct source?
 #
 # Life  Amp1  Amp2  Amp3  Amp4  AmpN  Pit1  Pit2  Pit3  Pit4
-     0     0     1     0     0     0     3     3     3     3
+     1     1     2     2     1     1     4     4     4     4
 
 # Envelope loop-how-many-stages-back for each envelope.
 # DANGER: all-zero times inside loop lead to infinite iteration!!!
-  0 2 0 0
+  0 2 0 0 0 0
 
-# Padding (unused)
-                             0     0
+# Padding (unused)  .. no more, after adding envelopes.
 
 # 7-bit integer parameters:
 #
 # (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
 
-# So far only padding:
+# So far only padding (let us see if these are necessary at all)
 
     0 0 0 0 0 0 0 0 0 0 
     0 0 0 0 0 0
@@ -59,7 +58,7 @@
 #  Knee1         Knee2         Knee3         Knee4         Knee5
 #  Time  Level   Time  Level   Time  Level   Time  Level   Time  Level
    0.00 0.00     0.01 1.00     0.04 0.64     4.00 0.02     0.04 0.00
-   0.00 1.27     0.24 0.80     0.64 0.05     0.64 0.27     2.10 0.00
+   0.00 2.27     0.24 0.80     0.64 0.05     0.64 0.27     2.10 0.00
    0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00
    0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00
    0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00     0.00 0.00

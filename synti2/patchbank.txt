@@ -6,13 +6,35 @@
 # at (in addition to any other goals)..
 
 # Global data (to be planned)
+# TODO: *Can we use the same int3/int7/float -structure for global data
+#       and for patches. Simplifies reader maybe.. "Patch 0"== global
 
-# Patch selection on each channel/part:
+
+# Patch selection on each channel/part (range 0-127?):
 
 # 0   0   0   0   0   0   0   0   0   0 
 # 0   0   0   0   0   0
 
-# Could be done with normal program change messages!
+# Could be done with normal program change messages!?
+
+# Mixer section?
+# Volume -> Mix
+# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+# Volume -> Effect1
+# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+# Volume -> Effect2
+# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+# Pan?
+# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+
 
 # Some two stereo effect lines would be nice.
 # Maybe just some sort of stereo delays..

@@ -559,8 +559,6 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
   /* Sysex data: */
   /* As of yet, offset==patch index. FIXME: Maybe more elaborate addressing? */
 
-  //pat = s->patch + offset;
-
   for(pat = s->patch + offset; *data != 0xf7; pat++){
 
     for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
@@ -572,7 +570,6 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
       pat->ipar7[ir] = *data++;
     }
 
-    //dst = pat->fpar;
     for (ir=0; ir<stride; ir++){
       rptr = data++;
       a = *rptr;
@@ -586,7 +583,6 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
       decoded += (adjust_byte & 0x0f) * 0.001f;
 #endif
       
-      //    *dst++ = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
       pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
     }
     data += 3*stride;

@@ -5,6 +5,14 @@ CC = gcc
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -g -Wall -pedantic
 
+# For normal 64-bit build:
+ARCHFLAGS = 
+LIBS = `sdl-config --libs` -lm -lGL -lGLU
+
+# For linking against 32-bit libraries (approx. 5% smaller packed exe):
+#ARCHFLAGS = -m32 -DNO_I64
+#LIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 /usr/lib/libGLU.so.1
+
 # The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
@@ -56,18 +64,22 @@ testdata.c: patchbank.txt testi.mid hacktac.py misssify Makefile
 
 sdltest: sdltest.c synti2.c synti2.h Makefile
 
-	$(CC) $(CFLAGS) -o sdltest sdltest.c synti2.c \
+	$(CC) $(CFLAGS) $(ARCHFLAGS) -o sdltest sdltest.c synti2.c \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
 tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makefile
 # hacking
-	$(CC) $(HCFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c 
-	$(CC) $(HCFLAGS) -c -o synti2.o synti2.c
-	$(CC) $(HCFLAGS) -c -o testdata.o testdata.c
-	$(CC) $(HCFLAGS) -c -o teh4k_gfx.o teh4k_gfx.c
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c 
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o synti2.o synti2.c
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o testdata.o testdata.c
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o teh4k_gfx.o teh4k_gfx.c
 
-	$(CC) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
+	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
 		teh4k_gfx.o \
+	   -nostartfiles $(LIBS)
+
+#	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
+#		teh4k_gfx.o \
 	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
 
 	strip $(STRIPOPT) -o $@.payload $@.unstripped.payload

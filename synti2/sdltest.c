@@ -229,10 +229,13 @@ rsp is the most crucial thing. But the bp reset could also be nice.
 void _start()
 /* Should check the architecure maybe.. the following assumes AMD64*/
 {
+#ifndef NO_I64
   asm (                                         \
        "xor %ebp,%ebp\n"                        \
        "and $0xfffffffffffffff0,%rsp"           \
        );
+#endif
+
   main2(SDL_OPENGL);
   /* Inline assembler for exiting without need of stdlib */
   asm (                                         \

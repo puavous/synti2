@@ -6,12 +6,12 @@ CC = gcc
 CFLAGS = -O3 -g -Wall -pedantic
 
 # For normal 64-bit build:
-ARCHFLAGS = 
-LIBS = `sdl-config --libs` -lm -lGL -lGLU
+#ARCHFLAGS = 
+#LIBS = `sdl-config --libs` -lm -lGL -lGLU
 
 # For linking against 32-bit libraries (approx. 5% smaller packed exe):
-#ARCHFLAGS = -m32 -DNO_I64
-#LIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 /usr/lib/libGLU.so.1
+ARCHFLAGS = -m32 -DNO_I64
+LIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 /usr/lib/libGLU.so.1
 
 # The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
@@ -41,7 +41,11 @@ STRIPOPT = -s -R .comment \
 
 all: jacktest
 
-tools: misssify
+tools: misssify jmiditrans
+
+jmiditrans: jmiditrans.c Makefile
+	$(CC) $(CFLAGS) -Wextra -o jmiditrans jmiditrans.c \
+		`pkg-config --cflags --libs jack`
 
 misssify: misssify.c Makefile
 	$(CC) $(CFLAGS) -Wextra -o misssify misssify.c -lm
@@ -82,9 +86,19 @@ tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makef
 #		teh4k_gfx.o \
 	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
 
-	strip $(STRIPOPT) -o $@.payload $@.unstripped.payload
+#	strip $(STRIPOPT) -o $@.payload $@.unstripped.payload
+#	cat selfextr.stub > $@
+#	gzip -n9 <$@.payload >> $@
+
+# I got a 32-bit sstrip executable from Zipola :).  The zipped result
+# got from 4.3k to 3.8k by linking against 32bit libraries, using
+# 7zip, and sstrip
+	cp $@.unstripped.payload $@.payload 
+	./sstrip $@.payload
+
+	7za a -tgzip -mx=9 tmp.gz $@.payload
 	cat selfextr.stub > $@
-	gzip -n9 <$@.payload >> $@
+	cat tmp.gz >> $@
 	chmod ugo+x $@
 
 

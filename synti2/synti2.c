@@ -200,6 +200,12 @@ struct synti2_synth {
   synti2_patch patch[NPATCHES];   /* The sound parameters per part*/
 };
 
+/* Random number generator was posted on musicdsp.org by Dominik
+ * Ries. Thanks a lot; saves me a call to rand(). I use the seed as a
+ * global because it is used by both the wavetable code and the
+ * non-wavetable one.
+ */
+static  int RandSeed = 1;
 
 
 /** Reads a MIDI variable length number. */
@@ -849,6 +855,12 @@ synti2_render(synti2_synth *s,
         wtoffs = (unsigned int)((s->c[iv*NOSCILLATORS+0].fr + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
         interm  = s->wave[wtoffs];
         interm *= s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1]].f;
+
+        RandSeed *= 16807;
+
+        interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
+          * (float)RandSeed * 4.6566129e-010f; /*noise*/
+
         buffer[iframe+ii] += interm;
       }      
       buffer[iframe+ii] /= NVOICES;

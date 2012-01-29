@@ -41,14 +41,18 @@ STRIPOPT = -s -R .comment \
 
 all: jacktest
 
-tools: misssify jmiditrans
+tools: misssify jmiditrans patchedit
+
+misssify: misssify.c Makefile
+	$(CC) $(CFLAGS) -Wextra -o misssify misssify.c -lm
 
 jmiditrans: jmiditrans.c Makefile
 	$(CC) $(CFLAGS) -Wextra -o jmiditrans jmiditrans.c \
 		`pkg-config --cflags --libs jack`
 
-misssify: misssify.c Makefile
-	$(CC) $(CFLAGS) -Wextra -o misssify misssify.c -lm
+patchedit: patchedit.cxx Makefile
+	g++ `fltk-config --cxxflags` -o patchedit patchedit.cxx -lfltk
+
 
 benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm

@@ -91,14 +91,16 @@ tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makef
 #	gzip -n9 <$@.payload >> $@
 
 # I got a 32-bit sstrip executable from Zipola :).  The zipped result
-# got from 4.3k to 3.8k by linking against 32bit libraries, using
-# 7zip, and sstrip
+# got from 4.3k down to 3.8k by compiling with -m32 and linking
+# against 32bit libraries, using 7zip, and stripping with sstrip
+# instead of strip:
 	cp $@.unstripped.payload $@.payload 
-	./sstrip $@.payload
+	sstrip $@.payload
 
 	7za a -tgzip -mx=9 tmp.gz $@.payload
-	cat selfextr.stub > $@
-	cat tmp.gz >> $@
+	cat selfextr.stub tmp.gz > $@
+	rm tmp.gz
+
 	chmod ugo+x $@
 
 
@@ -112,4 +114,5 @@ clean:
 
 veryclean: clean
 	-rm *.payload testi sdltest tinytest piippitesti \
-		benchmark testdata.c misssify test.misss
+		benchmark testdata.c misssify test.misss \
+		jmiditrans

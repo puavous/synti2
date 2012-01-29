@@ -104,10 +104,6 @@ tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makef
 	chmod ugo+x $@
 
 
-piippi:
-	$(CC) -o piippitesti jackout.c `pkg-config --cflags --libs jack` -lm
-
-
 clean:
 
 	-rm *~ *.o

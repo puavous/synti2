@@ -18,7 +18,7 @@ LIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 /usr/lib/libGLU.so.1
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
 HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL   -DNO_LOOPING_ENVELOPES \
-	-DNO_SYSEX_RECEIVE -nostdlib
+	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX -nostdlib
 
 
 
@@ -50,8 +50,10 @@ jmiditrans: jmiditrans.c Makefile
 	$(CC) $(CFLAGS) -Wextra -o jmiditrans jmiditrans.c \
 		`pkg-config --cflags --libs jack`
 
-patchedit: patchedit.cxx Makefile
-	g++ `fltk-config --cxxflags` -o patchedit patchedit.cxx -lfltk
+patchedit: patchedit.cxx Makefile testdata.c
+	g++ `fltk-config --cxxflags` -o patchedit \
+		patchedit.cxx testdata.c -lfltk \
+		`pkg-config --cflags --libs jack`
 
 
 benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile

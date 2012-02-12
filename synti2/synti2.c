@@ -1,3 +1,14 @@
+/** @file synti2.c
+ *
+ * Core functionality of Synti2 ("synti-kaksi"), a miniature realtime
+ * software synthesizer with a sequence playback engine.
+ * 
+ * @author Paavo Nieminen <paavo.j.nieminen@jyu.fi>
+ *
+ * @copyright TODO: license to be determined upon release at Instanssi
+ * 2012; definitely open source... maybe 'copyleft' if I get too
+ * idealistic.
+ */
 #include <math.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -21,13 +32,12 @@ typedef unsigned char byte_t;
 #endif
 
 /* If any foreign MIDI protocol is used, note-offs should be converted
- * to our own protocol (also a MIDI variant) that note-on with zero
- * velocity means a note-off.
+ * to our own protocol (also a well-known MIDI variant) in which
+ * note-on with zero velocity means a note-off.
  */
 #ifdef JACK_MIDI
 #define DO_CONVERT_OFFS
 #endif
-
 
 /* Polyphony */
 #define NVOICES 32
@@ -441,7 +451,7 @@ synti2_create(unsigned long sr,
   }
 
   for(ii=0; ii<WAVETABLE_SIZE; ii++){
-    //s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));
+    /*s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));*/
     t = (float)ii/(WAVETABLE_SIZE-1);
     s->wave[ii] = sinf(2*M_PI * t);
     s->rise[ii] = t; 
@@ -540,7 +550,6 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
    FIXME: Manufacturer ID check.. length check; checksums :) could
    have checks.. :) but checks are for chicks? Could also check that
    there is F7 in the end :)
-   
 
 */
 
@@ -565,52 +574,68 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
   /* Sysex data: */
   /* As of yet, offset==patch index. FIXME: Maybe more elaborate addressing? */
 
-  for(pat = s->patch + offset; *data != 0xf7; pat++){
+  if (opcode==0){
+    /* Opcode 0: fill in patch memory (one or more patches at a
+     * time). Data must be complete and without errors; no checks are
+     * made in here.
+     */
+    for(pat = s->patch + offset; *data != 0xf7; pat++){
+      
+      for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
+        pat->ipar3[ir] = *data >> 3;
+        pat->ipar3[ir+1] = (*data++) & 0x7;
+      }
 
-    for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
-      pat->ipar3[ir] = *data >> 3;
-      pat->ipar3[ir+1] = (*data++) & 0x7;
-    }
+      for(ir=0;ir<SYNTI2_I7_NPARS; ir++){
+        pat->ipar7[ir] = *data++;
+      }
 
-    for(ir=0;ir<SYNTI2_I7_NPARS; ir++){
-      pat->ipar7[ir] = *data++;
-    }
-
-    for (ir=0; ir<stride; ir++){
-      rptr = data++;
-      a = *rptr;
-      b = *(rptr += stride); 
-      c = *(rptr += stride);
-      adjust_byte = *(rptr += stride);
-      decoded = 0.01f * a + b + 100*c;
+      for (ir=0; ir<stride; ir++){
+        rptr = data++;
+        a = *rptr;
+        b = *(rptr += stride); 
+        c = *(rptr += stride);
+        adjust_byte = *(rptr += stride);
+        decoded = 0.01f * a + b + 100*c;
       
 #ifdef SUPER_ACCURATE_PATCHES
-      /* Sigh.. I wanted this, but letting go by default. */
-      decoded += (adjust_byte & 0x0f) * 0.001f;
+        /* Sigh.. I wanted this, but letting go by default. */
+        decoded += (adjust_byte & 0x0f) * 0.001f;
 #endif
       
-      pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+        pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+      }
+      data += 3*stride;
     }
-    data += 3*stride;
-    
-#if 0
-    /* TODO: Think about this... this becomes about 30 bytes shorter
-       code..  Maybe not worth it ?? Or maybe it is? Is there yet another
-       way to deliver the patch data accurately but with good
-       compressibility? */
-    int ir, a, stride, offset;  float *dst;
-    
-    data += 4; /* skip IDs n stuff*/
-    data += varlength(data, &offset);
-    data += varlength(data, &stride);
-    
-    dst = s->patch + offset;
-    for (ir=0; ir<stride; ir++){
-      data += varlength(data, &a);
-      a <<= 4; /* need sign bit. Effectively also multiplies by 2**4=16*/
-      *dst++ = a / 1600.0f; /* Encoding in 100ths. */
-    }
+#ifndef NO_EXTRA_SYSEX
+  } else if (opcode==1) {
+    /* Receive one 3-bit parameter at location (patch,i3par_index) */
+    pat = s->patch + (offset & 0x7f); 
+    ir = offset >> 7;
+    pat->ipar3[ir] = *data;
+  } else if (opcode==2) {
+    /* Receive one 7-bit parameter at location (patch,i7par_index) */
+    pat = s->patch + (offset & 0x7f); 
+    ir = offset >> 7;
+    pat->ipar7[ir] = *data;
+  } else if (opcode==3) {
+    /* Receive one fixed point parameter at location (patch,fpar_index) */
+    pat = s->patch + (offset & 0x7f); 
+    ir = offset >> 7;
+    /* FIXME: Decoding should be a static function instead of copy-paste:*/
+    rptr = data++;
+    a = *data++;
+    b = *data++;
+    c = *data++;
+    adjust_byte = *data++;
+    decoded = 0.01f * a + b + 100*c;
+#ifdef SUPER_ACCURATE_PATCHES
+    decoded += (adjust_byte & 0x0f) * 0.001f;
 #endif
+    pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+#endif
+  } else {
+    /* Unknown opcode - should be an error. */
   }
 }
 
@@ -726,7 +751,8 @@ synti2_updateEnvelopeStages(synti2_synth *s){
   synti2_patch *pat;
 
   for(iv=0; iv<NVOICES; iv++){
-    /* Consider note instance "completely finished" when envelope 1 is over: */
+    /* Consider note instance "completely finished" when envelope 1 is
+       over: */
     if (s->estage[iv][1] == 0) {
       s->partofvoice[iv] = -1;
     }

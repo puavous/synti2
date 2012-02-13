@@ -536,9 +536,27 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
     usually accuracy is critical for the smaller parameter values. But
     no... pitch envelopes need to be accurate on a wide range!!
 
+    FIXME: Think about the following format:
+
+            high       low
+      bits: 000 0000   000 0000
+            ||| ||||   |
+            ||| ||||   initial value, 7 bits, range 0.000 to 0.127
+            ||| ||additional 2 bits? -> integer range 0..511
+            ||| ||
+            |times to multiply by 10 (range -1270k to +1270; acc. 10000)
+            sign
+
+      examples of usual bit patterns:
+            000 0000   000 0001   == 0.001
+            100 0000   000 0001   == -0.001
+            000 0100   110 0100   == 1.00
+            000 0100   000 0000   == 0.00
+
+
     SysEx format (planned; FIXME: implement!) 
 
-    F0 00 00 00 [storeAddrMSB] [storeAddr2LSB] [inputLengthMSB] [inputLengthLSB]
+    F0 00 00 00 [storeAddrMSB] [storeAddrLSB] [inputLengthMSB] [inputLengthLSB]
     ... data LLSBs... 
     ... data LMSBs... 
     ... data MLSBs... 

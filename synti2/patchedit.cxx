@@ -38,6 +38,7 @@ extern unsigned char hack_patch_sysex;
 #include <jack/jack.h>
 #include <jack/midiport.h>
 #include <jack/ringbuffer.h>
+#include <jack/control.h>
 
 #include <errno.h>
 #ifndef WIN32
@@ -47,6 +48,13 @@ extern unsigned char hack_patch_sysex;
 
 #define RINGBUFSZ 0x10000
 
+/** Internal format for messages. */
+typedef struct {
+  int type;     /* see code for meaning 1 = 3 bits, 2 = 7 bits, 3 = float*/
+  int location; /* offset into the respective (3/7/float) parameter table */
+  float value;  /* value (internal) */
+  float actual; /* value (truncated to type and synti2 transmission format.)*/
+} s2ed_msg_t;
 
 jack_ringbuffer_t* global_rb;
 
@@ -56,11 +64,63 @@ jack_port_t *outmidi_port;
 unsigned long sr;
 char * client_name = "synti2editor";
 
+/* A small buffer for building one message... */
+unsigned char sysex_build_buf[] = {0xF0, 0x00, 0x00, 0x00,
+                                   0x00, 0x00,
+                                   0x00, 0x00,
+                                   0x00, 0x00, 0x00, 0x00,
+                                   0xf7,
+                                   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                                   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
 static void signal_handler(int sig)
 {
   jack_client_close(client);
   std::cerr << "stop" << std::endl;
   exit(0);
+}
+
+int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
+  int intval;
+  sm->actual = 3.14159265f;
+  switch (sm->type){
+  case 0:
+    jack_error("Cannot do opcode 0 from here.");
+    return 0;
+  case 1:
+    intval = sm->value;
+    if (intval > 0x07) jack_error("Excess 3bit value! %d", intval);
+    sm->actual = (*buf = (intval &= 0x07));
+    return 1;
+  case 2:
+    intval = sm->value;
+    if (intval > 0x7f) jack_error("Excess 7bit value! %d", intval);
+    sm->actual = (*buf = (intval &= 0x7f));
+    return 1;
+  case 3:
+    /* Hmm.. how to encode the "float" values... */
+    return 0;
+  default:
+    /* An error.*/
+    jack_error("Unknown parameter type.");
+  }
+  return 0;
+}
+
+/** 
+ * Builds a synti2 compatible jack MIDI message from our internal
+ * representation. The "actual value" field of the structure pointed
+ * to by the parameter will be updated. Returns the length of the
+ * complete jack MIDI message, headers and footers included.
+ */
+int build_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
+  int payload_len;
+  buf[0] = 0xF0; buf[1] = 0x00; buf[2] = 0x00; buf[3] = 0x00;
+  buf[4] = sm->type >> 7; buf[5] = sm->type & 0x7f;
+  buf[6] = sm->location >> 7; buf[7] = sm->location & 0x7f;
+  payload_len = synti2_encode(sm, &(buf[8]));
+  buf[8+payload_len] = 0xF7;
+  return 8+1+payload_len;
 }
 
 /** MIDI filtering is the only thing this client is required to do. */
@@ -78,14 +138,30 @@ process (jack_nframes_t nframes, void *arg)
 		size_t  	data_size 
 	) 	
   */
+  
+
   void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
   void *midi_out_buffer  = (void *) jack_port_get_buffer (outmidi_port, nframes);
 
+  s2ed_msg_t s2m;
+  size_t sz;
 
   jack_midi_clear_buffer(midi_out_buffer); 
   nev = jack_midi_get_event_count(midi_in_buffer);
+  /* Read from UI thread. FIXME: synchronization issues? */
+  while (jack_ringbuffer_read_space (global_rb) >= sizeof(s2ed_msg_t)) {
+    jack_ringbuffer_read (global_rb, (char*)&s2m, sizeof(s2ed_msg_t));
+    sz = build_sysex(&s2m,sysex_build_buf);
+    jack_midi_event_write(midi_out_buffer, 0, sysex_build_buf, sz);
+    jack_info("msg %d %d, %8.4f, %8.4f", 
+              s2m.type, s2m.location,
+              s2m.value, s2m.actual);
+  }
+  
+  /* Handle incoming. */
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
+      jack_info("k ");
       /*FIXME: zadaadaadaa. */
       /*debug_print_ev(&ev);*/
       //hack_channel(&ev);
@@ -104,15 +180,26 @@ process (jack_nframes_t nframes, void *arg)
 
 /** Sends data to MIDI. (FIXME: when it's done) */
 void cb_send(Fl_Widget*, void*){
+  s2ed_msg_t msg = {2,0,.123f,4.5f};
   std::cout << "ja tuota." << std::endl;
-  char* notuota = "notuota";
 
+#if 0
+/** Internal format for messages. */
+typedef struct {
+  int type;     /* 0 = 3 bits, 1 = 7 bits, 2 = float*/
+  int location; /* offset into the respective (3/7/float) parameter table */
+  float value;  /* value (internal) */
+  float actual; /* value (truncated to type and synti2 transmission format.)*/
+} s2ed_msg_t
+#endif
+    size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+    //size_t sz = s2ed_to_sysex(sysex_build_buf);
   /* FIXME: Implement actual writing to the buffer. */
-  size_t nwrit = jack_ringbuffer_write (global_rb, notuota, sizeof(notuota));
+  //size_t nwrit = jack_ringbuffer_write (global_rb, sysex_build_buf, sz);
 }
 
 int main(int argc, char **argv) {
-
+  int retval;
   jack_status_t status;
 
   /* Initial Jack setup. Open (=create?) a client. */
@@ -125,6 +212,12 @@ int main(int argc, char **argv) {
   /* Try to create a midi port */
   inmidi_port = jack_port_register (client, "iportti", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
   outmidi_port = jack_port_register (client, "oportti", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+
+  /* We'll set up a ringbuffer here for communication from GUI to process. */
+  if ((global_rb = jack_ringbuffer_create(RINGBUFSZ))==NULL){
+    std::cerr << "Could not allocate ringbuffer. Die." << std::endl;
+    exit(2);
+  }
 
   /* Now we activate our new client. */
   if (jack_activate (client)) {
@@ -159,11 +252,8 @@ int main(int argc, char **argv) {
   window->end();
   window->show(argc, argv);
 
-  if ((global_rb = jack_ringbuffer_create(RINGBUFSZ))==NULL){
-    std::cerr << "Die." << std::endl;
-    exit(2);
-  }
-  return Fl::run();
+  retval = Fl::run();
+
   jack_ringbuffer_free(global_rb);
   jack_client_close(client);
   

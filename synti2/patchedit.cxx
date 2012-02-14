@@ -80,9 +80,58 @@ static void signal_handler(int sig)
   exit(0);
 }
 
+/** Decode a "floating point" parameter. */
+float synti2_decode_f(const jack_midi_data_t *buf){
+  int i;
+  float res;
+  //jack_info("Decoding %x %x", buf[0], buf[1]);
+  res = ((buf[0] & 0x03) << 7) + buf[1];   /* 2 + 7 bits accuracy*/
+  res = ((buf[0] & 0x40)>0) ? -res : res;  /* sign */
+  res *= .001f;                            /* default e-3 */
+  for (i=0; i < ((buf[0] & 0x0c)>>2); i++) res *= 10.f;  /* can be more */
+  return res;
+}
+
+/* Encode a "floating point" parameter into 7 bit parts. */
+float synti2_encode_f(float val, jack_midi_data_t * buf){
+  int high = 0;
+  int low = 0;
+  int intval = 0;
+  int timestimes10 = 0;
+  if (val < 0){ high |= 0x40; val = -val; } /* handle sign bit */
+  /* maximum precision strategy: */
+  /* TODO: check decimals first, and try less precise if possible */
+  if (val <= 0.511) {
+    timestimes10 = 0; intval = val * 1000;
+  } else if (val <= 5.11) {
+    timestimes10 = 1; intval = val * 100;
+  } else if (val <= 51.1) {
+    timestimes10 = 2; intval = val * 10;
+  } else if (val <= 511) {
+    timestimes10 = 3; intval = val * 1;
+  } else if (val <= 5110.f) {
+    timestimes10 = 4; intval = val * .1;
+  } else if (val <= 51100.f) {
+    timestimes10 = 5; intval = val * .01;
+  } else if (val <= 511000.f) {
+    timestimes10 = 6; intval = val * .001;
+  } else if (val <= 5110000.f){
+    timestimes10 = 7; intval = val * .0001;
+  } else {
+    jack_error("Too large f value %f", val);
+  }
+  high |= (timestimes10 << 2); /* The powers of 10*/
+  high |= (intval >> 7);
+  low = intval & 0x7f;
+  buf[0] = high;
+  buf[1] = low;
+  // jack_info("%02x %02x", high, low);
+  return synti2_decode_f(buf);
+}
+
+
 int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
   int intval;
-  sm->actual = 3.14159265f;
   switch (sm->type){
   case 0:
     jack_error("Cannot do opcode 0 from here.");
@@ -98,8 +147,8 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
     sm->actual = (*buf = (intval &= 0x7f));
     return 1;
   case 3:
-    /* Hmm.. how to encode the "float" values... */
-    return 0;
+    sm->actual = synti2_encode_f(sm->value, buf);
+    return 2;
   default:
     /* An error.*/
     jack_error("Unknown parameter type.");
@@ -138,10 +187,9 @@ process (jack_nframes_t nframes, void *arg)
 		size_t  	data_size 
 	) 	
   */
-  
 
-  void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
-  void *midi_out_buffer  = (void *) jack_port_get_buffer (outmidi_port, nframes);
+  void *midi_in_buffer = (void *) jack_port_get_buffer (inmidi_port, nframes);
+  void *midi_out_buffer = (void *) jack_port_get_buffer (outmidi_port, nframes);
 
   s2ed_msg_t s2m;
   size_t sz;
@@ -153,9 +201,11 @@ process (jack_nframes_t nframes, void *arg)
     jack_ringbuffer_read (global_rb, (char*)&s2m, sizeof(s2ed_msg_t));
     sz = build_sysex(&s2m,sysex_build_buf);
     jack_midi_event_write(midi_out_buffer, 0, sysex_build_buf, sz);
+    /*
     jack_info("msg %d %d, %8.4f, %8.4f", 
               s2m.type, s2m.location,
               s2m.value, s2m.actual);
+    */
   }
   
   /* Handle incoming. */
@@ -180,46 +230,43 @@ process (jack_nframes_t nframes, void *arg)
 
 /** Sends data to MIDI. (FIXME: when it's done) */
 void cb_send(Fl_Widget*, void*){
-  s2ed_msg_t msg = {2,0,.123f,4.5f};
-  std::cout << "ja tuota." << std::endl;
+  s2ed_msg_t msg = {3,0,-3.14159265f,4.5f};
+  std::cout << "ja tuota. FIXME: implement this and others" << std::endl;
 
-#if 0
-/** Internal format for messages. */
-typedef struct {
-  int type;     /* 0 = 3 bits, 1 = 7 bits, 2 = float*/
-  int location; /* offset into the respective (3/7/float) parameter table */
-  float value;  /* value (internal) */
-  float actual; /* value (truncated to type and synti2 transmission format.)*/
-} s2ed_msg_t
-#endif
-    size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
-    //size_t sz = s2ed_to_sysex(sysex_build_buf);
-  /* FIXME: Implement actual writing to the buffer. */
-  //size_t nwrit = jack_ringbuffer_write (global_rb, sysex_build_buf, sz);
+  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
 }
+
+
 
 int main(int argc, char **argv) {
   int retval;
   jack_status_t status;
 
   /* Initial Jack setup. Open (=create?) a client. */
-  if ((client = jack_client_open (client_name, JackNoStartServer, &status)) == 0) {
+  if ((client = jack_client_open (client_name, 
+                                  JackNoStartServer, 
+                                  &status)) == 0) {
     std::cerr << "jack server not running?" << std::endl; return 1;
   }
+  
   /* Set up process callback */
   jack_set_process_callback (client, process, 0);
 
-  /* Try to create a midi port */
-  inmidi_port = jack_port_register (client, "iportti", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-  outmidi_port = jack_port_register (client, "oportti", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+  /* Try to create midi ports */
+  inmidi_port = jack_port_register (client, "iportti", 
+                                    JACK_DEFAULT_MIDI_TYPE, 
+                                    JackPortIsInput, 0);
+  outmidi_port = jack_port_register (client, "oportti", 
+                                     JACK_DEFAULT_MIDI_TYPE, 
+                                     JackPortIsOutput, 0);
 
-  /* We'll set up a ringbuffer here for communication from GUI to process. */
+  /* Set up a ringbuffer for communication from GUI to process().*/
   if ((global_rb = jack_ringbuffer_create(RINGBUFSZ))==NULL){
-    std::cerr << "Could not allocate ringbuffer. Die." << std::endl;
+    std::cerr << "Could not allocate ringbuffer. " << std::endl;
     exit(2);
   }
 
-  /* Now we activate our new client. */
+  /* Activate client. */
   if (jack_activate (client)) {
     std::cerr << "cannot activate client" << std::endl;
     exit(1);

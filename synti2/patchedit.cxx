@@ -166,7 +166,7 @@ int build_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
   int payload_len;
   buf[0] = 0xF0; buf[1] = 0x00; buf[2] = 0x00; buf[3] = 0x00;
   buf[4] = sm->type >> 7; buf[5] = sm->type & 0x7f;
-  buf[6] = sm->location >> 7; buf[7] = sm->location & 0x7f;
+  buf[6] = (sm->location >> 8) & 0x7f; buf[7] = sm->location & 0x7f;
   payload_len = synti2_encode(sm, &(buf[8]));
   buf[8+payload_len] = 0xF7;
   return 8+1+payload_len;
@@ -188,8 +188,8 @@ process (jack_nframes_t nframes, void *arg)
 	) 	
   */
 
-  void *midi_in_buffer = (void *) jack_port_get_buffer (inmidi_port, nframes);
-  void *midi_out_buffer = (void *) jack_port_get_buffer (outmidi_port, nframes);
+  void *midi_in_buffer = (void*)jack_port_get_buffer (inmidi_port, nframes);
+  void *midi_out_buffer = (void*)jack_port_get_buffer (outmidi_port, nframes);
 
   s2ed_msg_t s2m;
   size_t sz;
@@ -230,7 +230,7 @@ process (jack_nframes_t nframes, void *arg)
 
 /** Sends data to MIDI. (FIXME: when it's done) */
 void cb_send(Fl_Widget*, void*){
-  s2ed_msg_t msg = {3,0,-3.14159265f,4.5f};
+  s2ed_msg_t msg = {3,0x030a,-3.14159265f,4.5f};
   std::cout << "ja tuota. FIXME: implement this and others" << std::endl;
 
   size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));

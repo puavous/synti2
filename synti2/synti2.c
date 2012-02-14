@@ -543,8 +543,10 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
             ||| ||||   |
             ||| ||||   initial value, 7 bits, range 0.000 to 0.127
             ||| ||additional 2 bits? -> integer range 0..511
+            ||| ||TODO: could have a third bit? range 0..1024! Wow!
             ||| ||
-            |times to multiply by 10 (range -1270k to +1270; acc. 10000)
+            ||times to multiply by 10 (range -1270k to +1270; acc. 10000)
+            |reserved FIXME: no need to reserve! 
             sign
 
       examples of usual bit patterns:
@@ -641,16 +643,12 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
     /* FIXME: Decoding should be a static function instead of copy-paste:*/
-    rptr = data++;
-    a = *data++;
-    b = *data++;
-    c = *data++;
-    adjust_byte = *data++;
-    decoded = 0.01f * a + b + 100*c;
-#ifdef SUPER_ACCURATE_PATCHES
-    decoded += (adjust_byte & 0x0f) * 0.001f;
-#endif
+    decoded = ((data[0] & 0x03) << 7) + data[1];   /* 2 + 7 bits accuracy*/
+    decoded = ((data[0] & 0x40)>0) ? -decoded : decoded;  /* sign */
+    decoded *= .001f;                            /* default e-3 */
+    for (a=0; a < ((data[0] & 0x0c)>>2); a++) decoded *= 10.f;  /* or more */
     pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+    jack_info("Rcv at %d %d: %f", offset & 0x7f, ir, decoded);
 #endif
   } else {
     /* Unknown opcode - should be an error. */

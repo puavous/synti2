@@ -30,6 +30,7 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Dial.H>
+#include <FL/Fl_Value_Slider.H>
 
 #include <iostream>
 
@@ -196,6 +197,7 @@ process (jack_nframes_t nframes, void *arg)
 
   jack_midi_clear_buffer(midi_out_buffer); 
   nev = jack_midi_get_event_count(midi_in_buffer);
+
   /* Read from UI thread. FIXME: synchronization issues? */
   while (jack_ringbuffer_read_space (global_rb) >= sizeof(s2ed_msg_t)) {
     jack_ringbuffer_read (global_rb, (char*)&s2m, sizeof(s2ed_msg_t));
@@ -229,7 +231,7 @@ process (jack_nframes_t nframes, void *arg)
 
 
 /** Sends data to MIDI. (FIXME: when it's done) */
-void cb_send(Fl_Widget*, void*){
+void cb_send(Fl_Widget* w, void* p){
   s2ed_msg_t msg = {3,0x030a,-3.14159265f,4.5f};
   std::cout << "ja tuota. FIXME: implement this and others" << std::endl;
 
@@ -285,17 +287,27 @@ int main(int argc, char **argv) {
 #endif
 
 
-  Fl_Window *window = new Fl_Window(600,180);
+  Fl_Window *window = new Fl_Window(600, 480);
   Fl_Button *box = new Fl_Button(20,40,260,100,"S&end");
   box->callback(cb_send);
   box->box(FL_UP_BOX); box->labelsize(36); 
   box->labeltype(FL_SHADOW_LABEL);
 
+  Fl_Value_Slider *vs = new Fl_Value_Slider(10,200,300,20,"Addr");
+  vs->minimum(0);
+  vs->maximum(127);
+  vs->precision(0);
+  vs->value(18);
+  vs->type(FL_HOR_NICE_SLIDER);
+  //vs->callback();
 
   Fl_Dial *dial = new Fl_Dial(320,40,100,100,"Kissa123");
   dial->align(FL_ALIGN_CENTER);
   Fl_Dial *dial2 = new Fl_Dial(420,40,100,100,"@->| ja joo");
   dial2->type(FL_LINE_DIAL);
+
+
+
   window->end();
   window->show(argc, argv);
 

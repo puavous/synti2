@@ -31,6 +31,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Dial.H>
 #include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Value_Input.H>
 
 #include <iostream>
 
@@ -64,6 +65,16 @@ jack_port_t *inmidi_port;
 jack_port_t *outmidi_port;
 unsigned long sr;
 char * client_name = "synti2editor";
+
+/* Patch data: */
+#define NPATCHES 16
+#define NLEVELS 3
+#define NPARAMS 127
+float patch[NPATCHES][NLEVELS][NPARAMS];
+
+Fl_Value_Slider *vs3, *vs7, *vsf;  /* The value sliders. */
+int curr_patch = 0;
+int curr_addr[3] = {0,0,0};
 
 /* A small buffer for building one message... */
 unsigned char sysex_build_buf[] = {0xF0, 0x00, 0x00, 0x00,
@@ -233,9 +244,52 @@ process (jack_nframes_t nframes, void *arg)
 /** Sends data to MIDI. (FIXME: when it's done) */
 void cb_send(Fl_Widget* w, void* p){
   s2ed_msg_t msg = {3,0x030a,-3.14159265f,4.5f};
-  std::cout << "ja tuota. FIXME: implement this and others" << std::endl;
-
   size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+  std::cout << "ja tuota. FIXME: implement this and others" << std::endl;
+}
+
+
+/** Changes the send address. */
+void cb_change_address(Fl_Widget* w, void* p){
+  long i = (long) p;
+  if (i==3){
+    curr_addr[0] = ((Fl_Valuator*)w)->value();
+    vs3->value(patch[curr_patch][0][curr_addr[0]]);
+  }else if (i==7) {
+    curr_addr[1] = ((Fl_Valuator*)w)->value();
+    vs7->value(patch[curr_patch][1][curr_addr[1]]);
+  } else if (i==14) {
+    curr_addr[2] = ((Fl_Valuator*)w)->value();
+    vsf->value(patch[curr_patch][2][curr_addr[2]]);
+  }
+}
+
+/** Changes a value to be sent to the current address. */
+void cb_new_value(Fl_Widget* w, void* p){
+  double val;
+  int d;
+  d = (long)p;
+  val = ((Fl_Valuator*)w)->value();
+
+  if (d==3){
+    patch[curr_patch][0][curr_addr[0]] = val;
+    std::cout << "Send " << val 
+              << " to " << curr_addr[0] 
+              << " of " << curr_patch << std::endl;
+  } else if (d==7) {
+    patch[curr_patch][1][curr_addr[1]] = val;
+    std::cout << "Send " << val 
+              << " to " << curr_addr[1] 
+              << " of " << curr_patch << std::endl;
+  } else if (d==14) {
+    patch[curr_patch][2][curr_addr[2]] = val;
+    std::cout << "Send " << val 
+              << " to " << curr_addr[2] 
+              << " of " << curr_patch << std::endl;
+  } else {
+    std::cerr << "Error.";
+  }
+  std::cout << "niinniin. FIXME: implement actual send" << std::endl;
 }
 
 
@@ -286,6 +340,15 @@ int main(int argc, char **argv) {
   signal(SIGINT, signal_handler);
 #endif
 
+  for (int ip=0; ip<NPATCHES; ip++){
+    for (int il=0; il<NLEVELS; il++){
+      for (int ipar=0;ipar<NPARAMS; ipar++){
+        patch[ip][il][ipar] = 0.f;
+      }
+    }
+  }
+  
+
 
   Fl_Window *window = new Fl_Window(600, 480);
   Fl_Button *box = new Fl_Button(20,40,260,100,"S&end");
@@ -293,13 +356,29 @@ int main(int argc, char **argv) {
   box->box(FL_UP_BOX); box->labelsize(36); 
   box->labeltype(FL_SHADOW_LABEL);
 
-  Fl_Value_Slider *vs = new Fl_Value_Slider(10,200,300,20,"Addr");
-  vs->minimum(0);
-  vs->maximum(127);
-  vs->precision(0);
-  vs->value(18);
-  vs->type(FL_HOR_NICE_SLIDER);
-  //vs->callback();
+  int px=5, py=200, w=20, h=20, sp=2;
+  Fl_Value_Input *c3 = new Fl_Value_Input(px,py+0*(h+sp),w*4,h);
+  c3->bounds(0,127); c3->precision(0); c3->argument(3);
+  c3->callback(cb_change_address);
+  Fl_Value_Input *c7 = new Fl_Value_Input(px,py+1*(h+sp),w*4,h);
+  c7->bounds(0,127); c7->precision(0); c7->argument(7);
+  c7->callback(cb_change_address);
+  Fl_Value_Input *cf = new Fl_Value_Input(px,py+2*(h+sp),w*4,h);
+  cf->bounds(0,127); cf->precision(0); cf->argument(14);
+  cf->callback(cb_change_address);
+
+  vs3 = new Fl_Value_Slider(px+4*w+sp,py+0*(h+sp),w*16,h,NULL);
+  vs3->bounds(0,7); vs3->precision(0); vs3->type(FL_HOR_NICE_SLIDER);
+  vs3->argument(3);
+  vs3->callback(cb_new_value);
+  vs7= new Fl_Value_Slider(px+4*w+sp,py+1*(h+sp),w*16,h,NULL);
+  vs7->bounds(0,127); vs7->precision(0); vs7->type(FL_HOR_NICE_SLIDER);
+  vs7->argument(7);
+  vs7->callback(cb_new_value);
+  vsf= new Fl_Value_Slider(px+4*w+sp,py+2*(h+sp),w*16,h,NULL);
+  vsf->bounds(-1.27,1.27); vsf->precision(2); vsf->type(FL_HOR_NICE_SLIDER);
+  vsf->argument(14);
+  vsf->callback(cb_new_value);
 
   Fl_Dial *dial = new Fl_Dial(320,40,100,100,"Kissa123");
   dial->align(FL_ALIGN_CENTER);

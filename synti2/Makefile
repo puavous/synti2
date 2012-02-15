@@ -50,9 +50,9 @@ jmiditrans: jmiditrans.c Makefile
 	$(CC) $(CFLAGS) -Wextra -o jmiditrans jmiditrans.c \
 		`pkg-config --cflags --libs jack`
 
-patchedit: patchedit.cxx Makefile testdata.c
+patchedit: patchedit.cxx patchtool.hpp patchtool.cxx Makefile
 	g++ `fltk-config --cxxflags` -o patchedit \
-		patchedit.cxx testdata.c -lfltk \
+		patchedit.cxx patchtool.cxx -lfltk \
 		`pkg-config --cflags --libs jack`
 
 

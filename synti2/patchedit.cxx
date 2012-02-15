@@ -33,12 +33,6 @@
 #include <FL/Fl_Value_Slider.H>
 #include <FL/Fl_Value_Input.H>
 
-#include <iostream>
-#include <fstream>
-
-#include <string>
-#include <vector>
-
 #include <jack/jack.h>
 #include <jack/midiport.h>
 #include <jack/ringbuffer.h>
@@ -49,6 +43,10 @@
 #include <unistd.h>
 #endif
 #include <signal.h>
+
+#include <iostream>
+
+#include "patchtool.hpp"
 
 #define RINGBUFSZ 0x10000
 
@@ -81,7 +79,7 @@ jack_client_t *client;
 jack_port_t *inmidi_port;
 jack_port_t *outmidi_port;
 unsigned long sr;
-char * client_name = "synti2editor";
+const char * client_name = "synti2editor";
 
 /* A small buffer for building one message... FIXME: local to the build func?*/
 unsigned char sysex_build_buf[] = {0xF0, 0x00, 0x00, 0x00,
@@ -293,69 +291,12 @@ void cb_new_value(Fl_Widget* w, void* p){
 }
 
 
-bool line_is_whitespace(std::string &str){
-  return (str.find_first_not_of(" \t\n\r") == str.npos);
-}
-
-void line_to_header(std::string &str){
-  int endmark = str.find_first_of(']');
-  int len = endmark-1;
-  str.assign(str.substr(1,len));
-}
-
-std::string line_chop(std::string &str){
-  int beg = str.find_first_not_of(" \t\n\r");
-  int wbeg = str.find_first_of(" \t\n\r", beg);
-  if (wbeg == str.npos) wbeg = str.length();
-  std::string res = str.substr(beg,wbeg-beg);
-  if (wbeg<str.length()) str.assign(str.substr(wbeg,str.length()-wbeg));
-  return std::string(res);
-}
-
-/** Loads the patch format with information */
-void load_patch_data(const char *fname){
-  std::ifstream ifs(fname);
-  std::string line;
-  std::string curr_section;
-  int curr_sectnum = -1;
-  std::string pname, pdescr;
-  std::vector<std::string> sectlist;
-  std::vector<int> sectsize;
-  while(std::getline(ifs, line)){
-    if (line_is_whitespace(line)) continue;
-    if (line[0]=='#') continue;
-    if (line[0]=='['){
-      /* Begin section */
-      line_to_header(line);
-      curr_section = line;
-      std::cout << "**** New header: ";
-      std::cout << line << std::endl;
-      sectlist.push_back(line);
-      sectsize.push_back(0);
-      curr_sectnum++;
-      continue;
-    };
-    /* Else it is a parameter value. */
-    pname = line_chop(line);
-    pdescr = line_chop(line);
-    std::cout << "/*"<< pdescr << "*/" << std::endl;
-    std::cout << "#define SYNTI2_" << curr_section 
-              << "_" << pname 
-              << " " << sectsize[curr_sectnum] << std::endl;
-    sectsize[curr_sectnum]++;
-  }
-  for(int i=0; i<sectlist.size(); i++){
-    curr_section = sectlist[i];
-    std::cout << "#define SYNTI2_" << curr_section 
-              << "_NPARS "<< sectsize[i] << std::endl;
-  }
-}
 
 int main(int argc, char **argv) {
   int retval;
   jack_status_t status;
 
-  load_patch_data("patchdesign.dat");
+  synti2::Patchtool pt("patchdesign.dat");
 
  /* Initial Jack setup. Open (=create?) a client. */
   if ((client = jack_client_open (client_name, 

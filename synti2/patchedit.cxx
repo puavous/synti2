@@ -70,7 +70,11 @@ int curr_addr[3] = {0,0,0};
 #define NPATCHES 16
 #define NLEVELS 3
 #define NPARAMS 127
+
+/* Oh, F**ME: I'm converging to a bigger program here.. dynamize this etc: */
 float patch[NPATCHES][NLEVELS][NPARAMS];
+
+synti2::Patchtool *pt = NULL;
 
 /* Jack stuff */
 jack_ringbuffer_t* global_rb;
@@ -269,25 +273,35 @@ void cb_new_value(Fl_Widget* w, void* p){
   d = (long)p;
   val = ((Fl_Valuator*)w)->value();
 
+  s2ed_msg_t msg = {0,0,0,0};
+
   if (d==3){
     patch[curr_patch][0][curr_addr[0]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[0] 
               << " of " << curr_patch << std::endl;
+    msg.type = 1;
+    msg.location = curr_addr[0] << 8 + curr_patch;
   } else if (d==7) {
     patch[curr_patch][1][curr_addr[1]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[1] 
               << " of " << curr_patch << std::endl;
+    msg.type = 2;
+    msg.location = curr_addr[1] << 8 + curr_patch;
   } else if (d==14) {
     patch[curr_patch][2][curr_addr[2]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[2] 
               << " of " << curr_patch << std::endl;
+    msg.type = 3;
+    msg.location = curr_addr[2] << 8 + curr_patch;
   } else {
     std::cerr << "Error.";
+    return;
   }
-  std::cout << "niinniin. FIXME: implement actual send" << std::endl;
+  msg.value = val;
+  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
 }
 
 
@@ -296,7 +310,7 @@ int main(int argc, char **argv) {
   int retval;
   jack_status_t status;
 
-  synti2::Patchtool pt("patchdesign.dat");
+  pt = new synti2::Patchtool("patchdesign.dat");
 
  /* Initial Jack setup. Open (=create?) a client. */
   if ((client = jack_client_open (client_name, 
@@ -351,12 +365,16 @@ int main(int argc, char **argv) {
 
 
   Fl_Window *window = new Fl_Window(600, 480);
-  Fl_Button *box = new Fl_Button(20,40,260,100,"S&end");
+  Fl_Button *box = new Fl_Button(20,20,260,25,"Send al&l");
   box->callback(cb_send);
-  box->box(FL_UP_BOX); box->labelsize(36); 
+  box->box(FL_UP_BOX); box->labelsize(17); 
+  box->labeltype(FL_SHADOW_LABEL);
+  box = new Fl_Button(300,20,260,25,"&Save");
+  box->callback(cb_send);
+  box->box(FL_UP_BOX); box->labelsize(17); 
   box->labeltype(FL_SHADOW_LABEL);
 
-  int px=5, py=200, w=20, h=20, sp=2;
+  int px=5, py=100, w=20, h=20, sp=2;
   Fl_Value_Input *c3 = new Fl_Value_Input(px,py+0*(h+sp),w*4,h);
   c3->bounds(0,127); c3->precision(0); c3->argument(3);
   c3->callback(cb_change_address);
@@ -380,12 +398,10 @@ int main(int argc, char **argv) {
   vsf->argument(14);
   vsf->callback(cb_new_value);
 
-  Fl_Dial *dial = new Fl_Dial(320,40,100,100,"Kissa123");
+  /*Fl_Dial *dial = new Fl_Dial(320,40,100,100,"Kissa123");
   dial->align(FL_ALIGN_CENTER);
   Fl_Dial *dial2 = new Fl_Dial(420,40,100,100,"@->| ja joo");
-  dial2->type(FL_LINE_DIAL);
-
-
+  dial2->type(FL_LINE_DIAL);*/
 
   window->end();
   window->show(argc, argv);
@@ -396,6 +412,7 @@ int main(int argc, char **argv) {
   jack_client_close(client);
   
  error:
+  if (pt != NULL) free(pt);
   exit (0);
 
 }

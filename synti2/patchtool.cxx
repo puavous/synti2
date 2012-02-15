@@ -5,16 +5,19 @@
 #include "patchtool.hpp"
 
 /** Implementation of patchtool and stuff. */
+static
 bool line_is_whitespace(std::string &str){
   return (str.find_first_not_of(" \t\n\r") == str.npos);
 }
 
+static
 void line_to_header(std::string &str){
   int endmark = str.find_first_of(']');
   int len = endmark-1;
   str.assign(str.substr(1,len));
 }
 
+static
 std::string line_chop(std::string &str){
   int beg = str.find_first_not_of(" \t\n\r");
   int wbeg = str.find_first_of(" \t\n\r", beg);
@@ -25,6 +28,7 @@ std::string line_chop(std::string &str){
 }
 
 /** Loads the patch format with information */
+static
 void load_patch_data(const char *fname){
   std::ifstream ifs(fname);
   std::string line;

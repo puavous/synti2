@@ -34,8 +34,9 @@
 #include <FL/Fl_Value_Input.H>
 
 #include <iostream>
+#include <fstream>
 
-extern unsigned char hack_patch_sysex;
+#include <string>
 
 #include <jack/jack.h>
 #include <jack/midiport.h>
@@ -58,6 +59,21 @@ typedef struct {
   float actual; /* value (truncated to type and synti2 transmission format.)*/
 } s2ed_msg_t;
 
+
+/* FL things that need to be accessed globally */
+Fl_Value_Slider *vs3, *vs7, *vsf;  /* The value sliders. */
+
+/* Application logic that needs to be accessed globally */
+int curr_patch = 0;
+int curr_addr[3] = {0,0,0};
+
+/* Patch data: */
+#define NPATCHES 16
+#define NLEVELS 3
+#define NPARAMS 127
+float patch[NPATCHES][NLEVELS][NPARAMS];
+
+/* Jack stuff */
 jack_ringbuffer_t* global_rb;
 
 jack_client_t *client;
@@ -66,17 +82,7 @@ jack_port_t *outmidi_port;
 unsigned long sr;
 char * client_name = "synti2editor";
 
-/* Patch data: */
-#define NPATCHES 16
-#define NLEVELS 3
-#define NPARAMS 127
-float patch[NPATCHES][NLEVELS][NPARAMS];
-
-Fl_Value_Slider *vs3, *vs7, *vsf;  /* The value sliders. */
-int curr_patch = 0;
-int curr_addr[3] = {0,0,0};
-
-/* A small buffer for building one message... */
+/* A small buffer for building one message... FIXME: local to the build func?*/
 unsigned char sysex_build_buf[] = {0xF0, 0x00, 0x00, 0x00,
                                    0x00, 0x00,
                                    0x00, 0x00,
@@ -168,6 +174,7 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
   return 0;
 }
 
+
 /** 
  * Builds a synti2 compatible jack MIDI message from our internal
  * representation. The "actual value" field of the structure pointed
@@ -184,6 +191,7 @@ int build_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
   return 8+1+payload_len;
 }
 
+
 /** MIDI filtering is the only thing this client is required to do. */
 static int
 process (jack_nframes_t nframes, void *arg)
@@ -193,12 +201,6 @@ process (jack_nframes_t nframes, void *arg)
   jack_midi_data_t *msg;
 
   jack_midi_data_t *outdata;
-  /*
-  outdata = jack_midi_event_reserve(void *midi_out_buffer,
-		jack_nframes_t  	time,
-		size_t  	data_size 
-	) 	
-  */
 
   void *midi_in_buffer = (void*)jack_port_get_buffer (inmidi_port, nframes);
   void *midi_out_buffer = (void*)jack_port_get_buffer (outmidi_port, nframes);
@@ -221,7 +223,7 @@ process (jack_nframes_t nframes, void *arg)
     */
   }
   
-  /* Handle incoming. */
+  /* Handle incoming. TODO: jepijei. Same message structure could be used. */
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
       jack_info("k ");
@@ -236,9 +238,6 @@ process (jack_nframes_t nframes, void *arg)
   }
   return 0;
 }
-
-
-
 
 
 /** Sends data to MIDI. (FIXME: when it's done) */
@@ -293,12 +292,57 @@ void cb_new_value(Fl_Widget* w, void* p){
 }
 
 
+bool line_is_whitespace(std::string &str){
+  return (str.find_first_not_of(" \t\n\r") == str.npos);
+}
+
+void line_to_header(std::string &str){
+  int endmark = str.find_first_of(']');
+  int len = endmark-1;
+  str.assign(str.substr(1,len));
+}
+
+std::string line_chop(std::string &str){
+  int beg = str.find_first_not_of(" \t\n\r");
+  int wbeg = str.find_first_of(" \t\n\r");
+  if (wbeg == str.npos) wbeg = str.length();
+  std::string res = str.substr(beg,wbeg-beg);
+  str.assign(str.substr(wbeg,str.length()-wbeg));
+  std::cout << res;
+  return std::string(res);
+}
+
+/** Loads the patch format with information */
+void load_patch_data(const char *fname){
+  std::ifstream ifs(fname);
+  std::string line;
+  std::string curr_section;
+  std::string pname, pdescr;
+  while(std::getline(ifs, line)){
+    if (line_is_whitespace(line)) continue;
+    if (line[0]=='#') continue;
+    if (line[0]=='['){
+      /* Begin section */
+      line_to_header(line);
+      curr_section = line;
+      std::cout << "**** New header: ";
+      std::cout << line << std::endl;
+    };
+    pname = line_chop(line);
+    pdescr = line_chop(line);
+    /* Else it is a parameter value. */
+    std::cout << "#define SYNTI2_" << curr_section 
+              << "_" << pname << std::endl;
+  }
+}
 
 int main(int argc, char **argv) {
   int retval;
   jack_status_t status;
 
-  /* Initial Jack setup. Open (=create?) a client. */
+  load_patch_data("patchdesign.dat");
+
+ /* Initial Jack setup. Open (=create?) a client. */
   if ((client = jack_client_open (client_name, 
                                   JackNoStartServer, 
                                   &status)) == 0) {

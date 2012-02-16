@@ -117,4 +117,4 @@ clean:
 veryclean: clean
 	-rm *.payload testi sdltest tinytest piippitesti \
 		benchmark testdata.c misssify test.misss \
-		jmiditrans
+		jmiditrans patchedit

@@ -28,15 +28,13 @@ std::string line_chop(std::string &str){
 }
 
 /** Loads the patch format with information */
-static
-void load_patch_data(const char *fname){
+void 
+synti2::Patchtool::load_patch_data(const char *fname){
   std::ifstream ifs(fname);
   std::string line;
   std::string curr_section;
   int curr_sectnum = -1;
   std::string pname, pdescr;
-  std::vector<std::string> sectlist;
-  std::vector<int> sectsize;
   while(std::getline(ifs, line)){
     if (line_is_whitespace(line)) continue;
     if (line[0]=='#') continue;
@@ -71,4 +69,10 @@ void load_patch_data(const char *fname){
 synti2::Patchtool::Patchtool(std::string fname){
   std::cout << "Reading from file " << fname << std::endl;
   load_patch_data("patchdesign.dat");
+}
+
+
+int
+synti2::Patchtool::nPars(std::string type){
+  return -1; /*Not yet implemented. Need to refactor the whole class first..*/
 }

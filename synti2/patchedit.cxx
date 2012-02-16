@@ -72,7 +72,9 @@ int curr_addr[3] = {0,0,0};
 #define NPARAMS 127
 
 /* Oh, F**ME: I'm converging to a bigger program here.. dynamize this etc: */
+//float *patch;
 float patch[NPATCHES][NLEVELS][NPARAMS];
+
 
 synti2::Patchtool *pt = NULL;
 
@@ -312,6 +314,12 @@ int main(int argc, char **argv) {
 
   pt = new synti2::Patchtool("patchdesign.dat");
 
+  std::cout << "And so: " << pt->nPars(0) 
+            << "And so: " << pt->nPars(1)
+            << "And so: " << pt->nPars(2)
+            << std::endl;
+
+  //patch = calloc(1, NPATCHES * (pt->nPars(0) + pt->nPars(1) + pt->nPars(2)));
  /* Initial Jack setup. Open (=create?) a client. */
   if ((client = jack_client_open (client_name, 
                                   JackNoStartServer, 
@@ -361,7 +369,6 @@ int main(int argc, char **argv) {
       }
     }
   }
-  
 
 
   Fl_Window *window = new Fl_Window(600, 480);

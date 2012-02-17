@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 namespace synti2{
 
@@ -12,19 +13,49 @@ namespace synti2{
   /** Parameter description; used for GUI  */
   class ParamDescr {
   public:
+
+    /** Construct from a string of following kind:
+     *  Mnemonic Description MinVal MaxVal
+     * 
+     * Each value is a string which must not contain spaces.
+     * Type must be one of I3, I7, F as of this version... 
+     *
+     * Mnemonic: Must be a valid C constant name
+     *
+     * Description: Almost-human-readable descriptive text.
+     *
+     * Minimum value. TODO: Specify how to deal with these...
+     * 
+     *
+     * Maximum value. 
+     */
     ParamDescr(std::string line, std::string type);
   private:
-    /** Type. Must not contain spaces; must be one of I3, I7, F. */
     std::string type;
-    /** Mnemonic. Must be valid part of a C constant name*/
     std::string name;
-    /** Almost-human-readable descriptive text. Must not contain spaces. */
     std::string description;
-    /** Minimum value. */
-    float min;
-    /** Maximum value. */
-    float max;
+    std::string min;
+    std::string max;
+  public:
+    std::string getDescription(){return description;}
+    std::string getName(){return name;}
   };
+
+
+  /** The description of all parameters in one synti2 sound. */
+  class PatchDescr {
+  public:
+    PatchDescr(std::istream &inputs);
+    /** Returns the number of parameters of a certain type. */
+    int nPars(std::string type);
+    /** Prints out a complete C-header file that contains the descriptions */
+    void headerFileForC(std::ostream &os);
+  private:
+    /* The main structure is a map of description lists: */
+    std::map<std::string, std::vector<ParamDescr> > params;
+    void load_patch_data(std::istream &ifs);
+  };
+
 
   /** Individual value of a parameter. Hmm.. necessary? */
   class ParamValue {
@@ -35,29 +66,20 @@ namespace synti2{
     float value;
   };
 
-  class PatchDescr {
-  public:
-    PatchDescr(std::istream);
-  private:
-    std::vector<ParamDescr> params;
-  };
 
   /** Class for helping with patch system management. */
   class Patchtool {
   private:
-    std::vector<std::string> sectlist;
-    std::vector<int> sectsize;
-
+    PatchDescr *patch_description;
     Patchtool(){}; /*Hiding the default constructor.*/
 
-    void load_patch_data(const char *fname);
   public:
     Patchtool(std::string fname);
-    //  load_patch_data("patchdesign.dat");
+    ~Patchtool(){delete patch_description;}
 
-    /** Returns the number of parameters of a certain type. */
-    int nPars(std::string type);
-    int nPars(int num){return sectsize[num];}
+    /* delegated... TODO: Need these at all? */
+    int nPars(std::string type){return patch_description->nPars(type);}
+
   };
 }
 

@@ -6,7 +6,7 @@
 #include "patchtool.hpp"
 
 
-/* Some minuscule helpers */
+/* helper functions */
 static
 bool line_is_whitespace(std::string &str){
   return (str.find_first_not_of(" \t\n\r") == str.npos);
@@ -29,10 +29,11 @@ std::string line_chop(std::string &str){
   return std::string(res);
 }
 
+/* Actual methods */
+
 /** Loads the patch format with information */
 void 
-synti2::Patchtool::load_patch_data(const char *fname){
-  std::ifstream ifs(fname);
+synti2::PatchDescr::load_patch_data(std::istream &ifs){
   std::string line, curr_section;
   int curr_sectnum = -1;
   std::string pname, pdescr;
@@ -43,41 +44,65 @@ synti2::Patchtool::load_patch_data(const char *fname){
       /* Begin section */
       line_to_header(line);
       curr_section = line;
-      std::cout << "**** New header: ";
-      std::cout << line << std::endl;
-      sectlist.push_back(line);
-      sectsize.push_back(0);
+      params[line]; /* Makes a new list. */
       curr_sectnum++;
       continue;
     };
     /* Else it is a parameter description. */
     ParamDescr pardsc(line, curr_section);
-    std::cout << " /*hmm*/ " << sectsize[curr_sectnum] << std::endl;
-    sectsize[curr_sectnum]++;
+    params[curr_section].push_back(pardsc); /* add to list */
   }
-  for(int i=0; i<sectlist.size(); i++){
-    curr_section = sectlist[i];
-    std::cout << "#define SYNTI2_" << curr_section 
-              << "_NPARS "<< sectsize[i] << std::endl;
-  }
+}
+
+synti2::PatchDescr::PatchDescr(std::istream &inputs){
+  load_patch_data(inputs);
 }
 
 synti2::ParamDescr::ParamDescr(std::string line, std::string sect){
   type = sect;
   name = line_chop(line);
   description = line_chop(line);
-  std::cout << "/*"<< description << "*/" << std::endl;
-  std::cout << "#define SYNTI2_" << type
-            << "_" << name;
+  min = line_chop(line);
+  max = line_chop(line);
 }
 
 synti2::Patchtool::Patchtool(std::string fname){
-  std::cout << "Reading from file " << fname << std::endl;
-  load_patch_data("patchdesign.dat");
+  std::ifstream ifs(fname.c_str());  
+  patch_description = new PatchDescr(ifs);
+  /* Output for debug purposes only: */
+  patch_description->headerFileForC(std::cout);
 }
 
 
 int
-synti2::Patchtool::nPars(std::string type){
-  return -1; /*Not yet implemented. Need to refactor the whole class first..*/
+synti2::PatchDescr::nPars(std::string type){
+  std::vector<ParamDescr> &v = params[type];
+  return v.size();
+}
+
+
+void
+synti2::PatchDescr::headerFileForC(std::ostream &os){
+  std::map<std::string, std::vector<ParamDescr> >::iterator it;
+  os << "/** Parameter indices as C #defines */" << std::endl;
+  os << "#ifndef SYNTI2_PARAMETERS_H" << std::endl;
+  os << "#define SYNTI2_PARAMETERS_H" << std::endl;
+
+  for (it = params.begin(); it != params.end(); it++){
+    std::string sect = (*it).first;
+    std::vector<ParamDescr> &v = (*it).second;
+
+    os << std::endl << std::endl 
+       << "/* New section starts: */" << std::endl 
+       << "#define SYNTI2_" << sect
+       << "_NPARS "<< v.size() << std::endl;
+
+    for (int i=0; i < v.size(); i++){
+      os << "/*"<< v[i].getDescription() << "*/" << std::endl;
+      os << "#define SYNTI2_" << sect << "_" << v[i].getName()
+         << " " << i << std::endl << std::endl;
+    }
+  }
+
+  os << "#endif" << std::endl;
 }

@@ -314,9 +314,9 @@ int main(int argc, char **argv) {
 
   pt = new synti2::Patchtool("patchdesign.dat");
 
-  std::cout << "And so: " << pt->nPars(0) 
-            << "And so: " << pt->nPars(1)
-            << "And so: " << pt->nPars(2)
+  std::cout << "And so: " << pt->nPars("I3") 
+            << " And so: " << pt->nPars("I7")
+            << " And so: " << pt->nPars("F")
             << std::endl;
 
   //patch = calloc(1, NPATCHES * (pt->nPars(0) + pt->nPars(1) + pt->nPars(2)));

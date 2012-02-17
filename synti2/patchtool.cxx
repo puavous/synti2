@@ -1,10 +1,12 @@
+/** Implementation of patchtool and stuff. */
 #include <iostream>
 #include <fstream>
 #include <vector>
 
 #include "patchtool.hpp"
 
-/** Implementation of patchtool and stuff. */
+
+/* Some minuscule helpers */
 static
 bool line_is_whitespace(std::string &str){
   return (str.find_first_not_of(" \t\n\r") == str.npos);
@@ -31,8 +33,7 @@ std::string line_chop(std::string &str){
 void 
 synti2::Patchtool::load_patch_data(const char *fname){
   std::ifstream ifs(fname);
-  std::string line;
-  std::string curr_section;
+  std::string line, curr_section;
   int curr_sectnum = -1;
   std::string pname, pdescr;
   while(std::getline(ifs, line)){
@@ -49,13 +50,9 @@ synti2::Patchtool::load_patch_data(const char *fname){
       curr_sectnum++;
       continue;
     };
-    /* Else it is a parameter value. */
-    pname = line_chop(line);
-    pdescr = line_chop(line);
-    std::cout << "/*"<< pdescr << "*/" << std::endl;
-    std::cout << "#define SYNTI2_" << curr_section 
-              << "_" << pname 
-              << " " << sectsize[curr_sectnum] << std::endl;
+    /* Else it is a parameter description. */
+    ParamDescr pardsc(line, curr_section);
+    std::cout << " /*hmm*/ " << sectsize[curr_sectnum] << std::endl;
     sectsize[curr_sectnum]++;
   }
   for(int i=0; i<sectlist.size(); i++){
@@ -65,6 +62,14 @@ synti2::Patchtool::load_patch_data(const char *fname){
   }
 }
 
+synti2::ParamDescr::ParamDescr(std::string line, std::string sect){
+  type = sect;
+  name = line_chop(line);
+  description = line_chop(line);
+  std::cout << "/*"<< description << "*/" << std::endl;
+  std::cout << "#define SYNTI2_" << type
+            << "_" << name;
+}
 
 synti2::Patchtool::Patchtool(std::string fname){
   std::cout << "Reading from file " << fname << std::endl;

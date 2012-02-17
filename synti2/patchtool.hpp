@@ -12,10 +12,12 @@ namespace synti2{
   /** Parameter description; used for GUI  */
   class ParamDescr {
   public:
-    ParamDescr(std::string){};
+    ParamDescr(std::string line, std::string type);
   private:
     /** Type. Must not contain spaces; must be one of I3, I7, F. */
     std::string type;
+    /** Mnemonic. Must be valid part of a C constant name*/
+    std::string name;
     /** Almost-human-readable descriptive text. Must not contain spaces. */
     std::string description;
     /** Minimum value. */

@@ -10,7 +10,9 @@ namespace synti2{
 
   /* Classes for: Patch, PatchBank, ParamDescr, ParamValue */
 
-  /** Parameter description; used for GUI  */
+  /** Description for a single parameter; used for GUI. Parameter
+      knows about itself, but not about its context (for example, its
+      index number must be handled by others). */
   class ParamDescr {
   public:
 
@@ -42,7 +44,9 @@ namespace synti2{
   };
 
 
-  /** The description of all parameters in one synti2 sound. */
+  /** The description of all parameters in one synti2 sound. Patch
+   * description handles the descriptions of its parameters.
+   */
   class PatchDescr {
   public:
     PatchDescr(std::istream &inputs);
@@ -56,8 +60,18 @@ namespace synti2{
     void load_patch_data(std::istream &ifs);
   };
 
+  /** Patch is an actual synth patch. Patch uses PatchDescr to know
+   *  its structure, and allows holding, manipulating, reading, and
+   *  writing of actual sound parameters.
+   */
+  class Patch {
+    /* FIXME: Implement */
+  };
 
-  /** Individual value of a parameter. Hmm.. necessary? */
+  /** Individual value of a parameter. Hmm.. necessary? Value can be
+      stored as a float in patch, and ParamDescr can do all the
+      conversions necessary!! Maybe the value is not even worth a
+      distinct class? */
   class ParamValue {
   public:
     /** Pointer to the description of this value */

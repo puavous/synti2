@@ -307,26 +307,18 @@ void cb_new_value(Fl_Widget* w, void* p){
 }
 
 
-
-int main(int argc, char **argv) {
-  int retval;
+/** Initializes jack stuff. Exits upon failure. */
+void init_jack_or_die(){
   jack_status_t status;
 
-  pt = new synti2::Patchtool("patchdesign.dat");
-
-  std::cout << "And so: " << pt->nPars("I3") 
-            << " And so: " << pt->nPars("I7")
-            << " And so: " << pt->nPars("F")
-            << std::endl;
-
-  //patch = calloc(1, NPATCHES * (pt->nPars(0) + pt->nPars(1) + pt->nPars(2)));
- /* Initial Jack setup. Open (=create?) a client. */
+  /* Initial Jack setup. Open (=create?) a client. */
   if ((client = jack_client_open (client_name, 
                                   JackNoStartServer, 
                                   &status)) == 0) {
-    std::cerr << "jack server not running?" << std::endl; return 1;
+    std::cerr << "jack server not running?" << std::endl; 
+    exit(1);
   }
-  
+
   /* Set up process callback */
   jack_set_process_callback (client, process, 0);
 
@@ -362,24 +354,15 @@ int main(int argc, char **argv) {
   signal(SIGINT, signal_handler);
 #endif
 
-  for (int ip=0; ip<NPATCHES; ip++){
-    for (int il=0; il<NLEVELS; il++){
-      for (int ipar=0;ipar<NPARAMS; ipar++){
-        patch[ip][il][ipar] = 0.f;
-      }
-    }
-  }
+}
 
 
+Fl_Window *build_main_window(){
   Fl_Window *window = new Fl_Window(600, 480);
   Fl_Button *box = new Fl_Button(20,20,260,25,"Send al&l");
-  box->callback(cb_send);
-  box->box(FL_UP_BOX); box->labelsize(17); 
-  box->labeltype(FL_SHADOW_LABEL);
+  box->callback(cb_send); box->labelsize(17); 
   box = new Fl_Button(300,20,260,25,"&Save");
-  box->callback(cb_send);
-  box->box(FL_UP_BOX); box->labelsize(17); 
-  box->labeltype(FL_SHADOW_LABEL);
+  box->callback(cb_send); box->labelsize(17); 
 
   int px=5, py=100, w=20, h=20, sp=2;
   Fl_Value_Input *c3 = new Fl_Value_Input(px,py+0*(h+sp),w*4,h);
@@ -411,6 +394,30 @@ int main(int argc, char **argv) {
   dial2->type(FL_LINE_DIAL);*/
 
   window->end();
+  return window;
+}
+
+int main(int argc, char **argv) {
+  int retval;
+
+  pt = new synti2::Patchtool("patchdesign.dat");
+
+  std::cout << "And so: " << pt->nPars("I3") 
+            << " And so: " << pt->nPars("I7")
+            << " And so: " << pt->nPars("F")
+            << std::endl;
+
+  init_jack_or_die(); 
+
+  for (int ip=0; ip<NPATCHES; ip++){
+    for (int il=0; il<NLEVELS; il++){
+      for (int ipar=0;ipar<NPARAMS; ipar++){
+        patch[ip][il][ipar] = 0.f;
+      }
+    }
+  }
+
+  Fl_Window *window = build_main_window();
   window->show(argc, argv);
 
   retval = Fl::run();
@@ -418,7 +425,6 @@ int main(int argc, char **argv) {
   jack_ringbuffer_free(global_rb);
   jack_client_close(client);
   
- error:
   if (pt != NULL) free(pt);
   exit (0);
 

@@ -66,6 +66,16 @@ namespace synti2{
    */
   class Patch {
     /* FIXME: Implement */
+  public:
+    Patch(PatchDescr *pd);
+    void read(std::istream &is) {};
+    void write(std::ostream &os) {};
+    void setParam(std::string type, std::string name, float value){};
+    float getParam(std::string type, std::string name){};
+  };
+
+  class PatchBank {
+    /* FIXME: Implement */
   };
 
   /** Individual value of a parameter. Hmm.. necessary? Value can be

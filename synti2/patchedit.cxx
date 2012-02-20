@@ -69,15 +69,7 @@ int curr_patch = 0;
 int curr_addr[3] = {0,0,0};
 
 /* Patch data: */
-#define NPATCHES 16
-#define NLEVELS 3
-#define NPARAMS 127
-
-/* Oh, F**ME: I'm converging to a bigger program here.. dynamize this etc: */
-//float *patch;
-float patch[NPATCHES][NLEVELS][NPARAMS];
-
-
+synti2::PatchBank *pbank = NULL;
 synti2::Patchtool *pt = NULL;
 
 /* Jack stuff */
@@ -260,17 +252,18 @@ void cb_change_address(Fl_Widget* w, void* p){
   long i = (long) p;
   if (i==3){
     curr_addr[0] = ((Fl_Valuator*)w)->value();
-    vs3->value(patch[curr_patch][0][curr_addr[0]]);
+    //vs3->value(patch[curr_patch][0][curr_addr[0]]);
     vs3->label(pt->getDescription("I3",((Fl_Valuator*)w)->value()).c_str());
     vs3->align(FL_ALIGN_RIGHT);
   }else if (i==7) {
     curr_addr[1] = ((Fl_Valuator*)w)->value();
-    vs7->value(patch[curr_patch][1][curr_addr[1]]);
+
+    //vs7->value(patch[curr_patch][1][curr_addr[1]]);
     vs7->label(pt->getDescription("I7",((Fl_Valuator*)w)->value()).c_str());
     vs7->align(FL_ALIGN_RIGHT);
   } else if (i==14) {
     curr_addr[2] = ((Fl_Valuator*)w)->value();
-    vsf->value(patch[curr_patch][2][curr_addr[2]]);
+    //vsf->value(patch[curr_patch][2][curr_addr[2]]);
     vsf->label(pt->getDescription("F",((Fl_Valuator*)w)->value()).c_str());
     vsf->align(FL_ALIGN_RIGHT);
   }
@@ -286,21 +279,21 @@ void cb_new_value(Fl_Widget* w, void* p){
   s2ed_msg_t msg = {0,0,0,0};
 
   if (d==3){
-    patch[curr_patch][0][curr_addr[0]] = val;
+    //patch[curr_patch][0][curr_addr[0]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[0] 
               << " of " << curr_patch << std::endl;
     msg.type = 1;
     msg.location = curr_addr[0] << 8 + curr_patch;
   } else if (d==7) {
-    patch[curr_patch][1][curr_addr[1]] = val;
+    //patch[curr_patch][1][curr_addr[1]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[1] 
               << " of " << curr_patch << std::endl;
     msg.type = 2;
     msg.location = curr_addr[1] << 8 + curr_patch;
   } else if (d==14) {
-    patch[curr_patch][2][curr_addr[2]] = val;
+    //patch[curr_patch][2][curr_addr[2]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[2] 
               << " of " << curr_patch << std::endl;
@@ -325,21 +318,21 @@ void cb_new_f_value(Fl_Widget* w, void* p){
   s2ed_msg_t msg = {0,0,0,0};
 
   if (d==3){
-    patch[curr_patch][0][curr_addr[0]] = val;
+    //patch[curr_patch][0][curr_addr[0]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[0] 
               << " of " << curr_patch << std::endl;
     msg.type = 1;
     msg.location = curr_addr[0] << 8 + curr_patch;
   } else if (d==7) {
-    patch[curr_patch][1][curr_addr[1]] = val;
+    //patch[curr_patch][1][curr_addr[1]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[1] 
               << " of " << curr_patch << std::endl;
     msg.type = 2;
     msg.location = curr_addr[1] << 8 + curr_patch;
   } else if (d==14) {
-    patch[curr_patch][2][curr_addr[2]] = val;
+    //patch[curr_patch][2][curr_addr[2]] = val;
     std::cout << "Send " << val 
               << " to " << curr_addr[2] 
               << " of " << curr_patch << std::endl;
@@ -461,19 +454,11 @@ int main(int argc, char **argv) {
   int retval;
 
   pt = new synti2::Patchtool("patchdesign.dat");
+  pbank = pt->makePatchBank(16);
 
-  synti2::Patch p = pt->makePatch();
-  p.write(std::cout);
+  //for (int i=0;i<pbank->size();i++) (*pbank)[i].write(std::cout);
 
   init_jack_or_die(); 
-
-  for (int ip=0; ip<NPATCHES; ip++){
-    for (int il=0; il<NLEVELS; il++){
-      for (int ipar=0;ipar<NPARAMS; ipar++){
-        patch[ip][il][ipar] = 0.f;
-      }
-    }
-  }
 
   Fl_Window *window = build_main_window();
   window->show(argc, argv);
@@ -483,7 +468,8 @@ int main(int argc, char **argv) {
   jack_ringbuffer_free(global_rb);
   jack_client_close(client);
   
+  if (pbank != NULL) free(pbank);
   if (pt != NULL) free(pt);
-  exit (0);
 
+  return 0;
 }

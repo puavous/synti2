@@ -91,7 +91,7 @@ namespace synti2{
     void copy_structure_from_descr();
   };
 
-  class PatchBank {
+  class PatchBank : public std::vector<Patch> {
     /* FIXME: Implement */
   };
 
@@ -124,8 +124,16 @@ namespace synti2{
       return patch_description->getDescription(type, idx);
     };
 
+    /** Make an empty patch. */
     Patch makePatch(){return Patch(patch_description);}
-
+    /** Make a patch bank with npatches empty patches */
+    PatchBank *makePatchBank(int npatches){
+      PatchBank *pb = new PatchBank();
+      for (int i=0; i<npatches; i++){
+        pb->push_back(makePatch());
+      }
+      return pb;
+    }
   };
 }
 

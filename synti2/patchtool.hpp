@@ -49,29 +49,46 @@ namespace synti2{
    */
   class PatchDescr {
   public:
+    /** Constructs a patch description from a text spec. */
     PatchDescr(std::istream &inputs);
     /** Returns the number of parameters of a certain type. */
     int nPars(std::string type);
-    /** Prints out a complete C-header file that contains the descriptions */
+    /** Prints out a complete C-header file that contains the descriptions. */
     void headerFileForC(std::ostream &os);
+    /** Returns the almost-human-readable descriptive text. */
+    std::string getDescription(std::string type, int idx);
+
+    const std::map<std::string, std::vector<ParamDescr> >::iterator
+    paramBeg(){return params.begin();}
+    const std::map<std::string, std::vector<ParamDescr> >::iterator
+    paramEnd(){return params.end();}
+
   private:
     /* The main structure is a map of description lists: */
     std::map<std::string, std::vector<ParamDescr> > params;
     void load_patch_data(std::istream &ifs);
   };
 
-  /** Patch is an actual synth patch. Patch uses PatchDescr to know
-   *  its structure, and allows holding, manipulating, reading, and
-   *  writing of actual sound parameters.
+  /** Patch represents an actual synth patch. Patch uses PatchDescr to
+   *  know its structure, and allows holding, manipulating, reading,
+   *  and writing of actual sound parameters.
    */
   class Patch {
     /* FIXME: Implement */
   public:
-    Patch(PatchDescr *pd);
+    /** Creates a patch with structure taken from pd; values are
+     *  initialized as zeros.
+     */
+    Patch(PatchDescr *ipd);
     void read(std::istream &is) {};
-    void write(std::ostream &os) {};
+    void write(std::ostream &os);
     void setParam(std::string type, std::string name, float value){};
     float getParam(std::string type, std::string name){};
+  private:
+    /* The main structure mirrors that of PatchDescr. Values are floats: */
+    PatchDescr *pd;
+    std::map<std::string, std::vector<float> > values;
+    void copy_structure_from_descr();
   };
 
   class PatchBank {
@@ -103,6 +120,11 @@ namespace synti2{
 
     /* delegated... TODO: Need these at all? */
     int nPars(std::string type){return patch_description->nPars(type);}
+    std::string getDescription(std::string type, int idx){
+      return patch_description->getDescription(type, idx);
+    };
+
+    Patch makePatch(){return Patch(patch_description);}
 
   };
 }

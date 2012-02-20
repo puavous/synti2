@@ -30,8 +30,10 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Dial.H>
+#include <FL/Fl_Scroll.H>
 #include <FL/Fl_Value_Slider.H>
 #include <FL/Fl_Value_Input.H>
+#include <FL/Fl_Select_Browser.H>
 
 #include <jack/jack.h>
 #include <jack/midiport.h>
@@ -197,7 +199,7 @@ int build_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
 }
 
 
-/** MIDI filtering is the only thing this client is required to do. */
+/** send data to synth, if there is new stuff from the GUI. */
 static int
 process (jack_nframes_t nframes, void *arg)
 {
@@ -259,12 +261,18 @@ void cb_change_address(Fl_Widget* w, void* p){
   if (i==3){
     curr_addr[0] = ((Fl_Valuator*)w)->value();
     vs3->value(patch[curr_patch][0][curr_addr[0]]);
+    vs3->label(pt->getDescription("I3",((Fl_Valuator*)w)->value()).c_str());
+    vs3->align(FL_ALIGN_RIGHT);
   }else if (i==7) {
     curr_addr[1] = ((Fl_Valuator*)w)->value();
     vs7->value(patch[curr_patch][1][curr_addr[1]]);
+    vs7->label(pt->getDescription("I7",((Fl_Valuator*)w)->value()).c_str());
+    vs7->align(FL_ALIGN_RIGHT);
   } else if (i==14) {
     curr_addr[2] = ((Fl_Valuator*)w)->value();
     vsf->value(patch[curr_patch][2][curr_addr[2]]);
+    vsf->label(pt->getDescription("F",((Fl_Valuator*)w)->value()).c_str());
+    vsf->align(FL_ALIGN_RIGHT);
   }
 }
 
@@ -305,6 +313,46 @@ void cb_new_value(Fl_Widget* w, void* p){
   msg.value = val;
   size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
 }
+
+
+/** Changes an "F" value to be sent to the current address. */
+void cb_new_f_value(Fl_Widget* w, void* p){
+  double val;
+  int d;
+  d = (long)p;
+  val = ((Fl_Valuator*)w)->value();
+
+  s2ed_msg_t msg = {0,0,0,0};
+
+  if (d==3){
+    patch[curr_patch][0][curr_addr[0]] = val;
+    std::cout << "Send " << val 
+              << " to " << curr_addr[0] 
+              << " of " << curr_patch << std::endl;
+    msg.type = 1;
+    msg.location = curr_addr[0] << 8 + curr_patch;
+  } else if (d==7) {
+    patch[curr_patch][1][curr_addr[1]] = val;
+    std::cout << "Send " << val 
+              << " to " << curr_addr[1] 
+              << " of " << curr_patch << std::endl;
+    msg.type = 2;
+    msg.location = curr_addr[1] << 8 + curr_patch;
+  } else if (d==14) {
+    patch[curr_patch][2][curr_addr[2]] = val;
+    std::cout << "Send " << val 
+              << " to " << curr_addr[2] 
+              << " of " << curr_patch << std::endl;
+    msg.type = 3;
+    msg.location = curr_addr[2] << 8 + curr_patch;
+  } else {
+    std::cerr << "Error.";
+    return;
+  }
+  msg.value = val;
+  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+}
+
 
 
 /** Initializes jack stuff. Exits upon failure. */
@@ -358,31 +406,43 @@ void init_jack_or_die(){
 
 
 Fl_Window *build_main_window(){
-  Fl_Window *window = new Fl_Window(600, 480);
+  /* Buttons */
+  Fl_Window *window = new Fl_Window(600, 280);
+  window->resizable(window);
+  Fl_Scroll *scroll = new Fl_Scroll(0,0,600,280);
   Fl_Button *box = new Fl_Button(20,20,260,25,"Send al&l");
   box->callback(cb_send); box->labelsize(17); 
   box = new Fl_Button(300,20,260,25,"&Save");
   box->callback(cb_send); box->labelsize(17); 
 
+  /* I3 sliders */
+  /* F sliders */
+
   int px=5, py=100, w=20, h=20, sp=2;
   Fl_Value_Input *c3 = new Fl_Value_Input(px,py+0*(h+sp),w*4,h);
-  c3->bounds(0,127); c3->precision(0); c3->argument(3);
+  c3->bounds(0,pt->nPars("I3")-1); c3->precision(0); c3->argument(3);
   c3->callback(cb_change_address);
-  Fl_Value_Input *c7 = new Fl_Value_Input(px,py+1*(h+sp),w*4,h);
-  c7->bounds(0,127); c7->precision(0); c7->argument(7);
+
+  Fl_Select_Browser *c7 = new Fl_Select_Browser(px,py+1*(h+sp),w*4,h);
+  //c7->bounds(0,pt->nPars("I7")-1); c7->precision(0); c7->argument(7);
+  c7->add("hmm1");  c7->add("hmm2");
   c7->callback(cb_change_address);
+
   Fl_Value_Input *cf = new Fl_Value_Input(px,py+2*(h+sp),w*4,h);
-  cf->bounds(0,127); cf->precision(0); cf->argument(14);
+  cf->bounds(0,pt->nPars("F")-1); cf->precision(0); cf->argument(14);
   cf->callback(cb_change_address);
+
 
   vs3 = new Fl_Value_Slider(px+4*w+sp,py+0*(h+sp),w*16,h,NULL);
   vs3->bounds(0,7); vs3->precision(0); vs3->type(FL_HOR_NICE_SLIDER);
   vs3->argument(3);
   vs3->callback(cb_new_value);
+
   vs7= new Fl_Value_Slider(px+4*w+sp,py+1*(h+sp),w*16,h,NULL);
   vs7->bounds(0,127); vs7->precision(0); vs7->type(FL_HOR_NICE_SLIDER);
   vs7->argument(7);
   vs7->callback(cb_new_value);
+
   vsf= new Fl_Value_Slider(px+4*w+sp,py+2*(h+sp),w*16,h,NULL);
   vsf->bounds(-1.27,1.27); vsf->precision(2); vsf->type(FL_HOR_NICE_SLIDER);
   vsf->argument(14);
@@ -402,10 +462,8 @@ int main(int argc, char **argv) {
 
   pt = new synti2::Patchtool("patchdesign.dat");
 
-  std::cout << "And so: " << pt->nPars("I3") 
-            << " And so: " << pt->nPars("I7")
-            << " And so: " << pt->nPars("F")
-            << std::endl;
+  synti2::Patch p = pt->makePatch();
+  p.write(std::cout);
 
   init_jack_or_die(); 
 

@@ -31,6 +31,10 @@ std::string line_chop(std::string &str){
 
 /* Actual methods */
 
+synti2::PatchDescr::PatchDescr(std::istream &inputs){
+  load_patch_data(inputs);
+}
+
 /** Loads the patch format with information */
 void 
 synti2::PatchDescr::load_patch_data(std::istream &ifs){
@@ -54,8 +58,17 @@ synti2::PatchDescr::load_patch_data(std::istream &ifs){
   }
 }
 
-synti2::PatchDescr::PatchDescr(std::istream &inputs){
-  load_patch_data(inputs);
+int
+synti2::PatchDescr::nPars(std::string type){
+  std::vector<ParamDescr> &v = params[type];
+  return v.size();
+}
+
+std::string 
+synti2::PatchDescr::getDescription(std::string type, int idx)
+{
+  std::vector<ParamDescr> &v = params[type];
+  return v[idx].getDescription();
 }
 
 synti2::ParamDescr::ParamDescr(std::string line, std::string sect){
@@ -72,14 +85,6 @@ synti2::Patchtool::Patchtool(std::string fname){
   /* Output for debug purposes only: */
   patch_description->headerFileForC(std::cout);
 }
-
-
-int
-synti2::PatchDescr::nPars(std::string type){
-  std::vector<ParamDescr> &v = params[type];
-  return v.size();
-}
-
 
 void
 synti2::PatchDescr::headerFileForC(std::ostream &os){
@@ -106,3 +111,41 @@ synti2::PatchDescr::headerFileForC(std::ostream &os){
 
   os << "#endif" << std::endl;
 }
+
+/* Methods of Patch */
+
+synti2::Patch::Patch(synti2::PatchDescr *ipd){
+  pd = ipd;
+  copy_structure_from_descr();
+}
+
+void 
+synti2::Patch::write(std::ostream &os){
+  os << "# Patch data begins" << std::endl;
+  std::map<std::string, std::vector<ParamDescr> >::iterator it;
+  for (it = pd->paramBeg(); it != pd->paramEnd(); it++){
+    std::string sect = (*it).first;
+    os << "[" << sect  << "]" << std::endl;
+    std::vector<ParamDescr> &v = (*it).second;
+    for (int i=0; i < v.size(); i++){
+      os << v[i].getName();
+      os << " " << values[sect][i]  << std::endl;
+    }
+  }
+  os << "--- end of patch " << std::endl;
+}
+
+/* internal: initializes a patch, matching its description, with
+ * zero-values.
+ */
+void 
+synti2::Patch::copy_structure_from_descr(){
+  std::map<std::string, std::vector<ParamDescr> >::iterator it;
+  for (it = pd->paramBeg(); it != pd->paramEnd(); it++){
+    std::string sect = (*it).first;
+    std::vector<ParamDescr> &v = (*it).second;
+    values[sect]; /* create section and fill with zeros: */
+    for (int i=0; i < v.size(); i++) values[sect].push_back(0.0f);
+  }
+}
+

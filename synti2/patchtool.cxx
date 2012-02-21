@@ -135,6 +135,12 @@ synti2::Patch::write(std::ostream &os){
   os << "--- end of patch " << std::endl;
 }
 
+void 
+synti2::Patch::setValue(std::string type, int idx, float value){
+  (values[type])[idx] = value;
+}
+
+
 /* internal: initializes a patch, matching its description, with
  * zero-values.
  */

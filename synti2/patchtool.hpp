@@ -82,8 +82,12 @@ namespace synti2{
     Patch(PatchDescr *ipd);
     void read(std::istream &is) {};
     void write(std::ostream &os);
-    void setParam(std::string type, std::string name, float value){};
-    float getParam(std::string type, std::string name){};
+    void setValueByName(std::string type, std::string name, float value)
+    {};
+    void setValue(std::string type, int idx, float value);
+    float getValueByName(std::string type, std::string name){return 1.23;}
+    float getValue(std::string type, int idx){return (values[type])[idx];}
+    int getNPars(std::string type){return values[type].size();}
   private:
     /* The main structure mirrors that of PatchDescr. Values are floats: */
     PatchDescr *pd;
@@ -123,6 +127,8 @@ namespace synti2{
     std::string getDescription(std::string type, int idx){
       return patch_description->getDescription(type, idx);
     };
+
+    PatchDescr *exposePatchDescr(){return patch_description;}
 
     /** Make an empty patch. */
     Patch makePatch(){return Patch(patch_description);}

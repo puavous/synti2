@@ -33,6 +33,7 @@
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Value_Slider.H>
 #include <FL/Fl_Value_Input.H>
+#include <FL/Fl_Input.H>
 #include <FL/Fl_Select_Browser.H>
 
 #include <jack/jack.h>
@@ -61,12 +62,11 @@ typedef struct {
 } s2ed_msg_t;
 
 
-/* FL things that need to be accessed globally */
-Fl_Value_Slider *vs3, *vs7, *vsf;  /* The value sliders. */
-
 /* Application logic that needs to be accessed globally */
 int curr_patch = 0;
-int curr_addr[3] = {0,0,0};
+std::vector<Fl_Valuator*> widgets_i3;
+std::vector<Fl_Valuator*> widgets_f;
+//std::vector<synti2::Patch> patches;
 
 /* Patch data: */
 synti2::PatchBank *pbank = NULL;
@@ -238,112 +238,80 @@ process (jack_nframes_t nframes, void *arg)
   return 0;
 }
 
+/** Updates widgets to current values of the current patch. Works on
+ *  global data.
+ */
+void widgets_to_reflect_reality(){
+  for (int i=0; i<widgets_i3.size(); i++){
+    double val = (*pbank)[curr_patch].getValue("I3", i);
+    widgets_i3[i]->value(val);
+  }
+  for (int i=0; i<widgets_f.size(); i++){
+    double val = (*pbank)[curr_patch].getValue("F", i);
+    widgets_f[i]->value(val);
+  }
+}
 
-/** Sends data to MIDI. (FIXME: when it's done) */
-void cb_send(Fl_Widget* w, void* p){
-  s2ed_msg_t msg = {3,0x030a,-3.14159265f,4.5f};
+/** Sends a value over to the synth via the jack output port. */
+void send_to_jack_port(int type, int idx, int patch, float val){
+  /*
+  std::cout << "Send " << val 
+            << " to " << idx
+            << " of " << patch << std::endl;*/
+  s2ed_msg_t msg = {0,0,0,0};
+  msg.type = type;
+  msg.location = idx << 8 + patch;
+  msg.value = val;
   size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+
+}
+
+/** Sends one complete patch to the synth. */
+void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
+  for (int i=0; i<patch.getNPars("I3"); i++){
+    send_to_jack_port(1, i, patnum, patch.getValue("I3",i));
+  }
+  for (int i=0; i<patch.getNPars("F"); i++){
+    send_to_jack_port(3, i, patnum, patch.getValue("F",i));
+  }
+}
+
+/** Sends all data to MIDI. (FIXME: when it's done) */
+void cb_send_all(Fl_Widget* w, void* p){
+  for(int ip=0; ip<pbank->size(); ip++){
+    send_patch_to_jack_port((*pbank)[ip], ip);
+  }
+  //  s2ed_msg_t msg = {3,0x030a,-3.14159265f,4.5f};
+  //  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
   std::cout << "ja tuota. FIXME: implement this and others" << std::endl;
 }
 
 
-/** Changes the send address. */
-void cb_change_address(Fl_Widget* w, void* p){
-  long i = (long) p;
-  if (i==3){
-    curr_addr[0] = ((Fl_Valuator*)w)->value();
-    //vs3->value(patch[curr_patch][0][curr_addr[0]]);
-    vs3->label(pt->getDescription("I3",((Fl_Valuator*)w)->value()).c_str());
-    vs3->align(FL_ALIGN_RIGHT);
-  }else if (i==7) {
-    curr_addr[1] = ((Fl_Valuator*)w)->value();
-
-    //vs7->value(patch[curr_patch][1][curr_addr[1]]);
-    vs7->label(pt->getDescription("I7",((Fl_Valuator*)w)->value()).c_str());
-    vs7->align(FL_ALIGN_RIGHT);
-  } else if (i==14) {
-    curr_addr[2] = ((Fl_Valuator*)w)->value();
-    //vsf->value(patch[curr_patch][2][curr_addr[2]]);
-    vsf->label(pt->getDescription("F",((Fl_Valuator*)w)->value()).c_str());
-    vsf->align(FL_ALIGN_RIGHT);
-  }
-}
-
-/** Changes a value to be sent to the current address. */
-void cb_new_value(Fl_Widget* w, void* p){
-  double val;
-  int d;
-  d = (long)p;
-  val = ((Fl_Valuator*)w)->value();
-
-  s2ed_msg_t msg = {0,0,0,0};
-
-  if (d==3){
-    //patch[curr_patch][0][curr_addr[0]] = val;
-    std::cout << "Send " << val 
-              << " to " << curr_addr[0] 
-              << " of " << curr_patch << std::endl;
-    msg.type = 1;
-    msg.location = curr_addr[0] << 8 + curr_patch;
-  } else if (d==7) {
-    //patch[curr_patch][1][curr_addr[1]] = val;
-    std::cout << "Send " << val 
-              << " to " << curr_addr[1] 
-              << " of " << curr_patch << std::endl;
-    msg.type = 2;
-    msg.location = curr_addr[1] << 8 + curr_patch;
-  } else if (d==14) {
-    //patch[curr_patch][2][curr_addr[2]] = val;
-    std::cout << "Send " << val 
-              << " to " << curr_addr[2] 
-              << " of " << curr_patch << std::endl;
-    msg.type = 3;
-    msg.location = curr_addr[2] << 8 + curr_patch;
-  } else {
-    std::cerr << "Error.";
-    return;
-  }
-  msg.value = val;
-  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+/** Sends and stores (FIXME: implement store) an "F" value */
+void cb_change_patch(Fl_Widget* w, void* p){
+  double val = ((Fl_Valuator*)w)->value();
+  //  int d = (long)p;
+  curr_patch = val;
+  widgets_to_reflect_reality();
 }
 
 
-/** Changes an "F" value to be sent to the current address. */
+/** Sends and stores an "F" value */
 void cb_new_f_value(Fl_Widget* w, void* p){
-  double val;
-  int d;
-  d = (long)p;
-  val = ((Fl_Valuator*)w)->value();
+  double val = ((Fl_Valuator*)w)->value();
+  int d = (long)p;
 
-  s2ed_msg_t msg = {0,0,0,0};
+  (*pbank)[curr_patch].setValue("F",d,val);
+  send_to_jack_port(3, d, curr_patch, val);
+}
 
-  if (d==3){
-    //patch[curr_patch][0][curr_addr[0]] = val;
-    std::cout << "Send " << val 
-              << " to " << curr_addr[0] 
-              << " of " << curr_patch << std::endl;
-    msg.type = 1;
-    msg.location = curr_addr[0] << 8 + curr_patch;
-  } else if (d==7) {
-    //patch[curr_patch][1][curr_addr[1]] = val;
-    std::cout << "Send " << val 
-              << " to " << curr_addr[1] 
-              << " of " << curr_patch << std::endl;
-    msg.type = 2;
-    msg.location = curr_addr[1] << 8 + curr_patch;
-  } else if (d==14) {
-    //patch[curr_patch][2][curr_addr[2]] = val;
-    std::cout << "Send " << val 
-              << " to " << curr_addr[2] 
-              << " of " << curr_patch << std::endl;
-    msg.type = 3;
-    msg.location = curr_addr[2] << 8 + curr_patch;
-  } else {
-    std::cerr << "Error.";
-    return;
-  }
-  msg.value = val;
-  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+/** Sends and stores an "I3" value */
+void cb_new_i3_value(Fl_Widget* w, void* p){
+  double val = ((Fl_Valuator*)w)->value();
+  int d = (long)p;
+
+  (*pbank)[curr_patch].setValue("I3",d,val);
+  send_to_jack_port(1, d, curr_patch, val);
 }
 
 
@@ -398,53 +366,61 @@ void init_jack_or_die(){
 }
 
 
-Fl_Window *build_main_window(){
-  /* Buttons */
-  Fl_Window *window = new Fl_Window(600, 280);
+Fl_Window *build_main_window(synti2::PatchDescr *pd){
+  /* Overall Operation Buttons */
+  Fl_Window *window = new Fl_Window(800, 600);
   window->resizable(window);
-  Fl_Scroll *scroll = new Fl_Scroll(0,0,600,280);
-  Fl_Button *box = new Fl_Button(20,20,260,25,"Send al&l");
-  box->callback(cb_send); box->labelsize(17); 
-  box = new Fl_Button(300,20,260,25,"&Save");
-  box->callback(cb_send); box->labelsize(17); 
+  Fl_Scroll *scroll = new Fl_Scroll(0,0,800,600);
 
-  /* I3 sliders */
-  /* F sliders */
+  Fl_Value_Input *patch = new Fl_Value_Input(50,20,40,25,"Patch");
+  patch->callback(cb_change_patch);
 
-  int px=5, py=100, w=20, h=20, sp=2;
-  Fl_Value_Input *c3 = new Fl_Value_Input(px,py+0*(h+sp),w*4,h);
-  c3->bounds(0,pt->nPars("I3")-1); c3->precision(0); c3->argument(3);
-  c3->callback(cb_change_address);
+  Fl_Input *pname = new Fl_Input(150,20,90,25,"Name");
 
-  Fl_Select_Browser *c7 = new Fl_Select_Browser(px,py+1*(h+sp),w*4,h);
-  //c7->bounds(0,pt->nPars("I7")-1); c7->precision(0); c7->argument(7);
-  c7->add("hmm1");  c7->add("hmm2");
-  c7->callback(cb_change_address);
+  Fl_Button *box = new Fl_Button(280,20,120,25,"Send current");
+  box->callback(cb_send_all); box->labelsize(17); 
+  box = new Fl_Button(600,20,200,25,"&Save");
+  //  box->callback(cb_send); box->labelsize(17); 
 
-  Fl_Value_Input *cf = new Fl_Value_Input(px,py+2*(h+sp),w*4,h);
-  cf->bounds(0,pt->nPars("F")-1); cf->precision(0); cf->argument(14);
-  cf->callback(cb_change_address);
+  box = new Fl_Button(420,20,120,25,"Send al&l");
+  box->callback(cb_send_all); box->labelsize(17); 
+  box = new Fl_Button(600,20,200,25,"&Save");
+  //  box->callback(cb_send); box->labelsize(17); 
 
 
-  vs3 = new Fl_Value_Slider(px+4*w+sp,py+0*(h+sp),w*16,h,NULL);
-  vs3->bounds(0,7); vs3->precision(0); vs3->type(FL_HOR_NICE_SLIDER);
-  vs3->argument(3);
-  vs3->callback(cb_new_value);
+  /* Parameters Valuator Widgets */
+  int px=5, py=50, w=30, h=20, sp=2;
+  for (int i=0; i < pd->nPars("I3"); i++){
+    /* Need to store all ptrs and have attach_to_values() */
+    Fl_Value_Input *vi = new Fl_Value_Input(px+i*(w+sp),py,w,h);
+    widgets_i3.push_back(vi);
+    vi->bounds(0,7); vi->precision(0); vi->argument(i);
+    vi->tooltip(pd->getDescription("I3", i).c_str());
+    vi->argument(i);
+    vi->callback(cb_new_i3_value);
+  }
 
-  vs7= new Fl_Value_Slider(px+4*w+sp,py+1*(h+sp),w*16,h,NULL);
-  vs7->bounds(0,127); vs7->precision(0); vs7->type(FL_HOR_NICE_SLIDER);
-  vs7->argument(7);
-  vs7->callback(cb_new_value);
-
-  vsf= new Fl_Value_Slider(px+4*w+sp,py+2*(h+sp),w*16,h,NULL);
-  vsf->bounds(-1.27,1.27); vsf->precision(2); vsf->type(FL_HOR_NICE_SLIDER);
-  vsf->argument(14);
-  vsf->callback(cb_new_value);
-
-  /*Fl_Dial *dial = new Fl_Dial(320,40,100,100,"Kissa123");
-  dial->align(FL_ALIGN_CENTER);
-  Fl_Dial *dial2 = new Fl_Dial(420,40,100,100,"@->| ja joo");
-  dial2->type(FL_LINE_DIAL);*/
+  py=80; w=30*8;
+  int npars = pd->nPars("F");
+  int ncols = 3;
+  int nrows = (npars / ncols) + 1;
+  int i = 0;
+  for (int col=0; col < ncols; col++){
+    for (int row=0; row < nrows; row++){
+      if (i==npars) break;
+      /* Need to store all ptrs and have attach_to_values() */
+      Fl_Value_Slider *vsf = 
+        new Fl_Value_Slider(px+col*400,py+row*(h+sp),w,h);
+      widgets_f.push_back(vsf);
+      vsf->bounds(-1.27,1.27); vsf->precision(2);
+      vsf->type(FL_HOR_NICE_SLIDER);
+      vsf->label(pd->getDescription("F",i).c_str());
+      vsf->align(FL_ALIGN_RIGHT);
+      vsf->callback(cb_new_f_value);
+      vsf->argument(i);
+      i++;
+    }
+  }
 
   window->end();
   return window;
@@ -456,11 +432,16 @@ int main(int argc, char **argv) {
   pt = new synti2::Patchtool("patchdesign.dat");
   pbank = pt->makePatchBank(16);
 
+ 
   //for (int i=0;i<pbank->size();i++) (*pbank)[i].write(std::cout);
 
-  init_jack_or_die(); 
+  init_jack_or_die();
 
-  Fl_Window *window = build_main_window();
+  /* Make an edit window for our custom kind of patches. */
+  Fl_Window *window = build_main_window(pt->exposePatchDescr());
+
+  widgets_to_reflect_reality();
+
   window->show(argc, argv);
 
   retval = Fl::run();

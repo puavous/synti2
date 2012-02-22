@@ -99,7 +99,8 @@ namespace synti2{
   };
 
   class PatchBank : public std::vector<Patch> {
-    /* FIXME: Implement */
+  public:
+    void write(std::ostream &os){for(int i=0;i<size();i++) at(i).write(os);}
   };
 
   /** Individual value of a parameter. Hmm.. necessary? Value can be

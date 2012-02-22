@@ -366,10 +366,12 @@ void cb_new_i3_value(Fl_Widget* w, void* p){
 
 void cb_save_all(Fl_Widget* w, void* p){
   std::cout << "Save all not yet implemented" << std::endl;
+  pbank->write(std::cout);
 }
 
 void cb_save_current(Fl_Widget* w, void* p){
-  std::cout << "Save current not yet implemented" << std::endl;
+  std::cout << "As of yet, writing to stdout:" << std::endl;
+  (*pbank)[curr_patch].write(std::cout);
 }
 
 void cb_load(Fl_Widget* w, void* p){

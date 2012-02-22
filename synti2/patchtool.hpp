@@ -48,6 +48,10 @@ namespace synti2{
    * description handles the descriptions of its parameters.
    */
   class PatchDescr {
+  private:
+    /* The main structure is a map of description lists: */
+    std::map<std::string, std::vector<ParamDescr> > params;
+    std::map<std::string, std::map<std::string, int> > parind;
   public:
     /** Constructs a patch description from a text spec. */
     PatchDescr(std::istream &inputs);
@@ -61,14 +65,17 @@ namespace synti2{
     /** Returns the almost-human-readable descriptive text. */
     std::string getDescription(std::string type, int idx);
 
+    /** Returns the index of "name" in map["type"]. */
+    int getValueID(std::string type, std::string name){
+      return parind[type][name];
+    }
+
+
     const std::map<std::string, std::vector<ParamDescr> >::iterator
     paramBeg(){return params.begin();}
     const std::map<std::string, std::vector<ParamDescr> >::iterator
     paramEnd(){return params.end();}
-
   private:
-    /* The main structure is a map of description lists: */
-    std::map<std::string, std::vector<ParamDescr> > params;
     void load_patch_data(std::istream &ifs);
   };
 
@@ -77,7 +84,12 @@ namespace synti2{
    *  and writing of actual sound parameters.
    */
   class Patch {
-    /* FIXME: Implement */
+  private:
+    /* The main structure mirrors that of PatchDescr. Values are floats: */
+    PatchDescr *pd;
+    std::map<std::string, std::vector<float> > values;
+    void copy_structure_from_descr();
+    std::string name;
   public:
     /** Creates a patch with structure taken from pd; values are
      *  initialized as zeros.
@@ -85,23 +97,22 @@ namespace synti2{
     Patch(PatchDescr *ipd);
     void read(std::istream &is);
     void write(std::ostream &os);
-    void setValueByName(std::string type, std::string name, float value)
-    {};
+    void setName(std::string newname){name = newname;}
+    std::string getName(){return name;}
+    void setValueByName(std::string type, std::string name, float value){};
     void setValue(std::string type, int idx, float value);
     float getValueByName(std::string type, std::string name){return 1.23;}
     float getValue(std::string type, int idx){return (values[type])[idx];}
     int getNPars(std::string type){return values[type].size();}
-  private:
-    /* The main structure mirrors that of PatchDescr. Values are floats: */
-    PatchDescr *pd;
-    std::map<std::string, std::vector<float> > values;
-    void copy_structure_from_descr();
   };
 
   class PatchBank : public std::vector<Patch> {
   public:
     void write(std::ostream &os){for(int i=0;i<size();i++) at(i).write(os);}
-    void read(std::istream &is){for(int i=0;i<size();i++) at(i).read(is);}
+    void read(std::istream &is){
+      /*FIXME: End-of-file logics. */
+      for(int i=0;i<size();i++) at(i).read(is);
+    }
   };
 
   /** Individual value of a parameter. Hmm.. necessary? Value can be

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <cstdlib>
 
 #include "patchtool.hpp"
 
@@ -39,8 +40,8 @@ synti2::PatchDescr::PatchDescr(std::istream &inputs){
 void 
 synti2::PatchDescr::load_patch_data(std::istream &ifs){
   std::string line, curr_section;
-  int curr_sectnum = -1;
   std::string pname, pdescr;
+  //  int ind=0;
   while(std::getline(ifs, line)){
     if (line_is_whitespace(line)) continue;
     if (line[0]=='#') continue;
@@ -49,11 +50,12 @@ synti2::PatchDescr::load_patch_data(std::istream &ifs){
       line_to_header(line);
       curr_section = line;
       params[line]; /* Makes a new list. */
-      curr_sectnum++;
+      //      ind = params[line].size(); /* Indices are into sections. */
       continue;
     };
     /* Else it is a parameter description. */
     ParamDescr pardsc(line, curr_section);
+    parind[curr_section][pardsc.getName()] = params[curr_section].size();
     params[curr_section].push_back(pardsc); /* add to list */
   }
 }
@@ -121,7 +123,8 @@ synti2::Patch::Patch(synti2::PatchDescr *ipd){
 
 void 
 synti2::Patch::write(std::ostream &os){
-  os << "# Patch data begins" << std::endl;
+  os << getName() << std::endl;
+  os << "# Patch data for '" << getName() << "'begins" << std::endl;
   std::map<std::string, std::vector<ParamDescr> >::iterator it;
   for (it = pd->paramBeg(); it != pd->paramEnd(); it++){
     std::string sect = (*it).first;
@@ -136,8 +139,52 @@ synti2::Patch::write(std::ostream &os){
 }
 
 void 
-synti2::Patch::read(std::istream &is){
-  std::cerr << "FIXME: Reading to be implemented" << std::endl;
+synti2::Patch::read(std::istream &ifs){
+  /* This patch already has a description. Only read stuff that is
+     compatible with current description, and spit information about
+     incompatible stuff to stderr. */
+
+  std::string line, curr_section;
+  std::string pname, pdescr;
+  if(std::getline(ifs, line)){
+    setName(line);
+  } else {
+    std::cerr << "Warning: No patch to read (end of file)" << std::endl;
+    return;
+  }
+  while(std::getline(ifs, line)){
+    if (line_is_whitespace(line)) continue;
+    if (line[0]=='#') continue;
+    if (line[0]=='-') break;
+    if (line[0]=='['){
+      /* Begin section */
+      line_to_header(line);
+      curr_section = line;
+      continue;
+    };
+
+    /* Else it is a parameter value. */
+    if (values.count(curr_section) == 0) {
+      std::cerr << "Section doesn't exist in current patch format: "
+                << curr_section
+                << std::endl;
+      std::cerr << "Skipping parameter: "
+                << curr_section << "_" << line
+                << std::endl;
+      continue;
+    }
+
+    std::string parname = line_chop(line);
+    std::string parvals = line_chop(line);
+    float val = std::strtod(parvals.c_str(), 0);
+    int paraddr = pd->getValueID(curr_section, parname);
+    /* FIXME: Check if we don't have the corresponding index!! */
+    setValue(curr_section, paraddr, val);
+    /*    std::cerr << "FIXME: read logic not implemented yet. Skipping "
+              << curr_section << "_" << parname << " " << val << " " << paraddr
+              << std::endl;
+    */
+  }
 }
 
 

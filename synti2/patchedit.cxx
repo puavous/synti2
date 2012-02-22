@@ -65,6 +65,8 @@ typedef struct {
 
 /* Application logic that needs to be accessed globally */
 int curr_patch = 0;
+Fl_Button* button_send_all = NULL;
+Fl_Input* widget_patch_name = NULL;
 std::vector<Fl_Valuator*> widgets_i3;
 std::vector<Fl_Valuator*> widgets_f;
 //std::vector<synti2::Patch> patches;
@@ -295,6 +297,7 @@ void init_jack_or_die(){
  *  global data.
  */
 void widgets_to_reflect_reality(){
+  widget_patch_name->value((*pbank)[curr_patch].getName().c_str());
   for (int i=0; i<widgets_i3.size(); i++){
     double val = (*pbank)[curr_patch].getValue("I3", i);
     widgets_i3[i]->value(val);
@@ -380,16 +383,25 @@ void cb_save_current(Fl_Widget* w, void* p){
 void cb_load_all(Fl_Widget* w, void* p){
   std::ifstream ifs(hack_filename.c_str());
   pbank->read(ifs);
+  button_send_all->do_callback();
+  widgets_to_reflect_reality();
 }
 
 void cb_load_current(Fl_Widget* w, void* p){
   std::ifstream ifs(hack_filename.c_str());
   (*pbank)[curr_patch].read(ifs);
+  button_send_all->do_callback();
+  widgets_to_reflect_reality();
 }
 
 void cb_exit(Fl_Widget* w, void* p){
   ((Fl_Window*)p)->hide();
 }
+
+void cb_patch_name(Fl_Widget* w, void* p){
+  pbank->at(curr_patch).setName(((Fl_Input*)w)->value());
+}
+
 
 /** Builds the main window with widgets reflecting a patch description. */
 Fl_Window *build_main_window(synti2::PatchDescr *pd){
@@ -401,7 +413,8 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   Fl_Value_Input *patch = new Fl_Value_Input(50,20,40,25,"Patch");
   patch->callback(cb_change_patch);
 
-  Fl_Input *pname = new Fl_Input(150,20,90,25,"Name");
+  widget_patch_name = new Fl_Input(150,20,90,25,"Name");
+  widget_patch_name->callback(cb_patch_name);
 
   int px=280, py=20, w=120, h=25, sp=2;
   Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end current");
@@ -409,6 +422,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
 
   box = new Fl_Button(px + 1*(w+sp),py,w,h,"Send al&l");
   box->callback(cb_send_all); box->labelsize(17); 
+  button_send_all = box;
 
   px += w/2;
   box = new Fl_Button(px + 2*(w+sp),py,w,h,"Save current");

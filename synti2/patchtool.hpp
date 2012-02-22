@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstdlib>
 
 namespace synti2{
 
@@ -41,6 +42,8 @@ namespace synti2{
   public:
     std::string getDescription(){return description;}
     std::string getName(){return name;}
+    float getMin(){return std::strtod(min.c_str(), 0);}
+    float getMax(){return std::strtod(max.c_str(), 0);}
   };
 
 
@@ -64,6 +67,10 @@ namespace synti2{
 
     /** Returns the almost-human-readable descriptive text. */
     std::string getDescription(std::string type, int idx);
+    float getMin(std::string type, int idx){
+      return params[type][idx].getMin();}
+    float getMax(std::string type, int idx){
+      return params[type][idx].getMax();}
 
     /** Returns the index of "name" in map["type"]. */
     int getValueID(std::string type, std::string name){

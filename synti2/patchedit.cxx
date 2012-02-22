@@ -437,7 +437,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   box = new Fl_Button(px + 5*(w+sp),py,w,h,"Load all");
   box->callback(cb_load_all); box->labelsize(17);
 
-  px += w;
+  px += w/2;
   box = new Fl_Button(px + 6*(w+sp),py,w,h,"&Quit");
   box->callback(cb_exit); box->argument((long)window); box->labelsize(17); 
 
@@ -465,7 +465,9 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
       Fl_Value_Slider *vsf = 
         new Fl_Value_Slider(px+col*400,py+row*(h+sp),w,h);
       widgets_f.push_back(vsf);
-      vsf->bounds(-1.27,1.27); vsf->precision(2);
+      /* FIXME: think? */
+      vsf->bounds(pd->getMin("F",i),pd->getMax("F",i)); 
+      vsf->precision(2);
       vsf->type(FL_HOR_NICE_SLIDER);
       vsf->label(pd->getDescription("F",i).c_str());
       vsf->align(FL_ALIGN_RIGHT);

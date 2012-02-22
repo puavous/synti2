@@ -84,8 +84,8 @@ synti2::ParamDescr::ParamDescr(std::string line, std::string sect){
 synti2::Patchtool::Patchtool(std::string fname){
   std::ifstream ifs(fname.c_str());  
   patch_description = new PatchDescr(ifs);
-  /* Output for debug purposes only: */
-  patch_description->headerFileForC(std::cout);
+  //  /* Output for debug purposes only: */
+  //  patch_description->headerFileForC(std::cout);
 }
 
 void

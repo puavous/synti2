@@ -136,6 +136,12 @@ synti2::Patch::write(std::ostream &os){
 }
 
 void 
+synti2::Patch::read(std::istream &is){
+  std::cerr << "FIXME: Reading to be implemented" << std::endl;
+}
+
+
+void 
 synti2::Patch::setValue(std::string type, int idx, float value){
   (values[type])[idx] = value;
 }

@@ -83,7 +83,7 @@ namespace synti2{
      *  initialized as zeros.
      */
     Patch(PatchDescr *ipd);
-    void read(std::istream &is) {};
+    void read(std::istream &is);
     void write(std::ostream &os);
     void setValueByName(std::string type, std::string name, float value)
     {};
@@ -101,6 +101,7 @@ namespace synti2{
   class PatchBank : public std::vector<Patch> {
   public:
     void write(std::ostream &os){for(int i=0;i<size();i++) at(i).write(os);}
+    void read(std::istream &is){for(int i=0;i<size();i++) at(i).read(is);}
   };
 
   /** Individual value of a parameter. Hmm.. necessary? Value can be

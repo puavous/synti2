@@ -48,6 +48,7 @@
 #include <signal.h>
 
 #include <iostream>
+#include <fstream>
 
 #include "patchtool.hpp"
 
@@ -80,6 +81,8 @@ jack_port_t *inmidi_port;
 jack_port_t *outmidi_port;
 unsigned long sr;
 const char * client_name = "synti2editor";
+
+std::string hack_filename = "hack_patches.attempt";
 
 /* A small buffer for building one message... FIXME: local to the build func?*/
 unsigned char sysex_build_buf[] = {0xF0, 0x00, 0x00, 0x00,
@@ -365,17 +368,23 @@ void cb_new_i3_value(Fl_Widget* w, void* p){
 }
 
 void cb_save_all(Fl_Widget* w, void* p){
-  std::cout << "Save all not yet implemented" << std::endl;
-  pbank->write(std::cout);
+  std::ofstream ofs(hack_filename.c_str(), std::ios::trunc);
+  pbank->write(ofs);
 }
 
 void cb_save_current(Fl_Widget* w, void* p){
-  std::cout << "As of yet, writing to stdout:" << std::endl;
-  (*pbank)[curr_patch].write(std::cout);
+  std::ofstream ofs(hack_filename.c_str(), std::ios::trunc);
+  (*pbank)[curr_patch].write(ofs);
 }
 
-void cb_load(Fl_Widget* w, void* p){
-  std::cout << "Load not yet implemented" << std::endl;
+void cb_load_all(Fl_Widget* w, void* p){
+  std::ifstream ifs(hack_filename.c_str());
+  pbank->read(ifs);
+}
+
+void cb_load_current(Fl_Widget* w, void* p){
+  std::ifstream ifs(hack_filename.c_str());
+  (*pbank)[curr_patch].read(ifs);
 }
 
 void cb_exit(Fl_Widget* w, void* p){
@@ -408,8 +417,14 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   box = new Fl_Button(px + 3*(w+sp),py,w,h,"&Save all");
   box->callback(cb_save_all); box->labelsize(17); 
 
+  box = new Fl_Button(px + 4*(w+sp),py,w,h,"Load current");
+  box->callback(cb_load_current); box->labelsize(17); 
+
+  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Load all");
+  box->callback(cb_load_all); box->labelsize(17);
+
   px += w;
-  box = new Fl_Button(px + 4*(w+sp),py,w,h,"&Quit");
+  box = new Fl_Button(px + 6*(w+sp),py,w,h,"&Quit");
   box->callback(cb_exit); box->argument((long)window); box->labelsize(17); 
 
   /* Parameters Valuator Widgets */

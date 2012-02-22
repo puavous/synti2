@@ -633,6 +633,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
     pat->ipar3[ir] = *data;
+    jack_info("Rcv patch %d I3 param %d: %d", offset & 0x7f, ir, *data);
   } else if (opcode==2) {
     /* Receive one 7-bit parameter at location (patch,i7par_index) */
     pat = s->patch + (offset & 0x7f); 
@@ -648,7 +649,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
     decoded *= .001f;                            /* default e-3 */
     for (a=0; a < ((data[0] & 0x0c)>>2); a++) decoded *= 10.f;  /* or more */
     pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
-    jack_info("Rcv at %d %d: %f", offset & 0x7f, ir, decoded);
+    jack_info("Rcv patch %d F param %d: %f", offset & 0x7f, ir, decoded);
 #endif
   } else {
     /* Unknown opcode - should be an error. */

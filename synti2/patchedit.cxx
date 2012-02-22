@@ -155,12 +155,12 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
     return 0;
   case 1:
     intval = sm->value;
-    if (intval > 0x07) jack_error("Excess 3bit value! %d", intval);
+    if (intval > 0x07) jack_error("Too large to be 3bit value! %d", intval);
     sm->actual = (*buf = (intval &= 0x07));
     return 1;
   case 2:
     intval = sm->value;
-    if (intval > 0x7f) jack_error("Excess 7bit value! %d", intval);
+    if (intval > 0x7f) jack_error("Too large to be 7bit value! %d", intval);
     sm->actual = (*buf = (intval &= 0x7f));
     return 1;
   case 3:
@@ -238,84 +238,6 @@ process (jack_nframes_t nframes, void *arg)
   return 0;
 }
 
-/** Updates widgets to current values of the current patch. Works on
- *  global data.
- */
-void widgets_to_reflect_reality(){
-  for (int i=0; i<widgets_i3.size(); i++){
-    double val = (*pbank)[curr_patch].getValue("I3", i);
-    widgets_i3[i]->value(val);
-  }
-  for (int i=0; i<widgets_f.size(); i++){
-    double val = (*pbank)[curr_patch].getValue("F", i);
-    widgets_f[i]->value(val);
-  }
-}
-
-/** Sends a value over to the synth via the jack output port. */
-void send_to_jack_port(int type, int idx, int patch, float val){
-  /*
-  std::cout << "Send " << val 
-            << " to " << idx
-            << " of " << patch << std::endl;*/
-  s2ed_msg_t msg = {0,0,0,0};
-  msg.type = type;
-  msg.location = idx << 8 + patch;
-  msg.value = val;
-  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
-
-}
-
-/** Sends one complete patch to the synth. */
-void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
-  for (int i=0; i<patch.getNPars("I3"); i++){
-    send_to_jack_port(1, i, patnum, patch.getValue("I3",i));
-  }
-  for (int i=0; i<patch.getNPars("F"); i++){
-    send_to_jack_port(3, i, patnum, patch.getValue("F",i));
-  }
-}
-
-/** Sends all data to MIDI. (FIXME: when it's done) */
-void cb_send_all(Fl_Widget* w, void* p){
-  for(int ip=0; ip<pbank->size(); ip++){
-    send_patch_to_jack_port((*pbank)[ip], ip);
-  }
-  //  s2ed_msg_t msg = {3,0x030a,-3.14159265f,4.5f};
-  //  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
-  std::cout << "ja tuota. FIXME: implement this and others" << std::endl;
-}
-
-
-/** Sends and stores (FIXME: implement store) an "F" value */
-void cb_change_patch(Fl_Widget* w, void* p){
-  double val = ((Fl_Valuator*)w)->value();
-  //  int d = (long)p;
-  curr_patch = val;
-  widgets_to_reflect_reality();
-}
-
-
-/** Sends and stores an "F" value */
-void cb_new_f_value(Fl_Widget* w, void* p){
-  double val = ((Fl_Valuator*)w)->value();
-  int d = (long)p;
-
-  (*pbank)[curr_patch].setValue("F",d,val);
-  send_to_jack_port(3, d, curr_patch, val);
-}
-
-/** Sends and stores an "I3" value */
-void cb_new_i3_value(Fl_Widget* w, void* p){
-  double val = ((Fl_Valuator*)w)->value();
-  int d = (long)p;
-
-  (*pbank)[curr_patch].setValue("I3",d,val);
-  send_to_jack_port(1, d, curr_patch, val);
-}
-
-
-
 /** Initializes jack stuff. Exits upon failure. */
 void init_jack_or_die(){
   jack_status_t status;
@@ -366,6 +288,99 @@ void init_jack_or_die(){
 }
 
 
+/** Updates widgets to current values of the current patch. Works on
+ *  global data.
+ */
+void widgets_to_reflect_reality(){
+  for (int i=0; i<widgets_i3.size(); i++){
+    double val = (*pbank)[curr_patch].getValue("I3", i);
+    widgets_i3[i]->value(val);
+  }
+  for (int i=0; i<widgets_f.size(); i++){
+    double val = (*pbank)[curr_patch].getValue("F", i);
+    widgets_f[i]->value(val);
+  }
+}
+
+/** Sends a value over to the synth via the jack output port. */
+void send_to_jack_port(int type, int idx, int patch, float val){
+  /*
+  std::cout << "Send " << val 
+            << " to " << idx
+            << " of " << patch << std::endl;*/
+  s2ed_msg_t msg = {0,0,0,0};
+  msg.type = type;
+  msg.location = idx << 8 + patch;
+  msg.value = val;
+  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+}
+
+/** Sends one complete patch to the synth over jack MIDI. */
+void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
+  for (int i=0; i<patch.getNPars("I3"); i++){
+    send_to_jack_port(1, i, patnum, patch.getValue("I3",i));
+  }
+  for (int i=0; i<patch.getNPars("F"); i++){
+    send_to_jack_port(3, i, patnum, patch.getValue("F",i));
+  }
+}
+
+/* User interface callback functions. */
+
+/** Sends all patches of the patch bank to the synth over jack MIDI. */
+void cb_send_all(Fl_Widget* w, void* p){
+  for(int ip=0; ip<pbank->size(); ip++){
+    send_patch_to_jack_port((*pbank)[ip], ip);
+  }
+}
+
+/** Sends the current patch to the synth over jack MIDI. */
+void cb_send_current(Fl_Widget* w, void* p){
+  send_patch_to_jack_port((*pbank)[curr_patch], curr_patch);
+}
+
+/** Changes the current patch, and updates other widgets. */
+void cb_change_patch(Fl_Widget* w, void* p){
+  double val = ((Fl_Valuator*)w)->value();
+  curr_patch = val;
+  widgets_to_reflect_reality();
+}
+
+/** Sends and stores an "F" value */
+void cb_new_f_value(Fl_Widget* w, void* p){
+  double val = ((Fl_Valuator*)w)->value();
+  int d = (long)p;
+
+  (*pbank)[curr_patch].setValue("F",d,val);
+  send_to_jack_port(3, d, curr_patch, val);
+}
+
+/** Sends and stores an "I3" value */
+void cb_new_i3_value(Fl_Widget* w, void* p){
+  double val = ((Fl_Valuator*)w)->value();
+  int d = (long)p;
+
+  (*pbank)[curr_patch].setValue("I3",d,val);
+  send_to_jack_port(1, d, curr_patch, val);
+}
+
+void cb_save_all(Fl_Widget* w, void* p){
+  std::cout << "Save all not yet implemented" << std::endl;
+}
+
+void cb_save_current(Fl_Widget* w, void* p){
+  std::cout << "Save current not yet implemented" << std::endl;
+}
+
+void cb_load(Fl_Widget* w, void* p){
+  std::cout << "Load not yet implemented" << std::endl;
+}
+
+void cb_exit(Fl_Widget* w, void* p){
+  ((Fl_Window*)p)->hide();
+}
+
+/** Builds the main window with widgets reflecting a patch description. */
 Fl_Window *build_main_window(synti2::PatchDescr *pd){
   /* Overall Operation Buttons */
   Fl_Window *window = new Fl_Window(800, 600);
@@ -377,19 +392,26 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
 
   Fl_Input *pname = new Fl_Input(150,20,90,25,"Name");
 
-  Fl_Button *box = new Fl_Button(280,20,120,25,"Send current");
-  box->callback(cb_send_all); box->labelsize(17); 
-  box = new Fl_Button(600,20,200,25,"&Save");
-  //  box->callback(cb_send); box->labelsize(17); 
+  int px=280, py=20, w=120, h=25, sp=2;
+  Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end current");
+  box->callback(cb_send_current); box->labelsize(17); 
 
-  box = new Fl_Button(420,20,120,25,"Send al&l");
+  box = new Fl_Button(px + 1*(w+sp),py,w,h,"Send al&l");
   box->callback(cb_send_all); box->labelsize(17); 
-  box = new Fl_Button(600,20,200,25,"&Save");
-  //  box->callback(cb_send); box->labelsize(17); 
 
+  px += w/2;
+  box = new Fl_Button(px + 2*(w+sp),py,w,h,"Save current");
+  box->callback(cb_save_current); box->labelsize(17); 
+
+  box = new Fl_Button(px + 3*(w+sp),py,w,h,"&Save all");
+  box->callback(cb_save_all); box->labelsize(17); 
+
+  px += w;
+  box = new Fl_Button(px + 4*(w+sp),py,w,h,"&Quit");
+  box->callback(cb_exit); box->argument((long)window); box->labelsize(17); 
 
   /* Parameters Valuator Widgets */
-  int px=5, py=50, w=30, h=20, sp=2;
+  px=5; py=50; w=30; h=20; sp=2;
   for (int i=0; i < pd->nPars("I3"); i++){
     /* Need to store all ptrs and have attach_to_values() */
     Fl_Value_Input *vi = new Fl_Value_Input(px+i*(w+sp),py,w,h);
@@ -445,6 +467,8 @@ int main(int argc, char **argv) {
   window->show(argc, argv);
 
   retval = Fl::run();
+
+  std::cout << "Cleaning up." << std::endl;
 
   jack_ringbuffer_free(global_rb);
   jack_client_close(client);

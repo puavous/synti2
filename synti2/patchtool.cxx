@@ -59,7 +59,7 @@ synti2::PatchDescr::load_patch_data(std::istream &ifs){
 }
 
 int
-synti2::PatchDescr::nPars(std::string type){
+synti2::PatchDescr::nPars(std::string type) {
   std::vector<ParamDescr> &v = params[type];
   return v.size();
 }

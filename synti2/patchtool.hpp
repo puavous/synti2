@@ -51,10 +51,13 @@ namespace synti2{
   public:
     /** Constructs a patch description from a text spec. */
     PatchDescr(std::istream &inputs);
+
     /** Returns the number of parameters of a certain type. */
     int nPars(std::string type);
-    /** Prints out a complete C-header file that contains the descriptions. */
+
+    /** Prints out a complete C-header file that contains the descriptions.*/
     void headerFileForC(std::ostream &os);
+
     /** Returns the almost-human-readable descriptive text. */
     std::string getDescription(std::string type, int idx);
 

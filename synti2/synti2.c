@@ -26,6 +26,7 @@ typedef unsigned char byte_t;
  * synth. Jack headers are not necessary otherwise...
  */
 #ifdef JACK_MIDI
+#include "jack/control.h"
 #include "jack/jack.h"
 #include "jack/midiport.h"
 #include <errno.h>

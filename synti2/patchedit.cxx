@@ -335,6 +335,8 @@ void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
 
 /** Sends all patches of the patch bank to the synth over jack MIDI. */
 void cb_send_all(Fl_Widget* w, void* p){
+/*FIXME: There seems to be some curious error here... send_current
+  works but this doesn't. Let's find the mistake...*/
   for(int ip=0; ip < pbank->size(); ip++){
     std::cerr << "Sending " << ip << std::endl;
     send_patch_to_jack_port((*pbank)[ip], ip);

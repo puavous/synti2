@@ -150,6 +150,7 @@ struct synti2_player {
 typedef struct synti2_patch {
   int ipar3[SYNTI2_I3_NPARS];
   int ipar7[SYNTI2_I7_NPARS];
+  float fenvpar[10]; /* FIXME: This zero-env hack OK? */
   float fpar[SYNTI2_F_NPARS];
 } synti2_patch;
 
@@ -624,7 +625,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
         decoded += (adjust_byte & 0x0f) * 0.001f;
 #endif
       
-        pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+        pat->fpar[ir] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
       }
       data += 3*stride;
     }
@@ -649,7 +650,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
     decoded = ((data[0] & 0x40)>0) ? -decoded : decoded;  /* sign */
     decoded *= .001f;                            /* default e-3 */
     for (a=0; a < ((data[0] & 0x0c)>>2); a++) decoded *= 10.f;  /* or more */
-    pat->fpar[ir+10] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+    pat->fpar[ir] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
     jack_info("Rcv patch %d F param %d: %f", offset & 0x7f, ir, decoded);
 #endif
   } else {
@@ -711,6 +712,9 @@ synti2_handleInput(synti2_synth *s,
 
     } else {
       /* Other MIDI messages are silently ignored. */
+      /* FIXME: Could I use only 3 bits for the message type? Then I
+       * could have 32 individually addressable channels!
+       */
     }
   }
   pl->frames_done = upto_frames;
@@ -801,8 +805,8 @@ synti2_updateEnvelopeStages(synti2_synth *s){
         }
 #endif
 
-        nexttime = pat->fpar[ipastend - s->estage[iv][ie] * 2 + 0];
-        nextgoal = pat->fpar[ipastend - s->estage[iv][ie] * 2 + 1];
+        nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
+        nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
         s->eprog[iv][ie].aa = s->eprog[iv][ie].f;
         s->eprog[iv][ie].bb = nextgoal;
         if (nexttime <= 0.0f) {

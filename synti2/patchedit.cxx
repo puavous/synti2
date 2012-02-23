@@ -316,7 +316,7 @@ void send_to_jack_port(int type, int idx, int patch, float val){
             << " of " << patch << std::endl;*/
   s2ed_msg_t msg = {0,0,0,0};
   msg.type = type;
-  msg.location = idx << 8 + patch;
+  msg.location = (idx << 8) + patch;
   msg.value = val;
   size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
 }

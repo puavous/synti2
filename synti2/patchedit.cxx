@@ -64,6 +64,13 @@ typedef struct {
 
 
 /* Application logic that needs to be accessed globally */
+Fl_Color colortab[] = {
+  Fl_Color(246), Fl_Color(254), Fl_Color(241), Fl_Color(254),
+  Fl_Color(247), Fl_Color(255), Fl_Color(242), Fl_Color(253),
+  Fl_Color(248), Fl_Color(253), Fl_Color(243), Fl_Color(252),
+  Fl_Color(249), Fl_Color(252), Fl_Color(244), Fl_Color(251),
+  Fl_Color(249), Fl_Color(252), Fl_Color(244), Fl_Color(251),
+};
 int curr_patch = 0;
 Fl_Button* button_send_all = NULL;
 Fl_Input* widget_patch_name = NULL;
@@ -408,10 +415,20 @@ void cb_patch_name(Fl_Widget* w, void* p){
 
 /** Builds the main window with widgets reflecting a patch description. */
 Fl_Window *build_main_window(synti2::PatchDescr *pd){
+  /* Color scheme */
+  /*  for (int i=0; i<16; i++){
+  Fl::set_color(FL_LIGHT3, 0x5f,0x5f,0xff);
+  fl_color(FL_LIGHT3);
+
+    colortab[i].
+    }*/
+
   /* Overall Operation Buttons */
   Fl_Window *window = new Fl_Window(1200, 600);
   window->resizable(window);
+
   Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,600);
+  //  scroll->color(FL_WHITE);
 
   Fl_Value_Input *patch = new Fl_Value_Input(50,20,40,25,"Patch");
   patch->callback(cb_change_patch);
@@ -451,12 +468,13 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     Fl_Value_Input *vi = new Fl_Value_Input(px+i*(w+sp),py,w,h);
     widgets_i3.push_back(vi);
     vi->bounds(0,7); vi->precision(0); vi->argument(i);
+    vi->color(colortab[pd->getGroup("I3",i)]);
     vi->tooltip(pd->getDescription("I3", i).c_str());
     vi->argument(i);
     vi->callback(cb_new_i3_value);
   }
 
-  py=80; w=256;
+  py=80; w=340;
   int npars = pd->nPars("F");
   int ncols = 3;
   int nrows = (npars / ncols) + 1;
@@ -470,7 +488,8 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
       widgets_f.push_back(vsf);
       /* FIXME: think? */
       vsf->bounds(pd->getMin("F",i),pd->getMax("F",i)); 
-      vsf->precision(2);
+      vsf->precision(pd->getPrecision("F",i));
+      vsf->color(colortab[pd->getGroup("F",i)]);
       vsf->type(FL_HOR_NICE_SLIDER);
       vsf->label(pd->getDescription("F",i).c_str());
       vsf->align(FL_ALIGN_RIGHT);

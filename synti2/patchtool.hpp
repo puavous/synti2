@@ -39,11 +39,15 @@ namespace synti2{
     std::string description;
     std::string min;
     std::string max;
+    std::string precision;
+    std::string group;
   public:
     std::string getDescription(){return description;}
     std::string getName(){return name;}
     float getMin(){return std::strtod(min.c_str(), 0);}
     float getMax(){return std::strtod(max.c_str(), 0);}
+    int getPrecision(){return std::strtol(precision.c_str(), 0, 0);}
+    int getGroup(){return std::strtol(group.c_str(), 0, 0);}
   };
 
 
@@ -71,6 +75,11 @@ namespace synti2{
       return params[type][idx].getMin();}
     float getMax(std::string type, int idx){
       return params[type][idx].getMax();}
+    int getPrecision(std::string type, int idx){
+      return params[type][idx].getPrecision();}
+    int getGroup(std::string type, int idx){
+      return params[type][idx].getGroup();}
+
 
     /** Returns the index of "name" in map["type"]. */
     int getValueID(std::string type, std::string name){

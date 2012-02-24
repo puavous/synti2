@@ -79,6 +79,8 @@ synti2::ParamDescr::ParamDescr(std::string line, std::string sect){
   description = line_chop(line);
   min = line_chop(line);
   max = line_chop(line);
+  precision = line_chop(line);
+  group = line_chop(line);
 }
 
 synti2::Patchtool::Patchtool(std::string fname){

@@ -409,9 +409,9 @@ void cb_patch_name(Fl_Widget* w, void* p){
 /** Builds the main window with widgets reflecting a patch description. */
 Fl_Window *build_main_window(synti2::PatchDescr *pd){
   /* Overall Operation Buttons */
-  Fl_Window *window = new Fl_Window(800, 600);
+  Fl_Window *window = new Fl_Window(1200, 600);
   window->resizable(window);
-  Fl_Scroll *scroll = new Fl_Scroll(0,0,800,600);
+  Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,600);
 
   Fl_Value_Input *patch = new Fl_Value_Input(50,20,40,25,"Patch");
   patch->callback(cb_change_patch);
@@ -456,7 +456,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     vi->callback(cb_new_i3_value);
   }
 
-  py=80; w=30*8;
+  py=80; w=256;
   int npars = pd->nPars("F");
   int ncols = 3;
   int nrows = (npars / ncols) + 1;

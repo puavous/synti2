@@ -18,7 +18,7 @@ LIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 /usr/lib/libGLU.so.1
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
 HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL   -DNO_LOOPING_ENVELOPES \
-	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX -nostdlib
+	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX -DNO_OPTIONAL_ALGORITHMS -nostdlib
 
 
 

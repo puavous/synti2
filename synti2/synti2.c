@@ -207,6 +207,8 @@ struct synti2_synth {
   int note[NVOICES];
   int velocity[NVOICES];
 
+  float outp[NVOICES][NOSCILLATORS+1+1]; /*"zero", oscillator outputs, noise*/
+
   /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
   synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   synti2_patch patch[NPATCHES];   /* The sound parameters per part*/
@@ -862,10 +864,14 @@ synti2_render(synti2_synth *s,
               int nframes)
 {
   int iframe, ii, iv;
+  int iosc;
   float interm;
   int wtoffs;
   synti2_player *pl;
   synti2_patch *pat;
+
+  float *sigin;  /* Input signal table during computation. */
+  float *signal; /* Output signal destination during computation. */
 
   pl = s->pl;
   
@@ -892,26 +898,44 @@ synti2_render(synti2_synth *s,
         /* Hmm.. these not needed if we hardcode the patch algorithm!! */
         pat = s->patchofvoice[iv];
         if (pat==NULL) continue;
+
         /* if (s->partofvoice[iv] < 0) continue; Unsounding. FIXME: how? */
-        /* Produce sound :) First modulator, then carrier*/
+
         /* Wavetable definitely! Could bit-shift the counter... */
-        wtoffs = (unsigned int)(s->c[iv*NOSCILLATORS+1].fr * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
-        interm  = s->wave[wtoffs];
-        //interm *= interm * interm; /* Hack!! BEAUTIFUL!!*/
-        interm *= (s->velocity[iv]/128.0f);  /* Velocity sensitivity */
-        interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP2]].f);
-        wtoffs = (unsigned int)((s->c[iv*NOSCILLATORS+0].fr + interm) * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
-        interm  = s->wave[wtoffs];
-        interm *= s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1]].f;
 
+        /*
         RandSeed *= 16807;
-
-        interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
+        s->outp[iv][5] = s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
           * (float)RandSeed * 4.6566129e-010f; /*noise*/
 
+        sigin  = signal = &(s->outp[iv][0]);
+        RandSeed *= 16807;
+        sigin[5] = s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
+          * pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
+          * (float)RandSeed * 4.6566129e-010f; /*noise*/
+        
+        for(iosc = 0; iosc < NOSCILLATORS; iosc++){
+          signal++; /* Go to next output slot. */
+          wtoffs = (unsigned int)
+            ((s->c[iv*NOSCILLATORS+iosc].fr 
+              + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* FM modulator */
+              * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
+          interm  = s->wave[wtoffs];
+
+          /*interm *= (s->velocity[iv]/128.0f);  /* Velocity sensitivity */
+          /* could reorganize I3 parameters for shorter code here(?): */
+          interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
+          interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
+          interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
+          *signal = interm;
+        }
+        /* result is both in *signal and in interm (like before). */
         buffer[iframe+ii] += interm;
       }      
       buffer[iframe+ii] /= NVOICES;
+
+      //      buffer[iframe+ii] = tanh(buffer[iframe+ii]); /* Hack! beautiful too! */
+
       
       //buffer[iframe+ii] = sin(32*buffer[iframe+ii]); /* Hack! beautiful too!*/
       //buffer[iframe+ii] = tanh(16*buffer[iframe+ii]); /* Hack! beautiful too!*/

@@ -63,6 +63,9 @@
 # DANGER: all-zero times inside loop lead to infinite iteration!!!
   0 0 0 0 0 0
 
+# algorithm and unused
+  0 0
+
 # Padding (unused)  .. no more, after adding envelopes.
 
 # 7-bit integer parameters:
@@ -140,6 +143,11 @@
 # Envelope loop-how-many-stages-back for each envelope.
 # DANGER: all-zero times inside loop lead to infinite iteration!!!
   0 0 0 0 0 0
+
+# algorithm and unused
+  0 0
+
+
 
 # Padding (unused)  .. no more, after adding envelopes.
 
@@ -221,6 +229,11 @@
 # Padding (unused)
                              0     0
 
+# algorithm and unused
+  0 0
+
+
+
 # 7-bit integer parameters:
 #
 # (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
@@ -299,6 +312,11 @@
 
 # Padding (unused)
                              0 0
+
+# algorithm and unused
+  0 0
+
+
 
 # 7-bit integer parameters:
 #
@@ -392,6 +410,11 @@
 # Padding (unused)
                              0     0
 
+# algorithm and unused
+  0 0
+
+
+
 # 7-bit integer parameters:
 #
 # (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
@@ -471,6 +494,11 @@
 # Padding (unused)
                              0     0
 
+# algorithm and unused
+  0 0
+
+
+
 # 7-bit integer parameters:
 #
 # (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
@@ -549,6 +577,11 @@
 
 # Padding (unused)
                              0 0
+
+# algorithm and unused
+  0 0
+
+
 
 # 7-bit integer parameters:
 #
@@ -633,6 +666,11 @@
 # Padding (unused)
                              0     0
 
+# algorithm and unused
+  0 0
+
+
+
 # 7-bit integer parameters:
 #
 # (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
@@ -712,6 +750,11 @@
 # Padding (unused)
                              0     0
 
+# algorithm and unused
+  0 0
+
+
+
 # 7-bit integer parameters:
 #
 # (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
@@ -787,6 +830,9 @@
 # Envelope loop-how-many-stages-back for each envelope.
 # DANGER: all-zero times inside loop lead to infinite iteration!!!
   0 0 0 0 0 0
+
+# algorithm and unused
+  0 0
 
 # Padding (unused)  .. no more, after adding envelopes.
 
@@ -865,6 +911,10 @@
 # Envelope loop-how-many-stages-back for each envelope.
 # DANGER: all-zero times inside loop lead to infinite iteration!!!
   0 0 0 0 0 0
+
+# algorithm and unused
+  0 0
+
 
 # Padding (unused)  .. no more, after adding envelopes.
 
@@ -947,6 +997,11 @@
 # Padding (unused)
                              0     0
 
+# algorithm and unused
+  0 0
+
+
+
 # 7-bit integer parameters:
 #
 # (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
@@ -1025,6 +1080,11 @@
 
 # Padding (unused)
                              0 0
+
+# algorithm and unused
+  0 0
+
+
 
 # 7-bit integer parameters:
 #
@@ -1106,6 +1166,11 @@
 
 # Padding (unused)
                              0 0
+
+# algorithm and unused
+  0 0
+
+
 
 # 7-bit integer parameters:
 #

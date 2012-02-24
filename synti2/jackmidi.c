@@ -114,7 +114,7 @@ main (int argc, char *argv[])
   sr = jack_get_sample_rate (client);
 
   /* My own soft synth to be created. */
-  global_synth = synti2_create(sr, hack_patch_sysex, hacksong_data);
+  global_synth = synti2_create(sr, NULL, hacksong_data);
   if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");
     goto error;

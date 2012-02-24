@@ -78,10 +78,18 @@ synti2_read_jack_midi(synti2_synth *s,
 #define SYNTI2_I3_ELOOP5 14
 #define SYNTI2_I3_ELOOP6 15
 
+#define SYNTI2_I3_FMTO1 16
+#define SYNTI2_I3_FMTO2 17
+#define SYNTI2_I3_FMTO3 18
+#define SYNTI2_I3_FMTO4 19
+#define SYNTI2_I3_ADDTO1 20
+#define SYNTI2_I3_ADDTO2 21
+#define SYNTI2_I3_ADDTO3 22
+#define SYNTI2_I3_ADDTO4 23
 
 /*FIXME: We could have some wavetable info here! */
 
-#define SYNTI2_I3_NPARS 16
+#define SYNTI2_I3_NPARS 24
 
 /* Eight-bit integer parameters (range 0-127) */
 #define SYNTI2_I7_NPARS 16

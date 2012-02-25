@@ -59,9 +59,9 @@ patchedit: patchedit.cxx patchtool.hpp patchtool.cxx Makefile
 benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm
 
-jacktest: jackmidi.c synti2.c synti2.h synti2_jack.h synti2_jack.c \
+jsynti2: tests/jsynti2.c synti2.c synti2.h synti2_jack.h synti2_jack.c \
 		testdata.c Makefile
-	$(CC) $(CFLAGS) -DJACK_MIDI -o testi jackmidi.c synti2.c testdata.c \
+	$(CC) $(CFLAGS) -I./ -DJACK_MIDI -o jsynti2 tests/jsynti2.c synti2.c testdata.c \
 		synti2_jack.c \
 		`pkg-config --cflags --libs jack` -lm
 
@@ -117,6 +117,6 @@ clean:
 	-rm *~ *.o
 
 veryclean: clean
-	-rm *.payload testi sdltest tinytest piippitesti \
+	-rm *.payload jsynti2 sdltest tinytest piippitesti \
 		benchmark testdata.c misssify test.misss \
 		jmiditrans patchedit

@@ -55,7 +55,6 @@ patchedit: patchedit.cxx patchtool.hpp patchtool.cxx Makefile
 		patchedit.cxx patchtool.cxx -lfltk \
 		`pkg-config --cflags --libs jack`
 
-
 benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -I./ -o benchmark tests/benchmark.c synti2.c testdata.c -lm
 

@@ -33,9 +33,9 @@ synti2_player *global_player;
 
 /* FIXME: remove, after this works properly in the SDL test*/
 int global_hack_playeronly = 0;
-extern unsigned char hacksong_data[];
+/*extern unsigned char hacksong_data[];
 extern unsigned int hacksong_length;
-
+*/
 
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
@@ -114,7 +114,9 @@ main (int argc, char *argv[])
   sr = jack_get_sample_rate (client);
 
   /* My own soft synth to be created. */
-  global_synth = synti2_create(sr, NULL, hacksong_data);
+  /*global_synth = synti2_create(sr, patch_sysex, hacksong_data);*/
+  global_synth = synti2_create(sr, NULL, NULL);
+
   if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");
     goto error;

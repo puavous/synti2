@@ -2,6 +2,15 @@
 #ifndef SYNTI2_INCLUDED
 #define SYNTI2_INCLUDED
 
+/* FIXME: To do next: 
+
+   Separate jack-related stuff to its own synti2_jack.h
+
+   Separate the internals from the c file to synti2_guts.h
+
+   Make synti2_paramspec.h automatically with the patchtool class.
+*/
+
 typedef float synti2_smp_t;
 
 typedef struct synti2_synth synti2_synth;

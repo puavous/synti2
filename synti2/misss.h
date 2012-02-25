@@ -62,7 +62,9 @@
 #define MISSS_LAYER_NOTES_CVEL 0x01
 #define MISSS_LAYER_NOTES_CVEL_CPITCH 0x03
 /* TODO: Do I need two different controller commands, or could I use
- * just one, somehow parameterized to be either reset or ramp each? */
+ * just one, somehow parameterized to be either reset or ramp each? 
+ * Hmm... Hey: reset is a ramp with zero time, isn't it?! 
+ */
 #define MISSS_LAYER_CONTROLLER_RESETS 0x04
 #define MISSS_LAYER_CONTROLLER_RAMPS 0x05
 #define MISSS_LAYER_SYSEX_OR_ARBITRARY 0x06

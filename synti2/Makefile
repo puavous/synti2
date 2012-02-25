@@ -67,11 +67,18 @@ patchedit: tools/patchedit.cxx tools/patchtool.hpp tools/patchtool.cxx \
 benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -I./ -o benchmark tests/benchmark.c synti2.c testdata.c -lm
 
+genpar: tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
+	g++ -Itools/ -o $@ tools/genpar.cxx tools/patchtool.cxx
+
 jsynti2: $(SRCJSYNTI2) $(S2HEADERS) \
 		Makefile
 	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o jsynti2 \
 		$(SRCJSYNTI2) \
 		`pkg-config --cflags --libs jack` -lm
+
+include/synti2_params.h: genpar
+	./genpar src/patchdesign.dat $@
+
 
 testdata.c: patchbank.txt testi.mid tools/hacktac.py misssify Makefile
 	python tools/hacktac.py < patchbank.txt > testdata.c
@@ -127,4 +134,4 @@ clean:
 veryclean: clean
 	-rm *.payload jsynti2 sdltest tinytest piippitesti \
 		benchmark testdata.c misssify test.misss \
-		jmiditrans patchedit
+		jmiditrans patchedit genpar

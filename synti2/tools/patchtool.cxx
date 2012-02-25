@@ -86,14 +86,16 @@ synti2::ParamDescr::ParamDescr(std::string line, std::string sect){
 synti2::Patchtool::Patchtool(std::string fname){
   std::ifstream ifs(fname.c_str());  
   patch_description = new PatchDescr(ifs);
-  //  /* Output for debug purposes only: */
-  //  patch_description->headerFileForC(std::cout);
 }
 
 void
 synti2::PatchDescr::headerFileForC(std::ostream &os){
   std::map<std::string, std::vector<ParamDescr> >::iterator it;
-  os << "/** Parameter indices as C #defines */" << std::endl;
+  os << "/** Parameter indices as C #defines. " 
+     << " *  These have been automatically generated from the patch design"
+     << std::endl
+     << " *  specification file. More comments are available from there."
+     << " */" << std::endl;
   os << "#ifndef SYNTI2_PARAMETERS_H" << std::endl;
   os << "#define SYNTI2_PARAMETERS_H" << std::endl;
 

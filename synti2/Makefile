@@ -129,9 +129,12 @@ tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makef
 
 clean:
 
-	-rm *~ *.o
+	-rm `find . -name "*~"` *.o
 
 veryclean: clean
 	-rm *.payload jsynti2 sdltest tinytest piippitesti \
 		benchmark testdata.c misssify test.misss \
 		jmiditrans patchedit genpar
+
+veryveryclean: veryclean
+	-rm include/synti2_params.h

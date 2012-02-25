@@ -43,8 +43,8 @@ all: jacktest
 
 tools: misssify jmiditrans patchedit
 
-misssify: misssify.c Makefile
-	$(CC) $(CFLAGS) -Wextra -o misssify misssify.c -lm
+misssify: tools/misssify.c Makefile
+	$(CC) $(CFLAGS) -I./ -Wextra -o misssify tools/misssify.c -lm
 
 jmiditrans: tools/jmiditrans.c Makefile
 	$(CC) $(CFLAGS) -Wextra -o jmiditrans tools/jmiditrans.c \

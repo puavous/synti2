@@ -13,6 +13,8 @@
 
 typedef float synti2_smp_t;
 
+typedef unsigned char byte_t; 
+
 typedef struct synti2_synth synti2_synth;
 typedef struct synti2_player synti2_player;
 

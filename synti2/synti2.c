@@ -18,54 +18,22 @@
 #include <stdio.h>
 
 #include "synti2.h"
+#include "synti2_guts.h"
 #include "misss.h"
-
-typedef unsigned char byte_t; 
 
 /* Synti2 can be compiled as a Jack-MIDI compatible real-time soft
  * synth. Jack headers are not necessary otherwise...
  */
 #ifdef JACK_MIDI
-#include "jack/control.h"
-#include "jack/jack.h"
-#include "jack/midiport.h"
-#include <errno.h>
-#endif
-
+#include "synti2_jack.h"
 /* If any foreign MIDI protocol is used, note-offs should be converted
  * to our own protocol (also a well-known MIDI variant) in which
  * note-on with zero velocity means a note-off.
  */
-#ifdef JACK_MIDI
 #define DO_CONVERT_OFFS
 #endif
 
-/* Polyphony */
-#define NVOICES 32
 
-/* Multitimbrality */
-#define NPARTS 16
-
-/* Sound bank size (FIXME: separate the concept of patch and part!)*/
-#define NPATCHES 16
-
-/* Total number of "counters", i.e., oscillators/operators. */
-#define NCOUNTERS (NVOICES * NOSCILLATORS)
-
-/* Total number of envelopes */
-#define NENVS (NVOICES * (NENVPERVOICE+1))
-
-
-/* Maximum value of the counter type depends on C implementation, so
- * use limits.h -- TODO: Actually should probably use C99 and stdint.h !
- */
-#define MAX_COUNTER UINT_MAX
-/* The wavetable sizes and divisor-bitshift must be consistent. */
-#define WAVETABLE_SIZE 0x10000
-#define WAVETABLE_BITMASK 0xffff
-/* Hmm... is there some way to get the implementation-dependent
-   bit-count?*/
-#define COUNTER_TO_TABLE_SHIFT 16
 
 /* Number of inner loop iterations (audio frame evaluations) between
  * evaluating "slow-motion stuff" such as MIDI input and
@@ -79,140 +47,6 @@ typedef unsigned char byte_t;
  * TODO: test..
  */
 #define NINNERLOOP 8
-
-#define SYNTI2_MAX_SONGBYTES 30000
-#define SYNTI2_MAX_SONGEVENTS 15000
-
-
-/** I finally realized that unsigned ints will nicely loop around
- * (overflow) and as such they model an oscillator's phase pretty
- * nicely. Can I use them for other stuff as well? Seem fit for
- * envelopes with only a little extra (clamping and stop flag). Could
- * I use just one huge counter bank for everything? Looks that
- * way. There seems to be a 30% speed hit for computing all the
- * redundant stuff. But a little bit smaller code, and the source
- * looks pretty nice too. TODO: think if it is more efficient to put
- * values and deltas in separate arrays. Probably, if you think of a
- * possible assembler implementation with multimedia vector
- * instructions(?). Or maybe not? Look at the compiler output...
- *
- * TODO: Think. Signed integers would overflow just as nicely. Could
- * it be useful to model things in -1..1 range instead of 0..1 ?
- *
- * TODO: Maybe separate functions for oscillators and envelopes could
- * still be used if they would compress nicely...
- */
-typedef struct {
-  unsigned int detect;
-  unsigned int val;
-  unsigned int delta;
-  float f;  /* current output value (interpolant) */
-  float ff;  /* current output value (1..0) */
-  float fr;  /* current output value (0..1) */
-  float aa; /* for interpolation start */
-  float bb; /* for interpolation end */
-} counter;
-
-/* Events shall form a singly linked list. TODO: Is the list code too
- * complicated? Use just tables with O(n^2) pre-ordering instead??
- * Hmm.. after some futile attempts, I was unable to squeeze a smaller
- * code from any other approach, so I'm leaving the list as it is now.
- */
-typedef struct synti2_player_ev synti2_player_ev;
-
-struct synti2_player_ev {
-  const byte_t *data;
-  synti2_player_ev *next;
-  unsigned int frame;
-  int len;
-};
-
-struct synti2_player {
-  synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
-  synti2_player_ev *insloc;  /* (one loc yielded larger exe on my first try)*/
-  int fpt;          /* Frames per tick. integer => tempos inexact, sry! */
-                    /* Hmm: Could I use some "automagic" tick counter? */
-  int tpq;          /* Ticks per quarter (no support for SMPTE). */
-  synti2_player_ev *freeloc; /*pointer to next free event structure*/
-  int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
-  int sr;           /* Sample rate. */
-
-  int idata;        /* index of next free data location */
-
-  /* Only playable events. The first will be at evpool[0]! */
-  synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
-  /* Data for events. */
-  byte_t data[SYNTI2_MAX_SONGBYTES];
-};
-
-
-/* The patch. The way things sound. */
-typedef struct synti2_patch {
-  int ipar3[SYNTI2_I3_NPARS];
-  int ipar7[SYNTI2_I7_NPARS];
-  float fenvpar[10]; /* FIXME: This zero-env hack OK? */
-  float fpar[SYNTI2_F_NPARS];
-} synti2_patch;
-
-/** TODO: Not much is inside the part structure. Is it necessary at
- *  all? It will have controller values, though..
- */
-typedef struct synti2_part {
-  int voiceofkey[128];  /* Which note has triggered which voice */
-                        /* TODO: disable multiple triggering(?) */
-  int patch; /* Which patch is selected for this part. */
-} synti2_part;
-
-struct synti2_synth {
-  /* I'll actually put the player inside the synthesizer. Should
-   * probably call it "sequencer" instead of "player"... ? Seems to
-   * yield smallest compressed code (with current function
-   * implementations) when the player is dynamically allocated and the
-   * pointer is stored as the very first field of the synth structure.
-   */
-  synti2_player *pl;
-  unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
-
-  float infranotes[128]; /* TODO: This space could be used for LFO's */
-  float note2freq[128];  /* pre-computed frequencies of notes... Tuning
-			    systems would be easy to change - just
-			    compute a different table here (?)..*/
-  float ultranotes[128]; /* TODO: This space could be used for noises? */
-
-  float wave[WAVETABLE_SIZE];
-  float rise[WAVETABLE_SIZE];
-  float fall[WAVETABLE_SIZE];
-  /*float noise[WAVETABLE_SIZE]; Maybe?? */
-
-  /* Oscillators are now modeled as integer counters (phase). */
-  /* Envelope progression also modeled by integer counters. Not much
-   * difference between oscillators and envelopes!!
-   */
-  /* Must be in this order and next to each other exactly!! Impl. specif?*/
-  counter c[NCOUNTERS];
-  counter eprog[NVOICES][NENVPERVOICE+1];
-  counter framecount;
-
-  /* Envelope stages just a table? TODO: think.*/
-  int estage[NVOICES][NENVPERVOICE+1];
-  int sustain[NVOICES];
-
-  int partofvoice[NVOICES];  /* which part has triggered each "voice";
-                                -1 (should we use zero instead?) means
-                                that the voice is free to re-occupy. */
-
-  synti2_patch *patchofvoice[NVOICES];  /* which patch is sounding; */
-
-
-  int note[NVOICES];
-  int velocity[NVOICES];
-
-  float outp[NVOICES][NOSCILLATORS+1+1]; /*"zero", oscillator outputs, noise*/
-
-  /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
-  synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
-  synti2_patch patch[NPATCHES];   /* The sound parameters per part*/
-};
 
 /* Random number generator was posted on musicdsp.org by Dominik
  * Ries. Thanks a lot; saves me a call to rand(). I use the seed as a
@@ -245,7 +79,9 @@ varlength(const byte_t * source, int * dest){
 /** Adds an event to its correct location. Assumes that the
  * pre-existing events are ordered.
  */
+#ifndef JACK_MIDI
 static
+#endif
 void
 synti2_player_event_add(synti2_player *pl, 
                         int frame, 
@@ -316,62 +152,6 @@ synti2_player_merge_chunk(synti2_player *pl,
   }
   return (byte_t*) r;
 }
-
-#ifdef JACK_MIDI
-/** Creates a future for the player object that will repeat the next
- *  nframes of midi data from a jack audio connection kit midi port.
- *
- * ... If need be.. this could be made into merging function on top of
- * the sequence being played.. but I won't bother for today's
- * purposes...
- */
-static
-void
-synti2_player_init_from_jack_midi(synti2_player *pl,
-                                  jack_port_t *inmidi_port,
-                                  jack_nframes_t nframes)
-{
-  jack_midi_event_t ev;
-  jack_nframes_t i, nev;
-  byte_t *msg;
-  void *midi_in_buffer  = (void *) jack_port_get_buffer (inmidi_port, nframes);
-
-  /* Re-initialize, and overwrite any former data. */
-  pl->playloc = pl->evpool; /* This would "rewind" the song */
-  pl->insloc = pl->evpool; /* This would "rewind" the song */
-  pl->freeloc = pl->evpool+1;
-  pl->idata = 0;
-  pl->playloc->next = NULL; /* This effects the deletion of previous msgs.*/
-  
-  nev = jack_midi_get_event_count(midi_in_buffer);
-  for (i=0;i<nev;i++){
-    if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-
-      /* Get next available spot from the data pool */
-      msg = pl->data + pl->idata;
-      memcpy(msg,ev.buffer,ev.size);  /* deep copy here */
-      pl->idata += ev.size; /*Update the data pool top*/
-
-      synti2_player_event_add(pl, 
-                              pl->frames_done + ev.time, 
-                              msg, 
-                              ev.size);
-    } else {
-      break;
-    }
-  }
-}
-
-
-/** Interface. */
-void
-synti2_read_jack_midi(synti2_synth *s,
-                      jack_port_t *inmidi_port,
-                      jack_nframes_t nframes)
-{
-  synti2_player_init_from_jack_midi(s->pl, inmidi_port, nframes);
-}
-#endif
 
 /** Load and initialize a song. Assumes a freshly created player object!*/
 static
@@ -476,7 +256,7 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
   /* note off */
   if (vel==0){
     voice = s->part[part].voiceofkey[note];
-    //if (voice < 0) return; /* FIXME: think.. */
+    /*if (voice < 0) return; */ /* FIXME: think.. */
     /* TODO: release all envelopes.. */
     for (ie=0; ie<=NENVPERVOICE; ie++){
       s->estage[voice][ie] = 2;      /* skip to end */
@@ -503,13 +283,13 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
   for(voice=0; voice < NVOICES-1; voice++){
     if (s->partofvoice[voice] < 0) break;
   }
-  //if (voice==NVOICES) return; /* Cannot play new note! */
+  /*if (voice==NVOICES) return;*/ /* Cannot play new note! */
   /* (Could actually force the last voice to play anyway!?) */
 
   s->part[part].voiceofkey[note] = voice;
   /* How much code for always referencing through [voice]? voice.note better?*/
   s->partofvoice[voice] = part;
-  s->patchofvoice[voice] = s->patch + part; // FIXME: s->part[part].patch
+  s->patchofvoice[voice] = s->patch + part; /* FIXME: s->part[part].patch*/
   s->note[voice] = note;
   s->velocity[voice] = vel;
   s->sustain[voice] = 1;  
@@ -581,10 +361,9 @@ static
 void
 synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
   int opcode, offset, ir;
-  int a, b, c, adjust_byte;
+  int a, b, c, adjust_byte = 0;
   synti2_patch *pat;
   float decoded;  
-  float *dst; 
   static int stride = SYNTI2_F_NPARS; /* Constant, how to do?*/
   const byte_t *rptr;
   
@@ -734,14 +513,13 @@ static
 void
 synti2_evalCounters(synti2_synth *s){
   counter *c;
-  unsigned int detect;
-  //  for(ic=0;ic<NCOUNTERS+NVOICES*NENVPERVOICE+1;ic++){
+  /* for(ic=0;ic<NCOUNTERS+NVOICES*NENVPERVOICE+1;ic++){*/
   for(c = s->c; c <= &s->framecount; c++){
     if (c->delta == 0) {continue;}  /* stopped.. not running*/
     c->detect = c->val; 
     c->val += c->delta;  /* Count 0 to MAX*/
 
-    if (c >= s->eprog) { /* Clamp only latter half of counters. */
+    if (c >= (counter*) (s->eprog)) { /* Clamp only latter half of counters. */
       if (c->val < c->detect){         /* Detect overflow*/
         c->val = MAX_COUNTER;          /* Clamp. */
         c->delta = 0;                  /* Stop after cycle*/
@@ -786,7 +564,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
     pat = s->patchofvoice[iv]; /* Oh, the levels of indirection!(TODO:?)*/
 
     for (ie=1; ie<=NENVPERVOICE; ie++){
-      //printf("At %d voice %d env %d\n", s->framecount.val, iv,ie); fflush(stdout);
+      /*printf("At %d voice %d env %d\n", s->framecount.val, iv,ie); fflush(stdout);*/
       if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs.FIXME: needed?*/
       /* Think... delta==0 on a triggered envelope means endclamp??
          NOTE: Need to set delta=0 upon note on!! and estage ==
@@ -906,7 +684,7 @@ synti2_render(synti2_synth *s,
         /*
         RandSeed *= 16807;
         s->outp[iv][5] = s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
-          * (float)RandSeed * 4.6566129e-010f; /*noise*/
+        * (float)RandSeed * 4.6566129e-010f;*/
 
         sigin  = signal = &(s->outp[iv][0]);
         RandSeed *= 16807;
@@ -922,7 +700,7 @@ synti2_render(synti2_synth *s,
               * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
           interm  = s->wave[wtoffs];
 
-          /*interm *= (s->velocity[iv]/128.0f);  /* Velocity sensitivity */
+          /*interm *= (s->velocity[iv]/128.0f);*/  /* Velocity sensitivity */
           /* could reorganize I3 parameters for shorter code here(?): */
           interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
           interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
@@ -934,11 +712,11 @@ synti2_render(synti2_synth *s,
       }      
       buffer[iframe+ii] /= NVOICES;
 
-      //      buffer[iframe+ii] = tanh(buffer[iframe+ii]); /* Hack! beautiful too! */
+      buffer[iframe+ii] = tanh(buffer[iframe+ii]); /* Hack! beautiful too! */
 
       
-      //buffer[iframe+ii] = sin(32*buffer[iframe+ii]); /* Hack! beautiful too!*/
-      //buffer[iframe+ii] = tanh(16*buffer[iframe+ii]); /* Hack! beautiful too!*/
+      /*buffer[iframe+ii] = sin(32*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
+      /*buffer[iframe+ii] = tanh(16*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
     }
   }
 }

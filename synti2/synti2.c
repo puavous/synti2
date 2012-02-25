@@ -19,7 +19,7 @@
 
 #include "synti2.h"
 #include "synti2_guts.h"
-#include "misss.h"
+#include "synti2_misss.h"
 
 /* Synti2 can be compiled as a Jack-MIDI compatible real-time soft
  * synth. Jack headers are not necessary otherwise...

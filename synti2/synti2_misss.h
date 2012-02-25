@@ -1,4 +1,4 @@
-/** @file misss.h
+/** @file synti2_misss.h
  *
  * MIDI-like Interface for the Synti2 Software Synthesizer
  *

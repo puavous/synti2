@@ -48,7 +48,7 @@
 
 #include<math.h>
 
-#include "misss.h"
+#include "synti2_misss.h"
 
 #define MAX_NODES 0x10000
 #define MAX_DATA 0x1000000

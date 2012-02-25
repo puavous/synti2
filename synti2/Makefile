@@ -46,8 +46,8 @@ tools: misssify jmiditrans patchedit
 misssify: misssify.c Makefile
 	$(CC) $(CFLAGS) -Wextra -o misssify misssify.c -lm
 
-jmiditrans: jmiditrans.c Makefile
-	$(CC) $(CFLAGS) -Wextra -o jmiditrans jmiditrans.c \
+jmiditrans: tools/jmiditrans.c Makefile
+	$(CC) $(CFLAGS) -Wextra -o jmiditrans tools/jmiditrans.c \
 		`pkg-config --cflags --libs jack`
 
 patchedit: patchedit.cxx patchtool.hpp patchtool.cxx Makefile

@@ -10,6 +10,12 @@ S2HEADERS = include/synti2_guts.h \
 
 SRCJSYNTI2 = tests/jsynti2.c src/synti2.c src/synti2_jack.c
 
+GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
+
+PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
+		tools/patchtool.cxx
+
+
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -g -Wall -pedantic
 
@@ -59,27 +65,25 @@ jmiditrans: tools/jmiditrans.c Makefile
 	$(CC) $(CFLAGS) -Wextra -o $@ tools/jmiditrans.c \
 		`pkg-config --cflags --libs jack`
 
-patchedit: tools/patchedit.cxx tools/patchtool.hpp tools/patchtool.cxx \
-		Makefile
-	g++ `fltk-config --cxxflags` -o $@ \
-		tools/patchedit.cxx tools/patchtool.cxx -lfltk \
+patchedit: $(PATCHEDITDEPS) Makefile
+	g++ -o $@ $(filter %.cxx %.hpp , $(PATCHEDITDEPS)) -lfltk \
+		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`
 
+# broken as of now...
 benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -I./ -o $@ tests/benchmark.c synti2.c testdata.c -lm
 
-genpar: tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
-	g++ -Itools/ -o $@ tools/genpar.cxx tools/patchtool.cxx
+genpar: $(GENPARDEPS)
+	g++ -Itools/ -o $@ $(filter %.cxx , $(GENPARDEPS))
 
-jsynti2: $(SRCJSYNTI2) $(S2HEADERS) \
-		Makefile
+jsynti2: $(SRCJSYNTI2) $(S2HEADERS) Makefile
 	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
 		$(SRCJSYNTI2) \
 		`pkg-config --cflags --libs jack` -lm
 
-include/synti2_params.h: genpar
+include/synti2_params.h: genpar src/patchdesign.dat
 	./genpar src/patchdesign.dat $@
-
 
 testdata.c: patchbank.txt testi.mid tools/hacktac.py misssify Makefile
 	python tools/hacktac.py < patchbank.txt > testdata.c

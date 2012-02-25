@@ -521,7 +521,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
 int main(int argc, char **argv) {
   int retval;
 
-  pt = new synti2::Patchtool("patchdesign.dat");
+  pt = new synti2::Patchtool("src/patchdesign.dat");
   pbank = pt->makePatchBank(16);
 
  

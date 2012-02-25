@@ -113,11 +113,16 @@ static void signal_handler(int sig)
   exit(0);
 }
 
-/** Decode a "floating point" parameter. */
+/** Decode a "floating point" parameter. 
+
+  FIXME: Encoding/decoding should be localized (as of today, they are
+  copy-pasted to at least two parts of the system.. And, of course,
+  the coding system should be determined for good...
+
+*/
 float synti2_decode_f(const jack_midi_data_t *buf){
   int i;
   float res;
-  //jack_info("Decoding %x %x", buf[0], buf[1]);
   res = ((buf[0] & 0x03) << 7) + buf[1];   /* 2 + 7 bits accuracy*/
   res = ((buf[0] & 0x40)>0) ? -res : res;  /* sign */
   res *= .001f;                            /* default e-3 */
@@ -125,14 +130,20 @@ float synti2_decode_f(const jack_midi_data_t *buf){
   return res;
 }
 
-/* Encode a "floating point" parameter into 7 bit parts. */
+/** Encode a "floating point" parameter into 7 bit parts. 
+
+  FIXME: Encoding/decoding should be localized (as of today, they are
+  copy-pasted to at least two parts of the system.. And, of course,
+  the coding system should be determined for good...
+
+ */
 float synti2_encode_f(float val, jack_midi_data_t * buf){
   int high = 0;
   int low = 0;
   int intval = 0;
   int timestimes10 = 0;
   if (val < 0){ high |= 0x40; val = -val; } /* handle sign bit */
-  /* maximum precision strategy: */
+  /* maximum precision strategy (?): */
   /* TODO: check decimals first, and try less precise if possible */
   if (val <= 0.511) {
     timestimes10 = 0; intval = val * 1000;
@@ -226,27 +237,22 @@ process (jack_nframes_t nframes, void *arg)
   jack_midi_clear_buffer(midi_out_buffer); 
   nev = jack_midi_get_event_count(midi_in_buffer);
 
-  /* Read from UI thread. FIXME: synchronization issues? */
+  /* Read from UI thread. FIXME: think if synchronization issues persist? */
   while (jack_ringbuffer_read_space (global_rb) >= sizeof(s2ed_msg_t)) {
     jack_ringbuffer_read (global_rb, (char*)&s2m, sizeof(s2ed_msg_t));
     sz = build_sysex(&s2m,sysex_build_buf);
     jack_midi_event_write(midi_out_buffer, 0, sysex_build_buf, sz);
-    /*
-    jack_info("msg %d %d, %8.4f, %8.4f", 
-              s2m.type, s2m.location,
-              s2m.value, s2m.actual);
-    */
   }
-  
-  /* Handle incoming. TODO: jepijei. Same message structure could be used. */
+
+  /* Handle incoming. TODO: The idea was that a midi control surface
+     could be used for real-time editing... Same message structure
+     could be used for both directions, but need another ringbuffer
+     for the incoming messages.
+  */
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
       jack_info("k ");
       /*FIXME: zadaadaadaa. */
-      /*debug_print_ev(&ev);*/
-      //hack_channel(&ev);
-      /*debug_print_ev(&ev);*/
-      //jack_midi_event_write(midi_out_buffer, ev.time, ev.buffer, ev.size);
     } else {
       break;
     }
@@ -351,8 +357,6 @@ void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
 
 /** Sends all patches of the patch bank to the synth over jack MIDI. */
 void cb_send_all(Fl_Widget* w, void* p){
-/*FIXME: There seems to be some curious error here... send_current
-  works but this doesn't. Let's find the mistake...*/
   for(int ip=0; ip < pbank->size(); ip++){
     std::cerr << "Sending " << ip << std::endl;
     send_patch_to_jack_port((*pbank)[ip], ip);
@@ -428,13 +432,6 @@ void cb_patch_name(Fl_Widget* w, void* p){
 
 /** Builds the main window with widgets reflecting a patch description. */
 Fl_Window *build_main_window(synti2::PatchDescr *pd){
-  /* Color scheme */
-  /*  for (int i=0; i<16; i++){
-  Fl::set_color(FL_LIGHT3, 0x5f,0x5f,0xff);
-  fl_color(FL_LIGHT3);
-
-    colortab[i].
-    }*/
 
   /* Overall Operation Buttons */
   Fl_Window *window = new Fl_Window(1200, 600);
@@ -442,7 +439,6 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   main_win = window;
 
   Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,600);
-  //  scroll->color(FL_WHITE);
 
   Fl_Value_Input *patch = new Fl_Value_Input(50,20,40,25,"Patch");
   patch->callback(cb_change_patch);
@@ -523,10 +519,7 @@ int main(int argc, char **argv) {
 
   pt = new synti2::Patchtool("src/patchdesign.dat");
   pbank = pt->makePatchBank(16);
-
  
-  //for (int i=0;i<pbank->size();i++) (*pbank)[i].write(std::cout);
-
   init_jack_or_die();
 
   /* Make an edit window for our custom kind of patches. */
@@ -537,8 +530,6 @@ int main(int argc, char **argv) {
   window->show(argc, argv);
 
   retval = Fl::run();
-
-  std::cout << "Cleaning up." << std::endl;
 
   jack_ringbuffer_free(global_rb);
   jack_client_close(client);

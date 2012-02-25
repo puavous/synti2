@@ -47,32 +47,33 @@ STRIPOPT = -s -R .comment \
 	-R .eh_frame_hdr \
 	-R .eh_frame 
 
-all: jacktest
+nodefaultmake:
+	@echo "No default target is specified as of now."
 
 tools: misssify jmiditrans patchedit
 
 misssify: tools/misssify.c Makefile
-	$(CC) $(CFLAGS) -I./ -Wextra -o misssify tools/misssify.c -lm
+	$(CC) $(CFLAGS) -I./ -Wextra -o $@ tools/misssify.c -lm
 
 jmiditrans: tools/jmiditrans.c Makefile
-	$(CC) $(CFLAGS) -Wextra -o jmiditrans tools/jmiditrans.c \
+	$(CC) $(CFLAGS) -Wextra -o $@ tools/jmiditrans.c \
 		`pkg-config --cflags --libs jack`
 
 patchedit: tools/patchedit.cxx tools/patchtool.hpp tools/patchtool.cxx \
 		Makefile
-	g++ `fltk-config --cxxflags` -o patchedit \
+	g++ `fltk-config --cxxflags` -o $@ \
 		tools/patchedit.cxx tools/patchtool.cxx -lfltk \
 		`pkg-config --cflags --libs jack`
 
 benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
-	$(CC) $(CFLAGS) -I./ -o benchmark tests/benchmark.c synti2.c testdata.c -lm
+	$(CC) $(CFLAGS) -I./ -o $@ tests/benchmark.c synti2.c testdata.c -lm
 
 genpar: tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
 	g++ -Itools/ -o $@ tools/genpar.cxx tools/patchtool.cxx
 
 jsynti2: $(SRCJSYNTI2) $(S2HEADERS) \
 		Makefile
-	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o jsynti2 \
+	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
 		$(SRCJSYNTI2) \
 		`pkg-config --cflags --libs jack` -lm
 
@@ -128,7 +129,6 @@ tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makef
 
 
 clean:
-
 	-rm `find . -name "*~"` *.o
 
 veryclean: clean

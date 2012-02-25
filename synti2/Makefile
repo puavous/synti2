@@ -56,8 +56,8 @@ patchedit: patchedit.cxx patchtool.hpp patchtool.cxx Makefile
 		`pkg-config --cflags --libs jack`
 
 
-benchmark: benchmark.c synti2.c synti2.h testdata.c Makefile
-	$(CC) $(CFLAGS) -o benchmark benchmark.c synti2.c testdata.c -lm
+benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
+	$(CC) $(CFLAGS) -I./ -o benchmark tests/benchmark.c synti2.c testdata.c -lm
 
 jsynti2: tests/jsynti2.c synti2.c synti2.h synti2_jack.h synti2_jack.c \
 		testdata.c Makefile

@@ -165,6 +165,9 @@ struct synti2_synth {
 
 
 /* Jack interface needs to have this exposed. */
+#ifndef JACK_MIDI
+static
+#endif
 void
 synti2_player_event_add(synti2_player *pl, 
                         int frame, 

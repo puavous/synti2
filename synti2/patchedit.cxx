@@ -32,6 +32,7 @@
 #include <FL/Fl_Dial.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Roller.H>
 #include <FL/Fl_Value_Input.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Select_Browser.H>
@@ -48,6 +49,7 @@
 #include <signal.h>
 
 #include <iostream>
+#include <sstream>
 #include <fstream>
 
 #include "patchtool.hpp"
@@ -76,6 +78,8 @@ Fl_Button* button_send_all = NULL;
 Fl_Input* widget_patch_name = NULL;
 std::vector<Fl_Valuator*> widgets_i3;
 std::vector<Fl_Valuator*> widgets_f;
+std::vector<std::string> flbl;
+Fl_Window* main_win;
 //std::vector<synti2::Patch> patches;
 
 /* Patch data: */
@@ -312,7 +316,12 @@ void widgets_to_reflect_reality(){
   for (int i=0; i<widgets_f.size(); i++){
     double val = (*pbank)[curr_patch].getValue("F", i);
     widgets_f[i]->value(val);
+
+    std::ostringstream vs;
+    vs << flbl[i] << " = " << val;
+    widgets_f[i]->copy_label(vs.str().c_str());
   }
+  main_win->redraw();
 }
 
 /** Sends a value over to the synth via the jack output port. */
@@ -369,6 +378,10 @@ void cb_new_f_value(Fl_Widget* w, void* p){
 
   (*pbank)[curr_patch].setValue("F",d,val);
   send_to_jack_port(3, d, curr_patch, val);
+
+  std::ostringstream vs;
+  vs << flbl[d] << " = " << val << "         "; // hack..
+  ((Fl_Valuator*)w)->copy_label(vs.str().c_str());
 }
 
 /** Sends and stores an "I3" value */
@@ -426,6 +439,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   /* Overall Operation Buttons */
   Fl_Window *window = new Fl_Window(1200, 600);
   window->resizable(window);
+  main_win = window;
 
   Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,600);
   //  scroll->color(FL_WHITE);
@@ -474,7 +488,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     vi->callback(cb_new_i3_value);
   }
 
-  py=80; w=340;
+  py=80; w=200;
   int npars = pd->nPars("F");
   int ncols = 3;
   int nrows = (npars / ncols) + 1;
@@ -483,8 +497,8 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     for (int row=0; row < nrows; row++){
       if (i==npars) break;
       /* Need to store all ptrs and have attach_to_values() */
-      Fl_Value_Slider *vsf = 
-        new Fl_Value_Slider(px+col*400,py+row*(h+sp),w,h);
+      Fl_Roller *vsf = 
+        new Fl_Roller(px+col*400,py+row*(h+sp),w,h);
       widgets_f.push_back(vsf);
       /* FIXME: think? */
       vsf->bounds(pd->getMin("F",i),pd->getMax("F",i)); 
@@ -492,6 +506,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
       vsf->color(colortab[pd->getGroup("F",i)]);
       vsf->type(FL_HOR_NICE_SLIDER);
       vsf->label(pd->getDescription("F",i).c_str());
+      flbl.push_back(pd->getDescription("F",i)); // for use in the other part
       vsf->align(FL_ALIGN_RIGHT);
       vsf->callback(cb_new_f_value);
       vsf->argument(i);

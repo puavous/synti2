@@ -8,13 +8,15 @@ S2HEADERS = include/synti2_guts.h \
 		include/synti2_misss.h \
 		include/synti2_params.h \
 
-SRCJSYNTI2 = tests/jsynti2.c src/synti2.c src/synti2_jack.c
+JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c src/synti2.c src/synti2_jack.c
 
 GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
 
 PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
 		tools/patchtool.cxx
 
+SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/teh4k_gfx.c \
+	testsong.c src/synti2.c include/synti2.h 
 
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -g -Wall -pedantic
@@ -59,7 +61,7 @@ nodefaultmake:
 tools: misssify jmiditrans patchedit
 
 misssify: tools/misssify.c Makefile
-	$(CC) $(CFLAGS) -I./ -Wextra -o $@ tools/misssify.c -lm
+	$(CC) $(CFLAGS) -I./include -Wextra -o $@ tools/misssify.c -lm
 
 jmiditrans: tools/jmiditrans.c Makefile
 	$(CC) $(CFLAGS) -Wextra -o $@ tools/jmiditrans.c \
@@ -77,26 +79,26 @@ benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 genpar: $(GENPARDEPS)
 	g++ -Itools/ -o $@ $(filter %.cxx , $(GENPARDEPS))
 
-jsynti2: $(SRCJSYNTI2) $(S2HEADERS) Makefile
+jsynti2: $(JSYNTI2DEPS) $(S2HEADERS) Makefile
 	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
-		$(SRCJSYNTI2) \
+		$(filter %.c %.h, $(JSYNTI2DEPS)) \
 		`pkg-config --cflags --libs jack` -lm
 
 include/synti2_params.h: genpar src/patchdesign.dat
 	./genpar src/patchdesign.dat $@
 
-testdata.c: patchbank.txt testi.mid tools/hacktac.py misssify Makefile
-	python tools/hacktac.py < patchbank.txt > testdata.c
-	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
+testsong.c: tests/testi.mid misssify Makefile
+	./misssify --tpq 12 --velocity-all 100 --only-on tests/testi.mid
 #	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
 #	./misssify --tpq 12 --only-on testi.mid
 #	./misssify --tpq 12 testi.mid
 #	./misssify testi.mid
-	python tools/file2c.py test.misss hacksong >> testdata.c
+	python tools/file2c.py test.misss hacksong > testsong.c
 
-sdltest: sdltest.c synti2.c synti2.h Makefile
+sdltest: $(SDLTESTDEPS) Makefile
 
-	$(CC) $(CFLAGS) $(ARCHFLAGS) -o sdltest sdltest.c synti2.c \
+	$(CC) $(CFLAGS) -o $@ -Iinclude \
+		$(filter %.c %.h, $(SDLTESTDEPS)) \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
 tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makefile

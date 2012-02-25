@@ -394,22 +394,19 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
       }
 
       for (ir=0; ir<stride; ir++){
+        /* new way.. FIXME: Try different approaches and their sizes...*/
         rptr = data++;
         a = *rptr;
         b = *(rptr += stride); 
-        c = *(rptr += stride);
-        adjust_byte = *(rptr += stride);
-        decoded = 0.01f * a + b + 100*c;
-      
-#ifdef SUPER_ACCURATE_PATCHES
-        /* Sigh.. I wanted this, but letting go by default. */
-        decoded += (adjust_byte & 0x0f) * 0.001f;
-#endif
-      
-        pat->fpar[ir] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
+        decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
+        decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
+        decoded *= .001f;                           /* default e-3 */
+        for (c=0; c < ((a & 0x0c) >> 2); c++) decoded *= 10.f; /* can be more */
+        pat->fpar[ir] = decoded;
       }
-      data += 3*stride;
+      data += stride;
     }
+
 #ifndef NO_EXTRA_SYSEX
   } else if (opcode==1) {
     /* Receive one 3-bit parameter at location (patch,i3par_index) */

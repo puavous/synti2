@@ -1,6 +1,7 @@
 /**
- * A small program for creating synti2 patches, and sending them out
- * via jack MIDI.
+ * A small program for creating synti2 patches, sending them out via
+ * jack MIDI in real time, and exporting them for compiling a
+ * stand-alone synti2 player.
  *
  * UI idea:
  *
@@ -36,6 +37,7 @@
 #include <FL/Fl_Value_Input.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Select_Browser.H>
+#include <FL/Fl_File_Chooser.H>
 
 #include <jack/jack.h>
 #include <jack/midiport.h>
@@ -53,6 +55,7 @@
 #include <fstream>
 
 #include "patchtool.hpp"
+//#include "synti2_inter.h"
 
 #define RINGBUFSZ 0x10000
 
@@ -113,66 +116,6 @@ static void signal_handler(int sig)
   exit(0);
 }
 
-/** Decode a "floating point" parameter. 
-
-  FIXME: Encoding/decoding should be localized (as of today, they are
-  copy-pasted to at least two parts of the system.. And, of course,
-  the coding system should be determined for good...
-
-*/
-float synti2_decode_f(const jack_midi_data_t *buf){
-  int i;
-  float res;
-  res = ((buf[0] & 0x03) << 7) + buf[1];   /* 2 + 7 bits accuracy*/
-  res = ((buf[0] & 0x40)>0) ? -res : res;  /* sign */
-  res *= .001f;                            /* default e-3 */
-  for (i=0; i < ((buf[0] & 0x0c)>>2); i++) res *= 10.f;  /* can be more */
-  return res;
-}
-
-/** Encode a "floating point" parameter into 7 bit parts. 
-
-  FIXME: Encoding/decoding should be localized (as of today, they are
-  copy-pasted to at least two parts of the system.. And, of course,
-  the coding system should be determined for good...
-
- */
-float synti2_encode_f(float val, jack_midi_data_t * buf){
-  int high = 0;
-  int low = 0;
-  int intval = 0;
-  int timestimes10 = 0;
-  if (val < 0){ high |= 0x40; val = -val; } /* handle sign bit */
-  /* maximum precision strategy (?): */
-  /* TODO: check decimals first, and try less precise if possible */
-  if (val <= 0.511) {
-    timestimes10 = 0; intval = val * 1000;
-  } else if (val <= 5.11) {
-    timestimes10 = 1; intval = val * 100;
-  } else if (val <= 51.1) {
-    timestimes10 = 2; intval = val * 10;
-  } else if (val <= 511) {
-    timestimes10 = 3; intval = val * 1;
-  } else if (val <= 5110.f) {
-    timestimes10 = 4; intval = val * .1;
-  } else if (val <= 51100.f) {
-    timestimes10 = 5; intval = val * .01;
-  } else if (val <= 511000.f) {
-    timestimes10 = 6; intval = val * .001;
-  } else if (val <= 5110000.f){
-    timestimes10 = 7; intval = val * .0001;
-  } else {
-    jack_error("Too large f value %f", val);
-  }
-  high |= (timestimes10 << 2); /* The powers of 10*/
-  high |= (intval >> 7);
-  low = intval & 0x7f;
-  buf[0] = high;
-  buf[1] = low;
-  // jack_info("%02x %02x", high, low);
-  return synti2_decode_f(buf);
-}
-
 
 int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
   int intval;
@@ -191,7 +134,7 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
     sm->actual = (*buf = (intval &= 0x7f));
     return 1;
   case 3:
-    sm->actual = synti2_encode_f(sm->value, buf);
+    sm->actual = synti2::encode_f(sm->value, buf);
     return 2;
   default:
     /* An error.*/
@@ -402,6 +345,31 @@ void cb_save_all(Fl_Widget* w, void* p){
   pbank->write(ofs);
 }
 
+void cb_export_c(Fl_Widget* w, void* p){
+  Fl_File_Chooser chooser(".","*.c",Fl_File_Chooser::CREATE,
+                          "Select destination file to save.");
+  chooser.show();
+  while(chooser.shown()) Fl::wait();
+  if ( chooser.value() == NULL ) return;
+
+  /*  std::string fname(chooser.value());
+      fname += chooser.value();*/
+  std::cout << chooser.value() << " selected" << std::endl;
+
+  std::ifstream checkf(chooser.value());
+  if (checkf.is_open()){
+    checkf.close();
+    if (2 != fl_choice("File %s exists. \nDo you want to overwrite it?", 
+                       "Cancel", "No", "Yes", chooser.value())){
+      return;
+    }
+  }
+
+  std::ofstream ofs(chooser.value(), std::ios::trunc);
+  pbank->exportStandalone(ofs);
+}
+
+
 void cb_save_current(Fl_Widget* w, void* p){
   std::ofstream ofs(hack_filename.c_str(), std::ios::trunc);
   (*pbank)[curr_patch].write(ofs);
@@ -446,29 +414,33 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   widget_patch_name = new Fl_Input(150,20,90,25,"Name");
   widget_patch_name->callback(cb_patch_name);
 
-  int px=280, py=20, w=120, h=25, sp=2;
-  Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end current");
-  box->callback(cb_send_current); box->labelsize(17); 
+  int px=280, py=20, w=80, h=25, sp=2;
+  int labsz = 16;
+  Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
+  box->callback(cb_send_current); box->labelsize(labsz); 
 
   box = new Fl_Button(px + 1*(w+sp),py,w,h,"Send al&l");
-  box->callback(cb_send_all); box->labelsize(17); 
+  box->callback(cb_send_all); box->labelsize(labsz); 
   button_send_all = box;
 
   px += w/2;
-  box = new Fl_Button(px + 2*(w+sp),py,w,h,"Save current");
-  box->callback(cb_save_current); box->labelsize(17); 
+  box = new Fl_Button(px + 2*(w+sp),py,w,h,"Save this");
+  box->callback(cb_save_current); box->labelsize(labsz); 
 
   box = new Fl_Button(px + 3*(w+sp),py,w,h,"&Save all");
-  box->callback(cb_save_all); box->labelsize(17); 
+  box->callback(cb_save_all); box->labelsize(labsz); 
 
-  box = new Fl_Button(px + 4*(w+sp),py,w,h,"Load current");
-  box->callback(cb_load_current); box->labelsize(17); 
+  box = new Fl_Button(px + 4*(w+sp),py,w,h,"Ex&port C");
+  box->callback(cb_export_c); box->labelsize(labsz); 
 
-  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Load all");
-  box->callback(cb_load_all); box->labelsize(17);
+  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Load this");
+  box->callback(cb_load_current); box->labelsize(labsz); 
+
+  box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load all");
+  box->callback(cb_load_all); box->labelsize(labsz);
 
   px += w/2;
-  box = new Fl_Button(px + 6*(w+sp),py,w,h,"&Quit");
+  box = new Fl_Button(px + 7*(w+sp),py,w,h,"&Quit");
   box->callback(cb_exit); box->argument((long)window); box->labelsize(17); 
 
   /* Parameters Valuator Widgets */

@@ -39,8 +39,8 @@ extern unsigned int hacksong_length;
 
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
-/* Test patch from the hack script: */
-extern unsigned char hack_patch_sysex[];
+/* Test patch */
+extern unsigned char patch_sysex[];
 extern int hack_patch_sysex_length;
 
 static void signal_handler(int sig)
@@ -115,7 +115,7 @@ main (int argc, char *argv[])
 
   /* My own soft synth to be created. */
   /*global_synth = synti2_create(sr, patch_sysex, hacksong_data);*/
-  global_synth = synti2_create(sr, NULL, NULL);
+  global_synth = synti2_create(sr, patch_sysex, NULL);
 
   if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");

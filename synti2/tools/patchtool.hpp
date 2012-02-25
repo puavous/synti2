@@ -9,6 +9,11 @@
 
 namespace synti2{
 
+  /* Functions - maybe belonging to some class? */
+
+  float decode_f(const unsigned char *buf);
+  float encode_f(float val, unsigned char * buf);
+
   /* Classes for: Patch, PatchBank, ParamDescr, ParamValue */
 
   /** Description for a single parameter; used for GUI. Parameter
@@ -120,6 +125,7 @@ namespace synti2{
     float getValueByName(std::string type, std::string name){return 1.23;}
     float getValue(std::string type, int idx){return (values[type])[idx];}
     int getNPars(std::string type){return values[type].size();}
+    void exportBytes(std::vector<unsigned char> &bvec);
   };
 
   class PatchBank : public std::vector<Patch> {
@@ -129,6 +135,7 @@ namespace synti2{
       /*FIXME: End-of-file logics. */
       for(int i=0;i<size();i++) at(i).read(is);
     }
+    void exportStandalone(std::ostream &os);
   };
 
   /** Individual value of a parameter. Hmm.. necessary? Value can be

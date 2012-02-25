@@ -25,8 +25,7 @@ synti2_synth *st;
 static long frame = 0;
 
 /* Test patch from the hack script: */
-extern unsigned char hack_patch_sysex[];
-extern int hack_patch_sysex_length;
+extern unsigned char patch_sysex[];
 extern unsigned char hacksong_data[];
 extern unsigned int hacksong_length;
 
@@ -120,7 +119,7 @@ static void main2(int sdl_flags){
   float tnow;
 
   /* Checks of possible failures?*/
-  st = synti2_create(MY_SAMPLERATE, hack_patch_sysex, hacksong_data);
+  st = synti2_create(MY_SAMPLERATE, patch_sysex, hacksong_data);
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);

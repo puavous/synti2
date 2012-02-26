@@ -11,7 +11,7 @@
 #define NSTRIPS 25
 
 /** Paint a triangle :). */
-static void render_scene(synti2_synth *s){
+static void render_scene(const synti2_synth *s){
   int i, j;
 
   float time = (float)(s->framecount.val) / s->sr;
@@ -24,7 +24,7 @@ static void render_scene(synti2_synth *s){
   glEnable(GL_BLEND);
 
   glLoadIdentity();
-  glTranslatef(0.,0.,-150 +100. * sin(time));
+  glTranslatef(0.,0.,-150 +100. * sin(time) + 50*s->eprog[0][1].f);
   /*glTranslatef(data[400]*time,data[600]*time,-150);*/
   glRotatef(time*3,0.,1.,0.);
   glRotatef(time*7,0.,0.,1.);

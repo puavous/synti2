@@ -1,6 +1,8 @@
 #ifndef SYNTI2_INTERNAL_STRUCTURES_H
 #define SYNTI2_INTERNAL_STRUCTURES_H
 
+#include "synti2.h"
+#include "synti2_params.h"
 
 /* Polyphony */
 #define NVOICES 32

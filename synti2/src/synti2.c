@@ -665,7 +665,7 @@ synti2_render(synti2_synth *s,
       /* Could I put all counter upds in one big awesomely parallel loop? */
       synti2_evalCounters(s);  /* .. apparently yes ..*/
       
-      /* Getting more realistic soon: */
+      /* Sound output. Getting more realistic as we speak... */
       buffer[iframe+ii] = 0.0f;
       
       for(iv=0;iv<NVOICES;iv++){

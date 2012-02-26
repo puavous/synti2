@@ -13,7 +13,7 @@ JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
 
 JVISDEPS = tests/javtest.c tests/testbank.c testsong.c \
 	 src/synti2.c src/synti2_jack.c \
-	 tests/teh4k_gfx.c
+	 tests/tryout_gfx.c $(S2HEADERS)
 
 GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
 
@@ -90,7 +90,7 @@ jsynti2: $(JSYNTI2DEPS) $(S2HEADERS) Makefile
 		$(filter %.c , $^) \
 		`pkg-config --cflags --libs jack` -lm
 
-jvis: $(JVISDEPS) $(S2HEADERS) Makefile
+jvis: $(JVISDEPS) Makefile
 	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
 		$(filter %.c , $^) \
 		`pkg-config --cflags --libs jack` \

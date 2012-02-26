@@ -168,7 +168,7 @@ main (int argc, char *argv[])
   do
   {
     tnow = ((float)frame) / sr;
-    teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE); /* From 'Teh 4k 3000' */
+    render_using_synti2(global_synth);
     SDL_PollEvent(&event);
     usleep(1000000/50); /*50 Hz refresh enough for testing..*/
   } while (event.type != SDL_QUIT); //while (event.type!=SDL_KEYDOWN && tnow <70.0);

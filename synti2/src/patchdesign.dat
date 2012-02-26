@@ -187,11 +187,11 @@ ENV6K5L Env6Knee5Level -31.0 32.0   1 11
 # FIXME: This might be better as a normal CC -> MIDI-controllability
 # FIXME: Think about CCs overall
 
-DT1 Oper1Detune  -31.0 32.0   1 12
-DT2 Oper2Detune  -31.0 32.0   1 12
-DT3 Oper3Detune  -31.0 32.0   1 12
-DT4 Oper4Detune  -31.0 32.0   1 12
-xxx UNUSED0      -31.0 32.0   1 12
+DT1 Oper1Detune  -31.0 32.0   2 12
+DT2 Oper2Detune  -31.0 32.0   2 12
+DT3 Oper3Detune  -31.0 32.0   2 12
+DT4 Oper4Detune  -31.0 32.0   2 12
+xxx UNUSED0      -31.0 32.0   2 12
 
 
 # Source Levels (before multiplicative amplitude envelope)

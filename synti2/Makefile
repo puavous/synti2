@@ -46,9 +46,7 @@ ARCHSTRIPOPT =
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
 HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL   -DNO_LOOPING_ENVELOPES \
-	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX -DNO_OPTIONAL_ALGORITHMS -nostdlib
-
-
+	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX -nostdlib
 
 # Used the following the last time.. but now they don't seem to help much
 # at least with the first versions..
@@ -75,31 +73,31 @@ jmiditrans: tools/jmiditrans.c Makefile
 		`pkg-config --cflags --libs jack`
 
 patchedit: $(PATCHEDITDEPS) Makefile
-	g++ -o $@ $(filter %.cxx %.hpp , $(PATCHEDITDEPS)) -lfltk \
+	g++ -o $@ $(filter %.cxx %.hpp , $^) -lfltk \
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`
 
 # broken as of now...
 benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
-	$(CC) $(CFLAGS) -I./ -o $@ tests/benchmark.c synti2.c testdata.c -lm
+	$(CC) $(CFLAGS) -I./ -o $@ \
+		$(filter %.c , $^) -lm
 
 genpar: $(GENPARDEPS)
-	g++ -Itools/ -o $@ $(filter %.cxx , $(GENPARDEPS))
+	g++ -Itools/ -o $@ $(filter %.cxx , $^)
 
 jsynti2: $(JSYNTI2DEPS) $(S2HEADERS) Makefile
 	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
-		$(filter %.c %.h, $(JSYNTI2DEPS)) \
+		$(filter %.c , $^) \
 		`pkg-config --cflags --libs jack` -lm
 
 jvis: $(JVISDEPS) $(S2HEADERS) Makefile
 	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
-		$(filter %.c %.h, $(JVISDEPS)) \
+		$(filter %.c , $^) \
 		`pkg-config --cflags --libs jack` \
 		`sdl-config --cflags --libs` -lm -lGL -lGLU
 
-
-include/synti2_params.h: genpar src/patchdesign.dat
-	./genpar src/patchdesign.dat $@
+include/synti2_params.h: src/patchdesign.dat genpar
+	./genpar $< $@
 
 testsong.c: tests/testi.mid misssify Makefile
 	./misssify --tpq 12 --velocity-all 100 --only-on tests/testi.mid
@@ -150,7 +148,6 @@ tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
 	cp $@.unstripped.payload $@.payload 
 
 	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
-#	sstrip $@.payload
 
 	7za a -tgzip -mx=9 tmp.gz $@.payload
 	cat tests/selfextr.stub tmp.gz > $@
@@ -163,7 +160,7 @@ clean:
 	-rm `find . -name "*~"` *.o
 
 veryclean: clean
-	-rm *.payload jsynti2 sdltest tinytest piippitesti \
+	-rm *.payload jsynti2 jvis sdltest tinytest  \
 		benchmark testdata.c misssify test.misss \
 		jmiditrans patchedit genpar
 

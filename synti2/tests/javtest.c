@@ -53,14 +53,12 @@ static void
 process_audio (jack_nframes_t nframes) 
 {
   int i;
-  sample_t *bufferL = (sample_t *) jack_port_get_buffer (output_portL, nframes);
-  sample_t *bufferR = (sample_t *) jack_port_get_buffer (output_portR, nframes);
+  sample_t *bufferL = (sample_t*)jack_port_get_buffer(output_portL, nframes);
+  sample_t *bufferR = (sample_t*)jack_port_get_buffer(output_portR, nframes);
 
-  /* Transform MIDI messages from native type (jack) to our own format */
   if (global_hack_playeronly == 0){
     synti2_read_jack_midi(global_synth, inmidi_port, nframes);
   }
-  /* Call our own synth engine and convert samples to native type (jack) */
   synti2_render(global_synth, global_buffer, nframes); 
 
   for (i=0;i<nframes;i++){
@@ -75,7 +73,6 @@ process_audio (jack_nframes_t nframes)
   if ((global_buffer[5]>0.5)){
     for (i=0;i<AUDIOBUFSIZE;i++) snapshot[i]=global_buffer[i];
   }
-
 }
 
 static int
@@ -87,31 +84,31 @@ process (jack_nframes_t nframes, void *arg)
 }
 
 static int
-init_jack(){ return 0; /*TODO: proper..*/ }
+init_jack(){ return 0; /*TODO: proper coding practices and all that..*/ }
 
 int
 main (int argc, char *argv[])
 {
-  SDL_Event event;
-  //const SDL_VideoInfo * vid;
   float tnow;
-
+  SDL_Event event;
   jack_status_t status;
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
   SDL_SetVideoMode(640,400,32,SDL_OPENGL);
 
-
   if ((argc >= 2) && (strcmp(argv[1],"-p")==0)){
     global_hack_playeronly = 1;
   }
 
   /* Initial Jack setup. Open (=create?) a client. */
-  if ((client = jack_client_open (client_name, JackNoStartServer, &status)) == 0) {
+  if ((client = jack_client_open (client_name, 
+                                  JackNoStartServer, 
+                                  &status)) == 0) {
     fprintf (stderr, "jack server not running?\n");
     return 1;
   }
+
   /* Set up process callback */
   jack_set_process_callback (client, process, 0);
   
@@ -153,7 +150,6 @@ main (int argc, char *argv[])
     fprintf (stderr, "cannot activate client\n");
     goto error;
   }
-
   
   /* install a signal handler to properly quit jack client */
 #ifdef WIN32
@@ -176,17 +172,6 @@ main (int argc, char *argv[])
     SDL_PollEvent(&event);
     usleep(1000000/50); /*50 Hz refresh enough for testing..*/
   } while (event.type != SDL_QUIT); //while (event.type!=SDL_KEYDOWN && tnow <70.0);
-
-#if 0
-  while (1) {
-#ifdef WIN32
-    Sleep(1000);
-#else
-    sleep(1);
-#endif
-  };
-#endif
-
   
   jack_client_close(client);
   

@@ -24,7 +24,7 @@ static void render_scene(const synti2_synth *s){
   glEnable(GL_BLEND);
 
   glLoadIdentity();
-  glTranslatef(0.,0.,-150 +100. * sin(time) + 50*s->eprog[0][1].f);
+  glTranslatef(0.,0.,-150 +100. * sin(time) - .1*s->note[0]);
   /*glTranslatef(data[400]*time,data[600]*time,-150);*/
   glRotatef(time*3,0.,1.,0.);
   glRotatef(time*7,0.,0.,1.);

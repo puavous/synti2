@@ -20,7 +20,7 @@ GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp
 PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
 		tools/patchtool.cxx
 
-SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/teh4k_gfx.c \
+SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/tryout_gfx.c \
 	testsong.c src/synti2.c include/synti2.h 
 
 # C flags common to all files (normal/debug build)
@@ -161,7 +161,7 @@ clean:
 
 veryclean: clean
 	-rm *.payload jsynti2 jvis sdltest tinytest  \
-		benchmark testdata.c misssify test.misss \
+		benchmark testsong.c misssify test.misss \
 		jmiditrans patchedit genpar
 
 veryveryclean: veryclean

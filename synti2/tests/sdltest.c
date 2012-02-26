@@ -14,7 +14,7 @@ extern void teh4k_render_at_time(float time, float *data, size_t AUDIOBUFSIZE);
 
 
 #define MY_SAMPLERATE 48000
-#define AUDIOBUFSIZE  4096
+#define AUDIOBUFSIZE  8192
 
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
@@ -189,10 +189,10 @@ static void main2(int sdl_flags){
 
   do
   {
-    tnow = (double) frame / MY_SAMPLERATE;
-    teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE); /* From 'Teh 4k 3000' */
+    //tnow = (double) frame / MY_SAMPLERATE;
+    render_using_synti2(st); /* From 'Teh 4k 3000' */
     SDL_PollEvent(&event);
-  } while (event.type!=SDL_KEYDOWN && tnow <70.0);
+  } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);
 
   /* Hmm... What happens if I don't close these? Will the world collapse!?*/
 #ifndef ULTRASMALL

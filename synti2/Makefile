@@ -21,13 +21,20 @@ SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/teh4k_gfx.c \
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -g -Wall -pedantic
 
-# For normal 64-bit build:
+## For normal 64-bit build:
 #ARCHFLAGS = 
-#LIBS = `sdl-config --libs` -lm -lGL -lGLU
+#ARCHLIBS = `sdl-config --libs` -lm -lGL -lGLU
+#ARCHSTRIP = strip
+#ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
+#		-R .note.gnu.build-id -R .gnu.hash \
+#		-R .eh_frame_hdr -R .eh_frame 
 
 # For linking against 32-bit libraries (approx. 5% smaller packed exe):
+# (and even 10 % when sstrip is used instead of strip!!
 ARCHFLAGS = -m32 -DNO_I64
-LIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 /usr/lib/libGLU.so.1
+ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 /usr/lib/libGLU.so.1
+ARCHSTRIP = sstrip
+ARCHSTRIPOPT = 
 
 # The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
@@ -49,11 +56,6 @@ HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL   -DNO_LOOPING_ENVELOPES \
 #          --param max-unrolled-insns=0 \
 #          -msse4 -mavx -mhard-float 
 
-STRIPOPT = -s -R .comment \
-	-R .gnu.version \
-	-R .note.gnu.build-id -R .gnu.hash \
-	-R .eh_frame_hdr \
-	-R .eh_frame 
 
 nodefaultmake:
 	@echo "No default target is specified as of now."
@@ -101,20 +103,30 @@ sdltest: $(SDLTESTDEPS) Makefile
 		$(filter %.c %.h, $(SDLTESTDEPS)) \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
-tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makefile
+tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
 # hacking
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c 
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o synti2.o synti2.c
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o testdata.o testdata.c
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o teh4k_gfx.o teh4k_gfx.c
+#
+#	$(CC) $(HCFLAGS) $(ARCHFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c 
+#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o synti2.o synti2.c
+#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o testdata.o testdata.c
+#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o teh4k_gfx.o teh4k_gfx.c
 
-	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
+#	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
 		teh4k_gfx.o \
 	   -nostartfiles $(LIBS)
 
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
+		-Iinclude \
+		$(filter %.c, $(SDLTESTDEPS)) \
+		-nostartfiles -lc $(ARCHLIBS)
+
+# Why do I get problems with these and -m32:
+# `sdl-config --libs` -lm -lGL -lGLU
+
+
 #	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
 #		teh4k_gfx.o \
-	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
+#	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
 
 #	strip $(STRIPOPT) -o $@.payload $@.unstripped.payload
 #	cat selfextr.stub > $@
@@ -125,10 +137,12 @@ tinytest: sdltest.c synti2.c synti2.h testdata.c selfextr.stub teh4k_gfx.c Makef
 # against 32bit libraries, using 7zip, and stripping with sstrip
 # instead of strip:
 	cp $@.unstripped.payload $@.payload 
-	sstrip $@.payload
+
+	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
+#	sstrip $@.payload
 
 	7za a -tgzip -mx=9 tmp.gz $@.payload
-	cat selfextr.stub tmp.gz > $@
+	cat tests/selfextr.stub tmp.gz > $@
 	rm tmp.gz
 
 	chmod ugo+x $@

@@ -8,7 +8,12 @@ S2HEADERS = include/synti2_guts.h \
 		include/synti2_misss.h \
 		include/synti2_params.h \
 
-JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c src/synti2.c src/synti2_jack.c
+JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
+	src/synti2.c src/synti2_jack.c
+
+JVISDEPS = tests/javtest.c tests/testbank.c testsong.c \
+	 src/synti2.c src/synti2_jack.c \
+	 tests/teh4k_gfx.c
 
 GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
 
@@ -86,6 +91,13 @@ jsynti2: $(JSYNTI2DEPS) $(S2HEADERS) Makefile
 		$(filter %.c %.h, $(JSYNTI2DEPS)) \
 		`pkg-config --cflags --libs jack` -lm
 
+jvis: $(JVISDEPS) $(S2HEADERS) Makefile
+	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
+		$(filter %.c %.h, $(JVISDEPS)) \
+		`pkg-config --cflags --libs jack` \
+		`sdl-config --cflags --libs` -lm -lGL -lGLU
+
+
 include/synti2_params.h: genpar src/patchdesign.dat
 	./genpar src/patchdesign.dat $@
 
@@ -98,7 +110,6 @@ testsong.c: tests/testi.mid misssify Makefile
 	python tools/file2c.py test.misss hacksong > testsong.c
 
 sdltest: $(SDLTESTDEPS) Makefile
-
 	$(CC) $(CFLAGS) -o $@ -Iinclude \
 		$(filter %.c %.h, $(SDLTESTDEPS)) \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU

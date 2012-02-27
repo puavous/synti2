@@ -10,68 +10,93 @@
  * allocating a "voice". If there is need for more polyphony, it would
  * be easy enough to create several synth instances running in
  * parallel, each giving a maximum of 16 new "voices" to the whole.
+ *
+ * (And I would still like to call these "channels" rather than
+ * "parts", but let's still do it in the Roland way as of now)
  */
 #define NPARTS 16
 
 /* Sound bank size equals the number of parts. Also this decision
- * stems from the 4k no-frills approach. This is no restriction for
- * more general use, because, in principle, you could have thousands
- * of patches off-line, and then load one of them for each of the 16
- * channels on-demand. For 4k, we expect to use only max 16 patches
- * and 16 channels, and everything is "hard-coded" (automatically,
- * though, as of now) at compile time.
+ * stems from the 4k intro needs. But this is no restriction for more
+ * general use, because, in principle, you could have thousands of
+ * patches off-line, and then load one of them for each of the 16f
+ * channels on-demand. But, for 4k purposes, we expect to need only
+ * max 16 patches and 16 channels, and everything will be "hard-coded"
+ * (automatically, though, nowadays) at compile time.
  */
 #define NPATCHES 16
 
 /* Total number of "counters", i.e., oscillators/operators. */
-#define NCOUNTERS (NVOICES * NOSCILLATORS)
+#define NCOUNTERS (NPARTS * NOSCILLATORS)
 
-/* Total number of envelopes */
-#define NENVS (NVOICES * (NENVPERVOICE+1))
+/* Total number of envelopes. There is the magical "zero-envelope"
+ * which is technically not operational. Hmm.. FIXME: Is the
+ * zero-envelope needed anymore, when we are actually using separate
+ * operator gains? It seems to be necessary only for pitch
+ * envelopes. Would it make a shorter code if we used a "pitch gain"
+ * and not use a zero-envelope?
+ */
+#define NENVS (NPARTS * (NENVPERVOICE+1))
 
 /* Maximum value of the counter type depends on C implementation, so
  * use limits.h -- TODO: Actually should probably use C99 and stdint.h !
  */
 #define MAX_COUNTER UINT_MAX
+
 /* The wavetable sizes and divisor-bitshift must be consistent. */
 #define WAVETABLE_SIZE 0x10000
 #define WAVETABLE_BITMASK 0xffff
-/* Hmm... is there some way to get the implementation-dependent
-   bit-count?*/
+/* FIXME: This is implementation dependent! Hmm... is there some way
+   to get the implementation-dependent bit-count here? */
 #define COUNTER_TO_TABLE_SHIFT 16
 
-/* Storage size */
+/* Storage size. TODO: Would be nice to check bounds unless
+ * -DULTRASMALL is set.
+ */
 #define SYNTI2_MAX_SONGBYTES 30000
 #define SYNTI2_MAX_SONGEVENTS 15000
 
-
-/** I finally realized that unsigned ints will nicely loop around
- * (overflow) and as such they model an oscillator's phase pretty
- * nicely. Can I use them for other stuff as well? Seem fit for
- * envelopes with only a little extra (clamping and stop flag). Could
- * I use just one huge counter bank for everything? Looks that
- * way. There seems to be a 30% speed hit for computing all the
- * redundant stuff. But a little bit smaller code, and the source
- * looks pretty nice too. TODO: think if it is more efficient to put
- * values and deltas in separate arrays. Probably, if you think of a
- * possible assembler implementation with multimedia vector
- * instructions(?). Or maybe not? Look at the compiler output...
+/** Oscillator/counter structure. I don't know if they usually do this
+ * kind of stuff with synths... (I know I should read other peoples
+ * code, I know, I know, I will, I will... later... ) but I did it
+ * this way... 
+ * 
+ * The idea came about when I realized that unsigned ints will nicely
+ * loop around (overflow) through zero and as such they model an
+ * oscillator's phase pretty nicely. Could I use them for other stuff
+ * as well? They seem fit for envelopes with only a little extra logic
+ * (clamping and a stop flag). Could I use just one huge counter bank
+ * for everything? It pretty much looks that way. There seems to be a
+ * 30% speed hit for computing all the redundant stuff... but as a
+ * result, the executable is a little bit smaller, and the source
+ * looks pretty nice too.
+ * 
+ * TODO: think if it is more efficient to put values and deltas in
+ * separate arrays. Probably, if you think of a possible assembler
+ * implementation with multimedia vector instructions(?). Or maybe
+ * not? Look at the compiler output...
  *
  * TODO: Think. Signed integers would overflow just as nicely. Could
  * it be useful to model things in -1..1 range instead of 0..1 ?
  *
  * TODO: Maybe separate functions for oscillators and envelopes could
  * still be used if they would compress nicely...
+ *
+ * TODO: Now I convert the counter value to a float before
+ * computations even though fixed point arithmetics could admittedly
+ * yield shorter code (maybe...) Fixed point synth remains to be tried
+ * in a later project, because now I didn't have the time to think
+ * about accuracies and stuff. Floats are so easy.
  */
 typedef struct {
   unsigned int detect;
   unsigned int val;
   unsigned int delta;
-  float f;  /* current output value (interpolant) */
+  float f;   /* current output value (interpolant) */
   float ff;  /* current output value (1..0) */
   float fr;  /* current output value (0..1) */
-  float aa; /* for interpolation start */
-  float bb; /* for interpolation end */
+  float aa;  /* for interpolation start */
+  float bb;  /* for interpolation end */
 } counter;
 
 /* Events shall form a singly linked list. TODO: Is the list code too
@@ -82,12 +107,13 @@ typedef struct {
 typedef struct synti2_player_ev synti2_player_ev;
 
 struct synti2_player_ev {
-  const byte_t *data;
-  synti2_player_ev *next;
-  unsigned int frame;
-  int len;
+  const byte_t *data;       /* Event data */
+  synti2_player_ev *next;   /* link to next event */
+  unsigned int frame;       /* Time of the event in frames */
+  int len;                  /* length of the event data (hard-codable?) */
 };
 
+/** Player is the MIDI-like sequence playback engine. */
 struct synti2_player {
   synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
   synti2_player_ev *insloc;  /* (one loc yielded larger exe on my first try)*/
@@ -100,14 +126,14 @@ struct synti2_player {
 
   int idata;        /* index of next free data location */
 
-  /* Only playable events. The first will be at evpool[0]! */
+  /* Playable events. The first will be at evpool[0]! */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
   /* Data for events. */
   byte_t data[SYNTI2_MAX_SONGBYTES];
 };
 
 
-/* The patch. The way things sound. */
+/** The synthesizer patch. The way things sound. */
 typedef struct synti2_patch {
   int ipar3[SYNTI2_I3_NPARS];
   int ipar7[SYNTI2_I7_NPARS];
@@ -119,8 +145,10 @@ typedef struct synti2_patch {
  *  all? It will have controller values, though..
  */
 typedef struct synti2_part {
-  int voiceofkey[128];  /* Which note has triggered which voice */
+  //  int voiceofkey[128];  /* Which note has triggered which voice */
                         /* TODO: disable multiple triggering(?) */
+  /* Not used anymore when part==voice internally */
+
   int patch; /* Which patch is selected for this part. */
 } synti2_part;
 
@@ -151,27 +179,29 @@ struct synti2_synth {
    */
   /* Must be in this order and next to each other exactly!! Impl. specif?*/
   counter c[NCOUNTERS];
-  counter eprog[NVOICES][NENVPERVOICE+1];
+  counter eprog[NPARTS][NENVPERVOICE+1];
   counter framecount;
 
   /* Envelope stages just a table? TODO: think.*/
-  int estage[NVOICES][NENVPERVOICE+1];
-  int sustain[NVOICES];
+  int estage[NPARTS][NENVPERVOICE+1];
+  int sustain[NPARTS];
 
-  int partofvoice[NVOICES];  /* which part has triggered each "voice";
+  /* FIXME: Remove for good:
+     int partofvoice[NVOICES]; */ /* which part has triggered each "voice";
                                 -1 (should we use zero instead?) means
                                 that the voice is free to re-occupy. */
 
-  synti2_patch *patchofvoice[NVOICES];  /* which patch is sounding; */
+  /* FIXME: Remove this, too:
+     synti2_patch *patchofvoice[NVOICES];*/  /* which patch is sounding; */
 
 
-  int note[NVOICES];
-  int velocity[NVOICES];
+  int note[NPARTS];
+  int velocity[NPARTS];
 
-  float outp[NVOICES][NOSCILLATORS+1+1]; /*"zero", oscillator outputs, noise*/
+  float outp[NPARTS][NOSCILLATORS+1+1]; /*"zero", oscillator outputs, noise*/
 
   /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
-  synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
+  //synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
   synti2_patch patch[NPATCHES];   /* The sound parameters per part*/
 };
 

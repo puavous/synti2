@@ -204,7 +204,7 @@ synti2_create(unsigned long sr,
   if (s->pl == NULL) {free(s); return NULL;}
 #endif
 
-  /* Initialize the player part. (Not much to be done...) */
+  /* Initialize the player module. (Not much to be done...) */
   s->pl->sr = sr;
   s->sr = sr;
   if (songdata != NULL) synti2_player_init_from_misss(s->pl, songdata);
@@ -230,10 +230,6 @@ synti2_create(unsigned long sr,
     s->note2freq[ii] = 440.0f * powf(2.0f, ((float)ii - 69.0f) / 12.0f );
   }
 
-  for(ii=0; ii<NVOICES; ii++){
-    s->partofvoice[ii]--;     /* == -1 .. Could I make this 0 somehow? */
-  }
-
   for(ii=0; ii<WAVETABLE_SIZE; ii++){
     /*s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));*/
     t = (float)ii/(WAVETABLE_SIZE-1);
@@ -249,14 +245,12 @@ synti2_create(unsigned long sr,
 /** Note on OR note off (upon velocity == 0) */
 static
 void
-synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
+synti2_do_noteon(synti2_synth *s, int voice, int note, int vel)
 {
-  int voice, ie;
+  int ie;
 
   /* note off */
   if (vel==0){
-    voice = s->part[part].voiceofkey[note];
-    /*if (voice < 0) return; */ /* FIXME: think.. */
     /* TODO: release all envelopes.. */
     for (ie=0; ie<=NENVPERVOICE; ie++){
       s->estage[voice][ie] = 2;      /* skip to end */
@@ -266,33 +260,11 @@ synti2_do_noteon(synti2_synth *s, int part, int note, int vel)
     }
     return; /* Note off is now handled. Otherwise do note on. */
   }
-
  
   /* note on */
-
-  /* FIXME: Unimplemented plan: if patch is monophonic, always use the
-   * voice corresponding to the part number. Otherwise, if that
-   * primary voice is occupied, find a free voice starting from index
-   * 17. This way, there is always one voice available per channel for
-   * mono patches, and it will become more deterministic to know where
-   * things happen, for possible visualization needs (but there is
-   * evil resource wasting when the song uses less than 16 parts!
-   * maybe some kind of free voice stack could be implemented with not
-   * too much code...)
-   */
-  for(voice=0; voice < NVOICES-1; voice++){
-    if (s->partofvoice[voice] < 0) break;
-  }
-  /*if (voice==NVOICES) return;*/ /* Cannot play new note! */
-  /* (Could actually force the last voice to play anyway!?) */
-
-  s->part[part].voiceofkey[note] = voice;
-  /* How much code for always referencing through [voice]? voice.note better?*/
-  s->partofvoice[voice] = part;
-  s->patchofvoice[voice] = s->patch + part; /* FIXME: s->part[part].patch*/
   s->note[voice] = note;
   s->velocity[voice] = vel;
-  s->sustain[voice] = 1;  
+  s->sustain[voice] = 1;    /* FIXME: Needed only if loop env is used?*/
  
   /* TODO: trigger all envelopes according to patch data..  Just give
      a hint to the evaluator function.. */
@@ -510,7 +482,7 @@ static
 void
 synti2_evalCounters(synti2_synth *s){
   counter *c;
-  /* for(ic=0;ic<NCOUNTERS+NVOICES*NENVPERVOICE+1;ic++){*/
+  /* for(ic=0;ic<NCOUNTERS+NPARTS*NENVPERVOICE+1;ic++){*/
   for(c = s->c; c <= &s->framecount; c++){
     if (c->delta == 0) {continue;}  /* stopped.. not running*/
     c->detect = c->val; 
@@ -544,21 +516,15 @@ static
 void
 synti2_updateEnvelopeStages(synti2_synth *s){
   int iv, ie, ipastend;
-  int part;
   float nextgoal;
   float nexttime;
   synti2_patch *pat;
 
-  for(iv=0; iv<NVOICES; iv++){
-    /* Consider note instance "completely finished" when envelope 1 is
-       over: */
-    if (s->estage[iv][1] == 0) {
-      s->partofvoice[iv] = -1;
-    }
+  /* remember that voice == part under the new design decisions.. */
+  for(iv=0; iv<NPARTS; iv++){
+    /* FIXME: See if this needs some "completely finished sound" logic*/
 
-    part = s->partofvoice[iv];
-    if (part<0) continue;
-    pat = s->patchofvoice[iv]; /* Oh, the levels of indirection!(TODO:?)*/
+    pat = s->patch + iv;
 
     for (ie=1; ie<=NENVPERVOICE; ie++){
       /*printf("At %d voice %d env %d\n", s->framecount.val, iv,ie); fflush(stdout);*/
@@ -570,7 +536,6 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 
       /* Find next non-zero-timed knee (or end.) */
       while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){
-
 #ifndef NO_LOOPING_ENVELOPES
         /* Seems to yield 55 bytes of compressed code!! Whyyy so much? */
         if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)){
@@ -581,7 +546,6 @@ synti2_updateEnvelopeStages(synti2_synth *s){
           s->estage[iv][ie] += pat->ipar3[SYNTI2_I3_ELOOP1+ie];
         }
 #endif
-
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
         s->eprog[iv][ie].aa = s->eprog[iv][ie].f;
@@ -591,7 +555,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
             level (next goal). Delta remains at 0, and we may skip many.*/
           s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
         } else {
-          s->eprog[iv][ie].val = 0;    /* FIXME: Is it necessary to reset val? */
+          s->eprog[iv][ie].val = 0; /*FIXME: Is it necessary to reset val?*/
           s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
         }
         /*if ((iv==0) && (ie<2))
@@ -614,8 +578,8 @@ synti2_updateFrequencies(synti2_synth *s){
   synti2_patch *pat;
 
   /* Frequency computation... where to put it after all? */
-  for (iv=0; iv<NVOICES; iv++){
-    pat = s->patchofvoice[iv]; /* Oh, the levels of indirection!(TODO:?)*/
+  for (iv=0; iv<NPARTS; iv++){
+    pat = s->patch + iv;
     if (pat==NULL) continue;
 
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
@@ -668,13 +632,10 @@ synti2_render(synti2_synth *s,
       /* Sound output. Getting more realistic as we speak... */
       buffer[iframe+ii] = 0.0f;
       
-      for(iv=0;iv<NVOICES;iv++){
+      for(iv=0;iv<NPARTS;iv++){
 
-        /* Hmm.. these not needed if we hardcode the patch algorithm!! */
-        pat = s->patchofvoice[iv];
-        if (pat==NULL) continue;
-
-        /* if (s->partofvoice[iv] < 0) continue; Unsounding. FIXME: how? */
+        pat = s->patch + iv;
+        /* FIXME: Need logic for "unsounding"? */
 
         /* Wavetable definitely! Could bit-shift the counter... */
 
@@ -707,7 +668,7 @@ synti2_render(synti2_synth *s,
         /* result is both in *signal and in interm (like before). */
         buffer[iframe+ii] += interm;
       }      
-      buffer[iframe+ii] /= NVOICES;
+      buffer[iframe+ii] /= NPARTS;
 
       buffer[iframe+ii] = tanh(buffer[iframe+ii]); /* Hack! beautiful too! */
 

@@ -29,7 +29,7 @@
 /* If any foreign MIDI protocol is used, note-offs should be converted
  * to our own protocol (also a well-known MIDI variant) in which
  * note-on with zero velocity means a note-off.
- */
+ * */
 #define DO_CONVERT_OFFS
 #endif
 

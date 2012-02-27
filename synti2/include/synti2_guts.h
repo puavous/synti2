@@ -4,13 +4,23 @@
 #include "synti2.h"
 #include "synti2_params.h"
 
-/* Polyphony */
-#define NVOICES 32
-
-/* Multitimbrality */
+/* Multitimbrality. This equals polyphonic capacity, too. This
+ * decision makes the code simpler and resultingly smaller for the 4k
+ * intro use case, because no code needs to be written for dynamically
+ * allocating a "voice". If there is need for more polyphony, it would
+ * be easy enough to create several synth instances running in
+ * parallel, each giving a maximum of 16 new "voices" to the whole.
+ */
 #define NPARTS 16
 
-/* Sound bank size (FIXME: separate the concept of patch and part!)*/
+/* Sound bank size equals the number of parts. Also this decision
+ * stems from the 4k no-frills approach. This is no restriction for
+ * more general use, because, in principle, you could have thousands
+ * of patches off-line, and then load one of them for each of the 16
+ * channels on-demand. For 4k, we expect to use only max 16 patches
+ * and 16 channels, and everything is "hard-coded" (automatically,
+ * though, as of now) at compile time.
+ */
 #define NPATCHES 16
 
 /* Total number of "counters", i.e., oscillators/operators. */

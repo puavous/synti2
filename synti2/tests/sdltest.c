@@ -61,54 +61,6 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   }
 }
 
-#if 0
-/**
- * Some graphics
- */
-static void render_scene_at_time(float time){
-  int i;
-  float segm;
-  /* Some example graphics code */
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glFrustum(-1.33,1.33,-1,1,1.5,100);
-  glMatrixMode(GL_MODELVIEW);
-  glEnable(GL_DEPTH_TEST);
-  glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
-
-  glLoadIdentity();
-
-  glTranslatef(sin(time),0, -30 + 5*sin(time));
-
-  glRotatef(time*64,sin(time/7),sin(time),1);
-  for(i=0; i<300; i++){
-    glRotatef(12.0,1,0,1);
-    glBegin(GL_TRIANGLES);
-    glVertex3f(4+i%3,i*sin(time),150-i);
-    glVertex3f(-1,sin(time*i),150-i);
-    glVertex3f(3,i,150-i);
-    glEnd();
-  }
-
-  segm = 2*3.1415926535 / 100;
-  for(i=0; i<100; i++){
-
-    glRotatef(360.0/100,0,0,1);
-
-    glTranslatef(2*sin(time),0,0);
-    
-      glBegin(GL_TRIANGLES);
-      glVertex3f(16+1,1,-5-10*sin(3*i*segm));
-      glVertex3f(2+1,-1,-5-10*cos(3*i*segm));
-      glVertex3f(6-1,1,-10);
-      glEnd();
-
-
-  }
-  SDL_GL_SwapBuffers();
-}
-#endif
 
 /** Try to wrap it... */
 static void main2(int sdl_flags){
@@ -117,6 +69,7 @@ static void main2(int sdl_flags){
 
   const SDL_VideoInfo * vid;
   float tnow;
+
 
   /* Checks of possible failures?*/
   st = synti2_create(MY_SAMPLERATE, patch_sysex, hacksong_data);

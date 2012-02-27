@@ -667,7 +667,7 @@ synti2_render(synti2_synth *s,
         }
         /* result is both in *signal and in interm (like before). */
         buffer[iframe+ii] += interm;
-      }      
+      }
       buffer[iframe+ii] /= NPARTS;
 
       buffer[iframe+ii] = tanh(buffer[iframe+ii]); /* Hack! beautiful too! */

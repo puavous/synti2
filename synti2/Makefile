@@ -45,11 +45,16 @@ ARCHSTRIPOPT =
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL   -DNO_LOOPING_ENVELOPES \
+HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL \
 	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX -nostdlib
 
-# Used the following the last time.. but now they don't seem to help much
-# at least with the first versions..
+
+# -DNO_LOOPING_ENVELOPES
+
+# For some reason at least -msse4 seems to shave bytes.. so it is
+# worthwhile to keep the following memories. I used the following the
+# last time.. but there were some stability problems with the compo
+# machine...
 
 # -fno-strict-aliasing \
 #          -nostdlib -nostartfiles -DULTRASMALL \
@@ -152,6 +157,8 @@ tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
 	7za a -tgzip -mx=9 tmp.gz $@.payload
 	cat tests/selfextr.stub tmp.gz > $@
 	rm tmp.gz
+
+#	7za a -mx=9 tmp.7z $@.payload;cat tests/selfextr.stub tmp.7z > $@;rm tmp.7z
 
 	chmod ugo+x $@
 

@@ -50,23 +50,4 @@ synti2_read_jack_midi(synti2_synth *s,
 #endif
 
 
-
-/* Sound structure. Must be consistent with all the parameters! */
-#define NENVPERVOICE 6
-#define NOSCILLATORS 4
-
-/* TODO: Think about the whole envelope madness... use LFOs instead of
- * looping envelopes?
- */
-#define TRIGGERSTAGE 6
-
-/* Remain in the MIDI world - it is 7 bits per SysEx data bit. */
-
-/* Length of envelope data block (K1T&L K2T&L K3T&L K4T&L K5T&L) */
-#define SYNTI2_NENVD 10
-/* (order of knees might be better reversed ??) 
-  FIXME: Think about this .. make envs simpler?
-*/
-
-
 #endif

@@ -1,0 +1,35 @@
+Old snippets whose function was moved away from the core engine are
+kept here, for purposes of reflection...
+
+  /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
+  /* FIXME: Remove for good:
+     int partofvoice[NVOICES]; */ /* which part has triggered each "voice";
+                                -1 (should we use zero instead?) means
+                                that the voice is free to re-occupy. */
+
+  /* FIXME: Remove this, too:
+     synti2_patch *patchofvoice[NVOICES];*/  /* which patch is sounding; */
+
+  //synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
+
+
+
+
+
+  /* note on */
+
+  /* FIXME: Unimplemented plan: if patch is monophonic, always use the
+   * voice corresponding to the part number. Otherwise, if that
+   * primary voice is occupied, find a free voice starting from index
+   * 17. This way, there is always one voice available per channel for
+   * mono patches, and it will become more deterministic to know where
+   * things happen, for possible visualization needs (but there is
+   * evil resource wasting when the song uses less than 16 parts!
+   * maybe some kind of free voice stack could be implemented with not
+   * too much code...)
+   */
+  for(voice=0; voice < NVOICES-1; voice++){
+    if (s->partofvoice[voice] < 0) break;
+  }
+  /*if (voice==NVOICES) return;*/ /* Cannot play new note! */
+  /* (Could actually force the last voice to play anyway!?) */

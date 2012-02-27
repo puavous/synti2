@@ -22,9 +22,32 @@
  * patches off-line, and then load one of them for each of the 16f
  * channels on-demand. But, for 4k purposes, we expect to need only
  * max 16 patches and 16 channels, and everything will be "hard-coded"
- * (automatically, though, nowadays) at compile time.
+ * (automatically, though, nowadays) at compile time. Adjacent copies
+ * of exactly the same patch data should compress nicely, too.
+ *
+ * FIXME: The sysex_receive() could be hardwired to receive all the
+ * patches at once (when compiled as stand-alone), starting from 0,
+ * saving the bytes for the offset handling.
  */
-#define NPATCHES 16
+
+/* Sound structure. Must be consistent with all the parameters! */
+#define NENVPERVOICE 6
+#define NOSCILLATORS 4
+
+/* TODO: Think about the whole envelope madness... use LFOs instead of
+ * looping envelopes?
+ */
+#define TRIGGERSTAGE 6
+
+/* Remain in the MIDI world - it is 7 bits per SysEx data bit. Or
+ * should we move to our own world altogether? No... SysEx is nice :).
+ */
+
+/* Length of envelope data block (K1T&L K2T&L K3T&L K4T&L K5T&L) */
+#define SYNTI2_NENVD 10
+/* (order of knees might be better reversed ??) 
+  FIXME: Think about this .. make envs simpler?
+*/
 
 /* Total number of "counters", i.e., oscillators/operators. */
 #define NCOUNTERS (NPARTS * NOSCILLATORS)
@@ -186,23 +209,11 @@ struct synti2_synth {
   int estage[NPARTS][NENVPERVOICE+1];
   int sustain[NPARTS];
 
-  /* FIXME: Remove for good:
-     int partofvoice[NVOICES]; */ /* which part has triggered each "voice";
-                                -1 (should we use zero instead?) means
-                                that the voice is free to re-occupy. */
-
-  /* FIXME: Remove this, too:
-     synti2_patch *patchofvoice[NVOICES];*/  /* which patch is sounding; */
-
-
   int note[NPARTS];
   int velocity[NPARTS];
 
   float outp[NPARTS][NOSCILLATORS+1+1]; /*"zero", oscillator outputs, noise*/
-
-  /* The parts. Sixteen as in the MIDI standard. TODO: Could have more? */
-  //synti2_part part[NPARTS];   /* FIXME: I want to call this channel!!!*/
-  synti2_patch patch[NPATCHES];   /* The sound parameters per part*/
+  synti2_patch patch[NPARTS];   /* The sound parameters per part*/
 };
 
 

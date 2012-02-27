@@ -15,12 +15,13 @@ static void primit(){
       glVertex3i(  1,    1,   -1);
       glVertex3i(  -1,    1,   -1);
 
+      /*
       glVertex3i(  -1,    1,   1);
       glVertex3i(  1,    1,   1);
       glVertex3i(  1,   -1,   1);
       glVertex3i( -1,   -1,   1);
 
-      /*
+
       glVertex3i(  1,  -1,   1);
       glVertex3i(  1,  1,    1);
       glVertex3i(  1,  1,   -1);
@@ -48,23 +49,24 @@ static void primit(){
 static void recurs(int n, float am){
   if (n==0) return;
   primit();
-  glRotatef(am, 1.f, am ,2.f*n);
+  glRotatef(am, 1.f, am , 2*n);
   glTranslatef(1.f,-1.f,0.f);
-  glScalef(.99f,.99f,.99f);
+  //  glScalef(1.01f,.99f,.99f);
   recurs(n/2,am);
-  recurs(n/2,-am*2);
+  recurs(n/2,-am*2.f);
 }
 
 static void morko(int par, float par2){
   int j;
-    for(j=0; j<9; j++){
+  for(j=0; j<9; j++){
       
-      glRotatef(40,0.,1.,2.);
-      glPushMatrix();
-      recurs(par, par2);
-      glPopMatrix();
+    glRotatef(40, 0.f,1.f,2.f);
+    //glRotatef(40, 1.f, 0.f, 0.f);
+    glPushMatrix();
+    recurs(par, par2);
+    glPopMatrix();
 
-    }
+  }
 }
 
 
@@ -88,21 +90,22 @@ static void render_scene(const synti2_synth *s){
   
   glRotatef(time*13.f, 1.f, 0.f, 0.f);
   glRotatef(time*20.f, 1.f, 1.f, 0.f);
-  glRotatef(time*11.f, 0.f, 0.f, 1.f);
-
+  //  glRotatef(time*11.f, 0.f, 0.f, 1.f);
   
   glTranslatef(-100.f, (i%3) * 10.f, 0.f);
-  glPushMatrix();
+  //  glPushMatrix();
 
   for(i=0; i<10; i++){
     glRotatef(45.f, 1.f, 0.f, 0.f);
     glTranslatef(20.f, (i%3) * 10.f, 0.f);
 
-    glColor4f(.5f+.5f*sin(time),s->eprog[3][1].f,.5f+.5f*sin(time+1),1.0f/i);
+    //    glColor4f(.5f+.5f*sin(time),s->eprog[3][1].f,.5f+.5f*sin(time+1),1.0f/i);
+    glColor4f(fabs(sin(time)), fabs(sin(2*time)), 
+              fabs(sin(time+4.f)), 1.0f/i);
 
     morko(62+30*sin(time*i), time+i*2);
   }
-  glPopMatrix();
+  //  glPopMatrix();
 }
 
 /** Render something that varies with time and "audio snapshot". */

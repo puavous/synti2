@@ -25,6 +25,10 @@ jack_port_t *outmidi_port;
 unsigned long sr;
 char * client_name = "jmiditrans";
 
+int hack_last_noteon[16] ={-1,-1,-1,-1,
+                           -1,-1,-1,-1,
+                           -1,-1,-1,-1,
+                           -1,-1,-1,-1};
 
 int hack_channel_table[16][128] = {
   /*Chan 0  Oct -5 */ {0,0,0,0,0,0,0,0,0,0,0,0,
@@ -249,6 +253,27 @@ hack_channel(jack_midi_event_t *ev){
   ev->buffer[0] = (nib1<<4) + nib2;
 }
 
+static int
+hack_solo_notes(const jack_midi_event_t *ev){
+  int cmd, chn, note, vel;
+  cmd = ev->buffer[0] >> 4;
+  chn = ev->buffer[0] & 0x0f;
+  note = ev->buffer[1];
+
+  if (cmd==0x9) {
+    //vel = ev->buffer[2];
+    hack_last_noteon[chn] = note;
+    return 1; /* register and accept. */
+  }
+
+  if (cmd==0x8) {
+    return (hack_last_noteon[chn] == note); /* accept only if off goes
+                                               the same note that was
+                                               last on.*/
+  }
+  return 1; /* Accept all other commands with no problemos. */
+}
+
 
 /** MIDI filtering is the only thing this client is required to do. */
 static void
@@ -272,14 +297,16 @@ process_audio (jack_nframes_t nframes)
   jack_midi_clear_buffer(midi_out_buffer); 
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
-    if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-      /*debug_print_ev(&ev);*/
-      hack_channel(&ev);
-      /*debug_print_ev(&ev);*/
-      jack_midi_event_write(midi_out_buffer, ev.time, ev.buffer, ev.size);
-    } else {
-      break;
-    }
+    if (jack_midi_event_get (&ev, midi_in_buffer, i) == ENODATA) break;
+
+    /*debug_print_ev(&ev);*/
+    hack_channel(&ev);
+    /*debug_print_ev(&ev);*/
+    
+    if (!hack_solo_notes(&ev)) continue;
+
+    jack_midi_event_write(midi_out_buffer, 
+                          ev.time, ev.buffer, ev.size);
   }
 }
 

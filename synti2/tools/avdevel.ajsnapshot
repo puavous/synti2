@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<alsa>
+  <client name="System">
+    <port id="0" />
+    <port id="1" />
+  </client>
+  <client name="Midi Through">
+    <port id="0" />
+  </client>
+  <client name="Akai MPK25">
+    <port id="0" />
+    <port id="1" />
+    <port id="2" />
+  </client>
+  <client name="Client-128" />
+</alsa>
+<jack>
+  <client name="system">
+    <port name="capture_1" />
+    <port name="capture_2" />
+    <port name="midi_capture_1">
+      <connection port="jmiditrans:iportti" />
+    </port>
+    <port name="midi_capture_2" />
+    <port name="midi_capture_3" />
+  </client>
+  <client name="jmiditrans">
+    <port name="oportti">
+      <connection port="avtest:iportti" />
+    </port>
+  </client>
+  <client name="avtest">
+    <port name="bportL">
+      <connection port="system:playback_1" />
+    </port>
+    <port name="bportR">
+      <connection port="system:playback_2" />
+    </port>
+  </client>
+  <client name="synti2editor">
+    <port name="oportti">
+      <connection port="avtest:iportti" />
+    </port>
+  </client>
+</jack>

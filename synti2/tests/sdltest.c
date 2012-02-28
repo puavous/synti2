@@ -29,9 +29,6 @@ extern unsigned char patch_sysex[];
 extern unsigned char hacksong_data[];
 extern unsigned int hacksong_length;
 
-/* Snapshot of audiodata, as was hacked for 'Teh 4k 3000': */
-GLfloat snapshot[4*AUDIOBUFSIZE];
-
 
 /**
  * Process sound with our own synthesis, then convert to SDL format.
@@ -51,13 +48,6 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   for(i=0;i<len/2;i+=2){
     ((Sint16*)stream)[i+0] = (Sint16)(audiobuf[i/2]*vol); 
     ((Sint16*)stream)[i+1] = (Sint16)(audiobuf[i/2]*vol);
-  }
- 
-  /* FIXME: (Will do this time :)) I ended up with this very ugly way
-     to get things happening on screen. Need to expose more of the
-     synth state in future versions. */
-  if ((audiobuf[5]>0.05)||(frame > 48000*64)){
-    for (i=0;i<AUDIOBUFSIZE;i++) snapshot[i]=audiobuf[i]*20;
   }
 }
 
@@ -124,7 +114,7 @@ static void main2(int sdl_flags){
       write_to_snd(fout, audbuffer, AUDIOBUFSIZE)
     }
     if (frame % (MY_SAMPLERATE/50) == 0){  /* 50 fps */
-      teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE);
+      //teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE);
       grab_screen_somehow_from_openGL_output(screenbuf);
       write_image_to_disk_for_later_encoding(..);
     }

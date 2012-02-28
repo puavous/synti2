@@ -340,29 +340,37 @@ void cb_new_i3_value(Fl_Widget* w, void* p){
   send_to_jack_port(1, d, curr_patch, val);
 }
 
+bool file_exists(const char* fname){
+  std::ifstream checkf(fname);
+  return checkf.is_open();
+}
+
 void cb_save_all(Fl_Widget* w, void* p){
-  std::ofstream ofs(hack_filename.c_str(), std::ios::trunc);
+  Fl_File_Chooser chooser(".","*.s2bank",Fl_File_Chooser::CREATE,
+                          "Save -- select destination file.");
+  chooser.show();
+  while(chooser.shown()) Fl::wait();
+  if ( chooser.value() == NULL ) return;
+
+  if (file_exists(chooser.value())){
+    if (2 != fl_choice("File %s exists. \nDo you want to overwrite it?", 
+                       "Cancel", "No", "Yes", chooser.value())) return;
+  }
+
+  std::ofstream ofs(chooser.value(), std::ios::trunc);
   pbank->write(ofs);
 }
 
 void cb_export_c(Fl_Widget* w, void* p){
   Fl_File_Chooser chooser(".","*.c",Fl_File_Chooser::CREATE,
-                          "Select destination file to save.");
+                          "Export to C -- select destination file.");
   chooser.show();
   while(chooser.shown()) Fl::wait();
   if ( chooser.value() == NULL ) return;
 
-  /*  std::string fname(chooser.value());
-      fname += chooser.value();*/
-  std::cout << chooser.value() << " selected" << std::endl;
-
-  std::ifstream checkf(chooser.value());
-  if (checkf.is_open()){
-    checkf.close();
+  if (file_exists(chooser.value())){
     if (2 != fl_choice("File %s exists. \nDo you want to overwrite it?", 
-                       "Cancel", "No", "Yes", chooser.value())){
-      return;
-    }
+                       "Cancel", "No", "Yes", chooser.value())) return;
   }
 
   std::ofstream ofs(chooser.value(), std::ios::trunc);
@@ -371,19 +379,40 @@ void cb_export_c(Fl_Widget* w, void* p){
 
 
 void cb_save_current(Fl_Widget* w, void* p){
-  std::ofstream ofs(hack_filename.c_str(), std::ios::trunc);
+  Fl_File_Chooser chooser(".","*.s2patch",Fl_File_Chooser::CREATE,
+                          "Save Patch -- select destination file.");
+  chooser.show();
+  while(chooser.shown()) Fl::wait();
+  if ( chooser.value() == NULL ) return;
+
+  if (file_exists(chooser.value())){
+    if (2 != fl_choice("File %s exists. \nDo you want to overwrite it?", 
+                       "Cancel", "No", "Yes", chooser.value())) return;
+  }
+
+  std::ofstream ofs(chooser.value(), std::ios::trunc);
   (*pbank)[curr_patch].write(ofs);
 }
 
 void cb_load_all(Fl_Widget* w, void* p){
-  std::ifstream ifs(hack_filename.c_str());
+  Fl_File_Chooser chooser(".","*.s2bank",Fl_File_Chooser::SINGLE,
+                          "Load all");
+  chooser.show(); while(chooser.shown()) Fl::wait();
+  if ( chooser.value() == NULL ) return;
+
+  std::ifstream ifs(chooser.value());
   pbank->read(ifs);
   button_send_all->do_callback();
   widgets_to_reflect_reality();
 }
 
 void cb_load_current(Fl_Widget* w, void* p){
-  std::ifstream ifs(hack_filename.c_str());
+  Fl_File_Chooser chooser(".","*.s2patch",Fl_File_Chooser::SINGLE,
+                          "Load a single patch");
+  chooser.show(); while(chooser.shown()) Fl::wait();
+  if ( chooser.value() == NULL ) return;
+
+  std::ifstream ifs(chooser.value());
   (*pbank)[curr_patch].read(ifs);
   button_send_all->do_callback();
   widgets_to_reflect_reality();

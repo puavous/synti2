@@ -18,8 +18,8 @@
 
 /* Sound bank size equals the number of parts. Also this decision
  * stems from the 4k intro needs. But this is no restriction for more
- * general use, because, in principle, you could have thousands of
- * patches off-line, and then load one of them for each of the 16f
+ * general use either, because, in principle, you could have thousands
+ * of patches off-line, and then load one of them for each of the 16
  * channels on-demand. But, for 4k purposes, we expect to need only
  * max 16 patches and 16 channels, and everything will be "hard-coded"
  * (automatically, though, nowadays) at compile time. Adjacent copies
@@ -28,6 +28,9 @@
  * FIXME: The sysex_receive() could be hardwired to receive all the
  * patches at once (when compiled as stand-alone), starting from 0,
  * saving the bytes for the offset handling.
+ *
+ * Remain in the MIDI world - it is 7 bits per SysEx data bit. Or
+ * should we move to our own world altogether? No... SysEx is nice :).
  */
 
 /* Sound structure. Must be consistent with all the parameters! */
@@ -38,10 +41,6 @@
  * looping envelopes?
  */
 #define TRIGGERSTAGE 6
-
-/* Remain in the MIDI world - it is 7 bits per SysEx data bit. Or
- * should we move to our own world altogether? No... SysEx is nice :).
- */
 
 /* Length of envelope data block (K1T&L K2T&L K3T&L K4T&L K5T&L) */
 #define SYNTI2_NENVD 10
@@ -164,17 +163,6 @@ typedef struct synti2_patch {
   float fpar[SYNTI2_F_NPARS];
 } synti2_patch;
 
-/** TODO: Not much is inside the part structure. Is it necessary at
- *  all? It will have controller values, though..
- */
-typedef struct synti2_part {
-  //  int voiceofkey[128];  /* Which note has triggered which voice */
-                        /* TODO: disable multiple triggering(?) */
-  /* Not used anymore when part==voice internally */
-
-  int patch; /* Which patch is selected for this part. */
-} synti2_part;
-
 struct synti2_synth {
   /* I'll actually put the player inside the synthesizer. Should
    * probably call it "sequencer" instead of "player"... ? Seems to
@@ -217,7 +205,7 @@ struct synti2_synth {
 };
 
 
-/* Jack interface needs to have this exposed. */
+/* Jack interface needs to have this exposed. Otherwise can be static. */
 #ifndef JACK_MIDI
 static
 #endif

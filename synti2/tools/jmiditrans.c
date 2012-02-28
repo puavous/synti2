@@ -25,12 +25,30 @@ jack_port_t *outmidi_port;
 unsigned long sr;
 char * client_name = "jmiditrans";
 
-int hack_last_noteon[16] ={-1,-1,-1,-1,
-                           -1,-1,-1,-1,
-                           -1,-1,-1,-1,
-                           -1,-1,-1,-1};
+/* For example: 5-poly piano, 2-poly high-string, mono bass, mono lead,
+   drums (bd,sd,oh,ch,to), effects? */
+/* FIXME: Wrap all this to a class with load/save/edit option and a GUI.*/
+int voice_rotate[16] = {4,0,0,0,
+                        0,1,0,0,
+                        0,0,0,0,
+                        0,0,0,0};
 
-int hack_channel_table[16][128] = {
+int next_rotation[16] = {0,0,0,0,
+                         0,0,0,0,
+                         0,0,0,0,
+                         0,0,0,0};
+
+int note_of_rotation[16][16];
+
+int rotation_of_noteon[16][128]; /* FIXME: to -1*/
+
+
+int last_noteon[16] ={-1,-1,-1,-1,
+                      -1,-1,-1,-1,
+                      -1,-1,-1,-1,
+                      -1,-1,-1,-1};
+
+int channel_table[16][128] = {
   /*Chan 0  Oct -5 */ {0,0,0,0,0,0,0,0,0,0,0,0,
   /*        Oct -4 */  0,0,0,0,0,0,0,0,0,0,0,0,
   /*        Oct -3 */  0,0,0,0,0,0,0,0,0,0,0,0,
@@ -240,21 +258,72 @@ debug_print_ev(jack_midi_event_t *ev){
                              ev->buffer[1], ev->buffer[2]);
 }
 
+
+/** Just a dirty hack to rotate channels, if wired to do so.*/
+static 
+int
+rotate_notes(jack_midi_event_t *ev){
+  int cmd, chn, note;
+  int newrot, oldrot, newchn;
+
+  cmd = ev->buffer[0] >> 4;
+  chn = ev->buffer[0] & 0x0f;
+  note = ev->buffer[1];
+
+  if (cmd == 0x09){
+    /* Note on goes to the next channel in rotation. */
+    if (voice_rotate[chn] > 0) {
+      newrot = next_rotation[chn] % voice_rotate[chn];
+    } else {
+      newrot = 0;
+    }
+    next_rotation[chn]++; /* tentative for next note-on. */
+    newchn = chn + newrot;  /* divert to the rotated channel */
+
+    /* Keep a record of where note ons have been put. When there is an
+     * overriding note-on, earlier note-on must be erased, so that
+     * note-off can be skipped (the note is "lost"/superseded)
+     */
+    if (note_of_rotation[chn][newrot] >= 0){
+      /* Forget the superseded note-on: */
+      rotation_of_noteon[chn][note_of_rotation[chn][newrot]] = -1;
+    }
+    /* remember the new noteon */
+    note_of_rotation[chn][newrot] = note;
+    rotation_of_noteon[chn][note] = newrot;
+  } else if (cmd == 0x08){
+    /* Note off goes to the same channel, where the corresponding note
+       on was located earlier. FIXME: should swallow if note on is no
+       more relevant.  */
+    if (rotation_of_noteon[chn][note] < 0) return 0; /* Dismissed already*/
+
+    oldrot = rotation_of_noteon[chn][note];
+    note_of_rotation[chn][oldrot] = -1; /* no more note here. */
+    newchn = chn+oldrot; /* divert note-off to old target. */
+  } else {
+    return 1;
+  }
+
+  ev->buffer[0] = (cmd<<4) + newchn; /* mogrify event. */
+  return 1;
+}
+
+
 /** Just a dirty hack to spread drums out to different channels. */
 static void
-hack_channel(jack_midi_event_t *ev){
+channel(jack_midi_event_t *ev){
   int nib1, nib2, note;
   nib1 = ev->buffer[0] >> 4;
   nib2 = ev->buffer[0] & 0x0f;
   note = ev->buffer[1];
 
-  nib2 = nib2+hack_channel_table[nib2][note];
+  nib2 = nib2+channel_table[nib2][note];
 
   ev->buffer[0] = (nib1<<4) + nib2;
 }
 
 static int
-hack_solo_notes(const jack_midi_event_t *ev){
+solo_notes(const jack_midi_event_t *ev){
   int cmd, chn, note, vel;
   cmd = ev->buffer[0] >> 4;
   chn = ev->buffer[0] & 0x0f;
@@ -262,12 +331,12 @@ hack_solo_notes(const jack_midi_event_t *ev){
 
   if (cmd==0x9) {
     //vel = ev->buffer[2];
-    hack_last_noteon[chn] = note;
+    last_noteon[chn] = note;
     return 1; /* register and accept. */
   }
 
   if (cmd==0x8) {
-    return (hack_last_noteon[chn] == note); /* accept only if off goes
+    return (last_noteon[chn] == note); /* accept only if off goes
                                                the same note that was
                                                last on.*/
   }
@@ -300,10 +369,15 @@ process_audio (jack_nframes_t nframes)
     if (jack_midi_event_get (&ev, midi_in_buffer, i) == ENODATA) break;
 
     /*debug_print_ev(&ev);*/
-    hack_channel(&ev);
+    channel(&ev);
     /*debug_print_ev(&ev);*/
     
-    if (!hack_solo_notes(&ev)) continue;
+    if (!rotate_notes(&ev)) continue;
+    /* TODO: duplicate_controllers() -- 
+       requires creation of additional events!!!
+       maybe put the event writing inside of the functions 
+       (and refactor names)
+     */
 
     jack_midi_event_write(midi_out_buffer, 
                           ev.time, ev.buffer, ev.size);
@@ -321,7 +395,14 @@ process (jack_nframes_t nframes, void *arg)
 int
 main (int argc, char *argv[])
 {
+  int i,j;
   jack_status_t status;
+  
+  /* No notes "playing" when we begin. */
+  for (i=0;i<16;i++){
+    for (j=0;j<128;j++) rotation_of_noteon[i][j] = -1; 
+    for (j=0;j<16;j++) note_of_rotation[i][j] = -1;
+  }
 
   /* Initial Jack setup. Open (=create?) a client. */
   if ((client = jack_client_open (client_name, JackNoStartServer, &status)) == 0) {

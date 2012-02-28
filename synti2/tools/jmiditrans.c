@@ -301,7 +301,7 @@ rotate_notes(jack_midi_event_t *ev){
     note_of_rotation[chn][oldrot] = -1; /* no more note here. */
     newchn = chn+oldrot; /* divert note-off to old target. */
   } else {
-    return 1;
+    return 1; /* other messages not handled. */
   }
 
   ev->buffer[0] = (cmd<<4) + newchn; /* mogrify event. */

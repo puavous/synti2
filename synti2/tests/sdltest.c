@@ -9,10 +9,6 @@
 
 #include "synti2.h"
 
-/* Try with the previous graphics.. */
-extern void teh4k_render_at_time(float time, float *data, size_t AUDIOBUFSIZE);
-
-
 #define MY_SAMPLERATE 48000
 #define AUDIOBUFSIZE  8192
 
@@ -32,7 +28,9 @@ extern unsigned int hacksong_length;
 
 /**
  * Process sound with our own synthesis, then convert to SDL format.
- * TODO: Can we rely that we SDL really gave the requested format?
+ * TODO: Check if we can rely on SDL giving us the requested format?
+ * (If I understood the doc, it says that SDL does any necessary
+ * conversion internally)
  */
 static void sound_callback(void *udata, Uint8 *stream, int len)
 {

@@ -15,3 +15,38 @@
  *
  */
 
+/* Includes needed by fltk. */
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Button.H>
+
+/* Thanks to http://seriss.com/people/erco/fltk for nice and helpful
+ * Fltk examples.
+ */
+
+class MainWin : public Fl_Window {
+private:
+
+public:  
+
+  static void cb_exit(Fl_Widget *w, void *data){
+    ((Fl_Window*)data)->hide();
+  }
+
+  MainWin(int X, int Y, 
+          int W=100, int H=140,
+          const char *L=0) : Fl_Window(X,Y,W,H,L)
+  {
+    Fl_Button *b = new Fl_Button(10,10,50,20,"&Quit");
+    b->callback(cb_exit); b->argument((long)this);
+    end();
+  }
+};
+
+int main(int argc, char **argv){
+  MainWin *mw = new MainWin(10,10);
+  mw->show(argc, argv);
+  int retval = Fl::run();
+
+  return retval;
+}

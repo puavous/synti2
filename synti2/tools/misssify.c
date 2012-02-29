@@ -30,12 +30,14 @@
  *
  * + Use lower parts-per-quarter setting, and quantize notes as
  *   needed. The variable-length delta idea is useful as it is.
+ *   FIXME: Could I re-use the var-length decoder for the patches???
+ *   I think I could, somehow... if I just figured out how...
  *
  * - Decimate velocities
  *
  * - Approximate controllers with linear ramps.
  *
- * - Turn percussion tracks to binary beat patterns.
+ * - Turn percussion tracks to binary beat patterns(?).
  *
  * - Observe: Percussive instruments need no note-off.
  *

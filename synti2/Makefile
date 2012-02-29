@@ -171,7 +171,7 @@ clean:
 veryclean: clean
 	-rm *.payload jsynti2 jvis sdltest tinytest  \
 		benchmark testsong.c misssify test.misss \
-		jmiditrans patchedit genpar
+		midi2synti2 patchedit genpar
 
 veryveryclean: veryclean
 	-rm include/synti2_params.h

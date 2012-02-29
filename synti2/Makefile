@@ -79,7 +79,8 @@ jmiditrans: tools/jmiditrans.c Makefile
 
 midi2synti2: tools/midi2synti2.cxx Makefile
 	g++ -Wextra -o $@ $(filter %.cxx, $+) \
-		-lfltk `fltk-config --cxxflags`
+		-lfltk `fltk-config --cxxflags` \
+		`pkg-config --cflags --libs jack`
 
 patchedit: $(PATCHEDITDEPS) Makefile
 	g++ -o $@ $(filter %.cxx %.hpp , $^) -lfltk \

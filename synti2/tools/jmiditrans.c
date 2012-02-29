@@ -1,7 +1,8 @@
 /* A jack midi utility to make midi transformations on the fly.
  *
  * For experimenting with the realtime synth while it is being
- * developed.
+ * developed. DEPRECATED. Don't use this but the miditool.cxx
+ * instead. TODO: Delete this later on.
  */
 
 #include <stdlib.h>

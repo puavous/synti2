@@ -73,11 +73,8 @@ tools: misssify jmiditrans patchedit
 misssify: tools/misssify.c Makefile
 	$(CC) $(CFLAGS) -I./include -Wextra -o $@ tools/misssify.c -lm
 
-jmiditrans: tools/jmiditrans.c Makefile
-	$(CC) $(CFLAGS) -Wextra -o $@ tools/jmiditrans.c \
-		`pkg-config --cflags --libs jack`
-
-midi2synti2: tools/midi2synti2.cxx Makefile
+midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
+		tools/miditool.hpp Makefile
 	g++ -Wextra -o $@ $(filter %.cxx, $+) \
 		-lfltk `fltk-config --cxxflags` \
 		`pkg-config --cflags --libs jack`

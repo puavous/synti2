@@ -27,8 +27,20 @@
 #include <jack/control.h>
 #include <errno.h>
 
+/* Includes for our own application logic*/
+#include "miditool.hpp"
 
+/* Standard includes required by this unit */
 #include <iostream>
+
+class MyJackClient;
+class MidiEventTranslator;
+
+/* Application data */
+struct AppData{
+  MyJackClient *mjc;
+  MidiEventTranslator *translator;
+};
 
 
 /** Class for jack client setup. Just the earlier dirty code wrapped
@@ -46,7 +58,9 @@ private:
   bool _isOK;
 
   /** Initializes jack stuff. Exits upon failure. */
-  void init_jack_or_die(const char *client_name, JackProcessCallback process){
+  void init_jack_or_die(const char *client_name, 
+                        JackProcessCallback process,
+                        void *jarg){
     jack_status_t status;
 
     _isOK = false; /* It's not OK until it's OK. */
@@ -59,8 +73,7 @@ private:
       return;
     }
 
-    /* Set up process callback. Arg will be a ptr to this client instance. */
-    if (jack_set_process_callback (client, process, this) != 0){
+    if (jack_set_process_callback (client, process, jarg) != 0){
       std::cerr << "Could not set the jack process callback" << std::endl;
       return;
     };
@@ -91,8 +104,8 @@ private:
 
 
 public:
-  MyJackClient(const char *cname, JackProcessCallback cbf){
-    init_jack_or_die(cname, cbf);
+  MyJackClient(const char *cname, JackProcessCallback cbf, void* jarg){
+    init_jack_or_die(cname, cbf, jarg);
   }
   ~MyJackClient(){
     std::cerr << "releasing jack" << std::endl;
@@ -137,6 +150,12 @@ public:
   }
 };
 
+static void
+debug_print_ev(jack_midi_event_t *ev){
+  jack_info("Msg (len %d) at time %d:", ev->size, ev->time);
+  if (ev->size==3) jack_info("  3byte: %02x %02x %02x", ev->buffer[0],
+                             ev->buffer[1], ev->buffer[2]);
+}
 
 /** send data to synth, if there is new stuff from the GUI. */
 static int
@@ -144,17 +163,17 @@ process (jack_nframes_t nframes, void *arg)
 {
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
-  jack_midi_data_t *msg;
+  jack_midi_data_t *msg, *outdata;
 
-  jack_midi_data_t *outdata;
+  AppData *ad = (AppData*)arg;
+  MyJackClient *jc = ad->mjc;
 
-  MyJackClient *jc = (MyJackClient*) arg;
+  if (jc == NULL) return 0; /* Not everything may be ready yet. */
 
   void *midi_in_buffer = jc->getMidiInBuffer(nframes);
   void *midi_out_buffer = jc->getMidiOutBuffer(nframes);
 
   size_t sz;
-
 
   jack_midi_clear_buffer(midi_out_buffer);
   nev = jack_midi_get_event_count(midi_in_buffer);
@@ -162,27 +181,30 @@ process (jack_nframes_t nframes, void *arg)
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) == ENODATA) break;
 
-    /*debug_print_ev(&ev);*/
-    /*channel(&ev);*/
-    /*debug_print_ev(&ev);*/
+    //    debug_print_ev(&ev);
+    ad->translator->channel(&ev);
+    //    debug_print_ev(&ev);
     
-    /*if (!rotate_notes(&ev)) continue;*/
+    if (!ad->translator->rotate_notes(&ev)) continue;
     /* TODO: duplicate_controllers() -- 
        requires creation of additional events!!!
-       maybe put the event writing inside of the functions 
-       (and refactor names)
-     */
+       maybe put the event writing inside of the functions */
 
     jack_midi_event_write(midi_out_buffer, 
                           ev.time, ev.buffer, ev.size);
   }
+
   return 0;
 }
 
 
 int main(int argc, char **argv){
-  MyJackClient mjc("midi2synti2", process);
-  if (!mjc.isOK()) exit(1);
+  AppData *things = new AppData();
+
+  things->translator = new MidiEventTranslator();
+  things->mjc = new MyJackClient("midi2synti2", process, things);
+  if (!things->mjc->isOK()) exit(1);
+
 
   MainWin *mw = new MainWin(10,10);
   mw->show(argc, argv);

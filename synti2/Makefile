@@ -72,7 +72,8 @@ HCFLAGS = -Os -g -Wall -pedantic \
 nodefaultmake:
 	@echo "No default target is specified as of now."
 
-tools: misssify jmiditrans patchedit
+# Tools of all sorts have been popping in here ...
+tools: misssify midi2synti2 patchedit genpar
 
 misssify: tools/misssify.c Makefile
 	$(CC) $(CFLAGS) -I./include -Wextra -o $@ tools/misssify.c -lm
@@ -88,13 +89,11 @@ patchedit: $(PATCHEDITDEPS) Makefile
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`
 
-# broken as of now...
-benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
-	$(CC) $(CFLAGS) -I./ -o $@ \
-		$(filter %.c , $^) -lm
-
 genpar: $(GENPARDEPS)
 	g++ -Itools/ -o $@ $(filter %.cxx , $^)
+
+
+# Experiments with jack
 
 jsynti2: $(JSYNTI2DEPS) $(S2HEADERS) Makefile
 	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
@@ -110,6 +109,13 @@ jvis: $(JVISDEPS) Makefile
 include/synti2_params.h: src/patchdesign.dat genpar
 	./genpar $< $@
 
+
+# Experiments with dry runs, benchmarking, and SDL
+
+benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
+	$(CC) $(CFLAGS) -I./ -o $@ \
+		$(filter %.c , $^) -lm
+
 testsong.c: tests/minimal.mid misssify Makefile
 	./misssify --tpq 12 --velocity-all 100 --only-on $<
 #	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
@@ -123,10 +129,25 @@ sdltest: $(SDLTESTDEPS) Makefile
 		$(filter %.c , $(SDLTESTDEPS)) \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
-tinyplayer: $(TINYPLAYERDEPS) Makefile
+# This is a template for an easy 4k-builder (postponed until tools get better!! FIXME: Make the tools better!):
+tinyhack: broken! hackpack/main.c hackpack/graphics.c \
+	hackpack/song.mid hackpack/soundbank.c \
+	$(SYNTHSOURCES) Makefile misssify
+
+	./misssify --tpq 12 --velocity-all 100 --only-on hackpack/song.mid
+#FIXME: Making of soundbank.c is easy as 1-2-3 with the new classes!
 	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
 		-combine -fwhole-program -flto \
 		-DDRYRUN \
+		-Iinclude \
+		-DULTRASMALL -nostdlib  -nostartfiles -lc \
+		$(filter %.c, $(TINYPLAYERDEPS)) \
+		$(ARCHLIBS)
+
+
+tinyplayer: $(TINYPLAYERDEPS) Makefile
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
+		-combine -fwhole-program -flto \
 		-Iinclude \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYPLAYERDEPS)) \
@@ -193,7 +214,7 @@ clean:
 	-rm `find . -name "*~"` *.o
 
 veryclean: clean
-	-rm *.payload jsynti2 jvis sdltest tinytest  \
+	-rm *.payload jsynti2 jvis sdltest tinytest tinyplayer \
 		benchmark testsong.c misssify test.misss \
 		midi2synti2 patchedit genpar
 

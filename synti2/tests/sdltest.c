@@ -49,7 +49,6 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   }
 }
 
-
 /** Try to wrap it... */
 static void main2(int sdl_flags){
   SDL_Event event;
@@ -147,6 +146,7 @@ static void main2(int sdl_flags){
 #endif
 }
 
+
 /*
 Hmm... what are they doing in __libc_start_main that is absolutely 
 necessary... At the moment, my guess is that zeroing the 4 bits in
@@ -166,12 +166,14 @@ rsp is the most crucial thing. But the bp reset could also be nice.
  */
 
 #ifdef ULTRASMALL
-void _start()
-/* Should check the architecure maybe.. the following assumes AMD64*/
+void
+__attribute__ ((externally_visible)) 
+_start()
 {
 #ifndef NO_I64
+  /* AMD64 requires stack alignment */
   asm (                                         \
-       "xor %ebp,%ebp\n"                        \
+       "xor %rbp,%rbp\n"                        \
        "and $0xfffffffffffffff0,%rsp"           \
        );
 #endif

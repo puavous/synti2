@@ -13,14 +13,14 @@ JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
 
 JVISDEPS = tests/javtest.c tests/testbank.c testsong.c \
 	 src/synti2.c src/synti2_jack.c \
-	 tests/tryout_gfx.c $(S2HEADERS)
+	 tests/tryout_gfx2.c $(S2HEADERS)
 
 GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
 
 PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
 		tools/patchtool.cxx
 
-SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/tryout_gfx.c \
+SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/tryout_gfx2.c \
 	testsong.c src/synti2.c include/synti2.h 
 
 # C flags common to all files (normal/debug build)
@@ -45,10 +45,10 @@ ARCHSTRIPOPT =
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -g -Wall -pedantic -DULTRASMALL \
-	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX -nostdlib
+HCFLAGS = -Os -g -Wall -pedantic \
+	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX
 
-
+#  -DULTRASMALL
 # -DNO_LOOPING_ENVELOPES
 
 # For some reason at least -msse4 seems to shave bytes.. so it is
@@ -116,7 +116,7 @@ testsong.c: tests/testi.mid misssify Makefile
 
 sdltest: $(SDLTESTDEPS) Makefile
 	$(CC) $(CFLAGS) -o $@ -Iinclude \
-		$(filter %.c %.h, $(SDLTESTDEPS)) \
+		$(filter %.c , $(SDLTESTDEPS)) \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
 tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
@@ -132,9 +132,11 @@ tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
 	   -nostartfiles $(LIBS)
 
 	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
+		-combine -fwhole-program -flto \
 		-Iinclude \
+		-DULTRASMALL -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(SDLTESTDEPS)) \
-		-nostartfiles -lc $(ARCHLIBS)
+		$(ARCHLIBS)
 
 # Why do I get problems with these and -m32:
 # `sdl-config --libs` -lm -lGL -lGLU

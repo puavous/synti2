@@ -31,11 +31,9 @@ char * client_name = "beeper";
 synti2_synth *global_synth;
 synti2_player *global_player;
 
-/* FIXME: remove, after this works properly in the SDL test*/
+/* FIXME: remove, after this works properly in the SDL test.. maybe? */
 int global_hack_playeronly = 0;
-/*extern unsigned char hacksong_data[];
-extern unsigned int hacksong_length;
-*/
+extern unsigned char hacksong_data[];
 
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
@@ -115,7 +113,7 @@ main (int argc, char *argv[])
 
   /* My own soft synth to be created. */
   /*global_synth = synti2_create(sr, patch_sysex, hacksong_data);*/
-  global_synth = synti2_create(sr, patch_sysex, NULL);
+  global_synth = synti2_create(sr, patch_sysex, hacksong_data);
 
   if (global_synth == NULL){
     fprintf (stderr, "Couldn't allocate synti-kaksi \n");

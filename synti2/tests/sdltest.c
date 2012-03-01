@@ -50,13 +50,12 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
 }
 
 /** Try to wrap it... */
-static void main2(int sdl_flags){
+static void main2(){
   SDL_Event event;
   SDL_AudioSpec aud;
 
   const SDL_VideoInfo * vid;
   float tnow;
-
 
   /* Checks of possible failures?*/
   st = synti2_create(MY_SAMPLERATE, patch_sysex, hacksong_data);
@@ -89,9 +88,9 @@ static void main2(int sdl_flags){
   vid = SDL_GetVideoInfo();  /* get desktop mode */
 #if 1
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
-		   sdl_flags|SDL_FULLSCREEN); /* use it*/
+		   SDL_OPENGL|SDL_FULLSCREEN); /* use it*/
 #else
-  SDL_SetVideoMode(640,400,32,sdl_flags);
+  SDL_SetVideoMode(640,400,32,SDL_OPENGL);
 #endif
 
   /*SDL_SetVideoMode(1280,720,32,sdl_flags);*/
@@ -178,7 +177,7 @@ _start()
        );
 #endif
 
-  main2(SDL_OPENGL);
+  main2();
   /* Inline assembler for exiting without need of stdlib */
   asm (                                         \
        "movl $1,%eax\n"                         \
@@ -189,7 +188,7 @@ _start()
 #else
   int main(int argc, char *argv[])
 {
-  main2(SDL_OPENGL);
+  main2();
   return 0;
 }
 #endif

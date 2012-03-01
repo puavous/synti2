@@ -23,6 +23,10 @@ PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
 SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/tryout_gfx2.c \
 	testsong.c src/synti2.c include/synti2.h 
 
+TINYPLAYERDEPS = tests/tinyplayer.c tests/testbank.c testsong.c \
+	 src/synti2.c include/synti2.h 
+
+
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -g -Wall -pedantic
 
@@ -106,8 +110,8 @@ jvis: $(JVISDEPS) Makefile
 include/synti2_params.h: src/patchdesign.dat genpar
 	./genpar $< $@
 
-testsong.c: tests/testi.mid misssify Makefile
-	./misssify --tpq 12 --velocity-all 100 --only-on tests/testi.mid
+testsong.c: tests/minimal.mid misssify Makefile
+	./misssify --tpq 12 --velocity-all 100 --only-on $<
 #	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
 #	./misssify --tpq 12 --only-on testi.mid
 #	./misssify --tpq 12 testi.mid
@@ -118,6 +122,24 @@ sdltest: $(SDLTESTDEPS) Makefile
 	$(CC) $(CFLAGS) -o $@ -Iinclude \
 		$(filter %.c , $(SDLTESTDEPS)) \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
+
+tinyplayer: $(TINYPLAYERDEPS) Makefile
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
+		-combine -fwhole-program -flto \
+		-DDRYRUN \
+		-Iinclude \
+		-DULTRASMALL -nostdlib  -nostartfiles -lc \
+		$(filter %.c, $(TINYPLAYERDEPS)) \
+		$(ARCHLIBS)
+
+	cp $@.unstripped.payload $@.payload 
+	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
+	7za a -tgzip -mx=9 tmp.gz $@.payload
+	cat tests/selfextr.stub tmp.gz > $@
+	rm tmp.gz
+	chmod ugo+x $@
+
+
 
 tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
 # hacking

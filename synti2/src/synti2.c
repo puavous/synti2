@@ -53,7 +53,7 @@
  * global because it is used by both the wavetable code and the
  * non-wavetable one.
  */
-static  int RandSeed = 1;
+static int RandSeed = 1;
 
 
 /** Reads a MIDI variable length number. */
@@ -99,6 +99,8 @@ synti2_player_event_add(synti2_player *pl,
   ev_new->frame = frame;
   ev_new->len = n;
   pl->insloc->next = ev_new;
+  /*printf("stored frame %d data %02x %02x %02x\n", frame, src[0], src[1], src[2]); fflush(stdout);*/
+  
 }
 
 /** Returns a pointer to one past end of read in input data, i.e., next byte. */
@@ -670,7 +672,7 @@ synti2_render(synti2_synth *s,
       }
       buffer[iframe+ii] /= NPARTS;
 
-      buffer[iframe+ii] = tanh(buffer[iframe+ii]); /* Hack! beautiful too! */
+      /*buffer[iframe+ii] = tanh(buffer[iframe+ii]);*/ /* Hack! beautiful too! */
 
       
       /*buffer[iframe+ii] = sin(32*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/

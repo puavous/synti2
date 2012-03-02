@@ -20,7 +20,7 @@ GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp
 PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
 		tools/patchtool.cxx
 
-SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/tryout_gfx2.c \
+SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/tryout_gfx.c \
 	testsong.c src/synti2.c include/synti2.h 
 
 TINYPLAYERDEPS = tests/tinyplayer.c tests/testbank.c testsong.c \

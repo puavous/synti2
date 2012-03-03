@@ -1,3 +1,76 @@
+Old Makefile parts:
+
+tinyplayer: $(TINYPLAYERDEPS) Makefile
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
+		-combine -fwhole-program -flto \
+		-Iinclude \
+		-DULTRASMALL -nostdlib  -nostartfiles -lc \
+		$(filter %.c, $(TINYPLAYERDEPS)) \
+		$(ARCHLIBS)
+
+	cp $@.unstripped.payload $@.payload 
+	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
+	7za a -tgzip -mx=9 tmp.gz $@.payload
+	cat tests/selfextr.stub tmp.gz > $@
+	rm tmp.gz
+	chmod ugo+x $@
+
+
+
+tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
+# hacking
+#
+#	$(CC) $(HCFLAGS) $(ARCHFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c 
+#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o synti2.o synti2.c
+#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o testdata.o testdata.c
+#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o teh4k_gfx.o teh4k_gfx.c
+
+#	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
+		teh4k_gfx.o \
+	   -nostartfiles $(LIBS)
+
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
+		-combine -fwhole-program -flto \
+		-Iinclude \
+		-DULTRASMALL -nostdlib  -nostartfiles -lc \
+		$(filter %.c, $(SDLTESTDEPS)) \
+		$(ARCHLIBS)
+
+# Why do I get problems with these and -m32:
+# `sdl-config --libs` -lm -lGL -lGLU
+
+
+#	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
+#		teh4k_gfx.o \
+#	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
+
+#	strip $(STRIPOPT) -o $@.payload $@.unstripped.payload
+#	cat selfextr.stub > $@
+#	gzip -n9 <$@.payload >> $@
+
+# I got a 32-bit sstrip executable from Zipola :).  The zipped result
+# got from 4.3k down to 3.8k by compiling with -m32 and linking
+# against 32bit libraries, using 7zip, and stripping with sstrip
+# instead of strip:
+	cp $@.unstripped.payload $@.payload 
+
+	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
+
+	7za a -tgzip -mx=9 tmp.gz $@.payload
+	cat tests/selfextr.stub tmp.gz > $@
+	rm tmp.gz
+
+	chmod ugo+x $@
+
+
+sdltest: $(SDLTESTDEPS) Makefile
+	$(CC) $(CFLAGS) -o $@ -Iinclude \
+		$(filter %.c , $(SDLTESTDEPS)) \
+	   `sdl-config --cflags --libs` -lm -lGL -lGLU
+
+
+
+
 Old snippets whose function was moved away from the core engine are
 kept here, for purposes of reflection...
 

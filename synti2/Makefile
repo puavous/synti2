@@ -13,7 +13,7 @@ MAIN ?= tests/sdltest.c
 GFX ?= tests/tryout_gfx.c
 SMF ?= tests/minimal.mid
 SND ?= patches/testi1.s2bank
-NONOS ?= -DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX 
+NONOS ?= 
 BUTDOS ?= 
 
 # -DNO_LOOPING_ENVELOPES
@@ -44,7 +44,7 @@ TINYPLAYERDEPS = tests/tinyplayer.c tests/testbank.c testsong.c \
 
 
 # C flags common to all files (normal/debug build)
-CFLAGS = -O3 -g -Wall -pedantic
+CFLAGS = -O3 -g -Wextra -pedantic
 
 ## For normal 64-bit build:
 #ARCHFLAGS = 
@@ -65,7 +65,7 @@ ARCHSTRIPOPT =
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -g -Wall -pedantic \
+HCFLAGS = -Os -g -Wextra -pedantic \
 	$(NONOS)
 
 
@@ -86,7 +86,7 @@ HCFLAGS = -Os -g -Wall -pedantic \
 nodefaultmake:
 	@echo "No default target is specified as of now."
 
-# Tools of all sorts have been popping in here ...
+# Tools of all sorts have been popping about ...
 tools: misssify midi2synti2 patchedit genpar cbank
 
 misssify: tools/misssify.c Makefile
@@ -123,6 +123,8 @@ jvis: $(JVISDEPS) Makefile
 		`pkg-config --cflags --libs jack` \
 		`sdl-config --cflags --libs` -lm -lGL -lGLU
 
+# While still designing the patch system, we generate this for ease:
+
 include/synti2_params.h: src/patchdesign.dat genpar
 	./genpar $< $@
 
@@ -141,16 +143,16 @@ benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 #	./misssify testi.mid
 #	python tools/file2c.py test.misss hacksong > testsong.c
 
-sdltest: $(SDLTESTDEPS) Makefile
-	$(CC) $(CFLAGS) -o $@ -Iinclude \
-		$(filter %.c , $(SDLTESTDEPS)) \
-	   `sdl-config --cflags --libs` -lm -lGL -lGLU
+
+
 
 # This is a template for an easy 4k-builder 
 # Basically only TINYHACKSOURCES and HCFLAGS need to be changed.
-tinyhack: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
+dummy: # this is a hack to make the hack always re-compile
+
+tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		misssify cbank
-	mkdir -p hackpack
+	-mkdir hackpack
 	./misssify --tpq 12 --velocity-all 100 --only-on \
 		$(filter %.mid, $^) hackpack/song.misss
 	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
@@ -161,6 +163,7 @@ tinyhack: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 		-o hackpack/$@.unstripped.payload \
 		-combine -fwhole-program -flto \
 		-Iinclude \
+		-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYHACKSOURCES)) \
 		$(filter %.c, $(S2SOURCES)) \
@@ -179,74 +182,14 @@ tinyhack: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 
 
 
-tinyplayer: $(TINYPLAYERDEPS) Makefile
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
-		-combine -fwhole-program -flto \
-		-Iinclude \
-		-DULTRASMALL -nostdlib  -nostartfiles -lc \
-		$(filter %.c, $(TINYPLAYERDEPS)) \
-		$(ARCHLIBS)
-
-	cp $@.unstripped.payload $@.payload 
-	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
-	7za a -tgzip -mx=9 tmp.gz $@.payload
-	cat tests/selfextr.stub tmp.gz > $@
-	rm tmp.gz
-	chmod ugo+x $@
-
-
-
-tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
-# hacking
-#
-#	$(CC) $(HCFLAGS) $(ARCHFLAGS) `sdl-config --cflags` -c -o sdltest.o sdltest.c 
-#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o synti2.o synti2.c
-#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o testdata.o testdata.c
-#	$(CC) $(HCFLAGS) $(ARCHFLAGS) -c -o teh4k_gfx.o teh4k_gfx.c
-
-#	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
-		teh4k_gfx.o \
-	   -nostartfiles $(LIBS)
-
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
-		-combine -fwhole-program -flto \
-		-Iinclude \
-		-DULTRASMALL -nostdlib  -nostartfiles -lc \
-		$(filter %.c, $(SDLTESTDEPS)) \
-		$(ARCHLIBS)
-
-# Why do I get problems with these and -m32:
-# `sdl-config --libs` -lm -lGL -lGLU
-
-
-#	$(CC) $(ARCHFLAGS) -o $@.unstripped.payload sdltest.o synti2.o testdata.o \
-#		teh4k_gfx.o \
-#	   -nostartfiles `sdl-config --libs` -lm -lGL -lGLU
-
-#	strip $(STRIPOPT) -o $@.payload $@.unstripped.payload
-#	cat selfextr.stub > $@
-#	gzip -n9 <$@.payload >> $@
-
-# I got a 32-bit sstrip executable from Zipola :).  The zipped result
-# got from 4.3k down to 3.8k by compiling with -m32 and linking
-# against 32bit libraries, using 7zip, and stripping with sstrip
-# instead of strip:
-	cp $@.unstripped.payload $@.payload 
-
-	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
-
-	7za a -tgzip -mx=9 tmp.gz $@.payload
-	cat tests/selfextr.stub tmp.gz > $@
-	rm tmp.gz
-
-	chmod ugo+x $@
-
+# Clean-up targets:
 
 mostlyclean:
 	-rm `find . -name "*~"` *.o
+	-rm -r hackpack
 
 clean: mostlyclean
-	-rm *.payload jsynti2 jvis sdltest tinytest tinyplayer \
+	-rm *.payload jsynti2 jvis sdltest tinyexe tinyplayer \
 		benchmark testsong.c misssify test.misss \
 		midi2synti2 patchedit genpar cbank
 

@@ -10,7 +10,7 @@
 #include "synti2.h"
 
 #define MY_SAMPLERATE 48000
-#define AUDIOBUFSIZE  8192
+#define AUDIOBUFSIZE  4096
 
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */

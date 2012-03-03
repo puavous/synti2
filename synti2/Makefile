@@ -180,6 +180,9 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 
 	chmod ugo+x $@
 
+	@echo End result:
+	@ls -lat $@
+
 
 
 # Clean-up targets:

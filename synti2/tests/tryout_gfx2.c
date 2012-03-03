@@ -28,29 +28,6 @@ static void kuutio(){
   glPopMatrix();
 }
 
-static void recurs(int n, float am){
-  if (n==0) return;
-  primit();
-  glRotatef(am, 1.f, am , 2*n);
-  glTranslatef(1.f,-1.f,0.f);
-  //  glScalef(1.01f,.99f,.99f);
-  recurs(n/2,am);
-  recurs(n/2,-am*2.f);
-}
-
-static void morko(int par, float par2){
-  int j;
-  for(j=0; j<9; j++){
-      
-    glRotatef(40, 0.f,1.f,2.f);
-    //glRotatef(40, 1.f, 0.f, 0.f);
-    glPushMatrix();
-    recurs(par, par2);
-    glPopMatrix();
-
-  }
-}
-
 
 /** Paint a triangle :). */
 static void render_scene(const synti2_synth *s){
@@ -64,32 +41,24 @@ static void render_scene(const synti2_synth *s){
   glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
   glLoadIdentity();
-  glTranslatef(0.f, 10.f ,-160.f); // +100. * sin(time) - .1*s->note[0]);
+  glTranslatef(0.f, -20.f ,-160.f); // +100. * sin(time) - .1*s->note[0]);
   /*glTranslatef(data[400]*time,data[600]*time,-150);*/
   
-  glRotatef(time*180.f, 0.f, 1.f, 0.f);
+  glRotatef(time*90.f, 0.f, 1.f, 0.f);
 
-  glScalef(10.f, 10.f, 10.f);
+  glScalef(5.f, 5.f, 5.f);
 
-  kuutio();
-
-  glTranslatef(3.f, 0.f, 0.f);
-
-  glPushMatrix();
-  glScalef(1.f, s->eprog[0][1].f, 1.f);
-  kuutio();
-  glPopMatrix();
-
-  glTranslatef(3.f, 0.f, 0.f);
-
-  glPushMatrix();
-  glScalef(1.f, s->eprog[0][2].f, 1.f);
-  kuutio();
-  glPopMatrix();
-
-
-
-  //  glPopMatrix();
+  glTranslatef(-24.f, 0.f, -6.f);
+  for(i = 0; i<16; i++){
+    for(j = 0; j<4; j++){
+      glPushMatrix();
+      glTranslatef(i*3.f, 0.f, j*3.f);
+      glScalef(1.f, s->eprog[i][j].f, 1.f);
+      glTranslatef(0.f, 1.f, 0.f);
+      kuutio();
+      glPopMatrix();
+    }
+  }
 }
 
 /** Render something that varies with time and "audio snapshot". */

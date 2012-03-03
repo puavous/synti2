@@ -27,7 +27,7 @@ extern unsigned char hacksong_data[];
 static void sound_callback(void *udata, Uint8 *stream, int len)
 {
   int i;
-  float vol = 20000.0;
+  const static float vol = 20000.0;
   
   /* Call our own synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/

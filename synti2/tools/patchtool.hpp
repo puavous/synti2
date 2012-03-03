@@ -130,10 +130,10 @@ namespace synti2{
 
   class PatchBank : public std::vector<Patch> {
   public:
-    void write(std::ostream &os){for(int i=0;i<size();i++) at(i).write(os);}
+    void write(std::ostream &os){for(unsigned i=0;i<size();i++) at(i).write(os);}
     void read(std::istream &is){
       /*FIXME: End-of-file logics. */
-      for(int i=0;i<size();i++) at(i).read(is);
+      for(unsigned i=0;i<size();i++) at(i).read(is);
     }
     void exportStandalone(std::ostream &os);
   };

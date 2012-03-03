@@ -1,7 +1,3 @@
-CC = gcc
-
-#JACKLIBS = 
-
 S2HEADERS = include/synti2_guts.h \
 		include/synti2.h \
 		include/synti2_jack.h \
@@ -10,10 +6,20 @@ S2HEADERS = include/synti2_guts.h \
 
 S2SOURCES = src/synti2.c src/synti2_jack.c
 
-# A "demo" contains: main (which can be always the same!), graphics, 
-# patches (in original format), midi song (in sfm0/1 format) 
-TINYHACKSOURCES = tests/sdltest.c tests/tryout_gfx.c patches/testi1.s2bank \
-	tests/minimal.mid
+# A "demo" contains: main (which can be always the same!), graphics,
+# patches (in original format), midi song (in sfm0/1 format)
+GFX = tests/tryout_gfx.c
+SMF = tests/minimal.mid
+SND = patches/testi1.s2bank
+NONOS = -DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX 
+
+# -DNO_LOOPING_ENVELOPES
+# -DULTRASMALL
+# -DNO_LOOPING_ENVELOPES
+
+TINYHACKSOURCES = tests/sdltest.c $(GFX) $(SND) $(SMF) 
+
+
 
 JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
 	src/synti2.c src/synti2_jack.c
@@ -57,10 +63,8 @@ ARCHSTRIPOPT =
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
 HCFLAGS = -Os -g -Wall -pedantic \
-	-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX
+	$(NONOS)
 
-#  -DULTRASMALL
-# -DNO_LOOPING_ENVELOPES
 
 # For some reason at least -msse4 seems to shave bytes.. so it is
 # worthwhile to keep the following memories. I used the following the
@@ -139,24 +143,36 @@ sdltest: $(SDLTESTDEPS) Makefile
 		$(filter %.c , $(SDLTESTDEPS)) \
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
-# This is a template for an easy 4k-builder (postponed until tools get better!! FIXME: Make the tools better!):
+# This is a template for an easy 4k-builder 
+# Basically only TINYHACKSOURCES and HCFLAGS need to be changed.
 tinyhack: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 		misssify cbank
-
+	mkdir -p hackpack
 	./misssify --tpq 12 --velocity-all 100 --only-on \
 		$(filter %.mid, $^) hackpack/song.misss
 	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 
-#FIXME: Making of soundbank.c is easy as 1-2-3 with the new classes!
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o hackpack/$@.unstripped.payload \
 		-combine -fwhole-program -flto \
-		-DDRYRUN \
 		-Iinclude \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
-		$(filter %.c, $(TINYPLAYERDEPS)) \
+		$(filter %.c, $(TINYHACKSOURCES)) \
+		$(filter %.c, $(S2SOURCES)) \
+		hackpack/songdata.c hackpack/patchdata.c \
 		$(ARCHLIBS)
+
+	cp hackpack/$@.unstripped.payload hackpack/$@.payload 
+
+	$(ARCHSTRIP) $(ARCHSTRIPOPT) hackpack/$@.payload
+
+	7za a -tgzip -mx=9 tmp.gz hackpack/$@.payload
+	cat tests/selfextr.stub tmp.gz > $@
+	rm tmp.gz
+
+	chmod ugo+x $@
+
 
 
 tinyplayer: $(TINYPLAYERDEPS) Makefile
@@ -219,18 +235,16 @@ tinytest: $(SDLTESTDEPS) tests/selfextr.stub Makefile
 	cat tests/selfextr.stub tmp.gz > $@
 	rm tmp.gz
 
-#	7za a -mx=9 tmp.7z $@.payload;cat tests/selfextr.stub tmp.7z > $@;rm tmp.7z
-
 	chmod ugo+x $@
 
 
-clean:
+mostlyclean:
 	-rm `find . -name "*~"` *.o
 
-veryclean: clean
+clean: mostlyclean
 	-rm *.payload jsynti2 jvis sdltest tinytest tinyplayer \
 		benchmark testsong.c misssify test.misss \
-		midi2synti2 patchedit genpar
+		midi2synti2 patchedit genpar cbank
 
 veryveryclean: veryclean
 	-rm include/synti2_params.h

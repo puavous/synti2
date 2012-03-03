@@ -4,6 +4,9 @@
 
 #include <string.h>
 
+/* The whole thing is relevant only if compiling for Jack. */
+#ifdef JACK_MIDI
+
 /** Creates a future for the player object that will repeat the next
  *  nframes of midi data from a jack audio connection kit midi port.
  *
@@ -58,3 +61,4 @@ synti2_read_jack_midi(synti2_synth *s,
   synti2_player_init_from_jack_midi(s->pl, inmidi_port, nframes);
 }
 
+#endif

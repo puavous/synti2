@@ -8,6 +8,13 @@ S2HEADERS = include/synti2_guts.h \
 		include/synti2_misss.h \
 		include/synti2_params.h \
 
+S2SOURCES = src/synti2.c src/synti2_jack.c
+
+# A "demo" contains: main (which can be always the same!), graphics, 
+# patches (in original format), midi song (in sfm0/1 format) 
+TINYHACKSOURCES = tests/sdltest.c tests/tryout_gfx.c patches/testi1.s2bank \
+	tests/minimal.mid
+
 JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
 	src/synti2.c src/synti2_jack.c
 
@@ -78,6 +85,9 @@ tools: misssify midi2synti2 patchedit genpar
 misssify: tools/misssify.c Makefile
 	$(CC) $(CFLAGS) -I./include -Wextra -o $@ tools/misssify.c -lm
 
+cbank: tools/cbank.cxx tools/patchtool.cxx tools/patchtool.hpp Makefile
+	g++ -o $@ -Wextra $(filter %.cxx, $^)
+
 midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
 		tools/miditool.hpp Makefile
 	g++ -Wextra -o $@ $(filter %.cxx, $+) \
@@ -130,11 +140,15 @@ sdltest: $(SDLTESTDEPS) Makefile
 	   `sdl-config --cflags --libs` -lm -lGL -lGLU
 
 # This is a template for an easy 4k-builder (postponed until tools get better!! FIXME: Make the tools better!):
-tinyhack: broken! hackpack/main.c hackpack/graphics.c \
-	hackpack/song.mid hackpack/soundbank.c \
-	$(SYNTHSOURCES) Makefile misssify
+tinyhack: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
+		misssify cbank
 
-	./misssify --tpq 12 --velocity-all 100 --only-on hackpack/song.mid
+	./misssify --tpq 12 --velocity-all 100 --only-on \
+		$(filter %.mid, $^) hackpack/song.misss
+	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
+	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
+	cp $(filter %.c, $^) hackpack/
+
 #FIXME: Making of soundbank.c is easy as 1-2-3 with the new classes!
 	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o $@.unstripped.payload \
 		-combine -fwhole-program -flto \

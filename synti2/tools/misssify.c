@@ -287,9 +287,20 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
     exit(0);
   }
   if (strlen(argv[optind]) >= MAX_STRINGLENGTH){
-    fprintf(stderr, "Output file path too long. Will use default! %s\n", argv[argc]);
+    fprintf(stderr, "Input file path too long. Will use default! %s\n", argv[argc]);
   } else {
     strncpy(opt->infname, argv[optind], MAX_STRINGLENGTH);
+  }
+
+  /* Can have output file name. */
+  optind++;
+  if (optind >= argc){
+    return;
+  }
+  if (strlen(argv[optind]) >= MAX_STRINGLENGTH){
+    fprintf(stderr, "Output file path too long. Will use default! %s\n", argv[argc]);
+  } else {
+    strncpy(opt->outfname, argv[optind], MAX_STRINGLENGTH);
   }
 }
 

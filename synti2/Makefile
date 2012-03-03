@@ -6,18 +6,21 @@ S2HEADERS = include/synti2_guts.h \
 
 S2SOURCES = src/synti2.c src/synti2_jack.c
 
-# A "demo" contains: main (which can be always the same!), graphics,
+# A "demo" contains: main (which can be always the same!?), graphics,
 # patches (in original format), midi song (in sfm0/1 format)
-GFX = tests/tryout_gfx.c
-SMF = tests/minimal.mid
-SND = patches/testi1.s2bank
-NONOS = -DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX 
+# (These can be overridden from the command line:)
+MAIN ?= tests/sdltest.c
+GFX ?= tests/tryout_gfx.c
+SMF ?= tests/minimal.mid
+SND ?= patches/testi1.s2bank
+NONOS ?= -DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX 
+BUTDOS ?= 
 
 # -DNO_LOOPING_ENVELOPES
 # -DULTRASMALL
 # -DNO_LOOPING_ENVELOPES
 
-TINYHACKSOURCES = tests/sdltest.c $(GFX) $(SND) $(SMF) 
+TINYHACKSOURCES = $(MAIN) $(GFX) $(SND) $(SMF) 
 
 
 
@@ -84,13 +87,10 @@ nodefaultmake:
 	@echo "No default target is specified as of now."
 
 # Tools of all sorts have been popping in here ...
-tools: misssify midi2synti2 patchedit genpar
+tools: misssify midi2synti2 patchedit genpar cbank
 
 misssify: tools/misssify.c Makefile
 	$(CC) $(CFLAGS) -I./include -Wextra -o $@ tools/misssify.c -lm
-
-cbank: tools/cbank.cxx tools/patchtool.cxx tools/patchtool.hpp Makefile
-	g++ -o $@ -Wextra $(filter %.cxx, $^)
 
 midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
 		tools/miditool.hpp Makefile
@@ -105,6 +105,9 @@ patchedit: $(PATCHEDITDEPS) Makefile
 
 genpar: $(GENPARDEPS)
 	g++ -Itools/ -o $@ $(filter %.cxx , $^)
+
+cbank: tools/cbank.cxx tools/patchtool.cxx tools/patchtool.hpp Makefile
+	g++ -o $@ -Wextra $(filter %.cxx, $^)
 
 
 # Experiments with jack
@@ -130,13 +133,13 @@ benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -I./ -o $@ \
 		$(filter %.c , $^) -lm
 
-testsong.c: tests/minimal.mid misssify Makefile
-	./misssify --tpq 12 --velocity-all 100 --only-on $<
+#testsong.c: tests/minimal.mid misssify Makefile
+#	./misssify --tpq 12 --velocity-all 100 --only-on $<
 #	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
 #	./misssify --tpq 12 --only-on testi.mid
 #	./misssify --tpq 12 testi.mid
 #	./misssify testi.mid
-	python tools/file2c.py test.misss hacksong > testsong.c
+#	python tools/file2c.py test.misss hacksong > testsong.c
 
 sdltest: $(SDLTESTDEPS) Makefile
 	$(CC) $(CFLAGS) -o $@ -Iinclude \
@@ -154,7 +157,8 @@ tinyhack: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) -o hackpack/$@.unstripped.payload \
+	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) \
+		-o hackpack/$@.unstripped.payload \
 		-combine -fwhole-program -flto \
 		-Iinclude \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \

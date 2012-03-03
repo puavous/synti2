@@ -12,10 +12,11 @@
 int main(int argc, char **argv){
   if (argc<3){
     std::cout << "This program reads a plaintext patch spec, "
-              << "and outputs a C header file " 
+              << "and outputs a C header file. " 
               << std::endl << std::endl;
     std::cout << "Usage: " << std::endl;
     std::cout << argv[0] << " infile outfile" << std::endl;
+    return 1;
   }
 
   std::ifstream istr(argv[1]);

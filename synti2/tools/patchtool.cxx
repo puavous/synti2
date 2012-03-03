@@ -22,8 +22,8 @@ void line_to_header(std::string &str){
 
 static
 std::string line_chop(std::string &str){
-  int beg = str.find_first_not_of(" \t\n\r");
-  int wbeg = str.find_first_of(" \t\n\r", beg);
+  unsigned long beg = str.find_first_not_of(" \t\n\r");
+  unsigned long wbeg = str.find_first_of(" \t\n\r", beg);
   if (wbeg == str.npos) wbeg = str.length();
   std::string res = str.substr(beg,wbeg-beg);
   if (wbeg<str.length()) str.assign(str.substr(wbeg,str.length()-wbeg));
@@ -173,7 +173,7 @@ synti2::PatchDescr::headerFileForC(std::ostream &os){
        << "#define SYNTI2_" << sect
        << "_NPARS "<< v.size() << std::endl;
 
-    for (int i=0; i < v.size(); i++){
+    for (unsigned int i=0; i < v.size(); i++){
       os << "/*"<< v[i].getDescription() << "*/" << std::endl;
       os << "#define SYNTI2_" << sect << "_" << v[i].getName()
          << " " << i << std::endl << std::endl;
@@ -199,7 +199,7 @@ synti2::Patch::write(std::ostream &os){
     std::string sect = (*it).first;
     os << "[" << sect  << "]" << std::endl;
     std::vector<ParamDescr> &v = (*it).second;
-    for (int i=0; i < v.size(); i++){
+    for (unsigned int i=0; i < v.size(); i++){
       os << v[i].getName();
       os << " " << values[sect][i]  << std::endl;
     }
@@ -273,7 +273,7 @@ synti2::Patch::copy_structure_from_descr(){
     std::string sect = (*it).first;
     std::vector<ParamDescr> &v = (*it).second;
     values[sect]; /* create section and fill with zeros: */
-    for (int i=0; i < v.size(); i++) values[sect].push_back(0.0f);
+    for (unsigned int i=0; i < v.size(); i++) values[sect].push_back(0.0f);
   }
 }
 
@@ -325,11 +325,11 @@ synti2::PatchBank::exportStandalone(std::ostream &os){
                                       0x00, 0x00  /*offset 0 == from 1st.*/};
 
   std::vector<unsigned char> bytes;
-  for (int i=0; i<sizeof(syx_header); i++){
+  for (unsigned int i=0; i<sizeof(syx_header); i++){
     bytes.push_back(syx_header[i]);
   }
 
-  for (int i=0; i<size(); i++){
+  for (unsigned int i=0; i<size(); i++){
     at(i).exportBytes(bytes);
   }
 
@@ -337,7 +337,7 @@ synti2::PatchBank::exportStandalone(std::ostream &os){
 
   os << "unsigned char patch_sysex[] = {" << std::endl << "    ";
 
-  for (int i=0; i<bytes.size(); i++){
+  for (unsigned int i=0; i<bytes.size(); i++){
     os << int(bytes[i]) << ", ";
     if (((i+1)%16) == 0){
       os << std::endl << "    ";

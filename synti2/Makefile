@@ -45,7 +45,7 @@ TINYPLAYERDEPS = tests/tinyplayer.c tests/testbank.c testsong.c \
 
 
 # C flags common to all files (normal/debug build)
-CFLAGS = -O3 -g -Wextra -pedantic
+CFLAGS = -O3 -g -Wall -Wextra -pedantic
 
 ## For normal 64-bit build:
 #ARCHFLAGS = 

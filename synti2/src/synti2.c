@@ -292,7 +292,6 @@ void
 synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
 {
   int a,b,c,ir;
-  const unsigned char *rptr;
   float decoded;
   for(; *data != 0xf7; pat++){
     for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
@@ -301,14 +300,16 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
     }
 
     for (ir=0; ir<SYNTI2_F_NPARS; ir++){
-      /* new way.. FIXME: Try different approaches and their sizes...*/
-      rptr = data++;
-      a = *rptr;
-      b = *(rptr += SYNTI2_F_NPARS); 
+      /* TODO: Try different approaches to data storage? */
+      a = *data;
+      b = *(data++)+SYNTI2_F_NPARS;
       decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
       decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
       decoded *= .001f;                           /* default e-3 */
       for (c=0; c < ((a & 0x0c) >> 2); c++) decoded *= 10.f; /* can be more */
+      /*use of powf() seems to yield longer exe..*/
+      /*decoded *= powf(10.f, ((a & 0x0c) >> 2)-3);*/
+      /*pat->fpar[ir] = decoded * powf(10.f, ((a & 0x0c) >> 2)-3.f);*/
       pat->fpar[ir] = decoded;
     }
     data += SYNTI2_F_NPARS;
@@ -330,21 +331,18 @@ static
 void
 synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
   int opcode, offset, ir;
-  int a, b, c, adjust_byte = 0;
+  int a, adjust_byte = 0;
   synti2_patch *pat;
   float decoded;  
-  static int stride = SYNTI2_F_NPARS; /* Constant, how to do?*/
-  const byte_t *rptr;
+  /*static int stride = SYNTI2_F_NPARS;*/ /* Constant, how to do?*/
   
   /* Sysex header: */
-  data += 4; /* skip Manufacturer IDs n stuff*/
-  /* FIXME: For 4k stuff these could be hardcoded!!?:*/
-  /* Overall, these could be streamlined a bit*/
+  data += 4; /* skip Manufacturer IDs n stuff TODO: think about this */
   opcode = *data++; opcode <<= 7; opcode += *data++;  /* what to do */
   offset = *data++; offset <<= 7; offset += *data++;  /* in where */
 
   /* Sysex data: */
-  /* As of yet, offset==patch index. FIXME: Maybe more elaborate addressing? */
+  /* As of yet, offset==patch index. TODO: More elaborate addressing? */
 
   if (opcode==0){
     /* Opcode 0: fill in patch memory (one or more patches at a
@@ -362,9 +360,9 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
     /*jack_info("Rcv patch %d I3 param %d: %d", offset & 0x7f, ir, *data);*/
   } else if (opcode==2) {
     /* Receive one 7-bit parameter at location (patch,i7par_index) */
-    pat = s->patch + (offset & 0x7f); 
-    ir = offset >> 7;
-    pat->ipar7[ir] = *data;
+    /* (These were removed from the synth. Opdoce 2 no longer used!) */
+    /*pat = s->patch + (offset & 0x7f); ir = offset >> 7;
+      pat->ipar7[ir] = *data; */
   } else if (opcode==3) {
     /* Receive one fixed point parameter at location (patch,fpar_index) */
     pat = s->patch + (offset & 0x7f); 

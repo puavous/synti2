@@ -4,6 +4,18 @@
 
 #include "synti2_params.h"
 
+/* Some conditional compile logic to make things (maybe) easier. */
+#ifdef JACK_MIDI
+#define USE_MIDI_INPUT
+#endif
+
+/* If they don't want no nothin' then so be it. */
+#ifdef NO_NOTHING
+#define NO_NOISE
+#define NO_LOOPING_ENVELOPES
+#define NO_SYSEX_RECEIVE
+#endif
+
 typedef float synti2_smp_t;
 
 typedef unsigned char byte_t; 

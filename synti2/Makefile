@@ -40,9 +40,6 @@ PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
 SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/tryout_gfx.c \
 	testsong.c src/synti2.c include/synti2.h 
 
-TINYPLAYERDEPS = tests/tinyplayer.c tests/testbank.c testsong.c \
-	 src/synti2.c include/synti2.h 
-
 
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -g -Wall -Wextra -pedantic
@@ -209,7 +206,7 @@ mostlyclean:
 	-rm -r hackpack
 
 clean: mostlyclean
-	-rm *.payload jsynti2 jvis sdltest tinyexe tinyplayer \
+	-rm *.payload jsynti2 jvis sdltest tinyexe visexe \
 		benchmark testsong.c misssify test.misss \
 		midi2synti2 patchedit genpar cbank
 

@@ -303,14 +303,14 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
       /* TODO: Try different approaches to data storage? */
       a = *data;
       b = *(data++)+SYNTI2_F_NPARS;
-      decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
-      decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
-      decoded *= .001f;                           /* default e-3 */
-      for (c=0; c < ((a & 0x0c) >> 2); c++) decoded *= 10.f; /* can be more */
+      pat->fpar[ir] = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
+      pat->fpar[ir] = (a & 0x40) ? -pat->fpar[ir] : pat->fpar[ir];  /* sign */
+      pat->fpar[ir] *= .001f;                           /* default e-3 */
+      for (c=0; c < ((a & 0x0c) >> 2); c++) pat->fpar[ir] *= 10.f; /* can be more */
       /*use of powf() seems to yield longer exe..*/
       /*decoded *= powf(10.f, ((a & 0x0c) >> 2)-3);*/
       /*pat->fpar[ir] = decoded * powf(10.f, ((a & 0x0c) >> 2)-3.f);*/
-      pat->fpar[ir] = decoded;
+      //pat->fpar[ir] = decoded;
     }
     data += SYNTI2_F_NPARS;
   }

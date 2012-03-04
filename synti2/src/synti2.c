@@ -622,14 +622,6 @@ synti2_render(synti2_synth *s,
         pat = s->patch + iv;
         /* FIXME: Need logic for "unsounding"? */
 
-        /* Wavetable definitely! Could bit-shift the counter... */
-
-        /*
-        RandSeed *= 16807;
-        s->outp[iv][5] = s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
-        * (float)RandSeed * 4.6566129e-010f;
-*/
-
         sigin  = signal = &(s->outp[iv][0]);
   
         for(iosc = 0; iosc < NOSCILLATORS; iosc++){
@@ -649,7 +641,7 @@ synti2_render(synti2_synth *s,
         }
 
         /* Optional additive noise after FM operator synthesis:
-           (FIXME: could use wavetable for noise?) */
+           (FIXME: could/should use wavetable for noise?) */
 #ifndef NO_NOISE
         RandSeed *= 16807;
         interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 

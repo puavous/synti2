@@ -210,7 +210,7 @@ static
 #endif
 void
 synti2_player_event_add(synti2_player *pl, 
-                        int frame, 
+                        unsigned int frame, 
                         const byte_t *src, 
                         size_t n);
 

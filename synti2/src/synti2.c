@@ -48,6 +48,13 @@
  */
 #define NINNERLOOP 8
 
+
+/* local subr. declared here */
+static
+void
+synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data);
+
+
 /* The simple random number generator was posted on musicdsp.org by
  * Dominik Ries. Thanks a lot.
  */
@@ -85,7 +92,7 @@ static
 #endif
 void
 synti2_player_event_add(synti2_player *pl, 
-                        int frame, 
+                        unsigned int frame, 
                         const byte_t *src, 
                         size_t n){
   synti2_player_ev *ev_new;
@@ -180,15 +187,10 @@ synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
 
 
 
-static
-void
-synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data);
-
-
 /** Allocate and initialize a new synth instance. */
 synti2_synth *
 synti2_create(unsigned long sr, 
-              const byte_t * patch_sysex, 
+              const byte_t * patchdata, 
               const byte_t * songdata)
 {
   synti2_synth * s;
@@ -210,12 +212,19 @@ synti2_create(unsigned long sr,
   /* Initialize the player module. (Not much to be done...) */
   s->pl->sr = sr;
   s->sr = sr;
-  if (songdata != NULL) synti2_player_init_from_misss(s->pl, songdata);
-
   s->framecount.delta = 1;
 
-  if (patch_sysex != NULL)
-    synti2_do_receiveSysEx(s, patch_sysex);
+#ifndef ULTRASMALL
+  if (songdata != NULL) 
+    synti2_player_init_from_misss(s->pl, songdata);
+
+  if (patchdata != NULL)
+    synti2_fill_patches_from(s->patch, patchdata+8);
+#else
+  /* In "Ultrasmall" mode, we trust the user to provide all data.*/
+  synti2_player_init_from_misss(s->pl, songdata);
+  synti2_fill_patches_from(s->patch, patchdata+8);
+#endif
 
 
   /* Initialize the rest of the synth. */
@@ -278,59 +287,44 @@ synti2_do_noteon(synti2_synth *s, int voice, int note, int vel)
 }
 
 
-/** FIXME: Think about data model.. aim at maximal
-    sparsity/compressibility but sufficient expressive range. If it
-    turns out that the 1/1000 accuracy is very seldom required, then
-    it could be worthwhile to store everything in the much simpler
-    format of 4*7 = 28-bit signed integer representing (decimal)
-    hundredths. Even then most parameters would only have the
-    least-significant 7bit set?
+static
+void
+synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
+{
+  int a,b,c,ir;
+  const unsigned char *rptr;
+  float decoded;
+  for(; *data != 0xf7; pat++){
+    for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
+      pat->ipar3[ir] = *data >> 3;
+      pat->ipar3[ir+1] = (*data++) & 0x7;
+    }
 
-    FIXME: If the song sequence data is finally read from SMF, then
-    there will already be a subroutine that reads variable length
-    values (the time deltas) which could be re-used here. But what
-    about accuracy then?
-
-    FIXME: Think about nonlinear parameter range. For example x^2 -
-    usually accuracy is critical for the smaller parameter values. But
-    no... pitch envelopes need to be accurate on a wide range!!
-
-    FIXME: Think about the following format:
-
-            high       low
-      bits: 000 0000   000 0000
-            ||| ||||   |
-            ||| ||||   initial value, 7 bits, range 0.000 to 0.127
-            ||| ||additional 2 bits? -> integer range 0..511
-            ||| ||TODO: could have a third bit? range 0..1024! Wow!
-            ||| ||
-            ||times to multiply by 10 (range -1270k to +1270; acc. 10000)
-            |reserved FIXME: no need to reserve! 
-            sign
-
-      examples of usual bit patterns:
-            000 0000   000 0001   == 0.001
-            100 0000   000 0001   == -0.001
-            000 0100   110 0100   == 1.00
-            000 0100   000 0000   == 0.00
+    for (ir=0; ir<SYNTI2_F_NPARS; ir++){
+      /* new way.. FIXME: Try different approaches and their sizes...*/
+      rptr = data++;
+      a = *rptr;
+      b = *(rptr += SYNTI2_F_NPARS); 
+      decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
+      decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
+      decoded *= .001f;                           /* default e-3 */
+      for (c=0; c < ((a & 0x0c) >> 2); c++) decoded *= 10.f; /* can be more */
+      pat->fpar[ir] = decoded;
+    }
+    data += SYNTI2_F_NPARS;
+  }
+}
 
 
-    SysEx format (planned; FIXME: implement!) 
-
-    F0 00 00 00 [storeAddrMSB] [storeAddrLSB] [inputLengthMSB] [inputLengthLSB]
-    ... data LLSBs... 
-    ... data LMSBs... 
-    ... data MLSBs... 
-    ... data MMSBs... 
-    F7
-
-    Length is also the stride for value encoding.
-
-   FIXME: Manufacturer ID check.. length check; checksums :) could
-   have checks.. :) but checks are for chicks? Could also check that
-   there is F7 in the end :)
-
-*/
+#ifdef USE_MIDI_INPUT
+/** Receive a MIDI SysEx. (Convenient for sound editing, but not
+ *  strictly necessary for stand-alone 4k synth.)
+ *
+ * FIXME: Manufacturer ID check.. Should also check that there is F7
+ *  in the end :) length check; checksums :) could (and should) have
+ *  checks now that this code is moved outside the stand-alone synth
+ *  and thus is not size critical anymore..
+ */
 
 static
 void
@@ -357,26 +351,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
      * time). Data must be complete and without errors; no checks are
      * made in here.
      */
-    for(pat = s->patch + offset; *data != 0xf7; pat++){
-      
-      for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
-        pat->ipar3[ir] = *data >> 3;
-        pat->ipar3[ir+1] = (*data++) & 0x7;
-      }
-
-      for (ir=0; ir<stride; ir++){
-        /* new way.. FIXME: Try different approaches and their sizes...*/
-        rptr = data++;
-        a = *rptr;
-        b = *(rptr += stride); 
-        decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
-        decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
-        decoded *= .001f;                           /* default e-3 */
-        for (c=0; c < ((a & 0x0c) >> 2); c++) decoded *= 10.f; /* can be more */
-        pat->fpar[ir] = decoded;
-      }
-      data += stride;
-    }
+    synti2_fill_patches_from(s->patch + (offset & 0x7f), data);
 
 #ifndef NO_EXTRA_SYSEX
   } else if (opcode==1) {
@@ -406,7 +381,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
     /* Unknown opcode - should be an error. */
   }
 }
-
+#endif
 
 /** Handles input that comes from the stored list of song events.
  *
@@ -426,7 +401,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
 static
 void
 synti2_handleInput(synti2_synth *s, 
-                   int upto_frames)
+                   unsigned int upto_frames)
 {
   /* TODO: sane implementation */
   const byte_t *midibuf;

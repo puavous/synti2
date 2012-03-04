@@ -478,10 +478,7 @@ synti2_evalCounters(synti2_synth *s){
      */
     ind = c->val >> COUNTER_TO_TABLE_SHIFT;
     c->fr = s->rise[ind];
-    //ff = 1.0f-c->fr; //s->rise[WAVETABLE_SIZE-1 - ind];
-    c->f = (1.0f - c->fr) * c->aa + c->fr * c->bb; 
-    //c->ff = s->fall[c->val >> COUNTER_TO_TABLE_SHIFT];
-    //c->f = c->ff * c->aa + c->fr * c->bb; 
+    c->f = (1.0f-c->fr) * c->aa + c->fr * c->bb; 
   }
 }
 

@@ -78,6 +78,12 @@
 #define SYNTI2_MAX_SONGBYTES 30000
 #define SYNTI2_MAX_SONGEVENTS 15000
 
+
+/* Audio delay storage */
+#define NDELAYS 2
+#define DELAYSAMPLES 96000
+
+
 /** Oscillator/counter structure. I don't know if they usually do this
  * kind of stuff with synths... (I know I should read other peoples
  * code, I know, I know, I will, I will... later... ) but I did it
@@ -206,6 +212,9 @@ struct synti2_synth {
 
   float outp[NPARTS][NOSCILLATORS+1+1]; /*"zero", oscillator outputs, noise*/
   synti2_patch patch[NPARTS];   /* The sound parameters per part*/
+
+  //unsigned int delaypos; /* current counter into delay lines...*/
+  float delay[NDELAYS][DELAYSAMPLES]; /* Delays are optional but no cost for the playground field*/
 };
 
 

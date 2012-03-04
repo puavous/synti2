@@ -594,6 +594,7 @@ synti2_render(synti2_synth *s,
               synti2_smp_t *buffer,
               int nframes)
 {
+  unsigned int dsamp;
   int iframe, ii, iv;
   int iosc;
   float interm;
@@ -663,10 +664,21 @@ synti2_render(synti2_synth *s,
 
         /* result is both in *signal and in interm (like before). */
         buffer[iframe+ii] += interm;
+
+#ifndef NO_DELAY
+        /* mix also to a delay line. FIXME: s->delaypos is a counter
+           like frame? FIXME: Was that everything-is-a-counter thing a
+           good idea in the first place?*/
+        dsamp = s->framecount.val + pat->fpar[SYNTI2_F_DLEN] * s->sr;
+        dsamp %= DELAYSAMPLES;
+        s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp] 
+                 += pat->fpar[SYNTI2_F_DLEV] * interm;
+#endif
       }
 
-
-      /*buffer[iframe+ii] = tanh(buffer[iframe+ii]);*/ /* Hack! beautiful too! */
+#ifndef NO_OUTPUT_SQUASH
+      buffer[iframe+ii] = sin(buffer[iframe+ii]); /*Hack, but sounds nice*/
+#endif
       /*buffer[iframe+ii] = sin(32*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
       /*buffer[iframe+ii] = tanh(16*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
     }

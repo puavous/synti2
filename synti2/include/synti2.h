@@ -17,6 +17,8 @@
 #define NO_PITCH_ENV
 #define NO_DETUNE
 #define NO_EXTRA_WAVETABLES
+#define NO_OUTPUT_SQUASH
+#define NO_DELAY
 #endif
 
 typedef float synti2_smp_t;

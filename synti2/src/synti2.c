@@ -302,7 +302,9 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
     for (ir=0; ir<SYNTI2_F_NPARS; ir++){
       /* TODO: Try different approaches to data storage? */
       a = *data;
-      b = *(data++)+SYNTI2_F_NPARS;
+      b = *(data+SYNTI2_F_NPARS);
+      data++;      
+
       decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
       decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
       decoded *= .001f;                           /* default e-3 */

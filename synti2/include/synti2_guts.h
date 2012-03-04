@@ -177,8 +177,14 @@ struct synti2_synth {
 			    compute a different table here (?)..*/
   float ultranotes[128]; /* TODO: This space could be used for noises? */
 
+#ifndef NO_EXTRA_WAVETABLES
+#define NHARM 8
+#else
+#define NHARM 1
+#endif
+
   float rise[WAVETABLE_SIZE];
-  float wave[WAVETABLE_SIZE];
+  float wave[NHARM][WAVETABLE_SIZE];
   //float fall[WAVETABLE_SIZE];
   /*float noise[WAVETABLE_SIZE]; Maybe?? */
 

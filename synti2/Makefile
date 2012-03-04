@@ -194,7 +194,7 @@ visexe: $(VISHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 
-	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
+	$(CC) $(CFLAGS) $(NONOS) -I./include -DJACK_MIDI -o $@ \
 		$(filter %.c , $^) \
 		hackpack/songdata.c hackpack/patchdata.c \
 		`pkg-config --cflags --libs jack` \

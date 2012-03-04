@@ -62,6 +62,12 @@
 # For "normal" patches this presumably is the carrier volume envelope..
 ELIFE LifeEnvelope 0 6 0 1
 
+HARM1 Op1Wav 0 7   0 5
+HARM2 Op2Wav 0 7   0 5
+HARM3 Op3Wav 0 7   0 5
+HARM4 Op4Wav 0 7   0 5
+
+
 # Indices of the operator amplitude envelopes
 EAMP1 Op1AmpEnv 0 6   0 0
 EAMP2 Op2AmpEnv 0 6   0 0
@@ -96,6 +102,8 @@ ADDTO1 MixTo1 0 0   0 4
 ADDTO2 MixTo2 0 1   0 4
 ADDTO3 MixTo3 0 2   0 4
 ADDTO4 MixTo4 0 3   0 4
+
+
 
 
 # "Floating point" parameters:

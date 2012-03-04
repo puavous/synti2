@@ -194,7 +194,7 @@ synti2_create(unsigned long sr,
               const byte_t * songdata)
 {
   synti2_synth * s;
-  int ii;
+  int ii, wt;
   float t;
 
   s = calloc (1, sizeof(synti2_synth));
@@ -244,12 +244,19 @@ synti2_create(unsigned long sr,
 
   for(ii=0; ii<WAVETABLE_SIZE; ii++){
     /*s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));*/
-    t = (float)ii/(WAVETABLE_SIZE-1);
-    s->wave[ii] = sinf(2*M_PI * t);
-    s->rise[ii] = t; 
-    //s->fall[ii] = 1.0f-t;
-  }
 
+    t = (float)ii/(WAVETABLE_SIZE-1);
+    s->rise[ii] = t; 
+    s->wave[0][ii] += sinf(2*M_PI * t);
+
+#ifndef NO_EXTRA_WAVETABLES
+    for(wt=1; wt<NHARM; wt++){
+      s->wave[wt][ii] = s->wave[wt-1][ii] 
+        + 1.f/(wt+1) * sinf(2*M_PI * (wt+1) * t);
+    }
+#endif
+
+  }
   return s;
 }
 
@@ -630,7 +637,12 @@ synti2_render(synti2_synth *s,
             ((s->c[iv*NOSCILLATORS+iosc].fr 
               + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* FM modulator */
               * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
-          interm  = s->wave[wtoffs];
+
+#ifndef NO_EXTRA_WAVETABLES
+          interm  = s->wave[pat->ipar3[SYNTI2_I3_HARM1+iosc]][wtoffs];
+#else
+          interm  = s->wave[0][wtoffs];
+#endif
 
           /*interm *= (s->velocity[iv]/128.0f);*/  /* Velocity sensitivity */
           /* could reorganize I3 parameters for shorter code here(?): */

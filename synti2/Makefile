@@ -22,6 +22,7 @@ BUTDOS ?=
 
 TINYHACKSOURCES = $(MAIN) $(GFX) $(SND) $(SMF) 
 
+VISHACKSOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
 
 
 JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
@@ -182,6 +183,22 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 
 	@echo End result:
 	@ls -lat $@
+
+
+visexe: $(VISHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
+		misssify cbank
+	-mkdir hackpack
+	./misssify --tpq 12 --velocity-all 100 --only-on \
+		$(filter %.mid, $^) hackpack/song.misss
+	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
+	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
+	cp $(filter %.c, $^) hackpack/
+
+	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
+		$(filter %.c , $^) \
+		hackpack/songdata.c hackpack/patchdata.c \
+		`pkg-config --cflags --libs jack` \
+		`sdl-config --cflags --libs` -lm -lGL -lGLU
 
 
 

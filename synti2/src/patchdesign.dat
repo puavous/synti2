@@ -87,15 +87,15 @@ ELOOP6 En6LoopLen 0 3   0 2
 
 # Total of 16 seem to be critically useful.. no.. there is more!!
 
-FMTO1 FModTo1 0 5   0 3
-FMTO2 FModTo2 0 5   0 3
-FMTO3 FModTo3 0 5   0 3
-FMTO4 FModTo4 0 5   0 3
+FMTO1 FModTo1 0 0   0 3
+FMTO2 FModTo2 0 1   0 3
+FMTO3 FModTo3 0 2   0 3
+FMTO4 FModTo4 0 3   0 3
 
-ADDTO1 MixTo1 0 5   0 4
-ADDTO2 MixTo2 0 5   0 4
-ADDTO3 MixTo3 0 5   0 4
-ADDTO4 MixTo4 0 5   0 4
+ADDTO1 MixTo1 0 0   0 4
+ADDTO2 MixTo2 0 1   0 4
+ADDTO3 MixTo3 0 2   0 4
+ADDTO4 MixTo4 0 3   0 4
 
 # 7-bit integer parameters:
 #

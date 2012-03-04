@@ -478,7 +478,8 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     /* Need to store all ptrs and have attach_to_values() */
     Fl_Value_Input *vi = new Fl_Value_Input(px+i*(w+sp),py,w,h);
     widgets_i3.push_back(vi);
-    vi->bounds(0,7); vi->precision(0); vi->argument(i);
+    vi->bounds(pd->getMin("I3",i),pd->getMax("I3",i)); 
+    vi->precision(0); vi->argument(i);
     vi->color(colortab[pd->getGroup("I3",i)]);
     vi->tooltip(pd->getDescription("I3", i).c_str());
     vi->argument(i);

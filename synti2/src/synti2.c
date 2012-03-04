@@ -48,15 +48,16 @@
  */
 #define NINNERLOOP 8
 
-/* Random number generator was posted on musicdsp.org by Dominik
- * Ries. Thanks a lot; saves me a call to rand(). I use the seed as a
- * global because it is used by both the wavetable code and the
- * non-wavetable one.
+/* The simple random number generator was posted on musicdsp.org by
+ * Dominik Ries. Thanks a lot.
  */
 static int RandSeed = 1;
 
-
-/** Reads a MIDI variable length number. */
+/** Reads a MIDI variable length number. "Varlengths" are used in my
+ * native song format. I was thinking about re-using the scheme for
+ * other stuff, like patch parameters, but I was unable to figure out
+ * how to make significant improvements to code size that way.
+ */
 static 
 int
 __attribute__ ((noinline))
@@ -141,7 +142,7 @@ synti2_player_merge_chunk(synti2_player *pl,
       synti2_player_event_add(pl, frame, msg, 3); 
       pl->idata += 3; /*Update the data pool top*/
     } else {
-      /* Not yet implemented. FIXME: implement? */
+      /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
       switch (type){
       case MISSS_LAYER_CONTROLLER_RESETS:
       case MISSS_LAYER_CONTROLLER_RAMPS:
@@ -644,14 +645,11 @@ synti2_render(synti2_synth *s,
         /*
         RandSeed *= 16807;
         s->outp[iv][5] = s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
-        * (float)RandSeed * 4.6566129e-010f;*/
+        * (float)RandSeed * 4.6566129e-010f;
+*/
 
         sigin  = signal = &(s->outp[iv][0]);
-        RandSeed *= 16807;
-        sigin[5] = s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
-          * pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
-          * (float)RandSeed * 4.6566129e-010f; /*noise*/
-        
+  
         for(iosc = 0; iosc < NOSCILLATORS; iosc++){
           signal++; /* Go to next output slot. */
           wtoffs = (unsigned int)
@@ -667,14 +665,22 @@ synti2_render(synti2_synth *s,
           interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
           *signal = interm;
         }
+
+        /* Optional additive noise after FM operator synthesis:
+           (FIXME: could use wavetable for noise?) */
+#ifndef NO_NOISE
+        RandSeed *= 16807;
+        interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
+          * pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
+          * (float)RandSeed * 4.6566129e-010f; /*noise*/
+#endif
+
         /* result is both in *signal and in interm (like before). */
         buffer[iframe+ii] += interm;
       }
-      buffer[iframe+ii] /= NPARTS;
+
 
       /*buffer[iframe+ii] = tanh(buffer[iframe+ii]);*/ /* Hack! beautiful too! */
-
-      
       /*buffer[iframe+ii] = sin(32*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
       /*buffer[iframe+ii] = tanh(16*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
     }

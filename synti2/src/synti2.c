@@ -562,10 +562,17 @@ synti2_updateFrequencies(synti2_synth *s){
 
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
       /* TODO: Pitch-note follow ratio .. */
-      /* TODO: How much size gain from absolutely hard-coding envelopes n stuff?*/
-      notemod = s->note[iv] 
-        + s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f
-        + pat->fpar[SYNTI2_F_DT1+iosc];
+
+      notemod = s->note[iv];
+#ifndef NO_PITCH_ENV
+      notemod += s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
+#endif
+
+#ifndef NO_DETUNE
+      notemod += pat->fpar[SYNTI2_F_DT1 + iosc];    /* "coarse" */
+      notemod += pat->fpar[SYNTI2_F_DT1F + iosc];   /* "fine"   */
+#endif
+
       note = notemod; /* should make a floor (does it? check spec)*/
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
       freq = interm * s->note2freq[note];

@@ -247,7 +247,7 @@ synti2_create(unsigned long sr,
     t = (float)ii/(WAVETABLE_SIZE-1);
     s->wave[ii] = sinf(2*M_PI * t);
     s->rise[ii] = t; 
-    s->fall[ii] = 1.0f-t;
+    //s->fall[ii] = 1.0f-t;
   }
 
   return s;
@@ -454,6 +454,8 @@ static
 void
 synti2_evalCounters(synti2_synth *s){
   counter *c;
+  unsigned int ind;
+  double ff;
   /* for(ic=0;ic<NCOUNTERS+NPARTS*NENVPERVOICE+1;ic++){*/
   for(c = s->c; c <= &s->framecount; c++){
     if (c->delta == 0) {continue;}  /* stopped.. not running*/
@@ -469,10 +471,15 @@ synti2_evalCounters(synti2_synth *s){
 
     /* Linear interpolation using pre-computed "fall" and "rise"
      * tables. Also, the oscillator phases will be the rise values.
+     * Phew.. shaved off a byte by letting go of "fall" table...
+     * FIXME: See if there is a significant performance hit.. likely not(?)
      */
-    c->fr = s->rise[c->val >> COUNTER_TO_TABLE_SHIFT];
-    c->ff = s->fall[c->val >> COUNTER_TO_TABLE_SHIFT];
-    c->f = c->ff * c->aa + c->fr * c->bb; 
+    ind = c->val >> COUNTER_TO_TABLE_SHIFT;
+    c->fr = s->rise[ind];
+    //ff = 1.0f-c->fr; //s->rise[WAVETABLE_SIZE-1 - ind];
+    c->f = (1.0f - c->fr) * c->aa + c->fr * c->bb; 
+    //c->ff = s->fall[c->val >> COUNTER_TO_TABLE_SHIFT];
+    //c->f = c->ff * c->aa + c->fr * c->bb; 
   }
 }
 

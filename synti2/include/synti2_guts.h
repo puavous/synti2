@@ -111,12 +111,11 @@
  * about accuracies and stuff. Floats are so easy.
  */
 typedef struct {
-  unsigned int detect;
   unsigned int val;
+  unsigned int detect;
   unsigned int delta;
   float f;   /* current output value (interpolant) */
-  float ff;  /* current output value (1..0) */
-  float fr;  /* current output value (0..1) */ /* FIXME: only f needed! */
+  float fr;  /* current output value (0..1) */ /* (only f needed?) */
   float aa;  /* for interpolation start */
   float bb;  /* for interpolation end */
 } counter;
@@ -178,9 +177,9 @@ struct synti2_synth {
 			    compute a different table here (?)..*/
   float ultranotes[128]; /* TODO: This space could be used for noises? */
 
-  float wave[WAVETABLE_SIZE];
   float rise[WAVETABLE_SIZE];
-  float fall[WAVETABLE_SIZE];
+  float wave[WAVETABLE_SIZE];
+  //float fall[WAVETABLE_SIZE];
   /*float noise[WAVETABLE_SIZE]; Maybe?? */
 
   /* Oscillators are now modeled as integer counters (phase). */

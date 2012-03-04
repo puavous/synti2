@@ -364,10 +364,6 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
         pat->ipar3[ir+1] = (*data++) & 0x7;
       }
 
-      for(ir=0;ir<SYNTI2_I7_NPARS; ir++){
-        pat->ipar7[ir] = *data++;
-      }
-
       for (ir=0; ir<stride; ir++){
         /* new way.. FIXME: Try different approaches and their sizes...*/
         rptr = data++;

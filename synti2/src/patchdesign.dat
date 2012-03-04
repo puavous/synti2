@@ -97,20 +97,6 @@ ADDTO2 MixTo2 0 1   0 4
 ADDTO3 MixTo3 0 2   0 4
 ADDTO4 MixTo4 0 3   0 4
 
-# 7-bit integer parameters:
-#
-[I7]
-# (ideas: Envelope gain (to counteract unwanted pitch-env-by-default?))
-
-# So far only padding (let us see if these are necessary at all)
-UNUSED0 Unused 0 127   0 5
-UNUSED1 Unused 0 127   0 5
-UNUSED2 Unused 0 127   0 5
-UNUSED3 Unused 0 127   0 5
-UNUSED4 Unused 0 127   0 5
-UNUSED5 Unused 0 127   0 5
-UNUSED6 Unused 0 127   0 5
-UNUSED7 Unused 0 127   0 5
 
 # "Floating point" parameters:
 

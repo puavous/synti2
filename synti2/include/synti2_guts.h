@@ -157,10 +157,9 @@ struct synti2_player {
 
 /** The synthesizer patch. The way things sound. */
 typedef struct synti2_patch {
-  int ipar3[SYNTI2_I3_NPARS];
-  int ipar7[SYNTI2_I7_NPARS];
   float fenvpar[10]; /* FIXME: This zero-env hack OK? */
   float fpar[SYNTI2_F_NPARS];
+  int ipar3[SYNTI2_I3_NPARS];
 } synti2_patch;
 
 struct synti2_synth {

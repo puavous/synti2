@@ -41,16 +41,16 @@ static void render_scene(const synti2_synth *s){
   glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
   glLoadIdentity();
-  glTranslatef(0.f, -20.f ,-160.f); // +100. * sin(time) - .1*s->note[0]);
+  glTranslatef(0.f, -30.f ,-160.f); // +100. * sin(time) - .1*s->note[0]);
   /*glTranslatef(data[400]*time,data[600]*time,-150);*/
   
-  glRotatef(time*90.f, 0.f, 1.f, 0.f);
+  glRotatef(time*45.f, 0.f, 1.f, 0.f);
 
-  glScalef(5.f, 5.f, 5.f);
+  glScalef(4.f, 4.f, 4.f);
 
   glTranslatef(-24.f, 0.f, -6.f);
   for(i = 0; i<16; i++){
-    for(j = 0; j<4; j++){
+    for(j = 0; j<6; j++){
       glPushMatrix();
       glTranslatef(i*3.f, 0.f, j*3.f);
       glScalef(1.f, s->eprog[i][j].f, 1.f);

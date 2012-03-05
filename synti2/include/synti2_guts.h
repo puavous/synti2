@@ -80,8 +80,8 @@
 
 
 /* Audio delay storage */
-#define NDELAYS 2
-#define DELAYSAMPLES 96000
+#define NDELAYS 4
+#define DELAYSAMPLES 0x10000
 
 
 /** Oscillator/counter structure. I don't know if they usually do this
@@ -210,7 +210,10 @@ struct synti2_synth {
   int note[NPARTS];
   int velocity[NPARTS];
 
-  float outp[NPARTS][NOSCILLATORS+1+1]; /*"zero", oscillator outputs, noise*/
+  float outp[NPARTS][1+NOSCILLATORS+4]; /*"zero", oscillator outputs, 
+                                          filter storage.
+                                        FIXME: could be a struct?*/
+
   synti2_patch patch[NPARTS];   /* The sound parameters per part*/
 
   //unsigned int delaypos; /* current counter into delay lines...*/

@@ -107,6 +107,8 @@ ADDTO4 MixTo4 0 3   0 4
 DIN  DelayLineIn  0 1 0 5
 DNUM DelayLineOut 0 1 0 5
 
+FILT FilterMode 0 3 0 16
+
 
 # "Floating point" parameters:
 
@@ -208,6 +210,9 @@ LVN NoiseLevel -8.0 8.0   2 15
 DINLV DelayInLev  0.0 1.0   2 16
 DLEN DelayLen  0.0 1.0   2 16
 DLEV DelayLev  0.0 1.0   2 16
+
+FFREQ Cutoff  0.0 80.0   2 17
+FRESO Resonance   0.0 1.0   2 17
 
 # Other patch data.. Hmm.. playground as of now:
 

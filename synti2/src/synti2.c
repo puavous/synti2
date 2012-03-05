@@ -589,6 +589,84 @@ synti2_updateFrequencies(synti2_synth *s){
 }
 
 
+#ifndef NO_FILTER
+/** A filter. Taken from
+ *  http://www.musicdsp.org/showArchiveComment.php?ArchiveID=23
+ *
+ *     Type : 12db resonant low, high or bandpass
+ *
+ *     References : Effect Design Part 1, Jon Dattorro, J. Audio
+ *     Eng. Soc., Vol 45, No. 9, 1997 September
+ *
+ *     Notes : Digital approximation of Chamberlin two-pole low
+ *     pass. Easy to calculate coefficients, easy to process
+ *     algorithm.
+ *
+ *    cutoff = cutoff freq in Hz
+ *    fs = sampling frequency //(e.g. 44100Hz)
+ *    f = 2 sin (M_PI * ch->cur[SYNTI_EPAR_CUTOFF] / st->samplerate); 
+ *            //[approximately] hmm... means what?
+ *    f = 2 * sin (M_PI * ch->cur[SYNTI_EPAR_CUTOFF] / st->samplerate);
+ *    f = frqHz / sampleRate*4.;  hmm what it means..
+ *    q = resonance/bandwidth [0 < q <= 1]  most res: q=1, less: q=0
+ *    low = lowpass output    store[0]
+ *    high = highpass output  store[1]
+ *    band = bandpass output  store[2]
+ *    notch = notch output    store[3]
+ *    scale = q  OR scale = sqrt(q)?? 
+ *
+ *  Algorithm:
+ *    f = frqHz / sampleRate*4   (mine comes as 0-1 sound param.)
+ *                               (so Hz depends on sample rate!
+ *                                should check on 44.1kHz systems
+ *                                to see if songs sound too bad..)
+ *    low = low + f * band;
+ *    high = scale * input - low - q*band;   was scale=sqrt(q) 
+ *    band = f * high + band;
+ *    (save low and band for next round.)
+ */
+/* NEW: NOW: MAYBE: store[0] is current value and bypass-output. It
+   can conveniently come as &(outp[4])?
+*/
+static void apply_filter(synti2_synth *s, 
+                         synti2_patch *pat, 
+                         float *store){
+#define FIL_IN 0
+#define FIL_BP 1
+#define FIL_LP 2
+#define FIL_HP 3
+#define FIL_NF 4
+
+  float f,q;
+  /*float bp,lp,hp;*/
+  /*float ret;*/
+  /* At first use only a static filter frequency. Maybe use an
+     envelope later?*/
+
+  /* Filter envelope is now multiplicative on top of a base level.
+   * TODO: Maybe all envelopes could be similar? Computation in one
+   * place and value usable directly from a final output table?
+   */
+  f = 1000.f * pat->fpar[SYNTI2_F_FFREQ] / s->sr; /*FIXME: precomp? */
+  /*FIXME: at least just store 1/4:th of actual value!!*/
+
+  q = 1.0f - pat->fpar[SYNTI2_F_FRESO];
+
+  //bp = ch->store[ISTORE_BANDPASS];
+  //lp = (ch->store[ISTORE_LOWPASS] += f * bp); /* note add and store! */
+  store[FIL_LP] += f * store[FIL_BP];
+  //hp = q * newval - lp - q * bp;
+  store[FIL_HP] = q * store[FIL_IN] - store[FIL_LP] - q * store[FIL_BP];
+  //bp = (ch->store[ISTORE_BANDPASS] += f * hp); /* note add and store! */
+  store[FIL_BP] += f * store[FIL_HP];
+#ifndef NO_NOTCH_FILTER
+  store[FIL_NF] = store[FIL_LP] + store[FIL_HP];
+#endif
+}
+#endif  /*NO_FILTER*/
+
+
+
 void
 synti2_render(synti2_synth *s,
               synti2_smp_t *buffer,
@@ -670,6 +748,15 @@ synti2_render(synti2_synth *s,
         dsamp = s->framecount.val;
         interm += s->delay[pat->ipar3[SYNTI2_I3_DIN]][dsamp % DELAYSAMPLES]
           * pat->fpar[SYNTI2_F_DINLV];
+#endif
+
+#ifndef NO_FILTER
+        signal[0] = interm;
+        apply_filter(s, pat, signal);
+        interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
+#endif
+
+#ifndef NO_DELAY
         /* mix also to a delay line. FIXME: s->delaypos is a counter
            like frame? FIXME: Was that everything-is-a-counter thing a
            good idea in the first place?*/
@@ -678,6 +765,8 @@ synti2_render(synti2_synth *s,
         s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp % DELAYSAMPLES] 
                  += pat->fpar[SYNTI2_F_DLEV] * interm;
 #endif
+
+
 
         /* result is both in *signal and in interm (like before). 
          * Mix (no stereo as of yet) 

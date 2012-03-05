@@ -103,7 +103,9 @@ ADDTO2 MixTo2 0 1   0 4
 ADDTO3 MixTo3 0 2   0 4
 ADDTO4 MixTo4 0 3   0 4
 
-DNUM DelayLine 0 1 0 5
+
+DIN  DelayLineIn  0 1 0 5
+DNUM DelayLineOut 0 1 0 5
 
 
 # "Floating point" parameters:
@@ -203,6 +205,7 @@ LV4 Oper4Level -8.0 8.0   2 15
 LVN NoiseLevel -8.0 8.0   2 15
 
 
+DINLV DelayInLev  0.0 1.0   2 16
 DLEN DelayLen  0.0 1.0   2 16
 DLEV DelayLev  0.0 1.0   2 16
 

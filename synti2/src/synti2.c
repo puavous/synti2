@@ -662,22 +662,38 @@ synti2_render(synti2_synth *s,
           * (float)RandSeed * 4.6566129e-010f; /*noise*/
 #endif
 
-        /* result is both in *signal and in interm (like before). */
-        buffer[iframe+ii] += interm;
-
 #ifndef NO_DELAY
+        /* Additive mix from a delay line. FIXME: Could have wild
+           results from modulating with a delayed mix.. sort of like a
+           "feedback" operator. But the oscillator and envelope code
+           may need some rethinking in that case (?) ... */
+        dsamp = s->framecount.val;
+        interm += s->delay[pat->ipar3[SYNTI2_I3_DIN]][dsamp % DELAYSAMPLES]
+          * pat->fpar[SYNTI2_F_DINLV];
         /* mix also to a delay line. FIXME: s->delaypos is a counter
            like frame? FIXME: Was that everything-is-a-counter thing a
            good idea in the first place?*/
-        dsamp = s->framecount.val + pat->fpar[SYNTI2_F_DLEN] * s->sr;
-        dsamp %= DELAYSAMPLES;
-        s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp] 
+        dsamp += (int)(pat->fpar[SYNTI2_F_DLEN] * s->sr);
+        //dsamp %= DELAYSAMPLES;
+        s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp % DELAYSAMPLES] 
                  += pat->fpar[SYNTI2_F_DLEV] * interm;
 #endif
+
+        /* result is both in *signal and in interm (like before). 
+         * Mix (no stereo as of yet) 
+         */
+        buffer[iframe+ii] += interm;
+
       }
 
 #ifndef NO_OUTPUT_SQUASH
       buffer[iframe+ii] = sin(buffer[iframe+ii]); /*Hack, but sounds nice*/
+#endif
+
+#ifndef NO_DELAY
+      for(dsamp=0; dsamp<NDELAYS; dsamp++){
+        s->delay[dsamp][s->framecount.val % DELAYSAMPLES] = 0.f; 
+      }
 #endif
       /*buffer[iframe+ii] = sin(32*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
       /*buffer[iframe+ii] = tanh(16*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/

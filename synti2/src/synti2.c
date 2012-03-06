@@ -707,6 +707,12 @@ synti2_render(synti2_synth *s,
           interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
           interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
           interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
+#ifndef NO_VELOCITY
+          /* Optional velocity FIXME: think. Table lookup? Hmm.. */
+          if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
+            interm *= s->velocity[iv] / 127.f; /* Now just linear. */
+          }
+#endif
           *signal = interm;
         }
 

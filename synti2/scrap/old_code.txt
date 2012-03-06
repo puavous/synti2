@@ -52,6 +52,17 @@ In the old comment of receiveSysEx()...
     Length is also the stride for value encoding.
 **/
 
+Old code for 2-byte F pars:
+
+  //for (c=((a & 0x0c) >> 2); c < 3; c++) decoded *= .1f; /* e-N; N=0..2) */
+  //for (c=0; c < ((a & 0x0c) >> 2); c++) decoded *= .1f; /* can be more */
+  //decoded *= .001f;                           /* default e-3 */
+  //for (c=0; c < ((a & 0x0c) >> 2); c++) decoded *= 10.f; /* can be more */
+  /*use of powf() seems to yield longer exe..*/
+  /*decoded *= powf(10.f, ((a & 0x0c) >> 2)-3);*/
+  /*pat->fpar[ir] = decoded * powf(10.f, ((a & 0x0c) >> 2)-3.f);*/
+
+
 
 Old Makefile parts:
 -------------------

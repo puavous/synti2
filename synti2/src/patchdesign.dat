@@ -233,15 +233,19 @@ FRESO Resonance   0.0 1.0   2 17
 # Other patch data.. Hmm.. playground as of now:
 
 
-# Pitch note follow ratio (FIXME: Can make zero default? fall[]?)
+# Pitch note follow ratio (TODO: Useful?) Not using this
+# so-far.. could be nice for tom sounds, spezial effects, or for
+# including noise as yet another wavetable.  Hmm. What about... "Skip
+# freq" I3 parameter per oscillator. Then noise could be a wavetable
+# and the frequency would be set at 1/sr. FIXME: think about this,
+# maybe
 
-PF1 Oper1NoteFollow 0 1   2 15
-PF2 Oper2NoteFollow 0 1   2 15
-PF3 Oper3NoteFollow 0 1   2 15
-PF4 Oper4NoteFollow 0 1   2 15
+#PF1 Oper1NoteFollow 0 1   2 15
+#PF2 Oper2NoteFollow 0 1   2 15
+#PF3 Oper3NoteFollow 0 1   2 15
+#PF4 Oper4NoteFollow 0 1   2 15
 
 
-# Padding to get a power-of-two length for the instrument patch?
+# TODO: Padding to get a power-of-two length for the instrument patch?
 # hmmm.. why power of two? Well, just in case some bit-shifting..
-
-# Padding should be done by the tool programs...
+# Padding should be done by the tool programs... so far no need...

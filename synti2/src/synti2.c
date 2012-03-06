@@ -142,17 +142,18 @@ synti2_player_merge_chunk(synti2_player *pl,
     msg = pl->data + pl->idata; /* Get next available data pool spot */
 
     if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
-      msg[0] = 0x90; /* MIDI Note on. */
+      /* FIXME: Channel information!! */
+      msg[0] = 0x90; /* MIDI Note on. FIXME: Could be a MISSS note on? */
       msg[1]= (par[0]==0xff) ? *r++ : par[0];
       msg[2]= (par[1]==0xff) ? *r++ : par[1];
       /* Now it is a complete msg. */
       synti2_player_event_add(pl, frame, msg, 3); 
       pl->idata += 3; /*Update the data pool top*/
     } else {
-      /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
       switch (type){
       case MISSS_LAYER_CONTROLLER_RESETS:
       case MISSS_LAYER_CONTROLLER_RAMPS:
+      /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
       case MISSS_LAYER_SYSEX_OR_ARBITRARY:
       case MISSS_LAYER_NOTHING_AS_OF_YET:
       default:
@@ -439,11 +440,27 @@ synti2_handleInput(synti2_synth *s,
       synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], 0);
 #endif
 
+      /* FIXME: Instead of "SysEx", the core engine should be able to
+         do_update_f(misss_msg_with_decoded_float_value)
+
+         and the controller ramp generator should generate those kind
+         of messages! And of course the external midi receiver module.
+
+         FIXME: And the "misss_msg_with_decoded_float_value" could
+         have a whole soundbank.. It could have a heading with
+         npatches, nipar, nfpar... Maybe? Just thinking to re-use this
+         "do_update_f()" for all parameter updates...
+      */
+
+      /* FIXME: And yes, separate the midi receiver module from other
+         sources! 
+       */
+
 #ifndef NO_SYSEX_RECEIVE
     } else if (midibuf[0] == 0xf0){
       /* Receiving SysEx is nice, but not strictly necessary if the
        * initial patch data is given upon creation.
-       */
+       */      
       synti2_do_receiveSysEx(s, midibuf);
 #endif
 

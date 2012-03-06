@@ -512,6 +512,11 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 
     pat = s->patch + iv;
 
+    /* Envelope 0 is never touched. Therefore it yields a constant
+     * 0. I don't know if this hack is very useful, but it is in its
+     * own way very beautiful, so I leave it untouched. That's why the
+     * loop begins from envelope 1:
+     */
     for (ie=1; ie<=NENVPERVOICE; ie++){
       /*printf("At %d voice %d env %d\n", s->framecount.val, iv,ie); fflush(stdout);*/
       if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs.FIXME: needed?*/
@@ -520,7 +525,16 @@ synti2_updateEnvelopeStages(synti2_synth *s){
          NSTAGES+1 or so (=6?) means go to attack.. */
       ipastend = SYNTI2_F_ENVS + (ie+1) * SYNTI2_NENVD;
 
-      /* Find next non-zero-timed knee (or end.) */
+      /* Find next non-zero-timed knee (or end.)  FIXME: Infinite
+       iteration if envelope loop is on, and the loop region contains
+       only zero times!!
+      */
+#ifndef NO_SAFETY
+      /* FIXME: Could have some additional safeguarding logic here...
+         That should do it:
+       if ((safeiters++) > 5) (s->sustain[iv] = 0;) */
+#endif
+
       while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){
 #ifndef NO_LOOPING_ENVELOPES
         /* Seems to yield 55 bytes of compressed code!! Whyyy so much? */
@@ -529,7 +543,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
                     part, ie, s->estage[iv][ie], 
                     (int)s->patch[part*SYNTI2_NPARAMS 
                     + SYNTI2_IENVLOOP+ie]);*/
-          s->estage[iv][ie] += pat->ipar3[SYNTI2_I3_ELOOP1+ie];
+          s->estage[iv][ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
         }
 #endif
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];

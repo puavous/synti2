@@ -293,13 +293,26 @@ synti2_do_noteon(synti2_synth *s, int voice, int note, int vel)
   }
 }
 
+/** Decodes a "floating point" synthesis parameter. TODO: Maybe try
+ * yet more different approaches to data storage?
+ */
+static
+float
+/*__attribute__ ((noinline))*/ /* longer code with an actual call..*/
+synti2_decode_fpar(unsigned char a, unsigned char b){
+  float decoded;
+  decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
+  decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
+  for (a=((a & 0x0c) >> 2); a < 3; a++) decoded *= .1f; /* e-N; N=0..2) */
+  return decoded;
+}
+
 
 static
 void
 synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
 {
-  int a,b,c,ir;
-  float decoded;
+  int ir;
   for(; *data != 0xf7; pat++){
     for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
       pat->ipar3[ir] = *data >> 3;
@@ -307,21 +320,10 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
     }
 
     for (ir=0; ir<SYNTI2_F_NPARS; ir++){
-      /* TODO: Try different approaches to data storage? */
-      a = *data;
-      b = *(data+SYNTI2_F_NPARS);
-      data++;      
-
-      decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
-      decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
-      decoded *= .001f;                           /* default e-3 */
-      for (c=0; c < ((a & 0x0c) >> 2); c++) decoded *= 10.f; /* can be more */
-      /*use of powf() seems to yield longer exe..*/
-      /*decoded *= powf(10.f, ((a & 0x0c) >> 2)-3);*/
-      /*pat->fpar[ir] = decoded * powf(10.f, ((a & 0x0c) >> 2)-3.f);*/
-      pat->fpar[ir] = decoded;
+      pat->fpar[ir] = synti2_decode_fpar(data[ir],
+                                         data[ir+SYNTI2_F_NPARS]); 
     }
-    data += SYNTI2_F_NPARS;
+    data += 2*SYNTI2_F_NPARS;
   }
 }
 
@@ -464,7 +466,6 @@ void
 synti2_evalCounters(synti2_synth *s){
   counter *c;
   unsigned int ind;
-  double ff;
   /* for(ic=0;ic<NCOUNTERS+NPARTS*NENVPERVOICE+1;ic++){*/
   for(c = s->c; c <= &s->framecount; c++){
     if (c->delta == 0) {continue;}  /* stopped.. not running*/
@@ -742,7 +743,6 @@ synti2_render(synti2_synth *s,
            like frame? FIXME: Was that everything-is-a-counter thing a
            good idea in the first place?*/
         dsamp += (int)(pat->fpar[SYNTI2_F_DLEN] * s->sr);
-        //dsamp %= DELAYSAMPLES;
         s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp % DELAYSAMPLES] 
                  += pat->fpar[SYNTI2_F_DLEV] * interm;
 #endif

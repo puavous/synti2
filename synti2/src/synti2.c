@@ -505,6 +505,9 @@ synti2_updateEnvelopeStages(synti2_synth *s){
   float nextgoal;
   float nexttime;
   synti2_patch *pat;
+#ifndef NO_SAFETY
+  int iter_watch;
+#endif
 
   /* remember that voice == part under the new design decisions.. */
   for(iv=0; iv<NPARTS; iv++){
@@ -525,14 +528,12 @@ synti2_updateEnvelopeStages(synti2_synth *s){
          NSTAGES+1 or so (=6?) means go to attack.. */
       ipastend = SYNTI2_F_ENVS + (ie+1) * SYNTI2_NENVD;
 
-      /* Find next non-zero-timed knee (or end.)  FIXME: Infinite
-       iteration if envelope loop is on, and the loop region contains
-       only zero times!!
-      */
+      /* Find next non-zero-timed knee (or end.) */
 #ifndef NO_SAFETY
-      /* FIXME: Could have some additional safeguarding logic here...
-         That should do it:
-       if ((safeiters++) > 5) (s->sustain[iv] = 0;) */
+      /* Looping over all-zero times produces an infinite iteration
+         which is not nice, especially in a real-time audio
+         system. So, there is an optional safety mechanism. */
+      iter_watch = 0;
 #endif
 
       while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){
@@ -544,6 +545,11 @@ synti2_updateEnvelopeStages(synti2_synth *s){
                     (int)s->patch[part*SYNTI2_NPARAMS 
                     + SYNTI2_IENVLOOP+ie]);*/
           s->estage[iv][ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
+
+#ifndef NO_SAFETY
+          if ((iter_watch++) > 5) s->sustain[iv] = 0; /* stop ifinite loop. */
+#endif
+
         }
 #endif
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];

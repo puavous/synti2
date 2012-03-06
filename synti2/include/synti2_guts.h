@@ -191,7 +191,6 @@ struct synti2_synth {
 
   float rise[WAVETABLE_SIZE];
   float wave[NHARM][WAVETABLE_SIZE];
-  //float fall[WAVETABLE_SIZE];
   /*float noise[WAVETABLE_SIZE]; Maybe?? */
 
   /* Oscillators are now modeled as integer counters (phase). */
@@ -216,8 +215,8 @@ struct synti2_synth {
 
   synti2_patch patch[NPARTS];   /* The sound parameters per part*/
 
-  //unsigned int delaypos; /* current counter into delay lines...*/
-  float delay[NDELAYS][DELAYSAMPLES]; /* Delays are optional but no cost for the playground field*/
+  float delay[NDELAYS][DELAYSAMPLES]; /* Use of delays is optional,
+                                         but the space costs nothing..*/
 };
 
 

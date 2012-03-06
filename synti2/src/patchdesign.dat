@@ -109,6 +109,10 @@ DNUM DelayLineOut 0 1 0 5
 
 FILT FilterMode 0 3 0 16
 
+# Need an even number of 3-bit parameters:
+xxx UNUSED0 0 1 0 17
+
+
 
 # "Floating point" parameters:
 

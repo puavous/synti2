@@ -79,8 +79,8 @@
 #define SYNTI2_MAX_SONGEVENTS 15000
 
 
-/* Audio delay storage */
-#define NDELAYS 4
+/* Audio delay storage. Less delays means less computation, faster synth.*/
+#define NDELAYS 3
 #define DELAYSAMPLES 0x10000
 
 

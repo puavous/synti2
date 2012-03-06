@@ -604,15 +604,8 @@ synti2_updateFrequencies(synti2_synth *s){
  *
  *    cutoff = cutoff freq in Hz
  *    fs = sampling frequency //(e.g. 44100Hz)
- *    f = 2 sin (M_PI * ch->cur[SYNTI_EPAR_CUTOFF] / st->samplerate); 
- *            //[approximately] hmm... means what?
- *    f = 2 * sin (M_PI * ch->cur[SYNTI_EPAR_CUTOFF] / st->samplerate);
  *    f = frqHz / sampleRate*4.;  hmm what it means..
  *    q = resonance/bandwidth [0 < q <= 1]  most res: q=1, less: q=0
- *    low = lowpass output    store[0]
- *    high = highpass output  store[1]
- *    band = bandpass output  store[2]
- *    notch = notch output    store[3]
  *    scale = q  OR scale = sqrt(q)?? 
  *
  *  Algorithm:
@@ -625,9 +618,6 @@ synti2_updateFrequencies(synti2_synth *s){
  *    band = f * high + band;
  *    (save low and band for next round.)
  */
-/* NEW: NOW: MAYBE: store[0] is current value and bypass-output. It
-   can conveniently come as &(outp[4])?
-*/
 static void apply_filter(synti2_synth *s, 
                          synti2_patch *pat, 
                          float *store){
@@ -638,26 +628,14 @@ static void apply_filter(synti2_synth *s,
 #define FIL_NF 4
 
   float f,q;
-  /*float bp,lp,hp;*/
-  /*float ret;*/
-  /* At first use only a static filter frequency. Maybe use an
-     envelope later?*/
+  /* At first use only a static filter frequency. TODO: Maybe use an
+     envelope later? FIXME: Check the value range once again..? */
 
-  /* Filter envelope is now multiplicative on top of a base level.
-   * TODO: Maybe all envelopes could be similar? Computation in one
-   * place and value usable directly from a final output table?
-   */
-  f = 1000.f * pat->fpar[SYNTI2_F_FFREQ] / s->sr; /*FIXME: precomp? */
-  /*FIXME: at least just store 1/4:th of actual value!!*/
+  f = 1000.f * pat->fpar[SYNTI2_F_FFREQ] / s->sr;
 
   q = 1.0f - pat->fpar[SYNTI2_F_FRESO];
-
-  //bp = ch->store[ISTORE_BANDPASS];
-  //lp = (ch->store[ISTORE_LOWPASS] += f * bp); /* note add and store! */
   store[FIL_LP] += f * store[FIL_BP];
-  //hp = q * newval - lp - q * bp;
   store[FIL_HP] = q * store[FIL_IN] - store[FIL_LP] - q * store[FIL_BP];
-  //bp = (ch->store[ISTORE_BANDPASS] += f * hp); /* note add and store! */
   store[FIL_BP] += f * store[FIL_HP];
 #ifndef NO_NOTCH_FILTER
   store[FIL_NF] = store[FIL_LP] + store[FIL_HP];
@@ -751,9 +729,12 @@ synti2_render(synti2_synth *s,
 #endif
 
 #ifndef NO_FILTER
-        signal[0] = interm;
-        apply_filter(s, pat, signal);
-        interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
+        /* Skip for faster computation. Could do the same for delays? */
+        if(pat->ipar3[SYNTI2_I3_FILT]) {
+          signal[0] = interm;
+          apply_filter(s, pat, signal);
+          interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
+        }
 #endif
 
 #ifndef NO_DELAY

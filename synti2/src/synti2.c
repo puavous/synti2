@@ -124,7 +124,7 @@ synti2_player_merge_chunk(synti2_player *pl,
   const byte_t *par;
   byte_t *msg;
 
-  chan = *r++;
+  chan = *r++; /* IDEA: chan = [from, howmany] */
   type = *r++;
   par = r;
   frame = 0;
@@ -422,6 +422,10 @@ synti2_handleInput(synti2_synth *s,
         && (pl->playloc->next->frame < upto_frames )) {
     pl->playloc = pl->playloc->next;
 
+    /* FIXME: Move away from MIDI land, to the land of the MISSS !!
+     * All the conversion work can be done before arrival to this
+     * spot!! We shall receive only messages of the MISSS, not MIDI.
+     */
     midibuf = pl->playloc->data;
     if ((midibuf[0] & 0xf0) == 0x90){
       synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);

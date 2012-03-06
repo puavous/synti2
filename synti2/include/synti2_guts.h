@@ -138,6 +138,7 @@ struct synti2_player_ev {
   synti2_player_ev *next;   /* link to next event */
   unsigned int frame;       /* Time of the event in frames */
   int len;                  /* length of the event data (hard-codable?) */
+  /* FIXME: Think something like {*next, frame, databytes[10]}? */
 };
 
 /** Player is the MIDI-like sequence playback engine. */

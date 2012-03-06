@@ -116,12 +116,47 @@
 %   just say so once. Everybody will be happy with that.
 
 
-\section{Johtanto}
+\section{Johdanto}
 
 \subsection{Mitäs sitten oikein tulikaan tehtyä?}
 
 \subsection{Miksi tein sen \ldots}
 \begin{frame}{Miksi? Miksi, miksi miksi?}
+
+  Miksi softasyntikka? Onhan noita jo. (Muttei liikaa ainakaan
+  pikkiriikkisiä avoimen lähdekoodin syntsia.)
+
+  ``Oma on aina oma'', sanoi nörtti, ja alkoi koodata oppiakseen
+  koodaamaan paremmin.
+
+\end{frame}
+
+\begin{frame}{Pikkiriikkiset demot}
+  Tähän projektiin valitsemani harrastusgenre on ``4k introt''.
+
+  Miksi?
+
+  Miksi ei? Miksi esimerkiksi aitajuoksu, jos juokseminen on helpompaa
+  ilman esteitä? Älä kysy tyhmiä toisen harrastuksesta, vaan arvosta
+  4k introja kuten allekirjoittanut vaikkapa curlingia tai muuta
+  itselle vierasta harrastusta.
+\end{frame}
+
+\begin{frame}{Pikkiriikkisyys}
+  Osin huijausta - pakatut exet ym. ``temput''.
+
+  Rajoitteet keinotekoisia - miksi esim. tehdä C-kielellä, kun
+  Java/Javascriptillä saa pienempään tilaan hienomman?. Miksi
+  äänisynteesin pitää olla osa koodia eikä ulkopuolisesti linkitetty
+  kirjasto?
+
+  Vastakysymys on taas sama kuin siihen, miksi juostaan aitajuoksua,
+  kun juokseminen on helpompaa ilman aitoja. Miksi ylipäätään juostaan
+  kilpaa, kun juosta voi muutenkin?
+
+  En vastaa näihin, enkä mene yksityiskohtiin
+  pikkiriikkisyystempuista. Mm. Sipola kertoi näistä viime
+  Instanssissa; samat temput kovassa käytössä tässäkin projektissa.
 
 \end{frame}
 
@@ -129,7 +164,7 @@
 \begin{frame}{Softasyntikka}
 \begin{itemize}
   \item Ääni-ilmiö kuten musiikki: Tajunta, korva, ilman värähtely,
-    värähtelyn lähde kuten soitin
+    värähtelylähde kuten soitin
   \item Värähtelyn voi tuottaa kaiutin sähkösignaalin ohjaamana
   \item sähkösignaali tallennettu äänilähteestä kuten soittimesta
   \item signaali voi olla myös syntetisoitu
@@ -142,8 +177,20 @@
 
 \subsection{Ekat purkat: Synti Software Synthesizer}
 \begin{frame}{tästä se lähti}
+
+Oskillaattorit, filtterit.
+
+Hyvät tuli.
+
 Ja nälkä kasvoi syödessä.
 \end{frame}
+
+\begin{frame}{Mutta..}
+
+  Hankala editoida (tekstimuotoinen ``oma formaatti'').
+
+\end{frame}
+
 
 \begin{frame}{Kantapääopetuksia}
 
@@ -157,27 +204,35 @@ Ja nälkä kasvoi syödessä.
 
 \end{frame}
 
+\begin{frame}{Kantapääopetuksia 2/2}
+   Käytännöllisempiä juttuja - wavetablet ym.
+
+   Nolla on hyvä arvo parametrille.
+\end{frame}
 
 \subsection{Synti2}
-\begin{frame}{Vaatimukset}
-  Tuotettavissa pikkiriikkinen suoritettava ohjelma, jossa on mukana
-  ääni (so. musiikillinen sekvenssi syntesoiduin instrumentein) ja
-  grafiikka. Kokonaisuus datoineen oltava alle 4096 tavua.
+\begin{frame}{Synti2:n vaatimukset}
+  Järjestelmä tuottaa pikkiriikkisen suoritettavan ohjelman, jossa on
+  mukana ääni (so. ennakkoon kiinnitetty musiikillinen sekvenssi sekä
+  syntesoidut instrumenttiäänet) ja grafiikka. Suoritettava ohjelma
+  datoineen on kooltaan alle 4096 tavua, ja sen voi suorittaa
+  standardissa käyttöympäristössä (so. 32-bittinen Linux, libSDL,
+  libGL, gunzip TAI 64-bittinen Linux johon asennettuna 32-bittiset
+  SDL \& OpenGL)
 
-  Grafiikan parametrit voidaan asettaa syntetisaattorin tilan
-  perusteella, sekvenssin ohjaamana. (Ääneen synkronoidut animaatiot)
+  Grafiikan parametrit voidaan lukea syntetisaattorin tilasta, jota
+  sekvenssi ohjaa. (Ääneen synkronoidut animaatiot)
 
-  Sävellysvaiheessa reaaliaikainen. Latenssin on oltava alle 10
-  millisekuntia (jota suuremmat latenssit häiritsevät jopa meikäläistä
-  rähmätassua sunnuntaisoittelijaa)
+  Sävellysvaiheessa synteesi on reaaliaikainen. Latenssin on oltava
+  alle 10 millisekuntia (jota suuremmat latenssit häiritsevät jopa
+  meikäläistä rähmätassua sunnuntaisoittelijaa)
 
   Sävellysvaiheessa ohjattavissa standardilla MIDIllä. Mahdollistaa
   musiikin (ja tarkemmin ajatellen myös animaation ohjaussekvenssin)
   tuottamisen millä tahansa MIDI-sekvensseriohjelmistolla.
 
-  Suoritettavan ohjelman sekvenssi muodostetaan (karsien ja
-  suodattaen) standardimuotoisesta MIDI-musiikkitiedostosta (SMF0 tai
-  SMF1).
+  Suoritettavan ohjelman sekvenssi muodostetaan (karsien ja muuntaen)
+  standardimuotoisesta MIDI-musiikkitiedostosta (SMF0 tai SMF1).
 
   Instrumentteja varten on parametrieditori, jossa jokainen parametri
   on muutettavissa hiirellä raahaamalla. Äänien tallennus ja lataus

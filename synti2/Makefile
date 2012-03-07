@@ -149,7 +149,7 @@ benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 dummy: # this is a hack to make the hack always re-compile
 
 tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
-		misssify cbank
+		midi2synti2 cbank
 	-mkdir hackpack
 #	./misssify --tpq 12 --velocity-all 100 --only-on \
 		$(filter %.mid, $^) hackpack/song.misss

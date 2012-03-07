@@ -105,7 +105,7 @@ MisssSong::write_as_c(std::ostream &outs){
   outs << std::endl;
   outs << "/* CHUNK: hack try -- basedrum on 4beat */ " << std::endl;
   outs << "/* Number of events in this chunk: */ 26," << std::endl;
-  outs << "/* Channel of this chunk: */ 0x0a," << std::endl;
+  outs << "/* Channel of this chunk: */ 0x00," << std::endl;
   outs << "/* Type    of this chunk: */ MISSS_LAYER_NOTES_CVEL_CPITCH," << std::endl;
   outs << "/* Parameter 1 (Ex. note): */ 48," << std::endl;
   outs << "/* Parameter 2 (Ex. vel): */ 127," << std::endl;

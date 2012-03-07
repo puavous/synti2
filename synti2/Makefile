@@ -159,7 +159,7 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 
-	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) \
+	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o hackpack/$@.unstripped.payload \
 		-combine -fwhole-program -flto \
 		-Iinclude \

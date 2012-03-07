@@ -63,7 +63,8 @@ static int RandSeed = 1;
 /** Reads a MIDI variable length number. "Varlengths" are used in my
  * native song format. I was thinking about re-using the scheme for
  * other stuff, like patch parameters, but I was unable to figure out
- * how to make significant improvements to code size that way.
+ * how to make significant improvements to code size that way. I may
+ * have overlooked something, though, as always.
  */
 static 
 int
@@ -169,16 +170,22 @@ static
 void
 synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
 {
-  int chunksize;
-  int uspq;
+  unsigned int chunksize;
+  unsigned int uspq;
   /* Initialize an "empty" "head event": (really necessary?) */
   pl->freeloc = pl->evpool + 1;
 
   pl->playloc = pl->evpool; /* This would "rewind" the song */
 
+  /* FIXME: Now we use the standard MIDI tempo unit of MSPQN. For our
+   * 4k purposes, we might not need tpq at all. Just give us
+   * microseconds per tick, and we'll be quite happy here and try to
+   * match it approximately by framecounts...
+   */
   r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */
   r += varlength(r, &uspq);       /* Microseconds per quarter note */
-  pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0f); /* frames-per-tick */
+  pl->fpt = ((float)uspq / pl->tpq) / (1000000.0f / pl->sr); /* frames-per-tick */
+  printf("tpq %d useqpq %d fpt %d\n", pl->tpq, uspq, pl->fpt);
   /* TODO: Think about accuracy vs. code size */
   for(r += varlength(r, &chunksize); chunksize > 0; r += varlength(r, &chunksize)){
     r = synti2_player_merge_chunk(pl, r, chunksize); /* read a chunk... */
@@ -222,7 +229,10 @@ synti2_create(unsigned long sr,
     synti2_fill_patches_from(s->patch, patchdata+8);
 #else
   /* In "Ultrasmall" mode, we trust the user to provide all data.*/
+#ifndef EXTREME_NO_SEQUENCER
+  /* And extreme hackers have made a smaller sequencer/music generator:)*/
   synti2_player_init_from_misss(s->pl, songdata);
+#endif
   synti2_fill_patches_from(s->patch, patchdata+8);
 #endif
 
@@ -709,7 +719,12 @@ synti2_render(synti2_synth *s,
      * elaboration in comments near the definition of NINNERLOOP).
      */
     
+#ifndef EXTREME_NO_SEQUENCER
+    /* If they wish to generate do_note_on() without my beautiful
+       sequencer interface, by all means let them!! FIXME:
+       do_note_on() needs to be non-static in that case, though. */
     synti2_handleInput(s, s->framecount.val + iframe + NINNERLOOP);
+#endif
     synti2_updateEnvelopeStages(s); /* move on if need be. */
     synti2_updateFrequencies(s);    /* frequency upd. */
     

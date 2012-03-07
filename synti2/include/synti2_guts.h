@@ -145,9 +145,9 @@ struct synti2_player_ev {
 struct synti2_player {
   synti2_player_ev *playloc; /* could we use just one loc for play and ins? */
   synti2_player_ev *insloc;  /* (one loc yielded larger exe on my first try)*/
-  int fpt;          /* Frames per tick. integer => tempos inexact, sry! */
+  unsigned int fpt; /* Frames per tick. integer => tempos inexact, sry! */
                     /* Hmm: Could I use some "automagic" tick counter? */
-  int tpq;          /* Ticks per quarter (no support for SMPTE). */
+  unsigned int tpq; /* Ticks per quarter (no support for SMPTE). */
   synti2_player_ev *freeloc; /*pointer to next free event structure*/
   int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
   int sr;           /* Sample rate. */

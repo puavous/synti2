@@ -68,7 +68,7 @@ static int RandSeed = 1;
 static 
 int
 __attribute__ ((noinline))
-varlength(const byte_t * source, int * dest){
+varlength(const byte_t * source, unsigned int * dest){
   int nread;
   byte_t byte;
   *dest = 0;
@@ -125,6 +125,7 @@ synti2_player_merge_chunk(synti2_player *pl,
   byte_t *msg;
 
   chan = *r++; /* IDEA: chan = [from, howmany] */
+  printf("Read chan %d\n", chan);
   type = *r++;
   par = r;
   frame = 0;
@@ -144,8 +145,8 @@ synti2_player_merge_chunk(synti2_player *pl,
     if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
       /* FIXME: Channel information!! */
       msg[0] = 0x90+chan; /* MIDI Note on. FIXME: Could be a MISSS note on? */
-      msg[1]= (par[0]==0xff) ? *r++ : par[0];
-      msg[2]= (par[1]==0xff) ? *r++ : par[1];
+      msg[1]= (par[0]==0xff) ? *r++ : par[0];  /* must not eval ++ always!!*/
+      msg[2]= (par[1]==0xff) ? *r++ : par[1];  /* check the C spec!! */
       /* Now it is a complete msg. */
       printf("add frame %d msg %02x %02x %02x\n", frame, msg[0], msg[1], msg[2]);
       synti2_player_event_add(pl, frame, msg, 3); 
@@ -179,7 +180,6 @@ synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
   r += varlength(r, &uspq);       /* Microseconds per quarter note */
   pl->fpt = ((float)uspq / pl->tpq) * (pl->sr / 1000000.0f); /* frames-per-tick */
   /* TODO: Think about accuracy vs. code size */
-  
   for(r += varlength(r, &chunksize); chunksize > 0; r += varlength(r, &chunksize)){
     r = synti2_player_merge_chunk(pl, r, chunksize); /* read a chunk... */
   }

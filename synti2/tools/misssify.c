@@ -728,9 +728,13 @@ deconstruct_from_midi(smf_events *ev_original,
     info->timesig = deftimesig;
   }
   if ((p=ev_original->head[0xff51].next) != NULL){
+    /* This just doesn't work yet.. (FIXME)*/
     if (opt->verbose) fprintf(stderr, "Using first tempo. \n");
     info->usec_per_q = smf_read_int((unsigned char *)p->data+1, 3);
     info->tempo_initialized = 1;
+    if (opt->verbose) fprintf(stderr, "Tempo = %d. \n", info->usec_per_q);
+    info->usec_per_q = 500000;
+    fprintf(stderr, "FIXME: Hacking. Tempo = %d. \n", info->usec_per_q);
   } else {
     info->usec_per_q = 500000;
   }
@@ -825,11 +829,12 @@ void
 misss_events_write_notestuff(misss_events *ev_misss, 
                              smf_events *ev_from, 
                              int s_from,
+                             int chan,
                              int default_pitch,
                              int default_velocity){
   unsigned char *tmpbuf;
   int i, nev, tick_prev, tick_now, tick_delta;
-  int chan = 0;
+  //  int chan = 0;
 
   tmpbuf = malloc(MAX_DATA * sizeof(unsigned char));
 
@@ -936,16 +941,28 @@ construct_misss(smf_events *ev_original,
   /*smf_events_printcontents(ev_intermediate, stdout);*/
 
 
+
   misss_events_write_header(ev_misss, info);
-  if (opt->override_all_velocities > 0){
-    misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, 
-                                 opt->override_all_velocities);
-  } else {
-    misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, -1);
+
+  for(ichan=0;ichan<15;ichan++){
+
+    if (opt->override_all_velocities > 0){
+      misss_events_write_notestuff(ev_misss, ev_intermediate, 
+                                   0x0000+ichan, ichan, -1, 
+                                   opt->override_all_velocities);
+    } else {
+      misss_events_write_notestuff(ev_misss, ev_intermediate, 
+                                   0x0000+ichan, ichan,
+                                   -1, -1);
+    }
+    if (opt->trash_all_noteoffs == 0){
+      misss_events_write_notestuff(ev_misss, ev_intermediate, 
+                                   0x0010+ichan, ichan, -1, 0);
+    }
   }
-  if (opt->trash_all_noteoffs == 0){
-    misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0010, -1, 0);
-  }
+
+
+
   misss_events_write_byte(ev_misss, 0); /* Zero length indicates end of file. */
   free(ev_intermediate);
 }

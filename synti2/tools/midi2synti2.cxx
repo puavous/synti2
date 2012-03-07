@@ -32,6 +32,7 @@
 
 /* Standard includes required by this unit */
 #include <iostream>
+#include <fstream>
 
 class MyJackClient;
 class MidiEventTranslator;
@@ -197,8 +198,38 @@ process (jack_nframes_t nframes, void *arg)
   return 0;
 }
 
+static
+bool file_exists(const char* fname){
+  std::ifstream checkf(fname);
+  return checkf.is_open();
+}
+
+int cmd_line_only(int argc, char **argv){
+  if (argc<2) {
+    std::cerr << "Please, provide an input file name." << std::endl;
+    return 1;
+  }
+  if (!file_exists(argv[1])){
+    std::cerr << "File not found. " << argv[1] << std::endl;
+    return 1;
+  }
+
+  MisssSong ms;
+  ms.write_as_c(std::cout);
+
+  return 0;
+}
 
 int main(int argc, char **argv){
+
+  if (argc > 1){
+    /* Command line arguments are given, so run without user
+     * interface. TODO: Better handling of arguments! This is barely
+     * usable as of now.
+     */
+    return cmd_line_only(argc, argv);
+  }
+
   AppData *things = new AppData();
 
   things->translator = new MidiEventTranslator();

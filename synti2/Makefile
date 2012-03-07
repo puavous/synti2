@@ -153,10 +153,9 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 	-mkdir hackpack
 #	./misssify --tpq 12 --velocity-all 100 --only-on \
 		$(filter %.mid, $^) hackpack/song.misss
-	./misssify  \
-		$(filter %.mid, $^) hackpack/song.misss
+	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
 
-	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
+# 	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 
@@ -186,11 +185,14 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 
 
 visexe: $(VISHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
-		misssify cbank
+		midi2synti2 cbank
 	-mkdir hackpack
-	./misssify --tpq 12 --velocity-all 100 --only-on \
+
+	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
+
+#	./misssify --tpq 12 --velocity-all 100 --only-on \
 		$(filter %.mid, $^) hackpack/song.misss
-	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
+#	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 

@@ -65,9 +65,9 @@
  * just one, somehow parameterized to be either reset or ramp each? 
  * Hmm... Hey: reset is a ramp with zero time, isn't it?! 
  */
-#define MISSS_LAYER_CONTROLLER_RESETS 0x04
-#define MISSS_LAYER_CONTROLLER_RAMPS 0x05
-#define MISSS_LAYER_SYSEX_OR_ARBITRARY 0x06
-#define MISSS_LAYER_NOTHING_AS_OF_YET 0x07
+#define MISSS_LAYER_CONTROLLER_RAMPS 0x04
+#define MISSS_LAYER_SYSEX_OR_ARBITRARY 0x05
+#define MISSS_LAYER_NOTHING_AS_OF_YET1 0x06
+#define MISSS_LAYER_NOTHING_AS_OF_YET2 0x07
 
 #endif

@@ -151,8 +151,11 @@ dummy: # this is a hack to make the hack always re-compile
 tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		misssify cbank
 	-mkdir hackpack
-	./misssify --tpq 12 --velocity-all 100 --only-on \
+#	./misssify --tpq 12 --velocity-all 100 --only-on \
 		$(filter %.mid, $^) hackpack/song.misss
+	./misssify  \
+		$(filter %.mid, $^) hackpack/song.misss
+
 	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/

@@ -760,12 +760,19 @@ misss_encode_varlength(int value, unsigned char *dest){
   bytes[3] = (value >> 0) & 0x7f;
   /* Set the continuation bits where needed: */
   vllen = 0;
-  for(i=0;i<3;i++){
-    if ((vllen > 0) || (bytes[i] != 0)) vllen += 1;
-    if (vllen > 0) *(dest++) = bytes[i] | 0x80;
+  for(i=0; i<=3; i++){
+    if ((vllen > 0) || (bytes[i] != 0) || (i==3)){
+      vllen += 1;
+      if (i<3) bytes[i+1] |= 0x80; /* set cont. bit */ 
+    }
   }
-  vllen += 1; 
-  *(dest++) = bytes[3];
+  printf("Methinks %d == ",value);
+  for(i=3; i>=0; i--){
+    *(dest++) = bytes[i];
+    printf("%02x ",bytes[i]);
+    if (!(bytes[i] & 0x80)) break;
+  }
+  printf("\n");
   return vllen; 
 }
 
@@ -900,14 +907,14 @@ construct_misss(smf_events *ev_original,
   /* Merge note-ons. FIXME: Channel per layer */
 
   for(ichan=0;ichan<15;ichan++){
-    s_noteon_to = ichan;
+    s_noteon_to = ichan; /* FIXME: these are now hardcoded! */
     s_noteoff_to = 16+ichan;
     for(inote=0;inote<128;inote++){
       /* FIXME: make this proper. Organize the intermediate store... */
-      s_from = (0x90 + ichan) * 0x100 + inote;
+      s_from = ((0x90 + ichan) << 8) + inote;
       smf_events_merge_lists(ev_original, ev_intermediate, s_from, s_noteon_to);
 
-      s_from = (0x80 + ichan) * 0x100 + inote;
+      s_from = ((0x80 + ichan) << 8) + inote;
       smf_events_merge_lists(ev_original, ev_intermediate, s_from, s_noteoff_to);
     }
   }
@@ -927,6 +934,8 @@ construct_misss(smf_events *ev_original,
 
 
   /*smf_events_printcontents(ev_intermediate, stdout);*/
+
+
   misss_events_write_header(ev_misss, info);
   if (opt->override_all_velocities > 0){
     misss_events_write_notestuff(ev_misss, ev_intermediate, 0x0000, -1, 
@@ -986,9 +995,9 @@ int main(int argc, char *argv[]){
   dinput_size = file_read(opt->infname, dinput, MAX_DATA);
   deconstruct_from_midi(ev_original, info, dinput, opt);
   
-  /*smf_events_printcontents(ev_original, stdout);*/
-  
   /* 
+     smf_events_printcontents(ev_original, stdout);
+
      filter_events(?)??
   */
   construct_misss(ev_original, ev_misssified, info, opt);

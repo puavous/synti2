@@ -53,6 +53,52 @@ proper documentation):
   // or something like: from_midi_song_picking_only("chn 1 note on");
 
 
+The old MISSS spec:
+
+/** MISSS - Midi-like interface for Synti2 Software Synthesizer.
+ *
+ * This program reads and analyzes a standard MIDI file (type 0 or
+ * type 1), tries to mutilate it in various ways to reduce its size,
+ * and outputs a file compatible with the super-simplistic sequencer
+ * part of the Synti2 Software Synthesizer.
+ *
+ * FIXME: I want to redo this with some more flexible programming
+ * language.. (DONE: used C++)
+ *
+ * Ideas:
+ *
+ * + Trash all events that Synti2 doesn't handle.
+ *
+ * + Use simplistic note-off (not going to use note-off velocity)
+ *
+ * + Make exactly one "track" - call it "layer"! - per one MIDI status
+ *   word, use the channel nibble of the status byte for something
+ *   more useful (which is? Could be "chord size", i.e., number of
+ *   instantaneous notes, no need for zero delta!), and write
+ *   everything as "running status". Make a very simple layering
+ *   algorithm to piece it together upon sequencer creation. Just "for
+ *   layer in layers do song.addlayer(layer)" and then start
+ *   playing. Will be very simple at that point.
+ *
+ * + Trash header information that Synti2 doesn't need.
+ *
+ * + Only one BPM value allowed throughout the song; no tempo map,
+ *   sry. (No need to compute much during the playback).
+ *
+ * + Use lower parts-per-quarter setting, and quantize notes as
+ *   needed. The variable-length delta idea is useful as it is.
+ *   FIXME: Could I re-use the var-length decoder for the patches???
+ *   I think I could, somehow... if I just figured out how...
+ *
+ * - Decimate velocities
+ *
+ * - Approximate controllers with linear ramps.
+ *
+ * - Turn percussion tracks to binary beat patterns(?).
+ *
+ * - Observe: Percussive instruments need no note-off.
+ *
+ */
 
 
 In the old comment of receiveSysEx()...
@@ -227,3 +273,141 @@ kept here, for purposes of reflection...
   }
   /*if (voice==NVOICES) return;*/ /* Cannot play new note! */
   /* (Could actually force the last voice to play anyway!?) */
+
+
+
+
+Just some lessons learned:
+
+/** Interprets command line.
+ *
+ * TODO: Implement this; so far only example code from the GNU manual.
+ *
+ * TODO (later): learn to use argp instead of getopt..
+ */
+static
+void
+misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
+  int c;
+  static int local_verbose; /* must know address on compile time. */
+  /* Defaults for some values:*/
+  strncpy(opt->outfname, "test.misss", MAX_STRINGLENGTH);
+  /* Aah, but this will only fail possibly for user input:
+  if (strlen(str) >= MAX_STRINGLENGTH){
+    fprintf(stderr, "File path too long. %s", str);
+    exit(0);
+  }
+  */
+  opt->infname[0]='\0';
+
+  while (1){
+    static struct option long_options[] =
+      {
+        /* These options set a flag. */
+        {"verbose", no_argument,       &local_verbose, 1},
+        {"brief",   no_argument,       &local_verbose, 0},
+        /* These options don't set a flag.
+           We distinguish them by their indices. */
+        {"add",     no_argument,       0, 'a'},
+        {"append",  no_argument,       0, 'b'},
+        {"delete",  required_argument, 0, 'd'},
+        {"velocity-all",  required_argument, 0, 'l'},
+        {"only-on", no_argument, 0, 'o'},
+        {"tpq",     required_argument, 0, 'p'},
+        {0, 0, 0, 0} /* marks the end of options */
+      };
+    /* getopt_long stores the option index here. */
+    int option_index = 0;
+    
+    c = getopt_long (argc, argv, "ab:d:l:op:",
+                     long_options, &option_index);
+    
+    /* Detect the end of the options. */
+    if (c == -1)
+      break;
+    
+    switch (c)
+      {
+      case 0:
+        /* If this option set a flag, do nothing else now. */
+        if (long_options[option_index].flag != 0)
+          break;
+        printf ("option %s", long_options[option_index].name);
+        if (optarg)
+          printf (" with arg %s", optarg);
+        printf ("\n");
+        break;
+        
+      case 'a':
+        puts ("option -a\n");
+        break;
+        
+      case 'b':
+        puts ("option -b\n");
+        break;
+        
+      case 'c':
+        printf ("option -c with value `%s'\n", optarg);
+        break;
+        
+      case 'd':
+        printf ("option -d with value `%s'\n", optarg);
+        break;
+
+      case 'l':
+        opt->override_all_velocities = atoi(optarg);
+        printf ("All velocities will be %d (given as string '%s')\n", 
+                opt->override_all_velocities, optarg);
+        break;
+
+      case 'o':
+        opt->trash_all_noteoffs = 1;
+        printf ("No note-offs will be written on *any* part. \n");
+        break;
+        
+      case 'p':
+        opt->desired_timediv = atoi(optarg);
+        printf ("Desired timediv is %d (given as string '%s')\n", 
+                opt->desired_timediv, optarg);
+        break;
+        
+      case '?':
+        /* getopt_long already printed an error message. */
+        break;
+        
+      default:
+        abort ();
+      }
+  }
+  
+  /* Instead of reporting ‘--verbose’
+     and ‘--brief’ as they are encountered,
+     we report the final status resulting from them. */
+  opt->verbose = local_verbose;
+  if (opt->verbose){
+    fprintf(stderr, "Verbose on. I'll start talking to stderr.\n");
+  }
+  
+  /* Remaining command line arguments (not options); we must have
+     input file name. */
+  if (optind >= argc){
+    fprintf(stderr, "Input file name must be given!\n");
+    exit(0);
+  }
+  if (strlen(argv[optind]) >= MAX_STRINGLENGTH){
+    fprintf(stderr, "Input file path too long. Will use default! %s\n", argv[argc]);
+  } else {
+    strncpy(opt->infname, argv[optind], MAX_STRINGLENGTH);
+  }
+
+  /* Can have output file name. */
+  optind++;
+  if (optind >= argc){
+    return;
+  }
+  if (strlen(argv[optind]) >= MAX_STRINGLENGTH){
+    fprintf(stderr, "Output file path too long. Will use default! %s\n", argv[argc]);
+  } else {
+    strncpy(opt->outfname, argv[optind], MAX_STRINGLENGTH);
+  }
+}

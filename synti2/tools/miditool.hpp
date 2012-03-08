@@ -81,7 +81,7 @@ public:
   /* The only way to create a chunk is by giving a text description(?)*/
   //virtual MisssChunk(std::string desc){bytes_per_ev = 3;}
   MisssChunk(){in_channel = 0; out_channel = 0x9;}
-  virtual bool acceptEvent(MidiEvent &ev){return true;}
+  virtual bool acceptEvent(MidiEvent &ev){return false;}
   void write_as_c(std::ostream &outs){
     do_write_header_as_c(outs);
     do_write_data_as_c(outs);
@@ -108,6 +108,7 @@ public:
       tick.push_back(hack*6); /*dataind.push_back(hack); data.push_back();*/
     }
   }
+  bool acceptEvent(MidiEvent &ev);
 };
 
 class MisssRampChunk : public MisssChunk {

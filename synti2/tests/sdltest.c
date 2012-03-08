@@ -85,12 +85,17 @@ static void main2(){
    * It is definitely worth the ease! Oooh, but it won't work with a
    * dual monitor setup! (tries to make fullscreen and crashes, afaik)
    */
+  SDL_SetVideoMode(1024,768,32,SDL_OPENGL);
+#if 0
   vid = SDL_GetVideoInfo();  /* get desktop mode */
-#if 1
+  SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
+		   SDL_OPENGL); /* no full screen.. safer..*/
+#endif
+
+#if 0
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
 		   SDL_OPENGL|SDL_FULLSCREEN); /* use it*/
-#else
-  SDL_SetVideoMode(640,400,32,SDL_OPENGL);
+  //  SDL_SetVideoMode(640,400,32,SDL_OPENGL);
 #endif
 
   /*SDL_SetVideoMode(1280,720,32,sdl_flags);*/

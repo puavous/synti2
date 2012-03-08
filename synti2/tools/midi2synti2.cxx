@@ -214,8 +214,12 @@ int cmd_line_only(int argc, char **argv){
     return 1;
   }
 
-  MisssSong ms;
-  ms.write_as_c(std::cout);
+  std::ifstream ifs(argv[1]);
+  MidiSong ms(ifs);
+  ifs.close();
+  
+  MisssSong misss;
+  misss.write_as_c(std::cout);
 
   return 0;
 }

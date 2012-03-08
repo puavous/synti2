@@ -59,7 +59,12 @@ class MidiSong {
    - note on (possibly with constant velocity and/or constant pitch)
 
    - controller ramp. // Think about subclassing here!
-*/
+
+  Purpose of the chunks is just to grab the filtered events, and it
+  doesn't handle channel mapping. That is the responsibility of
+  MidiTranslator.
+
+ */
 
 
 class MisssChunk{
@@ -94,6 +99,9 @@ protected:
   void do_write_data_as_c(std::ostream &outs);
 public:
   MisssNoteChunk(){
+    default_note = -1;
+    default_velocity = -1;
+
     default_note = 35; /* hack bd*/
     default_velocity = 100;
     for (int hack=0; hack<10; hack++){

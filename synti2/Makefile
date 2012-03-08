@@ -163,7 +163,6 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		-o hackpack/$@.unstripped.payload \
 		-combine -fwhole-program -flto \
 		-Iinclude \
-		-DNO_SYSEX_RECEIVE -DNO_EXTRA_SYSEX \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYHACKSOURCES)) \
 		$(filter %.c, $(S2SOURCES)) \

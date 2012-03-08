@@ -5,11 +5,12 @@
 
 #include "SDL/SDL.h"
 #include "synti2.h"
+#include "synti2_guts.h"
 
 #include <stdlib.h>
 
 #define MY_SAMPLERATE 48000
-#define AUDIOBUFSIZE  4096
+#define AUDIOBUFSIZE  2048
 
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
@@ -19,7 +20,38 @@ synti2_synth *st;
 
 /* Test patch from the hack script: */
 extern unsigned char patch_sysex[];
-extern unsigned char hacksong_data[];
+
+static void produce_hell(){
+  static int tick = 0;
+  static int beat = 0;
+  static int neat = 0;
+  static float hmm = 0.f;
+
+  tick++;
+  beat = tick >> 4;
+  tick &= 0x3f;
+
+#ifdef EXTREME_NO_SEQUENCER
+
+
+  if ((tick) % 8 == 0){
+    st->patch[0].fpar[SYNTI2_F_LV3] = sin(hmm += .03);
+    st->patch[0].fpar[SYNTI2_F_LV4] = sin(hmm * .01);
+    synti2_do_noteon(st, 0, 32+beat*3+beat, 100);
+  }
+
+  if ((tick) % 16 == 0){
+    synti2_do_noteon(st, 1, 27, 100);
+  }
+
+  if ((tick) % 32 == 0){
+    neat += 1;
+    neat &= 0x7f;
+    synti2_do_noteon(st, 2, neat, 100);
+  }
+
+#endif
+}
 
 /**
  * Process sound with our own synthesis, then convert to SDL format.
@@ -30,15 +62,16 @@ extern unsigned char hacksong_data[];
 static void sound_callback(void *udata, Uint8 *stream, int len)
 {
   int i;
-  const static float vol = 20000.0;
+  static const float vol = 10000.0f;
   
+  produce_hell();
   /* Call our own synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
   synti2_render(st, 
 		audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
 
   for(i=0;i<len/2;i+=2){
-    ((Sint16*)stream)[i+0] = (Sint16)(audiobuf[i/2]*vol); 
+    ((Sint16*)stream)[i+0] = /*(Sint16)(audiobuf[i/2]*vol); */
     ((Sint16*)stream)[i+1] = (Sint16)(audiobuf[i/2]*vol);
   }
 }
@@ -49,7 +82,7 @@ static void main2(){
 #ifndef DRYRUN
   SDL_AudioSpec aud;
 
-  st = synti2_create(MY_SAMPLERATE, patch_sysex, hacksong_data);
+  st = synti2_create(MY_SAMPLERATE, patch_sysex, NULL);
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_AUDIO);
@@ -77,7 +110,7 @@ static void main2(){
 
 #else /*end DRYRUN */
   /* This should effectively do the tiniest thing possible with synti2: */
-  st = synti2_create(MY_SAMPLERATE, patch_sysex, hacksong_data);
+  st = synti2_create(MY_SAMPLERATE, patch_sysex, NULL);
   sound_callback(NULL, audiobuf, AUDIOBUFSIZE);
 
 #endif

@@ -272,12 +272,18 @@ synti2_create(unsigned long sr,
 
 
 /** Note on OR note off (upon velocity == 0) */
+#ifndef EXTREME_NO_SEQUENCER /* convenience for sequencer-less conduct */
 static
+#endif
 void
-synti2_do_noteon(synti2_synth *s, int voice, int note, int vel)
+synti2_do_noteon(synti2_synth *s, 
+                 unsigned char voice, 
+                 unsigned char note, 
+                 unsigned char vel)
 {
   int ie;
 
+#ifndef NO_NOTEOFF  /* Who needs note-offs anyway? */
   /* note off */
   if (vel==0){
     /* TODO: release all envelopes.. */
@@ -289,6 +295,7 @@ synti2_do_noteon(synti2_synth *s, int voice, int note, int vel)
     }
     return; /* Note off is now handled. Otherwise do note on. */
   }
+#endif
  
   /* note on */
   s->note[voice] = note;
@@ -402,6 +409,7 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
 }
 #endif
 
+#ifndef EXTREME_NO_SEQUENCER
 /** Handles input that comes from the stored list of song events.
  *
  * Renders some frames of control data for the synth, keeping track
@@ -482,7 +490,7 @@ synti2_handleInput(synti2_synth *s,
   }
   pl->frames_done = upto_frames;
 }
-
+#endif
 
 
 /* Advance the oscillator counters. Consider using the xmms assembly

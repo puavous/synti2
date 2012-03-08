@@ -11,6 +11,7 @@
 
 /* If they don't want no nothin' then so be it. */
 #ifdef NO_NOTHING
+#define NO_NOTEOFF
 #define NO_NOISE
 #define NO_LOOPING_ENVELOPES
 #define NO_SYSEX_RECEIVE
@@ -22,6 +23,14 @@
 #define NO_FILTER
 #define NO_VELOCITY
 #define NO_CC
+#endif
+
+/* don't know if this is nice, but doing it still: */
+#ifdef BUT_USE_DETUNE
+#undef NO_DETUNE
+#endif
+#ifdef BUT_USE_PITCH_ENV
+#undef NO_PITCH_ENV
 #endif
 
 typedef float synti2_smp_t;
@@ -46,6 +55,15 @@ void
 synti2_render(synti2_synth *s, 
 	      synti2_smp_t *buffer,
 	      int nframes);
+
+#ifdef EXTREME_NO_SEQUENCER
+/** If importing of MIDI sequences is not your itch, then why not set
+ *  -DEXTREME_NO_SEQUENCER and jam with generated calls to noteon().
+ */
+void
+synti2_do_noteon(synti2_synth *s, unsigned char voice, 
+                 unsigned char note, unsigned char vel);
+#endif
 
 
 /* ------- Realtime control interface ------- */

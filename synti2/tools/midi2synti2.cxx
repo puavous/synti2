@@ -214,7 +214,7 @@ int cmd_line_only(int argc, char **argv){
     return 1;
   }
 
-  std::ifstream ifs(argv[1]);
+  std::ifstream ifs(argv[1], std::ios::in|std::ios::binary);
   MidiSong ms(ifs);
   ifs.close();
   

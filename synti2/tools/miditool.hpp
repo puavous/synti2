@@ -25,8 +25,10 @@ typedef unsigned char evdata_t;
  *  know its location in time.
  */
 class MidiEvent{
-  
+public:
+  MidiEvent(){;}
 };
+
 
 /** MIDI Track as loaded from SMF0 or SMF1. Can read itself from a
  *  binary stream, and iterate ("play back") up to a tick
@@ -34,19 +36,39 @@ class MidiEvent{
  *  separated into self-contained events.
  */
 class MidiTrack {
-  unsigned int current_tick;
+  unsigned int current_tick; /* current tick for create and play.. not really nice, but works for now... */
+  typedef unsigned int miditick_t;
+  std::multimap<miditick_t, MidiEvent* > evs; /* multimap OK? why?wnot?*/
+
+  /** Adds an event (pointer) at a time tick. Who deletes the event?
+   *  Should we make a deep copy after all?
+   */
+  void addEvent(miditick_t tick, MidiEvent *ev);
+protected:
+  void readFrom(std::istream &ins);
+  /* Normalization depends on current status and side effects. */
+  MidiEvent* createNormalizedEvent(std::istream &ins);
 public:
   MidiTrack(){current_tick = 0;}
-  void readFrom(unsigned char *fr){;}
-  MidiEvent nextEventUpToTick(unsigned int t){;}
+  MidiTrack(std::istream &ins){readFrom(ins);}
+  ~MidiTrack(){/*FIXME: we need to delete our events, because we have allocated them!! Not sure yet, where they'll reside, though... FIXME: asap. */}
+
+  MidiEvent& nextEventUpToTick(unsigned int t){;}
 };
 
 /** MidiSong can read a standard midi file, and iterate it (call it
  *  "playback" if you wish) one event at a time.
  */
 class MidiSong {
+  unsigned int ticks_per_beat;
   std::map<miditick_t, evdata_t *> evs;
-  MidiSong(const char *fname){;}
+  std::vector<MidiTrack*> tracks;
+public:
+  int getNTracks(){return tracks.size();}
+  MidiSong(std::ifstream &ins);
+  ~MidiSong(){for(unsigned int i=0; i<tracks.size(); i++){delete tracks[i];}}
+  void rewind(){};
+  MidiEvent nextEvent(){return MidiEvent();/*FIXME*/}
 };
 
 
@@ -108,7 +130,7 @@ public:
       tick.push_back(hack*6); /*dataind.push_back(hack); data.push_back();*/
     }
   }
-  bool acceptEvent(MidiEvent &ev);
+  bool acceptEvent(MidiEvent &ev){return false;}
 };
 
 class MisssRampChunk : public MisssChunk {

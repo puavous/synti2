@@ -6,6 +6,7 @@
 #include "miditool.hpp"
 
 #include <iostream>
+#include <fstream>
 
 
 /* For simplicity, use the varlength of SMF.*/
@@ -66,6 +67,109 @@ static
 unsigned int bpm_to_usecpq(unsigned int bpm){
   return 60000000 / bpm;
 }
+
+
+static
+unsigned int read_4byte(std::istream &ins){
+  char buf[4];
+  ins.read(buf,4);
+  return (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
+}
+
+static
+unsigned int read_2byte(std::istream &ins){
+  char buf[2];
+  ins.read(buf,2);
+  return (buf[0] << 8) + buf[1];
+}
+
+static
+int read_varlen(std::istream &ins, unsigned int *dest){
+  int nread;
+  unsigned char byte;
+  *dest = 0;
+  for (nread=1; nread<=4; nread++){
+    byte = ins.get();
+    *dest += (byte & 0x7f);
+    if ((byte & 0x80) == 0)
+      return nread; 
+    else *dest <<= 7;
+  }
+  std::cerr << "Warning: varlength number longer than 4 bytes." << std::endl;
+  return 0; 
+}
+
+void MidiTrack::addEvent(miditick_t tick, MidiEvent *ev){
+  delete ev;/*FIXME:impl.*/
+  /* FIXME: Implement storage n stuff. */
+}
+
+MidiEvent *MidiTrack::createNormalizedEvent(std::istream &ins){
+  return new MidiEvent(); /* FIXME: parameters! Can abstract between channel and other events here!! */
+}
+
+void 
+MidiTrack::readFrom(std::istream &ins){
+  if (read_4byte(ins) != 0x4d54726b){
+    std::cerr << "Failed to read MIDI track. Reason:" << std::endl;
+    std::cerr << "Doesn't look like a MIDI track (No MTrk)." << std::endl;
+    return;
+  }
+  unsigned int chunk_size = (read_4byte(ins) != 0x4d54726b);
+
+  unsigned int cur_tick = 0;
+  unsigned int nread = 0; 
+  unsigned int delta = 0;
+  while(nread < chunk_size){
+    nread += read_varlen(ins, &delta);
+    cur_tick += delta;
+    MidiEvent* nev = createNormalizedEvent(ins); /* need side effect */
+    addEvent(cur_tick, nev); /* Need a factory? */
+  }
+}
+
+MidiSong::MidiSong(std::ifstream &ins){
+  
+  /* TODO: would be better to throw an exception from here. */
+  if (!ins.is_open()){
+    std::cerr << "Failed to read MIDI file. Reason:" << std::endl;
+    std::cerr << "File could not be opened." << std::endl;
+    return;
+  }
+  if (read_4byte(ins) != 0x4d546864){
+    std::cerr << "Failed to read MIDI file. Reason:" << std::endl;
+    std::cerr << "Doesn't look like a MIDI file (No MThd)." << std::endl;
+    return;
+  }
+  if (read_4byte(ins) != 6){
+    std::cerr << "Failed to read MIDI file. Reason:" << std::endl;
+    std::cerr << "MThd length not 6" << std::endl;
+    /* Although the spec says the header 'could' be longer...*/
+    return;
+  }
+  if (read_2byte(ins) >1) {
+    std::cerr << "Failed to read MIDI file. Reason:" << std::endl;
+    std::cerr << "Only MIDI formats 0 and 1 are supported." << std::endl;
+    return;
+  }
+
+  unsigned int ntracks = read_2byte(ins);
+
+  unsigned int time_division = read_2byte(ins);
+  if (time_division & 0x8000) {
+    std::cerr << "Failed to read MIDI file. Reason:" << std::endl;
+    std::cerr << "SMPTE timings are not supported." << std::endl;
+    return;
+  }
+  
+  ticks_per_beat = time_division;
+  
+  for (unsigned int i=0; i<ntracks; i++){
+    tracks.push_back(new MidiTrack(ins));
+  }
+}
+
+
 
 void
 MisssChunk::do_write_header_as_c(std::ostream &outs){

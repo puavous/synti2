@@ -21,6 +21,26 @@ typedef unsigned int miditick_t;
 typedef unsigned char evdata_t;
 
 
+/** MIDI Event - something that is supposed to happen. Event does not
+ *  know its location in time.
+ */
+class MidiEvent{
+  
+};
+
+/** MIDI Track as loaded from SMF0 or SMF1. Can read itself from a
+ *  binary stream, and iterate ("play back") up to a tick
+ *  value. Events are "normalized" upon load: running statuses are
+ *  separated into self-contained events.
+ */
+class MidiTrack {
+  unsigned int current_tick;
+public:
+  MidiTrack(){current_tick = 0;}
+  void readFrom(unsigned char *fr){;}
+  MidiEvent nextEventUpToTick(unsigned int t){;}
+};
+
 /** MidiSong can read a standard midi file, and iterate it (call it
  *  "playback" if you wish) one event at a time.
  */
@@ -40,65 +60,57 @@ class MidiSong {
 
    - controller ramp. // Think about subclassing here!
 */
+
+
 class MisssChunk{
-private:
-  int channel; /* channel of this chunk */
-  int par1; /* parameter 1 of this chunk */
-  int par2; /* parameter 2 of this chunk */
-  std::vector<unsigned int> tick;  /* time ticks */
+protected:
+  int in_channel;  /* accept channel of this chunk */
+  int out_channel; /* output channel of this chunk */
+  int bytes_per_ev; /* length of one event*/
+  std::vector<unsigned int> tick;  /* times of events as ticks. */
   std::vector<unsigned int> dataind;  /* corresp. data locations */
   std::vector<unsigned char> data; /* actual data directly as bytes */
+  virtual void do_write_header_as_c(std::ostream &outs);
+  virtual void do_write_data_as_c(std::ostream &outs) = 0;
 public:
-  // Something like this for creation;
-  //void from_midi_song_using_translator(MidiSong &s, MidiTranslator &mt);
-  // maybe sniff_note_ons_from_channel(MidiSong &s, MidiTranslator &mt, chan);
-  /* Or maybe in OOP style just something like:
-
-     setAcceptChn(12);   <- superclass
-     Type("Note on"),  <- subclass, actually maybe class MisssNoteChunk
-     setNoteAcceptRange("1..32"); <- in MisssNoteChunk only
-     setConstantNote(24); <- in MisssNoteChunk!! Wow! THIS determines subtype
-     setConstantNote(-1); <- in MisssNoteChunk!! becomes other subtype..
-     setConstantVel(100); <- in MisssNoteChunk!! Wow! THIS determines subtype
-     setVelAcceptRange(90,110); <- in MisssNoteChunk! THIS is the decimation!
-     setVelAcceptRange(1,127); <- and THIS is "no note off" subtype!
-
-     setAcceptController(32); <- in MisssRampChunk only
-     setOutputRange(0.0, 1.27); <- in MisssRampChunk only
-
-     Then play back once through translator and each chunk goes
-     sniffing for their respective food:
-
-     for each chunk:
-       if (chunk.eat_if_tasty(midievent)) break;
-
-     Then MisssRampChunk could have nice algorithms for ramp
-     determination, and MisssBulkChunk would be just another, simpler,
-     subclass. 
-
-       rampchunk.setDelta() <- THIS is the generative delta which fits
-       in the two-byte parameters. OH NO! It doesn't.. need a third
-       byte (maybe.. think!) But there could be three for this chunk
-       and still only two for the others. It's only an if and add in
-       the exe anyway.
-
-       rampchunk.setExaminationTime() <- parameters for the linear
-       approximation can be set like this.
-
-     MisssChunk could be a virtual superclass, and Misss file creation
-     would become just a matter of building a chunk list from a GUI
-     button callback. Oh, but it needs to be serializable. So all
-     these will have constructors with a string parameter:
-
-       MisssNoteChunk nc1("Chn: 1 VelRange: 1 127 DefVel: -1 DefNote: -1");
-       MisssNoteChunk nc2("Chn: 2 VelRange: 0 127 DefVel: -1 DefNote: -1");
-       MisssNoteChunk nc3("Chn: 1 VelRange: 0 0 DefVel: 0 DefNote: -1");
-
-     YES!! Do exactly this. FIXME: asap!!!
-  */
-  // or something like: from_midi_song_picking_only("chn 1 note on");
-  void write_as_c(std::ostream &outs);
+  /* The only way to create a chunk is by giving a text description(?)*/
+  //virtual MisssChunk(std::string desc){bytes_per_ev = 3;}
+  MisssChunk(){in_channel = 0; out_channel = 0x9;}
+  virtual bool acceptEvent(MidiEvent &ev){return true;}
+  void write_as_c(std::ostream &outs){
+    do_write_header_as_c(outs);
+    do_write_data_as_c(outs);
+  }
 };
+
+class MisssNoteChunk : public MisssChunk 
+{
+private:
+  /* parameters */
+  int default_note;
+  int default_velocity;
+protected:
+  void do_write_header_as_c(std::ostream &outs);
+  void do_write_data_as_c(std::ostream &outs);
+public:
+  MisssNoteChunk(){
+    default_note = 35; /* hack bd*/
+    default_velocity = 100;
+    for (int hack=0; hack<10; hack++){
+      tick.push_back(hack*6); /*dataind.push_back(hack); data.push_back();*/
+    }
+  }
+};
+
+class MisssRampChunk : public MisssChunk {
+private:
+  /* parameters */
+  int control_target;
+  int range_min;
+  int range_max;
+  // mapping_type
+};
+
 
 /** MisssSong can sniff a MidiSong using a MidiTranslator and save a
  * MISSS (midi-like interface for synti2 software synthesizer) data
@@ -110,9 +122,13 @@ private:
   unsigned int ticks_per_quarter;
   unsigned int usec_per_quarter;
 
-  std::vector<MisssChunk> chunks;
+  std::vector<MisssChunk*> chunks;
 public:
-  MisssSong(){MisssChunk hack; chunks.push_back(hack); chunks.push_back(hack);}
+  MisssSong(){
+    chunks.push_back(new MisssNoteChunk());
+    chunks.push_back(new MisssNoteChunk());
+    //    chunks.push_back(hack);
+  }
   void write_as_c(std::ostream &outs);
 };
 

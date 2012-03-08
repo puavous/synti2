@@ -161,6 +161,7 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o hackpack/$@.unstripped.payload \
+		-DNO_SYSEX_RECEIVE \
 		-combine -fwhole-program -flto \
 		-Iinclude \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \

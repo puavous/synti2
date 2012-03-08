@@ -68,16 +68,36 @@ unsigned int bpm_to_usecpq(unsigned int bpm){
 }
 
 void
-MisssChunk::write_as_c(std::ostream &outs){
-    outs << std::endl;
-    outs << "/* CHUNK: hack try -- basedrum on 4beat */ " << std::endl;
-    outs << "/* Number of events in this chunk: */ 0x10," << std::endl;
-    outs << "/* Channel of this chunk: */ 0x09," << std::endl;
-    outs << "/* Type    of this chunk: */ MISSS_LAYER_NOTES_CVEL_CPITCH," << std::endl;
-    outs << "/* Parameter 1 (Ex. note): */ 32," << std::endl;
-    outs << "/* Parameter 2 (Ex. vel): */ 127," << std::endl;
-    outs << "/* delta and info : */ " << std::endl;
-    outs << "   12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12," << std::endl;
+MisssChunk::do_write_header_as_c(std::ostream &outs){
+  outs << std::endl;
+  outs << "/* CHUNK begins ----------------------- */ " << std::endl;
+  fmt_comment(outs, "Number of events"); fmt_varlen(outs, tick.size());
+  outs << ", " << std::endl;
+  fmt_comment(outs, "Channel"); fmt_hexbyte(outs, out_channel);
+  outs << ", " << std::endl;
+  fmt_comment(outs, "Type"); outs << "MISSS_LAYER_NOTES_CVEL_CPITCH";
+  outs << ", " << std::endl;
+}
+
+void MisssNoteChunk::do_write_header_as_c(std::ostream &outs){
+  MisssChunk::do_write_header_as_c(outs);
+  fmt_comment(outs, "Default note"); fmt_hexbyte(outs, default_note);
+  outs << ", " << std::endl;
+  fmt_comment(outs, "Default velocity"); fmt_hexbyte(outs, default_velocity);
+  outs << ", " << std::endl;
+}
+
+void
+MisssNoteChunk::do_write_data_as_c(std::ostream &outs){
+  outs << "/* delta and info : */ " << std::endl;
+  unsigned int prev_tick=0;
+  for (unsigned int i=0; i<tick.size(); i++){
+    unsigned int delta = tick[i] - prev_tick; /* assume order */
+    prev_tick = tick[i];
+    fmt_varlen(outs, delta);
+    outs << ", " << std::endl;
+  }
+  outs << std::endl;
 }
 
 void
@@ -98,16 +118,16 @@ MisssSong::write_as_c(std::ostream &outs){
 
   outs << "/* *********** chunks *********** */ " << std::endl;
 
-  for (int i=0; i<chunks.size(); i++){
-    chunks.at(i).write_as_c(outs);
+  for (unsigned int i=0; i<chunks.size(); i++){
+    chunks.at(i)->write_as_c(outs);
   }
 
   outs << std::endl;
   outs << "/* CHUNK: hack try -- basedrum on 4beat */ " << std::endl;
   outs << "/* Number of events in this chunk: */ 26," << std::endl;
-  outs << "/* Channel of this chunk: */ 0x00," << std::endl;
+  outs << "/* Channel of this chunk: */ 0x0a," << std::endl;
   outs << "/* Type    of this chunk: */ MISSS_LAYER_NOTES_CVEL_CPITCH," << std::endl;
-  outs << "/* Parameter 1 (Ex. note): */ 48," << std::endl;
+  outs << "/* Parameter 1 (Ex. note): */ 39," << std::endl;
   outs << "/* Parameter 2 (Ex. vel): */ 127," << std::endl;
   outs << "/* delta and info : */ " << std::endl;
   outs << "   18,12,12,6,6,12,12,12,6,6,6,18,12,12,12,12,3,3,3,6,6,6,8,8,8,8," << std::endl;

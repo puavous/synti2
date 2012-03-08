@@ -1,6 +1,12 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+The design specification of MisssChunk classes (to be replaced with
+proper documentation):
+
+
+
+
 In the old comment of receiveSysEx()...
 
 /** FIXME: Think about data model.. aim at maximal

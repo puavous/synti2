@@ -23,6 +23,7 @@
 #define NO_FILTER
 #define NO_VELOCITY
 #define NO_CC
+#define NO_PHASE_RESET
 #endif
 
 /* don't know if this is nice, but doing it still: */

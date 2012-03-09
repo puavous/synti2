@@ -22,11 +22,32 @@ typedef unsigned char evdata_t;
 
 
 /** MIDI Event - something that is supposed to happen. Event does not
- *  know its location in time.
+ *  know its location in time, but only its effect. One class models
+ *  all the different kinds of events. This may not be as flexible as
+ *  subclassing, but I have no time to think right now..f
  */
 class MidiEvent{
+  int type;
+  int subtype_or_channel;
+  unsigned int par1;   /* parameters are used with channel events.. */
+  unsigned int par2;   /* other events can set these to 0 */
+  std::vector<unsigned char> bulk; /* for sysex, lyrics, and friends */
+private:
+  void read_meta_ev(std::istream &ins);
+  void read_system_exclusive(std::istream &ins);
 public:
-  MidiEvent(){;}
+  MidiEvent(int type, unsigned int subtype_or_channel, 
+            unsigned int par1, std::istream &ins);
+  MidiEvent(int type, unsigned int subtype_or_channel, 
+            unsigned int par1, unsigned int par2);
+  bool isEndOfTrack(){
+    return ((type == 0xf) && (subtype_or_channel == 0xf) && (par1 == 0x2f));}
+  void print(std::ostream &os){
+    os << "type " << std::hex <<  this->type 
+       << " sub " << std::hex << subtype_or_channel 
+       << " par1 " << par1 << " par2 " << par2
+       << " size of bulk " << bulk.size() << std::endl;
+  }
 };
 
 
@@ -37,8 +58,11 @@ public:
  */
 class MidiTrack {
   unsigned int current_tick; /* current tick for create and play.. not really nice, but works for now... */
+  unsigned int current_type;
+  unsigned int current_channel;
+
   typedef unsigned int miditick_t;
-  std::multimap<miditick_t, MidiEvent* > evs; /* multimap OK? why?wnot?*/
+  std::map<miditick_t, std::vector<MidiEvent*> > evs; /* multimap OK? why?wnot?*/
 
   /** Adds an event (pointer) at a time tick. Who deletes the event?
    *  Should we make a deep copy after all?
@@ -46,11 +70,14 @@ class MidiTrack {
   void addEvent(miditick_t tick, MidiEvent *ev);
 protected:
   void readFrom(std::istream &ins);
-  /* Normalization depends on current status and side effects. */
+  /** Creates a normalized midi event. Normalization depends on
+   *  current status and side effects that take place while "transport
+   *  is running".
+   */
   MidiEvent* createNormalizedEvent(std::istream &ins);
 public:
-  MidiTrack(){current_tick = 0;}
-  MidiTrack(std::istream &ins){readFrom(ins);}
+  MidiTrack(){current_tick = 0; current_type = 0; current_channel = 0;}
+  MidiTrack(std::istream &ins){MidiTrack(); readFrom(ins);}
   ~MidiTrack(){/*FIXME: we need to delete our events, because we have allocated them!! Not sure yet, where they'll reside, though... FIXME: asap. */}
 
   MidiEvent& nextEventUpToTick(unsigned int t){;}
@@ -68,7 +95,7 @@ public:
   MidiSong(std::ifstream &ins);
   ~MidiSong(){for(unsigned int i=0; i<tracks.size(); i++){delete tracks[i];}}
   void rewind(){};
-  MidiEvent nextEvent(){return MidiEvent();/*FIXME*/}
+  MidiEvent nextEvent(){return MidiEvent(0x9, 0x9, 35, 127);/*FIXME*/}
 };
 
 

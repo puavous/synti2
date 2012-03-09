@@ -100,32 +100,119 @@ int read_varlen(std::istream &ins, unsigned int *dest){
 }
 
 void MidiTrack::addEvent(miditick_t tick, MidiEvent *ev){
-  delete ev;/*FIXME:impl.*/
-  /* FIXME: Implement storage n stuff. */
+  evs[tick].push_back(ev);
 }
 
+
+void
+MidiEvent::read_meta_ev(std::istream &ins){
+  //int vlenlen;
+  par1 = ins.get(); /* par1 will be meta event type. */
+  read_varlen(ins, &par2); /* par2 will be meta event length. */
+  for(unsigned int i=0; i<par2; i++){bulk.push_back(ins.get());}
+}
+
+void
+MidiEvent::read_system_exclusive(std::istream &ins){
+  unsigned char c = 0;
+  /* par1 will be length. */
+  for(par1=0; c!=0xf7; par1++){
+    bulk.push_back(c = ins.get());
+  }
+}
+
+
+MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel, 
+                     unsigned int par1, std::istream &ins){
+  this->type = type;
+  this->subtype_or_channel = subtype_or_channel;
+  this->par1 = par1;
+  this->par2 = 0; /* Zero for sysex and meta */
+
+
+  switch(type){
+  case 0xc: case 0xd:
+    /* Only one parameter for these. */
+    return;
+  case 0x8: case 0x9:  case 0xa:  case 0xb:  case 0xe:
+    /* Two parameters for these. */
+    this->par2 = ins.get();
+    return;
+  case 0xf:
+
+    /* No parameters for these, but a bulk of other data may exist: */
+    if (subtype_or_channel == 0xf){
+      /* This means FF - meta event. */
+      read_meta_ev(ins);
+    } else {
+      read_system_exclusive(ins);
+    }
+    return;
+  default:
+    /* FIXME: Should throw an exception. Invalid input. */
+    std::cerr << "Hmm " << subtype_or_channel << " " <<  type;
+    std::cerr << "I lost track of MIDI data." << std::endl;
+  }
+}
+
+MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel, 
+                     unsigned int par1, unsigned int par2){
+  this->type = type;
+  this->subtype_or_channel = subtype_or_channel;
+  this->par1 = par1;
+  this->par2 = par2;
+}
+
+
 MidiEvent *MidiTrack::createNormalizedEvent(std::istream &ins){
-  return new MidiEvent(); /* FIXME: parameters! Can abstract between channel and other events here!! */
+  int byte = ins.get();
+  int type = byte >> 4;
+
+  if (type < 0x8){
+    /* "running status" - make a complete stand-alone event based on
+     current status (for some events, an additional byte may be read
+     from the stream. MidiEvent constructor will handle that for us): */
+    return new MidiEvent(current_type, current_channel, byte, ins);
+  }
+
+  if ((0x8 <= type) && ( type <= 0xe)) {
+    /* reset status - make an event, and update current running status. */
+    current_type = type;
+    current_channel = byte & 0xf;
+    byte = ins.get(); /* read first parameter. */
+    return new MidiEvent(current_type, current_channel, byte, ins);
+  }
+
+  /* else.. we are dealing with a meta event or sysex (no stat update): */
+  return new MidiEvent(type, byte & 0xf, 0, ins);
 }
 
 void 
 MidiTrack::readFrom(std::istream &ins){
-  if (read_4byte(ins) != 0x4d54726b){
+  unsigned int hdr = read_4byte(ins);
+  if (hdr != 0x4d54726b){
     std::cerr << "Failed to read MIDI track. Reason:" << std::endl;
     std::cerr << "Doesn't look like a MIDI track (No MTrk)." << std::endl;
+    std::cerr << "Instead: " << std::hex << hdr << std::endl;
     return;
   }
-  unsigned int chunk_size = (read_4byte(ins) != 0x4d54726b);
-
+  std::streamoff chunk_size = read_4byte(ins);
   unsigned int cur_tick = 0;
-  unsigned int nread = 0; 
+  std::streamoff last = ins.tellg() + chunk_size;
   unsigned int delta = 0;
-  while(nread < chunk_size){
-    nread += read_varlen(ins, &delta);
+  //while(ins.tellg() < last){  /* Hmm.. my bug why this don't work? */
+  for(;;){
+    read_varlen(ins, &delta);
     cur_tick += delta;
     MidiEvent* nev = createNormalizedEvent(ins); /* need side effect */
     addEvent(cur_tick, nev); /* Need a factory? */
+
+    std::cout << "tick " << cur_tick << " ";
+    nev->print(std::cout);
+    //std::cout << "nxt " << ins.tellg() << " last " << last << std::endl;
+    if (nev->isEndOfTrack()) break;
   }
+  //std::cout << "length = " << evs.size() << std::endl;
 }
 
 MidiSong::MidiSong(std::ifstream &ins){

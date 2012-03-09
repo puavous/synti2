@@ -419,7 +419,7 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
     
     //FIXME: hack: (should have happened earlier)
     for(i=0; i<ticks.size(); i++){
-      ticks[i] = ticks[i] / 16;
+      ticks[i] = ticks[i] / 32;
     }
 
     for(i=0; i<ticks.size(); i++){

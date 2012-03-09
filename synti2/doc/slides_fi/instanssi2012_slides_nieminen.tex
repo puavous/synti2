@@ -13,78 +13,15 @@
 \usepackage[utf8]{inputenc}
 
 \usepackage{times}
-% Hmm.. utf8?
-%\usepackage[T1]{fontenc}
 
-
-\graphicspath{{figs/}}
+%\graphicspath{{figs/}}
 
 \title% [](optional, use only with long paper titles)
-{Alle 1k softasyntikka}
+{Alle 1k (tai sinne päin) softasyntikka}
 
-%\author[Author, Another] % (optional, use only with lots of authors)
-%{F.~Author\inst{1} \and S.~Another\inst{2}}
-% - Give the names in the same order as the appear in the paper.
-% - Use the \inst{?} command only if the authors have different
-%   affiliation.
 \author{Paavo Nieminen}
-%\institute{}
 
-%\institute[Universities of Somewhere and Elsewhere] % (optional, but mostly needed)
-%{
-%  \inst{1}%
-%  Department of Computer Science\\
-%  University of Somewhere
-%  \and
-%  \inst{2}%
-%  Department of Theoretical Philosophy\\
-%  University of Elsewhere}
-% - Use the \inst command only if there are several affiliations.
-% - Keep it simple, no one is interested in your street address.
-
-\date{Instanssi 2012}
-% - Either use conference name or its abbreviation.
-% - Not really informative to the audience, more for people (including
-%   yourself) who are reading the slides online
-
-%\subject{Theoretical Computer Science}
-% This is only inserted into the PDF information catalog. Can be left
-% out. 
-
-
-
-% If you have a file called "university-logo-filename.xxx", where xxx
-% is a graphic format that can be processed by latex or pdflatex,
-% resp., then you can add a logo as follows:
-
-%\pgfdeclareimage[height=1.8cm]{university-logo}{mit_logo}
-%\logo{\pgfuseimage{university-logo}}
-
-
-
-% Delete this, if you do not want the table of contents to pop up at
-% the beginning of each subsection:
-%\AtBeginSubsection[]
-%{
-%  \begin{frame}<beamer>{Outline}
-%    \tableofcontents[currentsection,currentsubsection]
-%  \end{frame}
-%}
-
-%\AtBeginSection[]
-%{
-%  \begin{frame}<beamer>{Outline}
-%    \tableofcontents[currentsection]
-%  \end{frame}
-%}
-
-
-
-% If you wish to uncover everything in a step-wise fashion, uncomment
-% the following command: 
-
-%\beamerdefaultoverlayspecification{<+->}
-
+\date{Instanssi 2012, Voionmaan lukio, 9.3.2012}
 
 \begin{document}
 
@@ -97,197 +34,257 @@
   % You might wish to add the option [pausesections]
 \end{frame}
 
-
-% Structuring a talk is a difficult task and the following structure
-% may not be suitable. Here are some rules that apply for this
-% solution: 
-
-% - Exactly two or three sections (other than the summary).
-% - At *most* three subsections per section.
-% - Talk about 30s to 2min per frame. So there should be between about
-%   15 and 30 frames, all told.
-
-% - A conference audience is likely to know very little of what you
-%   are going to talk about. So *simplify*!
-% - In a 20min talk, getting the main ideas across is hard
-%   enough. Leave out details, even if it means being less precise than
-%   you think necessary.
-% - If you omit details that are vital to the proof/implementation,
-%   just say so once. Everybody will be happy with that.
-
-
-\section{Johdanto}
-
-\subsection{Mitäs sitten oikein tulikaan tehtyä?}
-
-\subsection{Miksi tein sen \ldots}
-\begin{frame}{Miksi? Miksi, miksi miksi?}
-
-  Miksi softasyntikka? Onhan noita jo. (Muttei liikaa ainakaan
-  pikkiriikkisiä avoimen lähdekoodin syntsia.)
-
-  ``Oma on aina oma'', sanoi nörtti, ja alkoi koodata oppiakseen
-  koodaamaan paremmin.
-
-\end{frame}
-
-\begin{frame}{Pikkiriikkiset demot}
-  Tähän projektiin valitsemani harrastusgenre on ``4k introt''.
-
-  Miksi?
-
-  Miksi ei? Miksi esimerkiksi aitajuoksu, jos juokseminen on helpompaa
-  ilman esteitä? Älä kysy tyhmiä toisen harrastuksesta, vaan arvosta
-  4k introja kuten allekirjoittanut vaikkapa curlingia tai muuta
-  itselle vierasta harrastusta.
-\end{frame}
-
-\begin{frame}{Pikkiriikkisyys}
-  Osin huijausta - pakatut exet ym. ``temput''.
-
-  Rajoitteet keinotekoisia - miksi esim. tehdä C-kielellä, kun
-  Java/Javascriptillä saa pienempään tilaan hienomman?. Miksi
-  äänisynteesin pitää olla osa koodia eikä ulkopuolisesti linkitetty
-  kirjasto?
-
-  Vastakysymys on taas sama kuin siihen, miksi juostaan aitajuoksua,
-  kun juokseminen on helpompaa ilman aitoja. Miksi ylipäätään juostaan
-  kilpaa, kun juosta voi muutenkin?
-
-  En vastaa näihin, enkä mene yksityiskohtiin
-  pikkiriikkisyystempuista. Mm. Sipola kertoi näistä viime
-  Instanssissa; samat temput kovassa käytössä tässäkin projektissa.
-
-\end{frame}
-
+\section{Syntetisaattori}
 
 \begin{frame}{Softasyntikka}
 \begin{itemize}
-  \item Ääni-ilmiö kuten musiikki: Tajunta, korva, ilman värähtely,
-    värähtelylähde kuten soitin
+  \item Ääni: korvalla aistittu ilman värähtely, värähtelylähteestä
+    kuten soittimesta
   \item Värähtelyn voi tuottaa kaiutin sähkösignaalin ohjaamana
   \item sähkösignaali tallennettu äänilähteestä kuten soittimesta
-  \item signaali voi olla myös syntetisoitu
-  \item Syntetisaattori voi olla tietokoneohjelma.
-  \item Ympäristö: DA-muunnin, digitaalinen puskuri, ajuriohjelmistot
-  \item Rajapinta: aika-ikkuna täytettäväksi numeroilla, esim. 256
-    tavua.
+  \item sähkösignaali voi olla myös syntetisoitu eli synnytetty ilman
+    mekaanista värähtelijää; silloin signaalin tuottajaa sanotaan
+    syntetisaattoriksi
+  \item syntetisaattori voi olla tietokoneohjelma.
 \end{itemize}
 \end{frame}
 
-\subsection{Ekat purkat: Synti Software Synthesizer}
-\begin{frame}{tästä se lähti}
-
-Oskillaattorit, filtterit.
-
-Hyvät tuli.
-
-Ja nälkä kasvoi syödessä.
+\section{Miksi? Miksi, miksi miksi?}
+\begin{frame}{Miksi? Miksi, miksi miksi?}
+  \begin{itemize}
+  \item Miksi uusi softasyntikka? Onhan noita jo!
+  \item Mutta mikään niistä ei ole ''omatekemä''!
+  \item Eikä ''pikkiriikkisiä'' avoimen lähdekoodin syntsia ole liian
+    paljon juossut vastaan.
+  \item \ldots ``Oma on aina oma'', totesi nörtti, ja alkoi koodata.
+  \end{itemize}
 \end{frame}
 
+
+\begin{frame}{Pikkiriikkiset demot}
+\begin{itemize}
+  \item Tähän projektiin valitsemani harrastusgenre on ``4k introt''.
+  \item Miksi?
+  \item Miksi ei? Miksi esimerkiksi harrastetaan aitajuoksua, vaikka
+    juokseminen on helpompaa ilman esteitä? Miksi kolmiloikka, kun jo
+    neljällä loikalla pääsisi pidemmälle?
+  \item Parempi ilmeisesti olla kysymättä tyhmiä toisen harrastuksesta
+    :). Minä teen nyt tätä ``old-school 4k matskua''.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Pikkiriikkisyys}
+\begin{itemize}
+\item ''Pikkiriikkinen'' tarkoittaa esim. että käynnistettävän (ja
+  toivottavasti toimivan) ohjelman koko on ''pieni'' eli esimerkiksi
+  alle 4096 tavua.
+\item Osin ''huijausta'' - pakatut exet ym. ''temput''.
+\item Ei enempää tempuista tässä. Näistä on kerrottu mm. viime
+  Instanssissa; samat temput ovat tietysti käytössä tässäkin
+  projektissa.
+\item Tässä puuhassa pääsee kivasti miettimään, miten ohjelma mahtuu
+  pienempään tilaan -- mukavaa kuten ristisanat tai sudokut.
+\item Rajoitteet nykypäivänä keinotekoisia -- miksi esim. tehdä
+  C-kielellä, kun Javalla/Javascriptillä saa pienempään tilaan
+  hienomman?. Miksi esim. äänisynteesin pitää olla osa koodia eikä
+  ulkopuolisesti linkitetty kirjasto?
+\item Valitsin tällä kertaa huvikseen rajoitteiksi mm. C-kielen +
+  linkityksen ainoastaan SDL:ää ja OpenGL:ää vasten.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Softasyntikan toimintaympäristö}
+  \begin{itemize}
+  \item DA-muunnin, digitaalisen datan puskuri äänikortissa,
+    ajuriohjelmistot, käyttöjärjestelmä
+  \item Kirjasto-ohjelmat järjestelmän abstrahoimiseksi
+  \item Ohjelmoijan rajapinta: aika-ikkuna täytettäväksi numeroilla,
+    esim. 256 tavua, joista ulostulosignaalin amplitudi määräytyy
+    esim. 48000 kertaa sekunnissa kanavaa kohti. Ikkuna on täytettävä
+    salamannopeasti, jotta ''ääni ei pätki''.
+  \item ''Musiikkia'' varten pitää jostain tulla myös tieto rytmistä,
+    äänenkorkeudesta ja -väristä sekä harmoniasta. Eli
+    ''instrumentit'' ja ''nuottien sekvenssi'' ilmeisesti tarvitaan.
+  \item Eli tavoite on hyvin selkeä. Sitte eiku koodaamaan.
+  \end{itemize}
+\end{frame}
+
+\section{Ekat purkat: Synti}
+\begin{frame}{tästä se lähti}
+\begin{itemize}
+\item Teinistä asti haikaillut koodailla näitä, mutta ei tullut
+  aloitettua\ldots
+\item Innostukseni heräsi uudelleen Zipolan 4k introsta ekoilla
+  Instansseilla pari vuotta sitten. ''Mäkin haluun tehdä meteliä!''
+\item Mitäs meillä pittäis olla? Varmaan fraasisekvensseri, jotain
+  oskillaattoreita, verhokäyriä, filttereitä, \ldots ja kiva nimi
+  projektille.
+\item Niinpä ''tein Syntiä'' pari kuukautta ennen Instanssia 2011.
+\item Syntyi ekat purkkaviritykset \ldots
+\item Hyvät tuli.
+\item Meteliä! Jes!!!
+\end{itemize}
+\end{frame}
+
+
 \begin{frame}{Mutta..}
-
-  Hankala editoida (tekstimuotoinen ``oma formaatti'').
-
+\begin{itemize}
+\item
+  Musiikkia hankala editoida (tekstimuotoinen ``oma formaatti''\ldots
+  tyhmä idea). Ajattelin säveltää ekan biisin jälkeen myös toisen,
+  mutta kunto loppui syötedatan muotoiluun ekan bassoriffin kohdalla.
+\item
+  Melko pikkiriikkistä koodia, mutta ei kovin nopeata -- ei
+  reaaliaikaisesti soiteltavissa.
+\item
+  Kuvan synkronointia äänen kanssa ei ollut tullut ajateltua yhtään
+  alunperin -- vain purkka ja päälleliimaus olivat mahdollisia
+  varsinaisen 4k intron tekemisen hetkellä.
+\item
+  Sounditkin oli vähän niin ja näin, vaikka vahingossa toteutuneella
+  ''köyhän miehen taajuusmodulaatiolla'' sai ihan riittävän pahvisen
+  kumivirvelin.
+\item
+  Koodissa jopa niin hämmästyttävän paljon purkkaa, ettei kehdannut
+  julkaista.
+\end{itemize}
 \end{frame}
 
 
 \begin{frame}{Kantapääopetuksia}
-
-  Numero 1: Älä keksi MIDIä uudestaan; se on jo ihan hyvä.
-
-  Siis älä keksi uudestaan valmiiksi mietittyä protokollaa.
-
-  Numero 2: Jos voit käyttää valmiita työkaluja, käytä.
-
+\begin{itemize}
+\item
+  Numero 1: Älä keksi MIDIä uudestaan; se on jo ihan hyvä
+  (lähtökohdaksi, ei lopputulemaksi).
+\item
+  Siis kertaus: älä keksi uudestaan protokollaa, jonka
+  insinööriarmeija on jo miettinyt läpi.
+\item
+  Numero 2: Valmiit työkalut (esim. sekvensseriohjelmat) ovat ihan
+  hyviä ja niitä on mietitty. Hyödynnä!
+\item
   Numero 3: Syntikka on kivampi reaaliaikaisena.
-
+\item
+  Numero 4: Koodinnälkä kasvaa koodatessa, jos innostuu jostain
+  puuhasta.
+\end{itemize}
 \end{frame}
 
-\begin{frame}{Kantapääopetuksia 2/2}
-   Käytännöllisempiä juttuja - wavetablet ym.
 
-   Nolla on hyvä arvo parametrille.
-\end{frame}
-
-\subsection{Synti2}
-\begin{frame}{Synti2:n vaatimukset}
-  Järjestelmä tuottaa pikkiriikkisen suoritettavan ohjelman, jossa on
-  mukana ääni (so. ennakkoon kiinnitetty musiikillinen sekvenssi sekä
-  syntesoidut instrumenttiäänet) ja grafiikka. Suoritettava ohjelma
-  datoineen on kooltaan alle 4096 tavua, ja sen voi suorittaa
-  standardissa käyttöympäristössä (so. 32-bittinen Linux, libSDL,
-  libGL, gunzip TAI 64-bittinen Linux johon asennettuna 32-bittiset
-  SDL \& OpenGL)
-
+\section{Uudet purkat: Synti2}
+\begin{frame}{Synti2:n vaatimukset 1/2}
+\begin{itemize}
+\item Kalusto tuottaa pikkiriikkisen suoritettavan ohjelman, jossa on
+  mukana ääni ja grafiikka (so. ennakkoon kiinnitetty musiikillinen ja
+  graafinen sekvenssi sekä syntesoidut
+  instrumenttiäänet). Suoritettava ohjelma datoineen on kooltaan alle
+  4096 tavua, ja sen voi suorittaa standardissa käyttöympäristössä
+  (kehitysvaiheessa 32-bittinen Linux, libSDL, libGL, gunzip TAI
+  64-bittinen Linux johon asennettuna 32-bittiset SDL \& OpenGL)
+\item
   Grafiikan parametrit voidaan lukea syntetisaattorin tilasta, jota
-  sekvenssi ohjaa. (Ääneen synkronoidut animaatiot)
-
+  sekvenssi ohjaa. (Äänitapahtumiin synkronoitu animaatio)
+\item
   Sävellysvaiheessa synteesi on reaaliaikainen. Latenssin on oltava
   alle 10 millisekuntia (jota suuremmat latenssit häiritsevät jopa
   meikäläistä rähmätassua sunnuntaisoittelijaa)
+\end{itemize}
+\end{frame}
 
-  Sävellysvaiheessa ohjattavissa standardilla MIDIllä. Mahdollistaa
-  musiikin (ja tarkemmin ajatellen myös animaation ohjaussekvenssin)
-  tuottamisen millä tahansa MIDI-sekvensseriohjelmistolla.
-
-  Suoritettavan ohjelman sekvenssi muodostetaan (karsien ja muuntaen)
-  standardimuotoisesta MIDI-musiikkitiedostosta (SMF0 tai SMF1).
-
-  Instrumentteja varten on parametrieditori, jossa jokainen parametri
-  on muutettavissa hiirellä raahaamalla. Äänien tallennus ja lataus
-  tapahtuu MIDI-maailmassa tavanomaisella SysEx-tiedostojen
+\begin{frame}{Synti2:n vaatimukset 2/2}
+\begin{itemize}
+\item Sävellysvaiheessa ohjattavissa standardilla
+  MIDIllä. Mahdollistaa musiikin (ja tarkemmin ajatellen myös
+  animaation ohjaussekvenssin) tuottamisen millä tahansa
+  MIDI-sekvensseriohjelmistolla.
+\item Suoritettavan ohjelman sekvenssi muodostetaan (karsien ja
+  muuntaen) standardimuotoisesta MIDI-musiikkitiedostosta (SMF0 tai
+  SMF1).
+\item Instrumentteja varten on parametrieditori, jossa jokainen
+  parametri on muutettavissa hiirellä raahaamalla. Äänien tallennus ja
+  lataus tapahtuu MIDI-maailmassa tavanomaisella SysEx-tiedostojen
   käytänteellä.
-
-  Kuulostaa vähintään yhtä hyvältä kuin alkuperäinen ``Synti ykkönen''
-
-  [Lisävaatimus Instanssin aikataulun kirjoittajalta: synteesimoduulin
-    koko on alle 1 kilotavu.]
-
+\item Äänenlaadultaan vähintään yhtä hyvä kuin alkuperäinen ``Synti
+  ykkönen''
+\item Lisävaatimus Instanssin aikataulun kirjoittajalta:
+  synteesimoduulin koko on alle 1 kilotavu. Tämä oli ainoa, joka ei
+  aivan täysin toteutunut :).
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Toteutuksesta}
-  FM-synteesi
-
-  Wavetablet
-
-  Filtterit
-
-  Delayt
-
+\begin{itemize}
+\item
+  FM-synteesi, 4 siniaalto-operaattoria
+\item
+  Wavetablet, Verhokäyrät, Filtterit ja Delayt kuten edellisessä,
+  joskin aavistuksen verran paremmin
+\item 
   Sekvensseri
-
-  Apuohjelmat. Huhhuh!!
-  
+\item 
+  MIDI-rajapinta
+\item
+  Apuohjelmat: reaaliaikainen MIDI-adapteri, offline
+  SMF-adapteri, soundieditori.
+\item
+  Huhhuh!! Aika paljon sitten putkahtikin tekemistä pikkiriikkisen
+  oskillaattorin ympärille \ldots
+\end{itemize}
 \end{frame}
 
 
-\begin{frame}{Lopputulema}
-  Aika kiva lelu tuli!
+\begin{frame}{Tilanne 9.3.2012 klo 20:38}
+  \begin{itemize}
+  \item
+    Aika kiva lelu \ldots
+  \item
+    Katsotaanpa kalustoa livenä \ldots Demoefektin todennäköisyys oli
+    kuin olikin suuri (\ldots yllättäen oli kuitenkin muu kuin oma
+    softa, joka jumitti audiosysteemin.)
+    \begin{itemize}
+    \item Jack käyntiin
+    \item Syntikka käyntiin
+    \item ''MIDI-mukiloija'' käyntiin
+    \item Äänieditori käyntiin
+    \item Koskettimet kiinni ja jamittelemaan \ldots
+    \end{itemize}
+  \item Biisin säveltäminen vapaavalintaisella
+    MIDI-sekvensserillä. Esim. Rosegarden on oikeasti hyvä ohjelma,
+    vaikka oli huteralla tuulella tänään.
+  \item Paketointi ''4k introksi'' on helppoa kuin 'make tinyexe'.
+  \item Eli miten kävi otsikon lupaukselle ''alle 1k softasyntikka''?
+    Synamoduulin saa runtattua 1.6 kiloon, mutta äänen saaminen
+    äänikortista ulos asti (SDL:n kautta) pullahtaa minimissään 2
+    kiloon.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Kantapääopetuksia}
-
-  Vois lukea matematiikkaa silloin, kun siihen on oikeasti resursseja.
-
+\begin{itemize}
+\item Vois lukea matematiikkaa silloin, kun siihen on oikeasti aikaa,
+  vaikkapa perusopintojen yhteydessä. Signaaliprosessoinnin teoria
+  (suodatinsuunnittelu ym.) helpottaisi näitä harrastuksia kovasti.
+\item
   Vois koodata kaikenlaista useammin, ettei taidot ruostu esim. olio-,
   grafiikka- tai käyttöliittymäohjelmoinnin osalta.
-
-  Vois päästää irti menneisyydestä ja siirtyä
-  funktio-ohjelmointiin. ``Ai että olis taas tämäkin [Asia X] helppoa,
-  kun ei tarttis aloittaa for(p=st; *p != 0; p++)\{...''
-  
+\item
+  Vois vaikka tämän jälkeen päästää irti menneisyydestä ja siirtyä
+  muihin kuin C-kieleen.
+\end{itemize}
 \end{frame}
 
-\begin{frame}{Lähdekoodit ja lisenssi}
-  YouSource-linkki tähän.
+\begin{frame}{Lähdekoodit ja Workshoppailu Instansseilla}
+  \begin{itemize}
+  \item Lähdekoodit MIT-lisenssillä noin puoleen yöhön mennessä
+    (Malttia!): \url{https://yousource.it.jyu.fi/synti2}
+  \item Apuohjelmat vielä bugisia ja muutenkin hiukan
+    vaiheessa. Kivoja ovat ikuinen silmukka reaaliaikasäikeessä tai
+    täysillä korvaan tuleva valkoinen kohina. Varokaa, jos kokeilette.
+  \item Parantunevat (koodit, ei korvat), jahka Instanssin kompojen
+    deadlinet lähestyvät :)
+  \item Nykikää hihoista, jos aihepiiri(t) kiinnostaa enempi.
+  \end{itemize}
 \end{frame}
-
-\begin{frame}{Workshoppia Instanssissa}
-  Kysymyksiä ja keskustelua tästä tai muista softasyntikoista tai
-  ylipäätään äänisynteesistä...
-\end{frame}
-
 
 \end{document}
 

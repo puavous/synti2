@@ -33,6 +33,7 @@
 /* Standard includes required by this unit */
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 class MyJackClient;
 class MidiEventTranslator;
@@ -217,8 +218,12 @@ int cmd_line_only(int argc, char **argv){
   std::ifstream ifs(argv[1], std::ios::in|std::ios::binary);
   MidiSong ms(ifs);
   ifs.close();
-  
-  MisssSong misss;
+
+  MidiEventTranslator tr;
+
+  std::stringstream spec("hm");
+  MisssSong misss(ms, tr, spec);
+
   misss.write_as_c(std::cout);
 
   return 0;

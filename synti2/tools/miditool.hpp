@@ -16,6 +16,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 typedef unsigned int miditick_t;
 typedef unsigned char evdata_t;
@@ -40,8 +41,11 @@ public:
             unsigned int par1, std::istream &ins);
   MidiEvent(int type, unsigned int subtype_or_channel, 
             unsigned int par1, unsigned int par2);
+  bool isNote(){return ((type == 0x9) || (type == 0xa));}
+  int getChannel(){return subtype_or_channel;}
   bool isEndOfTrack(){
     return ((type == 0xf) && (subtype_or_channel == 0xf) && (par1 == 0x2f));}
+
   void print(std::ostream &os){
     os << "type " << std::hex <<  this->type 
        << " sub " << std::hex << subtype_or_channel 
@@ -57,12 +61,16 @@ public:
  *  separated into self-contained events.
  */
 class MidiTrack {
-  unsigned int current_tick; /* current tick for create and play.. not really nice, but works for now... */
-  unsigned int current_type;
-  unsigned int current_channel;
+  /* current tick for create and play.. not nice, but works for now... */
+  unsigned int current_tick; 
+  unsigned int current_type;   /* for create */
+  unsigned int current_channel; /* for create */
+
+  //unsigned int ind; /* for play */
+  unsigned int current_evind; /* for play */
 
   typedef unsigned int miditick_t;
-  std::map<miditick_t, std::vector<MidiEvent*> > evs; /* multimap OK? why?wnot?*/
+  std::map<miditick_t, std::vector<MidiEvent*> > evs; /* multimap? why?wnot?*/
 
   /** Adds an event (pointer) at a time tick. Who deletes the event?
    *  Should we make a deep copy after all?
@@ -77,8 +85,11 @@ protected:
   MidiEvent* createNormalizedEvent(std::istream &ins);
 public:
   MidiTrack(){current_tick = 0; current_type = 0; current_channel = 0;}
-  MidiTrack(std::istream &ins){MidiTrack(); readFrom(ins);}
+  MidiTrack(std::istream &ins){MidiTrack(); readFrom(ins); rewind();}
   ~MidiTrack(){/*FIXME: we need to delete our events, because we have allocated them!! Not sure yet, where they'll reside, though... FIXME: asap. */}
+
+  void rewind(){current_tick = 0; current_evind = 0;}
+  /* FIXME: With this design, track cannot really change after rewound once.*/
 
   MidiEvent& nextEventUpToTick(unsigned int t){;}
 };
@@ -90,12 +101,48 @@ class MidiSong {
   unsigned int ticks_per_beat;
   std::map<miditick_t, evdata_t *> evs;
   std::vector<MidiTrack*> tracks;
+
+  unsigned int current_tick;
+  unsigned int current_track;
 public:
-  int getNTracks(){return tracks.size();}
+  int getNTracks(){return tracks.size();} /* Necessary? */
   MidiSong(std::ifstream &ins);
-  ~MidiSong(){for(unsigned int i=0; i<tracks.size(); i++){delete tracks[i];}}
-  void rewind(){};
-  MidiEvent nextEvent(){return MidiEvent(0x9, 0x9, 35, 127);/*FIXME*/}
+  ~MidiSong(){
+    for(unsigned int i=0; i<tracks.size(); i++) delete tracks[i];}
+  void rewind(){ current_tick = 0; current_track = 0;
+    for(unsigned int i=0; i<tracks.size(); i++) tracks[i]->rewind();
+  }
+
+  void linearize(std::vector<unsigned int> &ticks,
+                 std::vector<MidiEvent> &evs);
+  /** Advance song position to next event. Tick may or may not increase. */
+};
+
+
+
+/** The translator eats a standard midi message, and pukes an altered
+ *  message based on loaded configuration and current state. (TODO: as
+ *  midi or as missss?). Doesn't care if it is working in a real-time
+ *  or off-line job, it just answers when a question is asked.
+ */
+class MidiEventTranslator {
+private:
+  int voice_rotate[MIDI_NCHANNELS];
+  int next_rotation[MIDI_NCHANNELS];
+  int rotation_of_noteon[MIDI_NCHANNELS][MIDI_NNOTES];
+  int note_of_rotation[MIDI_NCHANNELS][MIDI_NCHANNELS];
+  int channel_table[MIDI_NCHANNELS][MIDI_NNOTES];
+
+  /** default settings; FIXME: to be removed after proper accessors exist. 
+   */
+  void hack_defaults();
+  /** Reset everything.. FIXME: This should mean a bit different thing.. */
+  void reset_state();
+public:
+  MidiEventTranslator();
+  int rotate_notes(jack_midi_event_t *ev);
+  void channel(jack_midi_event_t *ev);
+
 };
 
 
@@ -126,12 +173,19 @@ protected:
   std::vector<unsigned char> data; /* actual data directly as bytes */
   virtual void do_write_header_as_c(std::ostream &outs);
   virtual void do_write_data_as_c(std::ostream &outs) = 0;
+  bool channelMatch(MidiEvent &ev){ return (in_channel == ev.getChannel());}
 public:
   /* The only way to create a chunk is by giving a text description(?)*/
   //virtual MisssChunk(std::string desc){bytes_per_ev = 3;}
-  MisssChunk(){in_channel = 0; out_channel = 0x9;}
-  virtual bool acceptEvent(MidiEvent &ev){return false;}
+  MisssChunk(int in_ch, int out_ch){
+    in_channel = in_ch; 
+    out_channel = out_ch;}
+  virtual bool acceptEvent(unsigned int t, MidiEvent &ev){
+    return false;
+  }
+  int size(){return tick.size();}
   void write_as_c(std::ostream &outs){
+    if (size() == 0) return; /* zero-length, don't write. */
     do_write_header_as_c(outs);
     do_write_data_as_c(outs);
   }
@@ -147,17 +201,12 @@ protected:
   void do_write_header_as_c(std::ostream &outs);
   void do_write_data_as_c(std::ostream &outs);
 public:
-  MisssNoteChunk(){
-    default_note = -1;
-    default_velocity = -1;
+  MisssNoteChunk(int in_c, int out_c, int def_n, int def_v) 
+    : MisssChunk(in_c, out_c)
+  {    default_note = def_n;    default_velocity = def_v;  }
 
-    default_note = 35; /* hack bd*/
-    default_velocity = 100;
-    for (int hack=0; hack<10; hack++){
-      tick.push_back(hack*6); /*dataind.push_back(hack); data.push_back();*/
-    }
-  }
-  bool acceptEvent(MidiEvent &ev){return false;}
+  /** Must be called in increasing time-order. */
+  bool acceptEvent(unsigned int t, MidiEvent &ev);
 };
 
 class MisssRampChunk : public MisssChunk {
@@ -181,38 +230,22 @@ private:
   unsigned int usec_per_quarter;
 
   std::vector<MisssChunk*> chunks;
+
+  void build_chunks_from_spec(std::istream &spec);
+  void translated_grab_from_midi(MidiSong &midi_song, 
+                                 MidiEventTranslator &trans);
+
 public:
-  MisssSong(){
-    chunks.push_back(new MisssNoteChunk());
-    chunks.push_back(new MisssNoteChunk());
-    //    chunks.push_back(hack);
+  MisssSong(MidiSong &midi_song, 
+            MidiEventTranslator &trans, 
+            std::istream &spec)
+  {
+    build_chunks_from_spec(spec);
+    translated_grab_from_midi(midi_song, trans);
   }
+
   void write_as_c(std::ostream &outs);
 };
 
-/** The translator eats a standard midi message, and pukes an altered
- *  message based on loaded configuration and current state. (TODO: as
- *  midi or as missss?). Doesn't care if it is working in a real-time
- *  or off-line job, it just answers when a question is asked.
- */
-class MidiEventTranslator {
-private:
-  int voice_rotate[MIDI_NCHANNELS];
-  int next_rotation[MIDI_NCHANNELS];
-  int rotation_of_noteon[MIDI_NCHANNELS][MIDI_NNOTES];
-  int note_of_rotation[MIDI_NCHANNELS][MIDI_NCHANNELS];
-  int channel_table[MIDI_NCHANNELS][MIDI_NNOTES];
-
-  /** default settings; FIXME: to be removed after proper accessors exist. 
-   */
-  void hack_defaults();
-  /** Reset everything.. FIXME: This should mean a bit different thing.. */
-  void reset_state();
-public:
-  MidiEventTranslator();
-  int rotate_notes(jack_midi_event_t *ev);
-  void channel(jack_midi_event_t *ev);
-
-};
 
 #endif

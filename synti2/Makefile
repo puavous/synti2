@@ -10,8 +10,8 @@ S2SOURCES = src/synti2.c src/synti2_jack.c
 # patches (in original format), midi song (in sfm0/1 format)
 # (These can be overridden from the command line:)
 MAIN ?= tests/sdltest.c
-GFX ?= tests/tryout_gfx.c
-SMF ?= tests/minimal.mid
+GFX ?= tests/tryout_gfx2.c
+SMF ?= example/example1.mid
 SND ?= patches/testi1.s2bank
 NONOS ?= 
 BUTDOS ?= 

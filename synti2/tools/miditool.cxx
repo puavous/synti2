@@ -112,8 +112,10 @@ MidiEvent::read_meta_ev(std::istream &ins){
   //int vlenlen;
   par1 = ins.get(); /* par1 will be meta event type. */
   read_varlen(ins, &par2); /* par2 will be meta event length. */
+  /* Bulk data will be meta event contents: */
   for(unsigned int i=0; i<par2; i++){bulk.push_back(ins.get());}
 }
+
 
 void
 MidiEvent::read_system_exclusive(std::istream &ins){
@@ -167,7 +169,9 @@ MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel,
 }
 
 
-MidiEvent *MidiTrack::createNormalizedEvent(std::istream &ins){
+
+MidiEvent *
+MidiTrack::createNormalizedEvent(std::istream &ins){
   int byte = ins.get();
   int type = byte >> 4;
 
@@ -218,6 +222,16 @@ MidiTrack::readFrom(std::istream &ins){
   //std::cout << "length = " << evs.size() << std::endl;
 }
 
+MidiEvent * 
+MidiTrack::locateEvent(int type, int subtype, int par1){
+  for (int i=0; i<vec_evs.size(); i++){
+    if (vec_evs[i]->matches(type, subtype, par1)) return vec_evs[i];
+  }
+  return NULL;
+}
+
+
+
 MidiSong::MidiSong(std::ifstream &ins){
   
   /* TODO: would be better to throw an exception from here. */
@@ -259,6 +273,18 @@ MidiSong::MidiSong(std::ifstream &ins){
   }
 }
 
+
+
+unsigned int 
+MidiSong::getTPQ(){
+  return ticks_per_beat;
+}
+
+unsigned int 
+MidiSong::getMSPQ(){
+  MidiEvent * tempoev = tracks[0]->locateEvent(0xf, 0xf, 0x51);
+  tempoev->get3byte(); /* hacks n hacks. TODO: fix these hacks */
+}
 
 
 void
@@ -325,6 +351,11 @@ MisssNoteChunk::acceptEvent(unsigned int t, MidiEvent &ev){
 }
 
 
+void 
+MisssSong::figure_out_tempo_from_midi(MidiSong &midi_song){
+  ticks_per_quarter = midi_song.getTPQ();
+  usec_per_quarter = midi_song.getMSPQ();
+}
 
 void
 MisssSong::write_as_c(std::ostream &outs){
@@ -336,10 +367,10 @@ MisssSong::write_as_c(std::ostream &outs){
 
   outs << "/* *********** song header *********** */ " << std::endl;
   fmt_comment(outs, "Ticks per quarter");
-  fmt_hexbyte(outs, 12);
+  fmt_varlen(outs, ticks_per_quarter);
   outs << ", " << std::endl;
-  fmt_comment(outs, "Microseconds per minute"); 
-  fmt_varlen(outs, bpm_to_usecpq(220));
+  fmt_comment(outs, "Microseconds per tick"); 
+  fmt_varlen(outs, usec_per_quarter);
   outs << ", " << std::endl;
 
   outs << "/* *********** chunks *********** */ " << std::endl;
@@ -435,10 +466,10 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
       std::cout << "->";
       evs[i].print(std::cout);*/
     }
-    
+
     //FIXME: hack: (should have happened earlier)
     for(i=0; i<ticks.size(); i++){
-      ticks[i] = ticks[i] / 24;
+      ticks[i] = ticks[i] / 2;
     }
 
     for(i=0; i<ticks.size(); i++){

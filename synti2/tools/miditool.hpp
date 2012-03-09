@@ -41,7 +41,14 @@ public:
             unsigned int par1, std::istream &ins);
   MidiEvent(int type, unsigned int subtype_or_channel, 
             unsigned int par1, unsigned int par2);
+  bool matches(int type, int subtype, int par1){
+    return (this->type==type)
+      && (this->subtype_or_channel == subtype)
+      && (this->par1 == par1);
+  }
   bool isNote() const {return ((type == 0x9) || (type == 0x8));}
+  /* quick hack for tempo setting: */
+  int get3byte() const {return (bulk[0] << 16) + (bulk[1] << 8) + bulk[3];}
   int getNote(){return par1;}
   int getVelocity(){return par2;}
   int getChannel(){return subtype_or_channel;}
@@ -115,6 +122,8 @@ public:
   bool hasMore(){return (play_ind < vec_tks.size());}
 
   unsigned int peekNextTick(){return vec_tks[play_ind];}
+
+  MidiEvent * locateEvent(int type, int subtype, int par1);
   
   /* Return a (deep) copy of current event. */
   MidiEvent stepOneEvent(){
@@ -132,6 +141,8 @@ class MidiSong {
 
 public:
   int getNTracks(){return tracks.size();} /* Necessary? */
+  unsigned int getTPQ();
+  unsigned int getMSPQ();
   MidiSong(std::ifstream &ins);
   ~MidiSong(){
     for(unsigned int i=0; i<tracks.size(); i++) delete tracks[i];}
@@ -270,6 +281,7 @@ private:
 
   std::vector<MisssChunk*> chunks;
 
+  void figure_out_tempo_from_midi(MidiSong &midi_song);
   void build_chunks_from_spec(std::istream &spec);
   void translated_grab_from_midi(MidiSong &midi_song, 
                                  MidiEventTranslator &trans);
@@ -279,6 +291,7 @@ public:
             MidiEventTranslator &trans, 
             std::istream &spec)
   {
+    figure_out_tempo_from_midi(midi_song);
     build_chunks_from_spec(spec);
     translated_grab_from_midi(midi_song, trans);
   }

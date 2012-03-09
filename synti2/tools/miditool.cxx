@@ -73,16 +73,26 @@ unsigned int bpm_to_usecpq(unsigned int bpm){
 
 static
 unsigned int read_4byte(std::istream &ins){
-  char buf[4];
+  /*  char buf[4];
   ins.read(buf,4);
-  return (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
+  return (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];*/
+  unsigned int res = (ins.get() << 24) 
+    + (ins.get() << 16)
+    + (ins.get() << 8)
+    + (ins.get());
+  return res;
 }
 
 static
 unsigned int read_2byte(std::istream &ins){
-  char buf[2];
+  /*  unsigned int res;
+  unsigned char buf[2];
   ins.read(buf,2);
-  return (buf[0] << 8) + buf[1];
+  res = (buf[0] << 8) + buf[1];
+  */
+  unsigned int res = (ins.get() << 8) + ins.get();
+  //std::cout << " Read 2byte " << std::dec << res << std::endl;
+  return res;
 }
 
 static
@@ -469,7 +479,7 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
 
     //FIXME: hack: (should have happened earlier)
     for(i=0; i<ticks.size(); i++){
-      ticks[i] = ticks[i] / 2;
+      ticks[i] = ticks[i];
     }
 
     for(i=0; i<ticks.size(); i++){

@@ -149,7 +149,7 @@ synti2_player_merge_chunk(synti2_player *pl,
       msg[1]= (par[0]==0xff) ? *r++ : par[0];  /* must not eval ++ always!!*/
       msg[2]= (par[1]==0xff) ? *r++ : par[1];  /* check the C spec!! */
       /* Now it is a complete msg. */
-      printf("add frame %d msg %02x %02x %02x\n", frame, msg[0], msg[1], msg[2]);
+      /*printf("add frame %d msg %02x %02x %02x\n", frame, msg[0], msg[1], msg[2]);*/
       synti2_player_event_add(pl, frame, msg, 3); 
       pl->idata += 3; /*Update the data pool top*/
     } else {

@@ -147,9 +147,15 @@ private:
   void reset_state();
 public:
   MidiEventTranslator();
+
+  /* we do it on a raw buffer.. */
+  //  int rotate_notes(unsigned char *ev);
+  //  void channel(unsigned char *ev);
+
   int rotate_notes(jack_midi_event_t *ev);
   void channel(jack_midi_event_t *ev);
 
+  MidiEvent transformOffline(const MidiEvent &evin);
 };
 
 

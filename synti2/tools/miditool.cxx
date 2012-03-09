@@ -355,7 +355,7 @@ MidiSong::linearize(std::vector<unsigned int> &ticks,
 {
   rewind();  /* rewind tracks.. */
   /* For each track, find next tick. see what comes next. */
-  int ntick = 0;
+  unsigned int ntick = 0;
   unsigned int i;
 
   bool theyHaveMore = true;
@@ -397,11 +397,22 @@ void
 MisssSong::translated_grab_from_midi(MidiSong &midi_song, 
                                      MidiEventTranslator &trans){
     std::vector<unsigned int> ticks;
+    std::vector<MidiEvent> orig_evs;
+
+    //std::vector<unsigned int> ticks;
     std::vector<MidiEvent> evs;
 
-    midi_song.linearize(ticks, evs);
+    midi_song.linearize(ticks, orig_evs);
 
     unsigned int i;
+    /* Filter: */
+    for(i=0; i<ticks.size(); i++){
+      //MidiEvent ev = orig_evs[i];
+      evs.push_back(trans.transformOffline(orig_evs[i]));
+    }
+    
+    midi_song.linearize(ticks, evs);
+
     //FIXME: hack: (should have happened earlier)
     for(i=0; i<ticks.size(); i++){
       ticks[i] = ticks[i] / 16;
@@ -524,4 +535,10 @@ MidiEventTranslator::channel(jack_midi_event_t *ev){
   nib2 = nib2 + channel_table[nib2][note];
 
   ev->buffer[0] = (nib1<<4) + nib2;
+}
+
+
+MidiEvent
+MidiEventTranslator::transformOffline(const MidiEvent &evin){
+  return evin; /* FIXME: */
 }

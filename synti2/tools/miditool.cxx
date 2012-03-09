@@ -405,14 +405,18 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
     midi_song.linearize(ticks, orig_evs);
 
     unsigned int i;
+
     /* Filter: */
     for(i=0; i<ticks.size(); i++){
       //MidiEvent ev = orig_evs[i];
       evs.push_back(trans.transformOffline(orig_evs[i]));
+      
+      /*std::cout << "  ";
+      orig_evs[i].print(std::cout);
+      std::cout << "->";
+      evs[i].print(std::cout);*/
     }
     
-    midi_song.linearize(ticks, evs);
-
     //FIXME: hack: (should have happened earlier)
     for(i=0; i<ticks.size(); i++){
       ticks[i] = ticks[i] / 16;
@@ -479,14 +483,13 @@ MidiEventTranslator::MidiEventTranslator(){
 
 /** Just a dirty hack to rotate channels, if wired to do so.*/
 int
-MidiEventTranslator::rotate_notes(jack_midi_event_t *ev)
-{
+MidiEventTranslator::rotate_notes(unsigned char *buffer){
   int cmd, chn, note;
   int newrot, oldrot, newchn;
 
-  cmd = ev->buffer[0] >> 4;
-  chn = ev->buffer[0] & 0x0f;
-  note = ev->buffer[1];
+  cmd = buffer[0] >> 4;
+  chn = buffer[0] & 0x0f;
+  note = buffer[1];
 
   if (cmd == 0x09){
     /* Note on goes to the next channel in rotation. */
@@ -519,26 +522,45 @@ MidiEventTranslator::rotate_notes(jack_midi_event_t *ev)
     return 1; /* other messages not handled. */
   }
 
-  ev->buffer[0] = (cmd<<4) + newchn; /* mogrify event. */
+  buffer[0] = (cmd<<4) + newchn; /* mogrify event. */
   return 1;
-}
 
+}
 
 /** Just a dirty hack to spread drums out to different channels. */
 void
-MidiEventTranslator::channel(jack_midi_event_t *ev){
+MidiEventTranslator::channel(unsigned char *buffer){
   int nib1, nib2, note;
-  nib1 = ev->buffer[0] >> 4;
-  nib2 = ev->buffer[0] & 0x0f;
-  note = ev->buffer[1];
+  nib1 = buffer[0] >> 4;
+  nib2 = buffer[0] & 0x0f;
+  note = buffer[1];
 
   nib2 = nib2 + channel_table[nib2][note];
 
-  ev->buffer[0] = (nib1<<4) + nib2;
+  buffer[0] = (nib1<<4) + nib2;
 }
+
+
+int MidiEventTranslator::rotate_notes(jack_midi_event_t *ev)
+{  return rotate_notes(ev->buffer);  }
+
+void MidiEventTranslator::channel(jack_midi_event_t *ev)
+{  channel(ev->buffer);  }
 
 
 MidiEvent
 MidiEventTranslator::transformOffline(const MidiEvent &evin){
-  return evin; /* FIXME: */
+  /* Only mogrify notes, as of now... */
+  if (!evin.isNote()){ return evin; } 
+
+  //unsigned char hack[4]={0x99, 0x67, 0x70, 0x00};
+
+  unsigned char buf[4];
+  evin.toMidiBuffer(buf);
+  rotate_notes(buf);
+  channel(buf);
+  MidiEvent res = evin;
+  res.fromMidiBuffer(buf);
+
+  return res;
 }

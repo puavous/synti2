@@ -41,10 +41,27 @@ public:
             unsigned int par1, std::istream &ins);
   MidiEvent(int type, unsigned int subtype_or_channel, 
             unsigned int par1, unsigned int par2);
-  bool isNote(){return ((type == 0x9) || (type == 0xa));}
+  bool isNote() const {return ((type == 0x9) || (type == 0xa));}
   int getChannel(){return subtype_or_channel;}
   bool isEndOfTrack(){
     return ((type == 0xf) && (subtype_or_channel == 0xf) && (par1 == 0x2f));}
+
+  /** FIXME: Only works for note events, as of now!!! */
+  void fromMidiBuffer(const unsigned char *buf){
+    type = buf[0] >> 4;
+    subtype_or_channel = buf[0] & 0x0f;
+    par1 = buf[1];
+    par2 = buf[2];
+  }
+
+  /** FIXME: Only works for note events, as of now!!! */
+  void toMidiBuffer(unsigned char *buf) const {
+    buf[0] = (type << 4) + subtype_or_channel;
+    buf[1] = par1;
+    buf[2] = par2;
+  }
+
+
 
   void print(std::ostream &os){
     os << "type " << std::hex <<  this->type 
@@ -149,8 +166,8 @@ public:
   MidiEventTranslator();
 
   /* we do it on a raw buffer.. */
-  //  int rotate_notes(unsigned char *ev);
-  //  void channel(unsigned char *ev);
+  int rotate_notes(unsigned char *buffer);
+  void channel(unsigned char *buffer);
 
   int rotate_notes(jack_midi_event_t *ev);
   void channel(jack_midi_event_t *ev);

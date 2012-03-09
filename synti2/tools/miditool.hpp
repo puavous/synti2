@@ -62,18 +62,20 @@ public:
  */
 class MidiTrack {
   /* current tick for create and play.. not nice, but works for now... */
-  unsigned int current_tick; 
+  unsigned int current_tick;  /* for create */
+
   unsigned int current_type;   /* for create */
   unsigned int current_channel; /* for create */
 
-  //unsigned int ind; /* for play */
-  unsigned int current_evind; /* for play */
+  unsigned int play_ind; /* for play */
+  //unsigned int current_evind; /* for play */
 
   typedef unsigned int miditick_t;
-  std::map<miditick_t, std::vector<MidiEvent*> > evs; /* multimap? why?wnot?*/
+  std::vector<miditick_t> vec_tks;
+  std::vector<MidiEvent*> vec_evs;
 
-  /** Adds an event (pointer) at a time tick. Who deletes the event?
-   *  Should we make a deep copy after all?
+  /** Adds an event (pointer) at a time tick. As of now, must preserve
+   * ordering. Assume that we have created the event.
    */
   void addEvent(miditick_t tick, MidiEvent *ev);
 protected:
@@ -86,12 +88,19 @@ protected:
 public:
   MidiTrack(){current_tick = 0; current_type = 0; current_channel = 0;}
   MidiTrack(std::istream &ins){MidiTrack(); readFrom(ins); rewind();}
-  ~MidiTrack(){/*FIXME: we need to delete our events, because we have allocated them!! Not sure yet, where they'll reside, though... FIXME: asap. */}
+  ~MidiTrack(){for(unsigned int i=0; i<vec_evs.size(); i++){delete vec_evs[i];}}
 
-  void rewind(){current_tick = 0; current_evind = 0;}
-  /* FIXME: With this design, track cannot really change after rewound once.*/
+  void rewind(){current_tick = 0; play_ind = 0;}
+  /* FIXME: With this design, track cannot really change (very easily
+     / efficiently) after it has been rewound once. */
+  bool hasMore(){return (play_ind < vec_tks.size());}
 
-  MidiEvent& nextEventUpToTick(unsigned int t){;}
+  unsigned int peekNextTick(){return vec_tks[play_ind];}
+  
+  /* Return a (deep) copy of current event. */
+  MidiEvent stepOneEvent(){
+    return *(vec_evs[play_ind++]); /* cpy. */
+  }
 };
 
 /** MidiSong can read a standard midi file, and iterate it (call it
@@ -102,14 +111,12 @@ class MidiSong {
   std::map<miditick_t, evdata_t *> evs;
   std::vector<MidiTrack*> tracks;
 
-  unsigned int current_tick;
-  unsigned int current_track;
 public:
   int getNTracks(){return tracks.size();} /* Necessary? */
   MidiSong(std::ifstream &ins);
   ~MidiSong(){
     for(unsigned int i=0; i<tracks.size(); i++) delete tracks[i];}
-  void rewind(){ current_tick = 0; current_track = 0;
+  void rewind(){
     for(unsigned int i=0; i<tracks.size(); i++) tracks[i]->rewind();
   }
 

@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <limits.h>
+
 
 /* For simplicity, use the varlength of SMF.*/
 static
@@ -100,7 +102,8 @@ int read_varlen(std::istream &ins, unsigned int *dest){
 }
 
 void MidiTrack::addEvent(miditick_t tick, MidiEvent *ev){
-  evs[tick].push_back(ev);
+  vec_tks.push_back(tick);
+  vec_evs.push_back(ev);
 }
 
 
@@ -350,15 +353,43 @@ void
 MidiSong::linearize(std::vector<unsigned int> &ticks,
                     std::vector<MidiEvent> &evs)
 {
-  rewind();
+  rewind();  /* rewind tracks.. */
   /* For each track, find next tick. see what comes next. */
   int ntick = 0;
+  unsigned int i;
 
+  bool theyHaveMore = true;
+  while(theyHaveMore){
+    /* Yield all events at this tick. No problem if there are none..*/
+    for(i=0; i<tracks.size(); i++){
+      while ( (tracks[i]->hasMore()) 
+              && (tracks[i]->peekNextTick() == ntick)){
+        ticks.push_back(ntick);
+        evs.push_back(tracks[i]->stepOneEvent());
+      }
+    }
+
+    /* see if our tick should change: */
+    theyHaveMore = false;    
+    unsigned int mint = UINT_MAX; /*c++ way for this?*/
+    for(i=0; i<tracks.size(); i++){
+      if (tracks[i]->hasMore()){
+        theyHaveMore = true;
+        unsigned int t = tracks[i]->peekNextTick();
+        if (t<mint) mint = t;
+      }
+    }
+    /* we have minimum. That must be our next tick. */
+    ntick = mint;
+  }
+
+#if 0
   for(int i=0; i<300; i++){
     ticks.push_back(i*11);
     evs.push_back(MidiEvent(0x9, i % 16, 35+(i%16), 127)); /*FIXME*/
     evs.push_back(MidiEvent(0x9, (i +4) % 16, 35, 127)); /*FIXME*/
   }
+#endif
 }
 
 
@@ -370,7 +401,13 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
 
     midi_song.linearize(ticks, evs);
 
-    for(unsigned int i=0; i<ticks.size(); i++){
+    unsigned int i;
+    //FIXME: hack: (should have happened earlier)
+    for(i=0; i<ticks.size(); i++){
+      ticks[i] = ticks[i] / 16;
+    }
+
+    for(i=0; i<ticks.size(); i++){
       miditick_t t = ticks[i];
       MidiEvent ev = evs[i];
       

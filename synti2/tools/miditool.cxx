@@ -283,13 +283,23 @@ void MisssNoteChunk::do_write_header_as_c(std::ostream &outs){
 
 void
 MisssNoteChunk::do_write_data_as_c(std::ostream &outs){
+  unsigned int di = 0;
   outs << "/* delta and info : */ " << std::endl;
   unsigned int prev_tick=0;
   for (unsigned int i=0; i<tick.size(); i++){
     unsigned int delta = tick[i] - prev_tick; /* assume order */
     prev_tick = tick[i];
     fmt_varlen(outs, delta);
-    outs << ", " << std::endl;
+    outs << ", ";
+    if (default_note < 0) {
+      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
+      outs << ", ";
+    }
+    if (default_velocity < 0) {
+      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
+      outs << ", ";
+    }
+    outs << std::endl;
   }
   outs << std::endl;
 }
@@ -299,10 +309,18 @@ bool
 MisssNoteChunk::acceptEvent(unsigned int t, MidiEvent &ev){
   if (!ev.isNote()) return false;
   if (!channelMatch(ev)) return false;
+  if (! ((accept_vel_min <= ev.getVelocity()) 
+         && (ev.getVelocity() <= accept_vel_max))) return false;
 
   tick.push_back(t);
   dataind.push_back(data.size());
-  //data.push_back(ev.getNote());
+  if (default_note < 0){
+    data.push_back(ev.getNote());
+  }
+  if (default_velocity < 0){
+    data.push_back(ev.getVelocity());
+  }
+
   return true;
 }
 
@@ -337,9 +355,18 @@ MisssSong::write_as_c(std::ostream &outs){
 void
 MisssSong::build_chunks_from_spec(std::istream &spec)
 {
-  for (int i=0; i<16; i++){
-    chunks.push_back(new MisssNoteChunk(i, i, 35, 123));
+  for (int i=0; i<9; i++){
+    /* note ons: */
+    chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
+    /* note offs: */
+    chunks.push_back(new MisssNoteChunk(i, i, -1, 0, 0, 0));
   }
+  for (int i=9; i<16; i++){
+    /* note ons: */
+    chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
+    /* no note offs, as can be seen :) */
+  }
+
 
   /* FIXME: Implement. */
   std::cout << "/*FIXME: Cannot build from spec yet.*/ " << std::endl;
@@ -382,14 +409,6 @@ MidiSong::linearize(std::vector<unsigned int> &ticks,
     /* we have minimum. That must be our next tick. */
     ntick = mint;
   }
-
-#if 0
-  for(int i=0; i<300; i++){
-    ticks.push_back(i*11);
-    evs.push_back(MidiEvent(0x9, i % 16, 35+(i%16), 127)); /*FIXME*/
-    evs.push_back(MidiEvent(0x9, (i +4) % 16, 35, 127)); /*FIXME*/
-  }
-#endif
 }
 
 
@@ -419,7 +438,7 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
     
     //FIXME: hack: (should have happened earlier)
     for(i=0; i<ticks.size(); i++){
-      ticks[i] = ticks[i] / 32;
+      ticks[i] = ticks[i] / 24;
     }
 
     for(i=0; i<ticks.size(); i++){
@@ -540,6 +559,21 @@ MidiEventTranslator::channel(unsigned char *buffer){
   buffer[0] = (nib1<<4) + nib2;
 }
 
+/** Just a dirty hack, once more. Note off -> Note on with 0 velocity. */
+void
+MidiEventTranslator::off_to_zero_on(unsigned char *buffer){
+  int nib1, nib2;
+  nib1 = buffer[0] >> 4;
+  nib2 = buffer[0] & 0x0f;
+
+  if (nib1 == 0x08) {
+    nib1 = 0x09;
+    buffer[2] = 0; /* Velocity */
+  }
+  buffer[0] = (nib1<<4) + nib2;
+}
+
+
 
 int MidiEventTranslator::rotate_notes(jack_midi_event_t *ev)
 {  return rotate_notes(ev->buffer);  }
@@ -557,8 +591,11 @@ MidiEventTranslator::transformOffline(const MidiEvent &evin){
 
   unsigned char buf[4];
   evin.toMidiBuffer(buf);
+
   rotate_notes(buf);
   channel(buf);
+  off_to_zero_on(buf);
+
   MidiEvent res = evin;
   res.fromMidiBuffer(buf);
 

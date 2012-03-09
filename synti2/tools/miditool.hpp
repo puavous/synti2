@@ -41,7 +41,9 @@ public:
             unsigned int par1, std::istream &ins);
   MidiEvent(int type, unsigned int subtype_or_channel, 
             unsigned int par1, unsigned int par2);
-  bool isNote() const {return ((type == 0x9) || (type == 0xa));}
+  bool isNote() const {return ((type == 0x9) || (type == 0x8));}
+  int getNote(){return par1;}
+  int getVelocity(){return par2;}
   int getChannel(){return subtype_or_channel;}
   bool isEndOfTrack(){
     return ((type == 0xf) && (subtype_or_channel == 0xf) && (par1 == 0x2f));}
@@ -168,6 +170,8 @@ public:
   /* we do it on a raw buffer.. */
   int rotate_notes(unsigned char *buffer);
   void channel(unsigned char *buffer);
+  void off_to_zero_on(unsigned char *buffer);
+
 
   int rotate_notes(jack_midi_event_t *ev);
   void channel(jack_midi_event_t *ev);
@@ -227,17 +231,22 @@ private:
   /* parameters */
   int default_note;
   int default_velocity;
+  int accept_vel_min;
+  int accept_vel_max;
 protected:
   void do_write_header_as_c(std::ostream &outs);
   void do_write_data_as_c(std::ostream &outs);
 public:
-  MisssNoteChunk(int in_c, int out_c, int def_n, int def_v) 
+  MisssNoteChunk(int in_c, int out_c, int def_n, int def_v, 
+                 int avmin, int avmax) 
     : MisssChunk(in_c, out_c)
-  {    default_note = def_n;    default_velocity = def_v;  }
+  {    default_note = def_n;    default_velocity = def_v;  
+    accept_vel_min = avmin; accept_vel_max = avmax;}
 
   /** Must be called in increasing time-order. */
   bool acceptEvent(unsigned int t, MidiEvent &ev);
 };
+
 
 class MisssRampChunk : public MisssChunk {
 private:

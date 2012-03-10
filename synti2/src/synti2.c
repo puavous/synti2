@@ -45,7 +45,7 @@
  * env. Could it be that pitch or filter envelopes could be outside?
  * TODO: test..
  */
-#define NINNERLOOP 8
+#define NINNERLOOP 16
 
 
 /* local subr. declared here */
@@ -193,15 +193,17 @@ synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
 
 
 /** Allocate and initialize a new synth instance. */
-synti2_synth *
-synti2_create(unsigned long sr, 
-              const byte_t * patchdata, 
-              const byte_t * songdata)
+void
+synti2_init(synti2_synth * s,
+            unsigned long sr, 
+            const byte_t * patchdata, 
+            const byte_t * songdata)
 {
-  synti2_synth * s;
   int ii, wt;
   float t;
 
+  /* It can be statically reserved! */
+#if 0
   s = calloc (1, sizeof(synti2_synth));
 
 #ifndef ULTRASMALL
@@ -213,6 +215,11 @@ synti2_create(unsigned long sr,
 #ifndef ULTRASMALL
   if (s->pl == NULL) {free(s); return NULL;}
 #endif
+#endif
+
+  memset(s, 0, sizeof(s)); /* zero */
+
+  s->pl = &s->_actual_player;  /* no more necessary (FIXME everywh.)*/
 
   /* Initialize the player module. (Not much to be done...) */
   s->pl->sr = sr;

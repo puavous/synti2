@@ -80,7 +80,7 @@
 
 
 /* Audio delay storage. Less delays means less computation, faster synth.*/
-#define NDELAYS 3
+#define NDELAYS 2
 #define DELAYSAMPLES 0x10000
 
 
@@ -177,6 +177,7 @@ struct synti2_synth {
    */
   synti2_player *pl;
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
+  synti2_player _actual_player;
 
   float infranotes[128]; /* TODO: This space could be used for LFO's */
   float note2freq[128];  /* pre-computed frequencies of notes... Tuning

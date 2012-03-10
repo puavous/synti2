@@ -16,6 +16,7 @@
 #include "SDL/SDL.h"
 
 #include "synti2.h"
+#include "synti2_guts.h"
 
 #define MY_SAMPLERATE 48000
 #define AUDIOBUFSIZE  4096
@@ -24,7 +25,7 @@
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
 float audiobuf[AUDIOBUFSIZE];
 
-synti2_synth *st;
+synti2_synth my_synth;
 
 static long frame = 0;
 
@@ -45,7 +46,7 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   
   /* Call the synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
-  synti2_render(st, 
+  synti2_render(&my_synth, 
 		audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
 
   frame += len/4;
@@ -64,7 +65,8 @@ static void main2(){
   float tnow;
 
   /* Checks of possible failures?*/
-  st = synti2_create(MY_SAMPLERATE, patch_sysex, hacksong_data);
+  //st = synti2_create(MY_SAMPLERATE, patch_sysex, hacksong_data);
+  synti2_init(&my_synth, MY_SAMPLERATE, patch_sysex, hacksong_data);
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
@@ -112,7 +114,7 @@ static void main2(){
 
   do
   {
-    render_using_synti2(st);
+    render_using_synti2(&my_synth);
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);
 
@@ -123,9 +125,6 @@ static void main2(){
 
   SDL_Quit();  /* This must happen. Otherwise problems with exit! */
 
-#ifndef ULTRASMALL
-  free(st);
-#endif
 }
 
 

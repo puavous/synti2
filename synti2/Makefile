@@ -16,7 +16,7 @@ pikkune:
 # patches (in original format), midi song (in sfm0/1 format)
 # (These can be overridden from the command line:)
 #MAIN ?= example/sdl_main.c
-MAIN ?= tests/sdltest.c
+MAIN ?= example/sdl_main.c
 GFX ?= tests/tryout_gfx2.c
 SMF ?= example/example1.mid
 SND ?= example/example1.s2bank
@@ -38,9 +38,6 @@ GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp
 
 PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
 		tools/patchtool.cxx
-
-SDLTESTDEPS = tests/sdltest.c tests/testbank.c tests/tryout_gfx.c \
-	testsong.c src/synti2.c include/synti2.h 
 
 
 # C flags common to all files (normal/debug build)
@@ -192,7 +189,7 @@ mostlyclean:
 	-rm -r hackpack
 
 clean: mostlyclean
-	-rm *.payload jsynti2 jvis sdltest tinyexe visexe \
+	-rm *.payload jsynti2 jvis tinyexe visexe \
 		benchmark testsong.c test.misss \
 		midi2synti2 patchedit genpar cbank
 

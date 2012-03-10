@@ -44,10 +44,11 @@ typedef struct synti2_player synti2_player;
 /* ------- Realtime / pre-sequenced synth interface ------- */
 
 /** Create a synth instance */
-synti2_synth *
-synti2_create(unsigned long sr, 
-              const unsigned char * patch_sysex, 
-              const unsigned char * songdata);
+void
+synti2_init(synti2_synth * s,
+            unsigned long sr, 
+            const unsigned char * patch_sysex, 
+            const unsigned char * songdata);
 
 /** Render some (stereo-interleaved) frames of audio to the output
  *  buffer.

@@ -9,6 +9,7 @@ S2SOURCES = src/synti2.c src/synti2_jack.c
 # A "demo" contains: main (which can be always the same!?), graphics,
 # patches (in original format), midi song (in sfm0/1 format)
 # (These can be overridden from the command line:)
+#MAIN ?= example/sdl_main.c
 MAIN ?= tests/sdltest.c
 GFX ?= tests/tryout_gfx2.c
 SMF ?= example/example1.mid
@@ -16,9 +17,9 @@ SND ?= example/example1.s2bank
 NONOS ?= 
 BUTDOS ?= 
 
-TINYHACKSOURCES = $(MAIN) $(GFX) $(SND) $(SMF) 
+TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF) 
 
-VISHACKSOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
+VISEXESOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
 
 
 
@@ -128,16 +129,13 @@ benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 		$(filter %.c , $^) -lm
 
 
-
 # This is a template for an easy 4k-builder 
-# Basically only TINYHACKSOURCES and HCFLAGS need to be changed.
-dummy: # this is a hack to make the hack always re-compile
+dummy: # this is a hack to make the other hack always re-compile
 
-tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
+tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		midi2synti2 cbank
 	-mkdir hackpack
 	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
-
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 
@@ -147,7 +145,7 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		-combine -fwhole-program -flto \
 		-Iinclude \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
-		$(filter %.c, $(TINYHACKSOURCES)) \
+		$(filter %.c, $(TINYEXESOURCES)) \
 		$(filter %.c, $(S2SOURCES)) \
 		hackpack/songdata.c hackpack/patchdata.c \
 		$(ARCHLIBS)
@@ -166,7 +164,7 @@ tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 	@ls -lat $@
 
 
-visexe: $(VISHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
+visexe: $(VISEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		midi2synti2 cbank
 	-mkdir hackpack
 

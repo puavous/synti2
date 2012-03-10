@@ -219,6 +219,8 @@ int cmd_line_only(int argc, char **argv){
   MidiSong ms(ifs);
   ifs.close();
 
+  ms.decimateTime(6);
+
   MidiEventTranslator tr;
 
   std::stringstream spec("hm");

@@ -234,7 +234,7 @@ MidiTrack::readFrom(std::istream &ins){
 
 MidiEvent * 
 MidiTrack::locateEvent(int type, int subtype, int par1){
-  for (int i=0; i<vec_evs.size(); i++){
+  for (unsigned int i=0; i<vec_evs.size(); i++){
     if (vec_evs[i]->matches(type, subtype, par1)) return vec_evs[i];
   }
   return NULL;
@@ -295,6 +295,15 @@ MidiSong::getMSPQ(){
   MidiEvent * tempoev = tracks[0]->locateEvent(0xf, 0xf, 0x51);
   tempoev->get3byte(); /* hacks n hacks. TODO: fix these hacks */
 }
+
+void
+MidiSong::decimateTime(unsigned int new_tpb){
+  for (unsigned int i=0; i<tracks.size(); i++){
+    tracks[i]->divideTimesBy(getTPQ()/new_tpb);
+  }
+  ticks_per_beat = new_tpb;
+}
+
 
 
 void
@@ -483,11 +492,6 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
       orig_evs[i].print(std::cout);
       std::cout << "->";
       evs[i].print(std::cout);*/
-    }
-
-    //FIXME: hack: (should have happened earlier)
-    for(i=0; i<ticks.size(); i++){
-      ticks[i] = ticks[i];
     }
 
     for(i=0; i<ticks.size(); i++){

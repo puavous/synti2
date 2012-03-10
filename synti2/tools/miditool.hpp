@@ -41,7 +41,7 @@ public:
             unsigned int par1, std::istream &ins);
   MidiEvent(int type, unsigned int subtype_or_channel, 
             unsigned int par1, unsigned int par2);
-  bool matches(int type, int subtype, int par1){
+  bool matches(int type, int subtype, unsigned int par1){
     return (this->type==type)
       && (this->subtype_or_channel == subtype)
       && (this->par1 == par1);
@@ -116,6 +116,12 @@ public:
   MidiTrack(std::istream &ins){MidiTrack(); readFrom(ins); rewind();}
   ~MidiTrack(){for(unsigned int i=0; i<vec_evs.size(); i++){delete vec_evs[i];}}
 
+  void divideTimesBy(int divisor){
+    for(unsigned int i=0; i<vec_tks.size(); i++){
+      vec_tks[i] = vec_tks[i] / divisor;
+    }
+  }
+
   void rewind(){current_tick = 0; play_ind = 0;}
   /* FIXME: With this design, track cannot really change (very easily
      / efficiently) after it has been rewound once. */
@@ -150,6 +156,7 @@ public:
     for(unsigned int i=0; i<tracks.size(); i++) tracks[i]->rewind();
   }
 
+  void decimateTime(unsigned int new_tpb);
   void linearize(std::vector<unsigned int> &ticks,
                  std::vector<MidiEvent> &evs);
   /** Advance song position to next event. Tick may or may not increase. */

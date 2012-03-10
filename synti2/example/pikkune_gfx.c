@@ -11,10 +11,13 @@
 static void sivu(){
 
       glBegin(GL_QUADS);
-      //glNormal3i(  0,   0,   1);
+
       glVertex3i(  1,   1,   1);
+
       glVertex3i( -1,   1,   1);
+
       glVertex3i( -1,  -1,   1);
+
       glVertex3i(  1,  -1,   1);
       glEnd();
 }
@@ -30,13 +33,13 @@ static void kuutio(){
   glPopMatrix();
 }
 
-static void himpale(int par1, int par2){
+static void himpale(int par1, float par2){
   int i;
   glPushMatrix();
   for(i=0;i<par1;i++){
     glRotatef(360/par1, 0.f, 0.f, 1.f);
     glPushMatrix();
-    glTranslatef(1.5f, 0.f, 0.f);
+    glTranslatef(par2, 0.f, 0.f);
     kuutio();
     glPopMatrix();
   }
@@ -109,20 +112,21 @@ static void render_scene(const synti2_synth *s){
                s->eprog[1][1].f, 
                s->eprog[2][1].f, 0.0f);
   */
-   GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-   GLfloat mat_shininess[] = { 50.0 };
-   GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+   GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+   GLfloat mat_diffuse[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+   GLfloat mat_shininess[] = { 50.0f };
+   GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
    glClearColor (0.0, 0.0, 0.0, 0.0);
    glShadeModel (GL_SMOOTH);
 
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_specular);
    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
-
 
    glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
@@ -141,17 +145,29 @@ static void render_scene(const synti2_synth *s){
 
 
   glLoadIdentity();
-  glTranslatef(0.f, 0.f ,-100.f); // +100. * sin(time) - .1*s->note[0]);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+
+  glTranslatef(0.f, 0.f ,-20.f); // +100. * sin(time) - .1*s->note[0]);
   /*glTranslatef(data[400]*time,data[600]*time,-150);*/
 
   
-  glRotatef(time*45.f, 0.f, 1.f, 0.f);
+  //glRotatef(time*45.f, 0.f, 1.f, 0.f);
+  glRotatef(time*45.f, 1.f, 0.f, 0.f);
 
-  glScalef(10.f, 10.f, 10.f);
+  //glScalef(1.f, 1.f, 1.f);
 
-  glPushMatrix();
-  himpale(6, 10);
-  glPopMatrix();
+
+
+  int n = 18 + s->note[4];
+  for(i = 0; i<n; i++){
+    //glRotatef(360.f / n, 0.f, 0.f, 1.f);
+    glPushMatrix();
+    himpale(6, 10);
+    glPopMatrix();
+    glTranslatef(0.f, 0.f, 3.f);
+    glRotatef(360.f/n, 1.f, 0.f, 0.f);
+  }
 
 
 }

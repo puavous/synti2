@@ -95,8 +95,8 @@ main (int argc, char *argv[])
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
-  //  SDL_SetVideoMode(640,400,32,SDL_OPENGL);
-  SDL_SetVideoMode(1024,768,32,SDL_OPENGL);
+  SDL_SetVideoMode(640,400,32,SDL_OPENGL);
+  //SDL_SetVideoMode(1024,768,32,SDL_OPENGL);
 
   if ((argc >= 2) && (strcmp(argv[1],"-p")==0)){
     global_hack_playeronly = 1;

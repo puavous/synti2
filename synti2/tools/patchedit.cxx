@@ -314,6 +314,13 @@ void cb_send_current(Fl_Widget* w, void* p){
 /** Changes the current patch, and updates other widgets. */
 void cb_change_patch(Fl_Widget* w, void* p){
   double val = ((Fl_Valuator*)w)->value();
+  if (val > 15){
+    val = 15; ((Fl_Valuator*)w)->value(val);
+  }
+  if (val < 0){
+    val = 0; ((Fl_Valuator*)w)->value(val);
+  }
+
   curr_patch = val;
   widgets_to_reflect_reality();
 }
@@ -438,6 +445,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,600);
 
   Fl_Value_Input *patch = new Fl_Value_Input(50,20,40,25,"Patch");
+  patch->bounds(0,15);
   patch->callback(cb_change_patch);
 
   widget_patch_name = new Fl_Input(150,20,90,25,"Name");

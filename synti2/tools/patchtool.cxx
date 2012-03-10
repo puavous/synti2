@@ -262,6 +262,18 @@ synti2::Patch::setValue(std::string type, int idx, float value){
   (values[type])[idx] = value;
 }
 
+void
+synti2::Patch::clear(){
+  std::map<std::string, std::vector<ParamDescr> >::iterator it;
+  for (it = pd->paramBeg(); it != pd->paramEnd(); it++){
+    std::string sect = (*it).first;
+    std::vector<ParamDescr> &v = (*it).second;
+    for (unsigned int i=0; i < v.size(); i++){
+      values[sect][i] = 0.0;
+    }
+  }
+}
+
 
 /* internal: initializes a patch, matching its description, with
  * zero-values.

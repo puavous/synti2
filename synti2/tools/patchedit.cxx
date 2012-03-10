@@ -78,6 +78,7 @@ Fl_Color colortab[] = {
 };
 int curr_patch = 0;
 Fl_Button* button_send_all = NULL;
+Fl_Button* button_send_current = NULL;
 Fl_Input* widget_patch_name = NULL;
 std::vector<Fl_Valuator*> widgets_i3;
 std::vector<Fl_Valuator*> widgets_f;
@@ -421,9 +422,16 @@ void cb_load_current(Fl_Widget* w, void* p){
 
   std::ifstream ifs(chooser.value());
   (*pbank)[curr_patch].read(ifs);
-  button_send_all->do_callback();
+  button_send_all->do_callback();  /* sends all even if load just one. */
   widgets_to_reflect_reality();
 }
+
+void cb_clear_current(Fl_Widget* w, void* p){
+  (*pbank)[curr_patch].clear();
+  button_send_current->do_callback();
+  widgets_to_reflect_reality();
+}
+
 
 void cb_exit(Fl_Widget* w, void* p){
   ((Fl_Window*)p)->hide();
@@ -455,6 +463,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   int labsz = 16;
   Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
   box->callback(cb_send_current); box->labelsize(labsz); 
+  button_send_current = box;
 
   box = new Fl_Button(px + 1*(w+sp),py,w,h,"Send al&l");
   box->callback(cb_send_all); box->labelsize(labsz); 
@@ -470,14 +479,17 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   box = new Fl_Button(px + 4*(w+sp),py,w,h,"Ex&port C");
   box->callback(cb_export_c); box->labelsize(labsz); 
 
-  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Load this");
+  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Clear this");
+  box->callback(cb_clear_current); box->labelsize(labsz); 
+
+  box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load this");
   box->callback(cb_load_current); box->labelsize(labsz); 
 
-  box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load all");
+  box = new Fl_Button(px + 7*(w+sp),py,w,h,"Load all");
   box->callback(cb_load_all); box->labelsize(labsz);
 
   px += w/2;
-  box = new Fl_Button(px + 7*(w+sp),py,w,h,"&Quit");
+  box = new Fl_Button(px + 8*(w+sp),py,w,h,"&Quit");
   box->callback(cb_exit); box->argument((long)window); box->labelsize(17); 
 
   /* Parameters Valuator Widgets */

@@ -399,15 +399,23 @@ MisssSong::build_chunks_from_spec(std::istream &spec)
   for (int i=0; i<9; i++){
     /* note ons: */
     chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
+
     /* note offs: */
-    chunks.push_back(new MisssNoteChunk(i, i, -1, 0, 0, 0));
+    //chunks.push_back(new MisssNoteChunk(i, i, -1, 0, 0, 0));
   }
+
+  chunks.push_back(new MisssNoteChunk(0x9, 0x9, 35, 123, 1, 127));
+  chunks.push_back(new MisssNoteChunk(0xa, 0xa, 39, 123, 1, 127));
+  chunks.push_back(new MisssNoteChunk(0xb, 0xb, 41, 123, 1, 127));
+  chunks.push_back(new MisssNoteChunk(0xc, 0xc, 41, 123, 1, 127));
+
+#if 0
   for (int i=9; i<16; i++){
     /* note ons: */
     chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
     /* no note offs, as can be seen :) */
   }
-
+#endif
 
   /* FIXME: Implement. */
   std::cout << "/*FIXME: Cannot build from spec yet.*/ " << std::endl;

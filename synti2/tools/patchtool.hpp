@@ -116,6 +116,7 @@ namespace synti2{
      *  initialized as zeros.
      */
     Patch(PatchDescr *ipd);
+    void clear();
     void read(std::istream &is);
     void write(std::ostream &os);
     void setName(std::string newname){name = newname;}

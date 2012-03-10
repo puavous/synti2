@@ -46,57 +46,6 @@ static void himpale(int par1, float par2){
   glPopMatrix();
 }
 
-#if 0
-static void objekti(unsigned int par){
-  if (par==0) return;
-  glRotatef(25.f, 0.f, 1.f, 0.f);
-  glTranslatef(0.f, 7.f, 0.f);
-  glPushMatrix();
-  glScalef(1.f, 8.f, 1.f);
-  kuutio();
-  glPopMatrix();
-  glScalef(.96f, .98f, .95f);
-
-  glPushMatrix();
-
-  switch(par & 0x7){
-  case 1:
-    glRotatef(65.f, 1.f, 0.f, 0.f);
-    glPushMatrix();
-    objekti(par / 2);
-    glPopMatrix();
-    break;
-  case 2:
-    glRotatef(-40.f, 1.f, 0.f, 0.f);
-    glPushMatrix();
-    objekti(par / 5);
-    glPopMatrix();
-    break;
-    /*
-  case 3:
-    glRotatef(-35.f, 0.f, 0.f, 1.f);
-    glPushMatrix();
-    objekti(par / 7);
-    glPopMatrix();
-    break;
-  case 4:
-    glRotatef(35.f, 0.f, 0.f, 1.f);
-    glPushMatrix();
-    objekti(par / 5);
-    glPopMatrix();
-    break;
-    */
-  }
-
-  glPopMatrix();
-  objekti(par/2);
-
-  //if (par & 1) 
-  //glRotatef(20.f, 0.f, 1.f, 0.f);
-  //par >>= 1;
-  //objekti(par);
-}
-#endif
 
 /** Paint a triangle :). */
 static void render_scene(const synti2_synth *s){
@@ -147,29 +96,24 @@ static void render_scene(const synti2_synth *s){
   glLoadIdentity();
   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-
   glTranslatef(0.f, 0.f ,-20.f); // +100. * sin(time) - .1*s->note[0]);
   /*glTranslatef(data[400]*time,data[600]*time,-150);*/
 
-  
   //glRotatef(time*45.f, 0.f, 1.f, 0.f);
-  glRotatef(time*45.f, 1.f, 0.f, 0.f);
+  glRotatef(time*(1.f+s->note[4]), 1.f, s->note[4] % 3, 0.f);
 
   //glScalef(1.f, 1.f, 1.f);
 
+  int a = s->note[4] % 13;
 
-
-  int n = 18 + s->note[4];
+  int n = 10 + (a);
   for(i = 0; i<n; i++){
-    //glRotatef(360.f / n, 0.f, 0.f, 1.f);
     glPushMatrix();
     himpale(6, 10);
     glPopMatrix();
     glTranslatef(0.f, 0.f, 3.f);
     glRotatef(360.f/n, 1.f, 0.f, 0.f);
   }
-
-
 }
 
 /** Render something that varies with time and "audio snapshot". */

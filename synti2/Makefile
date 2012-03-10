@@ -6,6 +6,9 @@ S2HEADERS = include/synti2_guts.h \
 
 S2SOURCES = src/synti2.c src/synti2_jack.c
 
+pikkune:
+	make tinyexe GFX=example/pikkune_gfx.c
+
 # A "demo" contains: main (which can be always the same!?), graphics,
 # patches (in original format), midi song (in sfm0/1 format)
 # (These can be overridden from the command line:)
@@ -20,8 +23,6 @@ BUTDOS ?=
 TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF) 
 
 VISEXESOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
-
-
 
 JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
 	src/synti2.c src/synti2_jack.c

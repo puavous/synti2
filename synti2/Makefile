@@ -12,17 +12,14 @@ S2SOURCES = src/synti2.c src/synti2_jack.c
 MAIN ?= tests/sdltest.c
 GFX ?= tests/tryout_gfx2.c
 SMF ?= example/example1.mid
-SND ?= patches/testi1.s2bank
+SND ?= example/example1.s2bank
 NONOS ?= 
 BUTDOS ?= 
-
-# -DNO_LOOPING_ENVELOPES
-# -DULTRASMALL
-# -DNO_LOOPING_ENVELOPES
 
 TINYHACKSOURCES = $(MAIN) $(GFX) $(SND) $(SMF) 
 
 VISHACKSOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
+
 
 
 JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
@@ -85,10 +82,7 @@ nodefaultmake:
 	@echo "No default target is specified as of now."
 
 # Tools of all sorts have been popping about ...
-tools: misssify midi2synti2 patchedit genpar cbank
-
-misssify: tools/misssify.c Makefile
-	$(CC) $(CFLAGS) -I./include -Wextra -o $@ tools/misssify.c -lm
+tools: midi2synti2 patchedit genpar cbank
 
 midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
 		tools/miditool.hpp Makefile
@@ -133,15 +127,6 @@ benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -I./ -o $@ \
 		$(filter %.c , $^) -lm
 
-#testsong.c: tests/minimal.mid misssify Makefile
-#	./misssify --tpq 12 --velocity-all 100 --only-on $<
-#	./misssify --tpq 12 --velocity-all 100 --only-on testi.mid
-#	./misssify --tpq 12 --only-on testi.mid
-#	./misssify --tpq 12 testi.mid
-#	./misssify testi.mid
-#	python tools/file2c.py test.misss hacksong > testsong.c
-
-
 
 
 # This is a template for an easy 4k-builder 
@@ -151,11 +136,8 @@ dummy: # this is a hack to make the hack always re-compile
 tinyexe: $(TINYHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		midi2synti2 cbank
 	-mkdir hackpack
-#	./misssify --tpq 12 --velocity-all 100 --only-on \
-		$(filter %.mid, $^) hackpack/song.misss
 	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
 
-# 	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 
@@ -190,9 +172,6 @@ visexe: $(VISHACKSOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 
 	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
 
-#	./misssify --tpq 12 --velocity-all 100 --only-on \
-		$(filter %.mid, $^) hackpack/song.misss
-#	python tools/file2c.py hackpack/song.misss hacksong > hackpack/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 
@@ -212,7 +191,7 @@ mostlyclean:
 
 clean: mostlyclean
 	-rm *.payload jsynti2 jvis sdltest tinyexe visexe \
-		benchmark testsong.c misssify test.misss \
+		benchmark testsong.c test.misss \
 		midi2synti2 patchedit genpar cbank
 
 veryveryclean: veryclean

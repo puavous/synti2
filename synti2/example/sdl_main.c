@@ -1,11 +1,19 @@
-/** Test the synth output via the SDL library */
+/** A main program that opens graphics and sound output via the SDL
+ *  library, and plays back a song using Synti2. Song, sounds, and
+ *  graphics can be changed by including different files in the
+ *  compilation.
+ *
+ *  Developed and tested in a Linux setting, but I suppose this should
+ *  work on Windows.
+ */
 
 #include <math.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 #include "GL/gl.h"
 #include "SDL/SDL.h"
-#include "fcntl.h"
-#include "sys/ioctl.h"
-#include "unistd.h"
 
 #include "synti2.h"
 
@@ -20,11 +28,9 @@ synti2_synth *st;
 
 static long frame = 0;
 
-/* Test patch from the hack script: */
+/* These datas are created by the tool programs: */
 extern unsigned char patch_sysex[];
 extern unsigned char hacksong_data[];
-extern unsigned int hacksong_length;
-
 
 /**
  * Process sound with our own synthesis, then convert to SDL format.
@@ -35,9 +41,9 @@ extern unsigned int hacksong_length;
 static void sound_callback(void *udata, Uint8 *stream, int len)
 {
   int i;
-  float vol = 20000.0;
+  float vol = 32767.0f; /* Synti2 waveshaper squashes output to [-1,1] */
   
-  /* Call our own synth engine and convert samples to native type (SDL) */
+  /* Call the synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
   synti2_render(st, 
 		audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
@@ -68,12 +74,11 @@ static void main2(){
   aud.channels = 2;
   aud.samples  = AUDIOBUFSIZE/aud.channels;  /* "samples" means frames */
   aud.callback = sound_callback;
-  aud.userdata = NULL;     /* Would be nice to use? &mySoundData; */
-  /* btw, if userdata is not used in the callback, can delete reference*/
-
+  /* aud.userdata = NULL; */
+  /* My data is global, so userdata reference is not used */
 
   /* NULL 2nd param makes SDL automatically convert btw formats. Nice! */
-  SDL_OpenAudio(&aud, NULL);   /* Returns <0 upon failure. Check fits 4k?*/
+  SDL_OpenAudio(&aud, NULL);  /* Would returns <0 upon failure.*/
 
   /* Necessary?? Long names take up bytes!! (anyhow call before
    * modeset) Actually, I think this should be quite unnecessary(?):
@@ -81,44 +86,24 @@ static void main2(){
    * SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
    */
 
-  /* It costs 23-35 bytes (compressed) to politely query the mode !!
-   * It is definitely worth the ease! Oooh, but it won't work with a
-   * dual monitor setup! (tries to make fullscreen and crashes, afaik)
+  /* It costs 23-35 bytes (compressed) to politely query the display
+   * mode. But it is definitely worth the ease! Oooh, but it won't
+   * work with a dual monitor setup! (tries to make fullscreen and
+   * crashes, afaik) So, probably we'll have to make an option for
+   * this... or just compile two versions, One for fullscreen and one
+   * for windowed mode.
    */
-  //SDL_SetVideoMode(1024,768,32,SDL_OPENGL);
 
+#ifndef NO_FULLSCREEN
   vid = SDL_GetVideoInfo();  /* get desktop mode */
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
-		   SDL_OPENGL|SDL_FULLSCREEN); /* no full screen.. safer..*/
-
-
-  /*SDL_SetVideoMode(1280,720,32,sdl_flags);*/
-  /*SDL_SetVideoMode(1024,768,32,sdl_flags);*/
-
-#ifdef TOFILEONLY
-  /* Preliminary idea to just output to video and audio files. 
-   * FIXME: Implement properly..
-   */
-  frame = 0;
-  tnow = 0.0;
-  do
-  {
-    tnow = (double) frame / MY_SAMPLERATE;
-    if (frame % AUDIOBUFSIZE == 0){
-      sound_callback(audbuffer, AUDIOBUFSIZE...FIXME...);
-      write_to_snd(fout, audbuffer, AUDIOBUFSIZE)
-    }
-    if (frame % (MY_SAMPLERATE/50) == 0){  /* 50 fps */
-      //teh4k_render_at_time(tnow, snapshot, AUDIOBUFSIZE);
-      grab_screen_somehow_from_openGL_output(screenbuf);
-      write_image_to_disk_for_later_encoding(..);
-    }
-    frame ++; //= AUDIOBUFSIZE;
-  } while (tnow <70.0);
+		   SDL_OPENGL|SDL_FULLSCREEN);
+#else
+  SDL_SetVideoMode(800,600,32,SDL_OPENGL);
 #endif
 
 #ifndef ULTRASMALL
-  SDL_WM_SetCaption("Testing soft synth SDL interface",0);
+  SDL_WM_SetCaption("Soft synth SDL interface",0);
   SDL_ShowCursor(SDL_DISABLE);
 #endif
 
@@ -127,8 +112,7 @@ static void main2(){
 
   do
   {
-    //tnow = (double) frame / MY_SAMPLERATE;
-    render_using_synti2(st); /* From 'Teh 4k 3000' */
+    render_using_synti2(st);
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);
 
@@ -137,7 +121,7 @@ static void main2(){
   SDL_CloseAudio();  /* Hmm.. Does SDL_Quit() do what this does? */
 #endif
 
-  SDL_Quit();  /* This must happen. Otherwise problems with exit!*/
+  SDL_Quit();  /* This must happen. Otherwise problems with exit! */
 
 #ifndef ULTRASMALL
   free(st);
@@ -177,6 +161,7 @@ _start()
 #endif
 
   main2();
+
   /* Inline assembler for exiting without need of stdlib */
   asm (                                         \
        "movl $1,%eax\n"                         \

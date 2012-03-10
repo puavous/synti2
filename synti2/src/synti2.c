@@ -1,13 +1,12 @@
 /** @file synti2.c
  *
  * Core functionality of Synti2 ("synti-kaksi"), a miniature realtime
- * software synthesizer with a sequence playback engine.
+ * software synthesizer with a sequence playback engine. Released at
+ * Instanssi 2012;
  * 
  * @author Paavo Nieminen <paavo.j.nieminen@jyu.fi>
  *
- * @copyright TODO: license to be determined upon release at Instanssi
- * 2012; definitely open source... maybe 'copyleft' if I get too
- * idealistic.
+ * @copyright 2012. MIT License, see LICENSE.txt
  */
 #include <math.h>
 #include <limits.h>
@@ -126,7 +125,7 @@ synti2_player_merge_chunk(synti2_player *pl,
   byte_t *msg;
 
   chan = *r++; /* IDEA: chan = [from, howmany] */
-  printf("Read chan %d\n", chan);
+  /*printf("Read chan %d\n", chan);*/
   type = *r++;
   par = r;
   frame = 0;
@@ -177,16 +176,15 @@ synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
 
   pl->playloc = pl->evpool; /* This would "rewind" the song */
 
-  /* FIXME: Now we use the standard MIDI tempo unit of MSPQN. For our
+  /* TODO: Now we use the standard MIDI tempo unit of MSPQN. For our
    * 4k purposes, we might not need tpq at all. Just give us
    * microseconds per tick, and we'll be quite happy here and try to
-   * match it approximately by framecounts...
+   * match it approximately by framecounts... TODO: Think about
+   * accuracy vs. code size once more in here(?).
    */
   r += varlength(r, &(pl->tpq));  /* Ticks per quarter note */
   r += varlength(r, &uspq);       /* Microseconds per quarter note */
   pl->fpt = ((float)uspq / pl->tpq) / (1000000.0f / pl->sr); /* frames-per-tick */
-  printf("tpq %d useqpq %d fpt %d\n", pl->tpq, uspq, pl->fpt);
-  /* TODO: Think about accuracy vs. code size */
   for(r += varlength(r, &chunksize); chunksize > 0; r += varlength(r, &chunksize)){
     r = synti2_player_merge_chunk(pl, r, chunksize); /* read a chunk... */
   }
@@ -230,7 +228,7 @@ synti2_create(unsigned long sr,
 #else
   /* In "Ultrasmall" mode, we trust the user to provide all data.*/
 #ifndef EXTREME_NO_SEQUENCER
-  /* And extreme hackers have made a smaller sequencer/music generator:)*/
+  /* Extreme hackers may have made a smaller sequencer/music generator:)*/
   synti2_player_init_from_misss(s->pl, songdata);
 #endif
   synti2_fill_patches_from(s->patch, patchdata+8);
@@ -816,10 +814,9 @@ synti2_render(synti2_synth *s,
                  += pat->fpar[SYNTI2_F_DLEV] * interm;
 #endif
 
-
-
-        /* result is both in *signal and in interm (like before). 
-         * Mix (no stereo as of yet) 
+        /* result is both in *signal and in interm (like before). Mix
+         * (no stereo as of yet - wow, that was just like a bit
+         * forgotten...)
          */
         buffer[iframe+ii] += interm;
 
@@ -834,8 +831,6 @@ synti2_render(synti2_synth *s,
         s->delay[dsamp][s->framecount.val % DELAYSAMPLES] = 0.f; 
       }
 #endif
-      /*buffer[iframe+ii] = sin(32*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
-      /*buffer[iframe+ii] = tanh(16*buffer[iframe+ii]);*/ /* Hack! beautiful too!*/
     }
   }
 }

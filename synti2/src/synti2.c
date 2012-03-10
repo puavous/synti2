@@ -272,7 +272,6 @@ synti2_init(synti2_synth * s,
 #endif
 
   }
-  return s;
 }
 
 

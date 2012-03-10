@@ -15,6 +15,7 @@
 #include <jack/midiport.h>
 
 #include "synti2.h"
+#include "synti2_guts.h"
 
 typedef jack_default_audio_sample_t sample_t;
 
@@ -25,8 +26,7 @@ jack_port_t *inmidi_port;
 unsigned long sr;
 char * client_name = "avtest";
 
-synti2_synth *global_synth;
-synti2_player *global_player;
+synti2_synth global_synth;
 
 int global_hack_playeronly = 0;
 
@@ -57,9 +57,11 @@ process_audio (jack_nframes_t nframes)
   sample_t *bufferR = (sample_t*)jack_port_get_buffer(output_portR, nframes);
 
   if (global_hack_playeronly == 0){
-    synti2_read_jack_midi(global_synth, inmidi_port, nframes);
+    /* It would be reaally nice to be able to play along, even in
+       playback mode. FIXME: Proper event merge here. */
+    synti2_read_jack_midi(&global_synth, inmidi_port, nframes);
   }
-  synti2_render(global_synth, global_buffer, nframes); 
+  synti2_render(&global_synth, global_buffer, nframes); 
 
   for (i=0;i<nframes;i++){
     bufferL[i] = global_buffer[i];
@@ -135,15 +137,10 @@ main (int argc, char *argv[])
 
   /* My own soft synth to be created. */
   if (global_hack_playeronly) {
-    global_synth = synti2_create(sr, patch_sysex, hacksong_data);
+    synti2_init(&global_synth, sr, patch_sysex, hacksong_data);
   } else {
-    global_synth = synti2_create(sr, patch_sysex, NULL);
+    synti2_init(&global_synth, sr, patch_sysex, NULL);
   }
-
-  if (global_synth == NULL){
-    fprintf (stderr, "Couldn't allocate synti-kaksi \n");
-    goto error;
-  };
   
 
   /* Now we activate our new client. */
@@ -169,7 +166,7 @@ main (int argc, char *argv[])
   do
   {
     tnow = ((float)frame) / sr;
-    render_using_synti2(global_synth);
+    render_using_synti2(&global_synth);
     SDL_PollEvent(&event);
     usleep(1000000/50); /*50 Hz refresh enough for testing..*/
   } while (event.type != SDL_QUIT); //while (event.type!=SDL_KEYDOWN && tnow <70.0);

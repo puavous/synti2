@@ -518,7 +518,7 @@ MidiEventTranslator::hack_defaults()
      drums (bd,sd,oh,ch,to), effects? */
   reset_state(); /* Start with nothing, and only set some non-zeros */
   voice_rotate[0]=4; /*Channels 1-4 are 'polyphonic' */
-  voice_rotate[5]=2; /*Channels 6-7 are 'biphonic' */
+  //voice_rotate[5]=2; /*Channels 6-7 are 'biphonic' */
 
   /* Drum channel diversions as in GM for one octave (bd, sd, sd2 ...): */
   for (int j=0;j<MIDI_NNOTES;j++) {

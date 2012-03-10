@@ -56,16 +56,14 @@ static void render_scene(const synti2_synth *s){
 
   float time = (float)(s->framecount.val) / s->sr;
 
-  /*
-  glClearColor(s->eprog[0][1].f, 
-               s->eprog[1][1].f, 
-               s->eprog[2][1].f, 0.0f);
-  */
    GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
    GLfloat mat_diffuse[] = { 1.0f, 0.0f, 0.0f, 1.0f };
    GLfloat mat_shininess[] = { 50.0f };
    GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
-   glClearColor (0.0, 0.0, 0.0, 0.0);
+
+   float cf = s->eprog[1][1].f;
+   glClearColor (cf, cf, cf, 0.0);
+
    glShadeModel (GL_SMOOTH);
 
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
@@ -78,19 +76,6 @@ static void render_scene(const synti2_synth *s){
    glEnable(GL_DEPTH_TEST);
 
    glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
-
-   //glEnable(GL_LIGHTING);
-   /*
-  amb[0] = 1.f-s->eprog[0][1].f;
-  amb[1] = 1.f-s->eprog[1][1].f;
-  amb[2] = 1.f-s->eprog[2][1].f;
-  amb[3] = s->eprog[3][1].f;
-
-  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, amb);
-   */
-
-  //  glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
-
 
 
   glLoadIdentity();
@@ -109,7 +94,7 @@ static void render_scene(const synti2_synth *s){
   int n = 10 + (a);
   for(i = 0; i<n; i++){
     glPushMatrix();
-    himpale(6, 10);
+    himpale(6, 10+cf);
     glPopMatrix();
     glTranslatef(0.f, 0.f, 3.f);
     glRotatef(360.f/n, 1.f, 0.f, 0.f);

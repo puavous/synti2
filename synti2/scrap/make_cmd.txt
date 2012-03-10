@@ -1,0 +1,2 @@
+make tinyexe GFX=example/pikkune_gfx.c SND=example/pikkune.s2bank SMF=example/pikkune.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY '
+make visexe GFX=example/pikkune_gfx.c SND=example/pikkune.s2bank SMF=example/pikkune.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER'

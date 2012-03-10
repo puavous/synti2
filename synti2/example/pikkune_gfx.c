@@ -9,7 +9,9 @@
 #include "synti2_guts.h"
 
 static void sivu(){
+
       glBegin(GL_QUADS);
+      //glNormal3i(  0,   0,   1);
       glVertex3i(  1,   1,   1);
       glVertex3i( -1,   1,   1);
       glVertex3i( -1,  -1,   1);
@@ -107,27 +109,39 @@ static void render_scene(const synti2_synth *s){
                s->eprog[1][1].f, 
                s->eprog[2][1].f, 0.0f);
   */
+   GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+   GLfloat mat_shininess[] = { 50.0 };
+   GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+   glClearColor (0.0, 0.0, 0.0, 0.0);
+   glShadeModel (GL_SMOOTH);
 
-  glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
+   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-  glEnable(GL_LIGHTING);
+   glEnable(GL_LIGHTING);
+   glEnable(GL_LIGHT0);
+   glEnable(GL_DEPTH_TEST);
 
+
+   glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
+
+   //glEnable(GL_LIGHTING);
+   /*
   amb[0] = 1.f-s->eprog[0][1].f;
   amb[1] = 1.f-s->eprog[1][1].f;
   amb[2] = 1.f-s->eprog[2][1].f;
   amb[3] = s->eprog[3][1].f;
 
   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, amb);
-
+   */
 
   //  glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 
 
 
-
-
   glLoadIdentity();
-  glTranslatef(0.f, -30.f ,-200.f); // +100. * sin(time) - .1*s->note[0]);
+  glTranslatef(0.f, 0.f ,-100.f); // +100. * sin(time) - .1*s->note[0]);
   /*glTranslatef(data[400]*time,data[600]*time,-150);*/
 
   

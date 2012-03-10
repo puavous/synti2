@@ -57,7 +57,7 @@ CFLAGS = -O3 -g -Wall -Wextra -pedantic
 # For linking against 32-bit libraries (approx. 5% smaller packed exe):
 # (and even 10 % when sstrip is used instead of strip!!
 ARCHFLAGS = -m32 -DNO_I64
-ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 /usr/lib/libGLU.so.1
+ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 
 ARCHSTRIP = sstrip
 ARCHSTRIPOPT = 
 

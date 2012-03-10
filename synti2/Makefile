@@ -6,8 +6,11 @@ S2HEADERS = include/synti2_guts.h \
 
 S2SOURCES = src/synti2.c src/synti2_jack.c
 
+# Ahaa.. you can have a make inside a make... 
+
 pikkune:
 	make tinyexe GFX=example/pikkune_gfx.c
+
 
 # A "demo" contains: main (which can be always the same!?), graphics,
 # patches (in original format), midi song (in sfm0/1 format)

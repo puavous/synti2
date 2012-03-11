@@ -27,9 +27,6 @@ TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF)
 
 VISEXESOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
 
-JSYNTI2DEPS = tests/jsynti2.c tests/testbank.c testsong.c \
-	src/synti2.c src/synti2_jack.c
-
 JVISDEPS = tests/javtest.c tests/testbank.c testsong.c \
 	 src/synti2.c src/synti2_jack.c \
 	 tests/tryout_gfx2.c $(S2HEADERS)
@@ -104,19 +101,6 @@ cbank: tools/cbank.cxx tools/patchtool.cxx tools/patchtool.hpp Makefile
 	g++ -o $@ -Wextra $(filter %.cxx, $^)
 
 
-# Experiments with jack
-
-jsynti2: $(JSYNTI2DEPS) $(S2HEADERS) Makefile
-	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
-		$(filter %.c , $^) \
-		`pkg-config --cflags --libs jack` -lm
-
-jvis: $(JVISDEPS) Makefile
-	$(CC) $(CFLAGS) -I./include -DJACK_MIDI -o $@ \
-		$(filter %.c , $^) \
-		`pkg-config --cflags --libs jack` \
-		`sdl-config --cflags --libs` -lm -lGL -lGLU
-
 # While still designing the patch system, we generate this for ease:
 
 include/synti2_params.h: src/patchdesign.dat genpar
@@ -189,9 +173,9 @@ mostlyclean:
 	-rm -r hackpack
 
 clean: mostlyclean
-	-rm *.payload jsynti2 jvis tinyexe visexe \
+	-rm *.payload tinyexe visexe \
 		benchmark testsong.c test.misss \
 		midi2synti2 patchedit genpar cbank
 
-veryveryclean: veryclean
+veryveryclean: clean
 	-rm include/synti2_params.h

@@ -293,7 +293,11 @@ MidiSong::getTPQ(){
 unsigned int 
 MidiSong::getMSPQ(){
   MidiEvent * tempoev = tracks[0]->locateEvent(0xf, 0xf, 0x51);
-  tempoev->get3byte(); /* hacks n hacks. TODO: fix these hacks */
+  if (tempoev == NULL){
+    return 120; 
+  } else {
+    return tempoev->get3byte(); /* hacks n hacks. TODO: fix these hacks */
+  }
 }
 
 void

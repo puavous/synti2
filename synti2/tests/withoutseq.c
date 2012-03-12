@@ -16,9 +16,8 @@
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
 float audiobuf[AUDIOBUFSIZE];
 
-synti2_synth *st;
+synti2_synth st;
 
-/* Test patch from the hack script: */
 extern unsigned char patch_sysex[];
 
 static void produce_hell(){
@@ -35,19 +34,19 @@ static void produce_hell(){
 
 
   if ((tick) % 8 == 0){
-    st->patch[0].fpar[SYNTI2_F_LV3] = sin(hmm += .03);
-    st->patch[0].fpar[SYNTI2_F_LV4] = sin(hmm * .01);
-    synti2_do_noteon(st, 0, 32+beat*3+beat, 100);
+    st.patch[0].fpar[SYNTI2_F_LV3] = sin(hmm += .03);
+    st.patch[0].fpar[SYNTI2_F_LV4] = sin(hmm * .01);
+    synti2_do_noteon(&st, 0, 32+beat*3+beat, 100);
   }
 
   if ((tick) % 16 == 0){
-    synti2_do_noteon(st, 1, 27, 100);
+    synti2_do_noteon(&st, 1, 27, 100);
   }
 
   if ((tick) % 32 == 0){
     neat += 1;
     neat &= 0x7f;
-    synti2_do_noteon(st, 2, neat, 100);
+    synti2_do_noteon(&st, 2, neat, 100);
   }
 
 #endif
@@ -67,7 +66,7 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   produce_hell();
   /* Call our own synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
-  synti2_render(st, 
+  synti2_render(&st, 
 		audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
 
   for(i=0;i<len/2;i+=2){
@@ -82,7 +81,7 @@ static void main2(){
 #ifndef DRYRUN
   SDL_AudioSpec aud;
 
-  st = synti2_create(MY_SAMPLERATE, patch_sysex, NULL);
+  synti2_init(&st, MY_SAMPLERATE, patch_sysex, NULL);
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_AUDIO);
@@ -110,15 +109,11 @@ static void main2(){
 
 #else /*end DRYRUN */
   /* This should effectively do the tiniest thing possible with synti2: */
-  st = synti2_create(MY_SAMPLERATE, patch_sysex, NULL);
+  synti2_init(&st, MY_SAMPLERATE, patch_sysex, NULL);
   sound_callback(NULL, audiobuf, AUDIOBUFSIZE);
 
 #endif
 
-
-#ifndef ULTRASMALL
-  free(st);
-#endif
 }
 
 

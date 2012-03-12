@@ -219,7 +219,8 @@ int cmd_line_only(int argc, char **argv){
   MidiSong ms(ifs);
   ifs.close();
 
-  /*ms.decimateTime(6);*/
+  /* FIXME: This needs to be made into a parameter very soon: */
+  /*ms.decimateTime(2);*/
 
   MidiEventTranslator tr;
 

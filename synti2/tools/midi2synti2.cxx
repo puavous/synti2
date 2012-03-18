@@ -152,12 +152,14 @@ public:
   }
 };
 
+/* 
 static void
 debug_print_ev(jack_midi_event_t *ev){
   jack_info("Msg (len %d) at time %d:", ev->size, ev->time);
   if (ev->size==3) jack_info("  3byte: %02x %02x %02x", ev->buffer[0],
                              ev->buffer[1], ev->buffer[2]);
 }
+*/
 
 /** send data to synth, if there is new stuff from the GUI. */
 static int

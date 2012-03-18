@@ -59,7 +59,7 @@ ARCHSTRIPOPT =
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -g -Wextra -pedantic \
+HCFLAGS = -Os  -Wextra -pedantic \
 	$(NONOS)
 
 
@@ -126,13 +126,16 @@ tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o hackpack/$@.unstripped.payload \
-		-combine -fwhole-program -flto \
+		-fwhole-program -flto \
 		-Iinclude \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYEXESOURCES)) \
 		$(filter %.c, $(S2SOURCES)) \
 		hackpack/songdata.c hackpack/patchdata.c \
 		$(ARCHLIBS)
+
+#		-combine -fwhole-program -flto \
+
 
 	cp hackpack/$@.unstripped.payload hackpack/$@.payload 
 

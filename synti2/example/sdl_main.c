@@ -71,17 +71,6 @@ static void main2(){
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
 
-  aud.freq     = MY_SAMPLERATE;
-  aud.format   = AUDIO_S16SYS;
-  aud.channels = 2;
-  aud.samples  = AUDIOBUFSIZE/aud.channels;  /* "samples" means frames */
-  aud.callback = sound_callback;
-  /* aud.userdata = NULL; */
-  /* My data is global, so userdata reference is not used */
-
-  /* NULL 2nd param makes SDL automatically convert btw formats. Nice! */
-  SDL_OpenAudio(&aud, NULL);  /* Would returns <0 upon failure.*/
-
   /* Necessary?? Long names take up bytes!! (anyhow call before
    * modeset) Actually, I think this should be quite unnecessary(?):
    *
@@ -108,6 +97,27 @@ static void main2(){
   SDL_WM_SetCaption("Soft synth SDL interface",0);
   SDL_ShowCursor(SDL_DISABLE);
 #endif
+
+
+  /* They say that OpenAudio needs to be called after video init. */
+  aud.freq     = MY_SAMPLERATE;
+  aud.format   = AUDIO_S16SYS;
+  aud.channels = 2;
+  aud.samples  = AUDIOBUFSIZE/aud.channels;  /* "samples" means frames */
+  aud.callback = sound_callback;
+  /*aud.userdata = NULL;*/
+  /* My data is global, so userdata reference is not used */
+
+  /* NULL 2nd param makes SDL automatically convert btw formats. Nice! */
+#ifndef ULTRASMALL
+  if (SDL_OpenAudio(&aud, NULL) < 0) {
+    printf("SDL_OpenAudio failed: %s\n", SDL_GetError());
+    exit(2);
+  };
+#else
+  SDL_OpenAudio(&aud, NULL);  /* Would return <0 upon failure.*/
+#endif
+
 
   /* Start audio after inits are done.. */
   SDL_PauseAudio(0);

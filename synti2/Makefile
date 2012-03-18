@@ -41,19 +41,19 @@ PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
 CFLAGS = -O3 -g -Wall -Wextra -pedantic
 
 ## For normal 64-bit build:
-#ARCHFLAGS = 
-#ARCHLIBS = `sdl-config --libs` -lm -lGL -lGLU
-#ARCHSTRIP = strip
-#ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
-#		-R .note.gnu.build-id -R .gnu.hash \
-#		-R .eh_frame_hdr -R .eh_frame 
+ARCHFLAGS = 
+ARCHLIBS = `sdl-config --libs` -lm -lGL
+ARCHSTRIP = strip
+ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
+		-R .note.gnu.build-id -R .gnu.hash \
+		-R .eh_frame_hdr -R .eh_frame 
 
 # For linking against 32-bit libraries (approx. 5% smaller packed exe):
 # (and even 10 % when sstrip is used instead of strip!!
-ARCHFLAGS = -m32 -DNO_I64
-ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1 
-ARCHSTRIP = sstrip
-ARCHSTRIPOPT = 
+#ARCHFLAGS = -m32 -DNO_I64
+#ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
+#ARCHSTRIP = sstrip
+#ARCHSTRIPOPT = 
 
 # The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses

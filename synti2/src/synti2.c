@@ -349,7 +349,7 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
 }
 
 
-#ifdef USE_MIDI_INPUT
+#ifndef NO_RECEIVE_SYSEX
 /** Receive a MIDI SysEx. (Convenient for sound editing, but not
  *  strictly necessary for stand-alone 4k synth.)
  *

@@ -99,7 +99,7 @@ synti2_player_event_add(synti2_player *pl,
   while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
     pl->insloc = pl->insloc->next;
   }
-  ev_new = pl->freeloc++;
+  ev_new = pl->freeloc++;  /*FIXME: Will spill over lethally! */
 
   /* Fill in the node: */
   ev_new->data = src;         /* SHALLOW COPY here.*/
@@ -124,8 +124,7 @@ synti2_player_merge_chunk(synti2_player *pl,
   const byte_t *par;
   byte_t *msg;
 
-  chan = *r++; /* IDEA: chan = [from, howmany] */
-  /*printf("Read chan %d\n", chan);*/
+  chan = *r++; /* IDEA: chan = [from, howmany] FIXME: decide this. */
   type = *r++;
   par = r;
   frame = 0;
@@ -144,11 +143,11 @@ synti2_player_merge_chunk(synti2_player *pl,
 
     if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
       /* FIXME: Channel information!! */
-      msg[0] = 0x90+chan; /* MIDI Note on. FIXME: Could be a MISSS note on? */
-      msg[1]= (par[0]==0xff) ? *r++ : par[0];  /* must not eval ++ always!!*/
-      msg[2]= (par[1]==0xff) ? *r++ : par[1];  /* check the C spec!! */
+      /* Note on message in our internal midi-like format. */
+      msg[0] = MISSS_MSG_NOTE + chan; 
+      msg[1] = (par[0]==0xff) ? *r++ : par[0];
+      msg[2] = (par[1]==0xff) ? *r++ : par[1];
       /* Now it is a complete msg. */
-      /*printf("add frame %d msg %02x %02x %02x\n", frame, msg[0], msg[1], msg[2]);*/
       synti2_player_event_add(pl, frame, msg, 3); 
       pl->idata += 3; /*Update the data pool top*/
     } else {
@@ -449,14 +448,13 @@ synti2_handleInput(synti2_synth *s,
      * spot!! We shall receive only messages of the MISSS, not MIDI.
      */
     midibuf = pl->playloc->data;
-    if ((midibuf[0] & 0xf0) == 0x90){
+    if ((midibuf[0] & MISSS_MSG_BITMASK) == MISSS_MSG_NOTE){
       synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);
 
-#ifdef DO_CONVERT_OFFS
-    } else if ((midibuf[0] & 0xf0) == 0x80) {
-      /* Convert any note-off to a note-on with velocity 0 here.
-       * Necessary only if you don't have control over the note-off
-       * protocol of the sender.
+#if 0
+    } else if ((midibuf[0] & MISSS_MSG_BITMASK) == 0x80) {
+      /* Convert any note-off to a note-on with velocity 0 here. NO!
+       * We shall do that in a MIDI adapter module!
        */
       synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], 0);
 #endif
@@ -478,7 +476,7 @@ synti2_handleInput(synti2_synth *s,
        */
 
 #ifndef NO_SYSEX_RECEIVE
-    } else if (midibuf[0] == 0xf0){
+    } else if ((midibuf[0] & MISSS_MSG_BITMASK) == MISSS_MSG_DATA){
       /* Receiving SysEx is nice, but not strictly necessary if the
        * initial patch data is given upon creation.
        */      
@@ -486,9 +484,8 @@ synti2_handleInput(synti2_synth *s,
 #endif
 
     } else {
-      /* Other MIDI messages are silently ignored. */
-      /* FIXME: Could I use only 3 bits for the message type? Then I
-       * could have 32 individually addressable channels!
+      /* Other messages are actually an error. */
+      /* FIXME: Handle somehow?
        */
     }
   }

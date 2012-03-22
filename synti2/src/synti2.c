@@ -119,21 +119,23 @@ synti2_player_merge_chunk(synti2_player *pl,
                           int n_events)
 {
   char chan, type;
+  char par1, par2;
   int ii;
   unsigned int frame, tickdelta;
-  const byte_t *par;
+  //  const byte_t *par;
   byte_t *msg;
 
   chan = *r++; /* IDEA: chan = [from, howmany] FIXME: decide this. */
   type = *r++;
-  par = r;
+  par1 = *r++; 
+  par2 = *r++; /* add number of parameters to r! */
   frame = 0;
   pl->insloc = pl->evpool; /* Re-start merging from frame 0. */
 
   /* Always two parameters.. makes reader code simpler with not too
    * much storage overhead.
    */
-  r += 2;   /* add number of parameters to r! */
+  //r += 2;   
 
   for(ii=0; ii<n_events; ii++){
     r += varlength(r, &tickdelta);
@@ -144,12 +146,13 @@ synti2_player_merge_chunk(synti2_player *pl,
     if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
       /* FIXME: Channel information!! */
       /* Note on message in our internal midi-like format. */
-      msg[0] = MISSS_MSG_NOTE + chan; 
-      msg[1] = (par[0]==0xff) ? *r++ : par[0];
-      msg[2] = (par[1]==0xff) ? *r++ : par[1];
+      msg[0] = MISSS_MSG_NOTE;
+      msg[1] = chan; 
+      msg[2] = (par1==0xff) ? *r++ : par1;
+      msg[3] = (par2==0xff) ? *r++ : par2;
       /* Now it is a complete msg. */
-      synti2_player_event_add(pl, frame, msg, 3); 
-      pl->idata += 3; /*Update the data pool top*/
+      synti2_player_event_add(pl, frame, msg, 4); 
+      pl->idata += 4; /*Update the data pool top*/
     } else {
       switch (type){
       case MISSS_LAYER_CONTROLLER_RAMPS:
@@ -287,11 +290,16 @@ synti2_do_noteon(synti2_synth *s,
   int ie;
 
 #ifndef NO_NOTEOFF  /* Who needs note-offs anyway? */
+  /* FIXME: Notice that the code is identical, except for RELEASESTAGE
+     vs TRIGGERSTAGE, and note,vel&sustain select. Note number is
+     meaningless at note-off for our monophonic internals, but is it
+     problematic? Velocity must not change upon release if it is used
+     for sound control */
   /* note off */
   if (vel==0){
     /* TODO: release all envelopes.. */
     for (ie=0; ie<=NENVPERVOICE; ie++){
-      s->estage[voice][ie] = 2;      /* skip to end */
+      s->estage[voice][ie] = RELEASESTAGE; /* skip to end */
       s->eprog[voice][ie].delta = 0; /* skip to end */
       s->eprog[voice][ie].val = 0;   /* must skip also value!! FIXME: think(?)*/
       s->sustain[voice] = 0;         /* don't renew loop. FIXME: necessary only if loop is used.*/
@@ -351,6 +359,9 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
 #ifndef NO_RECEIVE_SYSEX
 /** Receive a MIDI SysEx. (Convenient for sound editing, but not
  *  strictly necessary for stand-alone 4k synth.)
+ *
+ * FIXME: Move this to the MIDI adapter module. I suppose this should
+ * create a MISSS_MSG_DATA message, maybe.
  *
  * FIXME: Manufacturer ID check.. Should also check that there is F7
  *  in the end :) length check; checksums :) could (and should) have
@@ -413,51 +424,48 @@ synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
 #endif
 
 #ifndef EXTREME_NO_SEQUENCER
-/** Handles input that comes from the stored list of song events.
- *
- * Renders some frames of control data for the synth, keeping track
- * of song position. This will do the store()s as if the song was
- * played live. The dirty work of figuring out event timing has been
- * done by the song loader, so we just float in here.
+/** 
+ * Handles input that comes from the stored list of song events;
+ * forwards control data for the synth and keeps track of song
+ * position. All necessary conversion and event timing work has been
+ * done by either a real-time midi adapter or the sequencer's song
+ * loader, and we can just go with the pre-determined flow of our own
+ * internal messages here.
  *
  * Upon entry (and all times): pl->next points to the next event to be
  * played. pl->frames_done indicates how far the sequence has been
  * played.
  *
- *  Things may happen late or ahead of time. I don't know if that is
- *  what they call "jitter", but if it is, then this is where I jit
- *  and jat...
+ * This is part of the "sequencer module" which can be left out, if
+ * you want to control the engine without it.
+ *
  */
 static
 void
 synti2_handleInput(synti2_synth *s, 
                    unsigned int upto_frames)
 {
-  /* TODO: sane implementation */
   const byte_t *midibuf;
   synti2_player *pl;
 
-  pl = s->pl;
+  pl = s->pl;  /* TODO: Think about the role of the player structure...*/
 
   while((pl->playloc->next != NULL) 
         && (pl->playloc->next->frame < upto_frames )) {
     pl->playloc = pl->playloc->next;
 
-    /* FIXME: Move away from MIDI land, to the land of the MISSS !!
-     * All the conversion work can be done before arrival to this
-     * spot!! We shall receive only messages of the MISSS, not MIDI.
-     */
-    midibuf = pl->playloc->data;
-    if ((midibuf[0] & MISSS_MSG_BITMASK) == MISSS_MSG_NOTE){
-      synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], midibuf[2]);
-
-#if 0
-    } else if ((midibuf[0] & MISSS_MSG_BITMASK) == 0x80) {
-      /* Convert any note-off to a note-on with velocity 0 here. NO!
-       * We shall do that in a MIDI adapter module!
+      /* FIXME: And yes, separate the midi receiver module from other
+         sources! 
        */
-      synti2_do_noteon(s, midibuf[0] & 0x0f, midibuf[1], 0);
-#endif
+
+    midibuf = pl->playloc->data;
+    if (midibuf[0] == MISSS_MSG_NOTE){
+      synti2_do_noteon(s, midibuf[1], midibuf[2], midibuf[3]);
+
+#ifndef NO_CC
+    } else if (midibuf[0] == MISSS_MSG_SETF){
+      /* A native float format is provided for our convenience: */
+      s->patch[midibuf[1]].fpar[midibuf[2]] = *((float*)(midibuf+3));
 
       /* FIXME: Instead of "SysEx", the core engine should be able to
          do_update_f(misss_msg_with_decoded_float_value)
@@ -470,13 +478,10 @@ synti2_handleInput(synti2_synth *s,
          npatches, nipar, nfpar... Maybe? Just thinking to re-use this
          "do_update_f()" for all parameter updates...
       */
-
-      /* FIXME: And yes, separate the midi receiver module from other
-         sources! 
-       */
+#endif
 
 #ifndef NO_SYSEX_RECEIVE
-    } else if ((midibuf[0] & MISSS_MSG_BITMASK) == MISSS_MSG_DATA){
+    } else if (midibuf[0] == MISSS_MSG_DATA){
       /* Receiving SysEx is nice, but not strictly necessary if the
        * initial patch data is given upon creation.
        */      

@@ -41,6 +41,8 @@
  * looping envelopes?
  */
 #define TRIGGERSTAGE 6
+#define RELEASESTAGE 2
+
 
 /* Length of envelope data block (K1T&L K2T&L K3T&L K4T&L K5T&L) */
 #define SYNTI2_NENVD 10

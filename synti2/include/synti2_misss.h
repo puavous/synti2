@@ -54,7 +54,8 @@
 
 
 /* These are pretty much fixed, as the implementation depends on bit
- * patterns!
+ * patterns! Layer storage is where we are space limited the most,
+ * because the song data will be in layers.
  */
 /* Layer identifier nibbles 0-7. FIXME: Using only one currently!  */
 #define MISSS_LAYER_NOTES 0x00
@@ -71,9 +72,8 @@
 #define MISSS_LAYER_NOTHING_AS_OF_YET2 0x07
 
 /* Only two bits needed for real-time synth control: */
-#define MISSS_MSG_BITMASK 0xc0
-#define MISSS_MSG_NOTE 0x80
-#define MISSS_MSG_SETF 0x40
-#define MISSS_MSG_DATA 0xc0
+#define MISSS_MSG_NOTE 0x00
+#define MISSS_MSG_SETF 0x01
+#define MISSS_MSG_DATA 0x02
 
 #endif

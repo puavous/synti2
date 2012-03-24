@@ -119,7 +119,7 @@ synti2_player_merge_chunk(synti2_player *pl,
                           int n_events)
 {
   char chan, type;
-  char par1, par2;
+  byte_t par1, par2;
   int ii;
   unsigned int frame, tickdelta;
   //  const byte_t *par;

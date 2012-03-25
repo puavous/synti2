@@ -79,7 +79,7 @@ varlength(const byte_t * source, unsigned int * dest){
       return nread; 
     else *dest <<= 7;
   }
-  return 0; /* Longer than 4 bytes! Wrong input! FIXME: die. */
+  return 0; /* Longer than 4 bytes! Actually unexpected input!*/
 }
 
 

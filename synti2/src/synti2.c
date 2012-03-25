@@ -141,21 +141,20 @@ synti2_player_merge_chunk(synti2_player *pl,
     msg = pl->data + pl->idata; /* Get next available data pool spot */
 
     if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
-      /* FIXME: Channel information!! */
-      /* Note on message in our internal midi-like format. */
+      /* Produce a 'Note on' message in our internal midi-like format. */
       msg[0] = MISSS_MSG_NOTE;
-      msg[1] = chan; 
+      msg[1] = chan;
       msg[2] = (par[0]==0xff) ? *r++ : par[0];
       msg[3] = (par[1]==0xff) ? *r++ : par[1];
-      /* Now it is a complete msg. */
-      synti2_player_event_add(pl, frame, msg, 4); 
-      pl->idata += 4; /*Update the data pool top*/
+      synti2_player_event_add(pl, frame, msg, 4);
+      pl->idata += 4; /* Update the data pool top */
     } else {
       switch (type){
       case MISSS_LAYER_CONTROLLER_RAMPS:
       /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
       case MISSS_LAYER_SYSEX_OR_ARBITRARY:
       default:
+        /* Unexpected input; maybe handle somehow as an error.. */
         break;
       }
     }
@@ -191,7 +190,10 @@ synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
 
 
 
-/** Allocate and initialize a new synth instance. */
+/** Initialize a new synth instance. To make the code smaller, we
+ *  assume that somebody else has made the allocation. It can be a
+ *  static chunk of global data, for example.
+ */
 void
 synti2_init(synti2_synth * s,
             unsigned long sr, 
@@ -201,22 +203,7 @@ synti2_init(synti2_synth * s,
   int ii, wt;
   float t;
 
-  /* It can be statically reserved! */
-#if 0
-  s = calloc (1, sizeof(synti2_synth));
-
-#ifndef ULTRASMALL
-  if (s == NULL) return NULL;
-#endif
-
-  s->pl = calloc (1, sizeof(synti2_player));
-
-#ifndef ULTRASMALL
-  if (s->pl == NULL) {free(s); return NULL;}
-#endif
-#endif
-
-  memset(s, 0, sizeof(s)); /* zero */
+  memset(s, 0, sizeof(s));     /* zero */
 
   s->pl = &s->_actual_player;  /* no more necessary (FIXME everywh.)*/
 

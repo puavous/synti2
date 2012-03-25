@@ -6,6 +6,8 @@ S2HEADERS = include/synti2_guts.h \
 
 S2SOURCES = src/synti2.c src/synti2_jack.c
 
+PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp 
+
 # Ahaa.. you can have a make inside a make... 
 
 pikkune:
@@ -27,10 +29,9 @@ TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF)
 
 VISEXESOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
 
-GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
+GENPARDEPS = tools/genpar.cxx $(PTSOURCES)
 
-PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\
-		tools/patchtool.cxx
+PATCHEDITDEPS = tools/patchedit.cxx $(PTSOURCES)
 
 
 # C flags common to all files (normal/debug build)

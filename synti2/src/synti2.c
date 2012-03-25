@@ -111,7 +111,10 @@ synti2_player_event_add(synti2_player *pl,
   
 }
 
-/** Returns a pointer to one past end of read in input data, i.e., next byte. */
+/** Merges a chunk, aka layer, to the list of events to be
+ *  played. Returns a pointer to one past end of read in input data,
+ *  i.e., next byte.
+ */
 static
 byte_t *
 synti2_player_merge_chunk(synti2_player *pl, 
@@ -124,7 +127,7 @@ synti2_player_merge_chunk(synti2_player *pl,
   const byte_t *par;
   byte_t *msg;
 
-  chan = *r++; /* IDEA: chan = [from, howmany] FIXME: decide this. */
+  chan = *r++;
   type = *r++;
   par = r;
   frame = 0;
@@ -627,6 +630,10 @@ synti2_updateFrequencies(synti2_synth *s){
 #ifndef NO_DETUNE
       notemod += pat->fpar[SYNTI2_F_DT1 + iosc];    /* "coarse" */
       notemod += pat->fpar[SYNTI2_F_DT1F + iosc];   /* "fine"   */
+#endif
+
+#ifndef NO_PITCH_BEND
+      /* FIXME: Implement pitch bend. */
 #endif
 
       note = notemod; /* should make a floor (does it? check spec)*/

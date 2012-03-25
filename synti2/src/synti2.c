@@ -119,23 +119,20 @@ synti2_player_merge_chunk(synti2_player *pl,
                           int n_events)
 {
   char chan, type;
-  byte_t par1, par2;
   int ii;
   unsigned int frame, tickdelta;
-  //  const byte_t *par;
+  const byte_t *par;
   byte_t *msg;
 
   chan = *r++; /* IDEA: chan = [from, howmany] FIXME: decide this. */
   type = *r++;
-  par1 = *r++; 
-  par2 = *r++; /* add number of parameters to r! */
+  par = r;
   frame = 0;
   pl->insloc = pl->evpool; /* Re-start merging from frame 0. */
-
+  r += 2; /* add number of parameters to r! */
   /* Always two parameters.. makes reader code simpler with not too
    * much storage overhead.
    */
-  //r += 2;   
 
   for(ii=0; ii<n_events; ii++){
     r += varlength(r, &tickdelta);
@@ -148,8 +145,8 @@ synti2_player_merge_chunk(synti2_player *pl,
       /* Note on message in our internal midi-like format. */
       msg[0] = MISSS_MSG_NOTE;
       msg[1] = chan; 
-      msg[2] = (par1==0xff) ? *r++ : par1;
-      msg[3] = (par2==0xff) ? *r++ : par2;
+      msg[2] = (par[0]==0xff) ? *r++ : par[0];
+      msg[3] = (par[1]==0xff) ? *r++ : par[1];
       /* Now it is a complete msg. */
       synti2_player_event_add(pl, frame, msg, 4); 
       pl->idata += 4; /*Update the data pool top*/

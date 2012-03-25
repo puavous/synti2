@@ -27,10 +27,6 @@ TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF)
 
 VISEXESOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
 
-JVISDEPS = tests/javtest.c tests/testbank.c testsong.c \
-	 src/synti2.c src/synti2_jack.c \
-	 tests/tryout_gfx2.c $(S2HEADERS)
-
 GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx tools/patchtool.hpp 
 
 PATCHEDITDEPS = tools/patchedit.cxx tools/patchtool.hpp	\

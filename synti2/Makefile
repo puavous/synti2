@@ -10,6 +10,14 @@ PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp
 
 # Ahaa.. you can have a make inside a make... 
 
+cube_thing:
+	make tinyexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE'
+	mv tinyexe cube_thing
+
+jacksynti2:
+	make visexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid 
+	mv visexe jacksynti2
+
 pikkune:
 	make tinyexe GFX=example/pikkune_gfx.c
 

@@ -1,10 +1,11 @@
 S2HEADERS = include/synti2_guts.h \
 		include/synti2.h \
 		include/synti2_jack.h \
+		include/synti2_midi.h \
 		include/synti2_misss.h \
 		include/synti2_params.h \
 
-S2SOURCES = src/synti2.c src/synti2_jack.c
+S2SOURCES = src/synti2.c src/synti2_jack.c src/synti2_midi.c
 
 PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp 
 

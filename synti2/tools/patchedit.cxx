@@ -122,16 +122,16 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
   int intval;
   switch (sm->type){
   case 0:
-    jack_error("Cannot do opcode 0 from here.");
+    /*jack_error("Cannot do opcode 0 from here.");*/
     return 0;
   case 1:
     intval = sm->value;
-    if (intval > 0x07) jack_error("Too large to be 3bit value! %d", intval);
+    /*if (intval > 0x07) jack_error("Too large to be 3bit value! %d", intval);*/
     sm->actual = (*buf = (intval &= 0x07));
     return 1;
   case 2:
     intval = sm->value;
-    if (intval > 0x7f) jack_error("Too large to be 7bit value! %d", intval);
+    /*if (intval > 0x7f) jack_error("Too large to be 7bit value! %d", intval);*/
     sm->actual = (*buf = (intval &= 0x7f));
     return 1;
   case 3:
@@ -139,7 +139,8 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
     return 2;
   default:
     /* An error.*/
-    jack_error("Unknown parameter type.");
+    /*jack_error("Unknown parameter type.");*/
+    break;
   }
   return 0;
 }
@@ -195,7 +196,7 @@ process (jack_nframes_t nframes, void *arg)
   */
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-      jack_info("k ");
+      /*jack_info("k ");*/
       /*FIXME: zadaadaadaa. */
     } else {
       break;

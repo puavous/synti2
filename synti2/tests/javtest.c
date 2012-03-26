@@ -67,14 +67,6 @@ process_audio (jack_nframes_t nframes)
     bufferL[i] = global_buffer[i];
     bufferR[i] = global_buffer[i];
   }
- 
-  /* FIXME: (Will do this time :)) I ended up with this very ugly way
-     to get things happening on screen. Need to expose more of the
-     synth state in future versions. Happening right here and now...*/
-  frame += nframes;
-  if ((global_buffer[5]>0.5)){
-    for (i=0;i<AUDIOBUFSIZE;i++) snapshot[i]=global_buffer[i];
-  }
 }
 
 static int
@@ -91,7 +83,6 @@ init_jack(){ return 0; /*TODO: proper coding practices and all that..*/ }
 int
 main (int argc, char *argv[])
 {
-  float tnow;
   SDL_Event event;
   jack_status_t status;
 
@@ -165,11 +156,10 @@ main (int argc, char *argv[])
 
   do
   {
-    tnow = ((float)frame) / sr;
     render_using_synti2(&global_synth);
     SDL_PollEvent(&event);
     usleep(1000000/50); /*50 Hz refresh enough for testing..*/
-  } while (event.type != SDL_QUIT); //while (event.type!=SDL_KEYDOWN && tnow <70.0);
+  } while (event.type != SDL_QUIT);
   
   jack_client_close(client);
   

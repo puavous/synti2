@@ -74,8 +74,6 @@ synti2_misss_setf(byte_t *misss_out,
  * of the output MISSS message. There must be enough space in the
  * output buffer (TODO: document the maximum message size increase).
  *
- * FIXME: Move this to a non-jack specific MIDI interpreter module.
- *
  * FIXME: Need a MIDI filter module in C, with parameters, after all?
  * If the whole synti2 interface is intended to be in one programming
  * language(?) probably so.. so do it, pls.
@@ -133,4 +131,3 @@ synti2_midi_to_misss(byte_t *midi_in,
   }
   return 0;
 }
-

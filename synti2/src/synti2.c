@@ -623,7 +623,8 @@ synti2_updateFrequencies(synti2_synth *s){
 #endif
 
 #ifndef NO_PITCH_BEND
-      /* FIXME: Implement pitch bend. */
+      /* Pitch bends for all oscillators. TODO: Allow weird effects?*/
+      notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM];
 #endif
 
       note = notemod; /* should make a floor (does it? check spec)*/

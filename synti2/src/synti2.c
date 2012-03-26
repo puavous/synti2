@@ -711,14 +711,11 @@ synti2_render(synti2_synth *s,
   int iosc;
   float interm;
   int wtoffs;
-  synti2_player *pl;
   synti2_patch *pat;
 
   float *sigin;  /* Input signal table during computation. */
   float *signal; /* Output signal destination during computation. */
 
-  pl = s->pl;
-  
   for (iframe=0; iframe<nframes; iframe += NINNERLOOP){
     /* Outer loop for things that are allowed some jitter. (further
      * elaboration in comments near the definition of NINNERLOOP).

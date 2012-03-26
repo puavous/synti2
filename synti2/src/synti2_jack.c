@@ -1,5 +1,6 @@
 #include "synti2.h"
 #include "synti2_jack.h"
+#include "synti2_misss.h"
 #include "synti2_guts.h"
 
 #include <string.h>
@@ -17,14 +18,14 @@
  */
 
 /* Some defines to make midi handling more clear in the code part: */
-#define MIDI_STATUS_NOTE_OFF 0x8;
-#define MIDI_STATUS_NOTE_ON 0x9;
-#define MIDI_STATUS_KEY_PRESSURE 0xa;
-#define MIDI_STATUS_CONTROL 0xb;
-#define MIDI_STATUS_PROGRAM 0xc;
-#define MIDI_STATUS_CHANNEL_PRESSURE 0xd;
-#define MIDI_STATUS_PITCH_WHEEL 0xe;
-#define MIDI_STATUS_SYSTEM 0xf;
+#define MIDI_STATUS_NOTE_OFF 0x8
+#define MIDI_STATUS_NOTE_ON 0x9
+#define MIDI_STATUS_KEY_PRESSURE 0xa
+#define MIDI_STATUS_CONTROL 0xb
+#define MIDI_STATUS_PROGRAM 0xc
+#define MIDI_STATUS_CHANNEL_PRESSURE 0xd
+#define MIDI_STATUS_PITCH_WHEEL 0xe
+#define MIDI_STATUS_SYSTEM 0xf
 
 
 
@@ -59,7 +60,7 @@ synti2_misss_note(byte_t *misss_out,
  */
 static
 int
-synti2_midi_to_misss(byte_t *midi_status, 
+synti2_midi_to_misss(byte_t *midi_in, 
                      byte_t *misss_out, 
                      int input_size)
 {
@@ -77,26 +78,27 @@ synti2_midi_to_misss(byte_t *midi_status,
     midi_note = *midi_in++;
     midi_vel = *midi_in++;
     return synti2_misss_note(misss_out, midi_chn, midi_note, midi_vel);
-  case MIDI_STATUS_KEY_PRESSURE 0xa:
+  case MIDI_STATUS_KEY_PRESSURE:
     /* Key pressure becomes channel pressure (no polyphonic pressure). */
     /* return synti2_misss_control(misss_out, midi_chn, 
        synti2_misss_mapPressureDest(), synti2_misss_mapPressureValue());*/
-  case MIDI_STATUS_CONTROL 0xb:
+  case MIDI_STATUS_CONTROL:
     /* return synti2_misss_control(misss_out, midi_chn, 
        synti2_misss_mapControlDest(xx), 
        synti2_misss_mapControlValue(yy));*/
-  case MIDI_STATUS_PROGRAM 0xc:
+  case MIDI_STATUS_PROGRAM:
     /* Omit program change. Could have some sound bank logic... */
     return 0;
-  case MIDI_STATUS_CHANNEL_PRESSURE 0xd:
+  case MIDI_STATUS_CHANNEL_PRESSURE:
     /* return synti2_misss_control(misss_out, midi_chn, 
        synti2_misss_mapPressureDest(), synti2_misss_mapPressureValue());*/
-  case MIDI_STATUS_PITCH_WHEEL 0xe:
+  case MIDI_STATUS_PITCH_WHEEL:
     /* return synti2_misss_control(misss_out, midi_chn, 
        synti2_misss_mapPitchDest(), synti2_misss_mapPitchValue());*/
-  case MIDI_STATUS_SYSTEM 0xf:
+  case MIDI_STATUS_SYSTEM:
     /* return synti2_misss_data(xx,yy,zz)*/
   default:
+    break;
   }
   return 0;
 }

@@ -21,7 +21,7 @@
 static
 byte_t
 synti2_misss_mapPitchDest(){
-  return SYNTI2_F_PBVAL; /* FIXME: need a pitch bend dest! */
+  return SYNTI2_F_PBVAL;
 }
 
 /** Map MIDI controller value ccval to a synti2 parameter value. */

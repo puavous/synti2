@@ -453,18 +453,7 @@ synti2_handleInput(synti2_synth *s,
     } else if (midibuf[0] == MISSS_MSG_SETF){
       /* A native float format is provided for our convenience: */
       s->patch[midibuf[1]].fpar[midibuf[2]] = *((float*)(midibuf+3));
-
-      /* FIXME: Instead of "SysEx", the core engine should be able to
-         do_update_f(misss_msg_with_decoded_float_value)
-
-         and the controller ramp generator should generate those kind
-         of messages! And of course the external midi receiver module.
-
-         FIXME: And the "misss_msg_with_decoded_float_value" could
-         have a whole soundbank.. It could have a heading with
-         npatches, nipar, nfpar... Maybe? Just thinking to re-use this
-         "do_update_f()" for all parameter updates...
-      */
+      /* or synti2_do_setf(midibuf[1], midibuf[2], (float*)(midibuf+3)?*/
 #endif
 
 #ifndef NO_SYSEX_RECEIVE

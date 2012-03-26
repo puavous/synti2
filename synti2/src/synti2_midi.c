@@ -1,19 +1,37 @@
-#include "synti2.h"
-#include "synti2_midi.h"
-#include "synti2_misss.h"
-
 /** @file synti2_midi.c - Conversion from MIDI messages to MISSS
  * (Midi-like Interface for the Synti Software Synthesizer) messages.
  *
  * The same module can be used with whatever MIDI interface (ALSA,
  *  VST..).
+ *
+ *
+ * FIXME: This could be a place also for synti2 channel allocation?
+ * Maybe? But that needs a bigger revamp of the tool-engine-interface
+ * responsibility share?
+ *
  */
 
-/* FIXME: This could be a place also for synti2 channel allocation?
-   Maybe? But that needs a bigger revamp of the tool-engine-interface
-   responsibility share.
- */
+#include "synti2.h"
+#include "synti2_midi.h"
+#include "synti2_misss.h"
+#include "synti2_params.h"
 
+
+/** Map MIDI controller number ccn to a synti2 parameter number. */
+static
+int 
+synti2_misss_mapControlDest(byte_t ccn){
+  return SYNTI2_F_LV3; /* FIXME: Always op3 level */
+}
+
+/** Map MIDI controller value ccval to a synti2 parameter value. */
+static
+float
+synti2_misss_mapControlValue(byte_t ccval){
+  float fmin = 0.0f;
+  float frange = 1.0f; /*FIXME: Always range [0,1]*/
+  return fmin + ((float)ccval / 127.f) * frange;
+}
 
 /** Creates a MISSS note message; returns length of the
  *  message. Output buffer must have enough space. Currently, the
@@ -31,6 +49,24 @@ synti2_misss_note(byte_t *misss_out,
   *misss_out++ = midi_vel;
   return 4;
 }
+
+/** Creates a MISSS "F-value" message; returns length of the
+ *  message. Output buffer must have enough space. Currently, the
+ *  length is 3 + sizeof(float).
+ */
+static
+int
+synti2_misss_setf(byte_t *misss_out, 
+                  byte_t misss_chn, 
+                  byte_t fval_index,
+                  float fval){
+  *misss_out++ = MISSS_MSG_SETF;
+  *misss_out++ = misss_chn; /* TODO: Channel dispersion logic in caller?*/
+  *misss_out++ = fval_index;
+  *(float*)misss_out = fval;
+  return 3+sizeof(float); /* A native float floats out. */
+}
+
 
 /**
  * Converts a MIDI message (complete; no running status) into a MISSS
@@ -53,6 +89,9 @@ synti2_midi_to_misss(byte_t *midi_in,
   byte_t midi_chn;
   byte_t midi_vel = 0;
   byte_t midi_note = 0;
+  byte_t midi_ccnum = 0;
+  byte_t midi_ccval = 0;
+
   midi_status = *midi_in++;
   midi_chn = midi_status & 0x0f;
 
@@ -67,23 +106,30 @@ synti2_midi_to_misss(byte_t *midi_in,
     /* Key pressure becomes channel pressure (no polyphonic pressure). */
     /* return synti2_misss_control(misss_out, midi_chn, 
        synti2_misss_mapPressureDest(), synti2_misss_mapPressureValue());*/
+    return 0;
   case MIDI_STATUS_CONTROL:
-    /* return synti2_misss_control(misss_out, midi_chn, 
-       synti2_misss_mapControlDest(xx), 
-       synti2_misss_mapControlValue(yy));*/
+    /* TODO: So far, we do nothing to Channel Mode Messages. */
+    midi_ccnum = *midi_in++;
+    midi_ccval = *midi_in++;
+    return synti2_misss_setf(misss_out, midi_chn, 
+       synti2_misss_mapControlDest(midi_ccnum), 
+       synti2_misss_mapControlValue(midi_ccval));
   case MIDI_STATUS_PROGRAM:
     /* Omit program change. Could have some sound bank logic... */
     return 0;
   case MIDI_STATUS_CHANNEL_PRESSURE:
     /* return synti2_misss_control(misss_out, midi_chn, 
        synti2_misss_mapPressureDest(), synti2_misss_mapPressureValue());*/
+    return 0;
   case MIDI_STATUS_PITCH_WHEEL:
     /* return synti2_misss_control(misss_out, midi_chn, 
        synti2_misss_mapPitchDest(), synti2_misss_mapPitchValue());*/
+    return 0;
   case MIDI_STATUS_SYSTEM:
     /* return synti2_misss_data(xx,yy,zz)*/
+    return 0;
   default:
-    break;
+    return 0;
   }
   return 0;
 }

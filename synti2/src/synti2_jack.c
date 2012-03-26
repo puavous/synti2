@@ -39,21 +39,16 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
   
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
-    if (jack_midi_event_get (&ev, midi_in_buffer, i) != ENODATA) {
-
-      /* Get next available spot from the data pool */
-      msg = pl->data + pl->idata;
-
-      out_size = synti2_midi_to_misss(ev.buffer, msg, ev.size);
-
+    if (jack_midi_event_get (&ev, midi_in_buffer, i) == ENODATA) break;
+    /* Get next available spot from the data pool */
+    msg = pl->data + pl->idata;
+    out_size = synti2_midi_to_misss(ev.buffer, msg, ev.size);
+    if (out_size > 0){
       pl->idata += out_size; /*Update the data pool top*/
-
       synti2_player_event_add(pl, 
                               pl->frames_done + ev.time, 
                               msg, 
                               out_size);
-    } else {
-      break;
     }
   }
 }

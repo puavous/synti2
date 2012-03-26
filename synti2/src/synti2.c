@@ -84,8 +84,9 @@ varlength(const byte_t * source, unsigned int * dest){
 
 
 
-/** Adds an event to its correct location. Assumes that the
- * pre-existing events are ordered.
+/** Adds an event to its correct location; makes no checks for empty
+ * messages, i.e., assumes n >= 1. Also assumes that the pre-existing
+ * events are ordered.
  */
 #ifndef JACK_MIDI
 static

@@ -184,8 +184,15 @@ process (jack_nframes_t nframes, void *arg)
 
   /* Read from UI thread. FIXME: think if synchronization issues persist? */
   while (jack_ringbuffer_read_space (global_rb) >= sizeof(s2ed_msg_t)) {
+    /* Our maximum message size so far... */
+    if (jack_midi_max_event_size(midi_out_buffer) < 11) break;
+
     jack_ringbuffer_read (global_rb, (char*)&s2m, sizeof(s2ed_msg_t));
     sz = build_sysex(&s2m,sysex_build_buf);
+
+    /*printf("jack event size %d\n", 
+      jack_midi_max_event_size(midi_out_buffer));*/
+
     jack_midi_event_write(midi_out_buffer, 0, sysex_build_buf, sz);
   }
 

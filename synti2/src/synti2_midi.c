@@ -83,6 +83,58 @@ synti2_misss_setf(byte_t *misss_out,
 }
 
 
+/** As of now, this just forwards the bulk of a MIDI SysEx, replacing
+ *  the SysEx header with a MISSS header. Expects input_size to be the
+ *  number of bytes to be forwarded.
+ */
+static
+int
+synti2_misss_data(byte_t *midi_in, 
+                  byte_t *misss_out, 
+                  int input_size){
+  int i;
+  byte_t *p = misss_out;
+  *misss_out++ = MISSS_MSG_DATA;
+  for (i=0; i<input_size; i++){
+    *misss_out++ = *midi_in++;
+  }
+  /*printf("Sending %d bytes %02x %02x %02x %02x \n",  input_size, 
+    (int)p[0], (int)p[1],(int)p[2],(int)p[3]);*/
+  return input_size+1;
+}
+
+
+/**
+ * Converts MIDI System messages. Assumes midi_status to be between F0
+ * and FF (which means a System Message).
+ *
+ *
+ * FIXME: Manufacturer ID check.. Should also check that there is F7
+ *  in the end :) length check; checksums :) could (and should) have
+ *  checks now that this code is moved outside the stand-alone synth
+ *  and thus is not size critical anymore..
+ */
+static
+int
+synti2_sysmsg_to_misss(byte_t midi_status, 
+                       byte_t *midi_in, 
+                       byte_t *misss_out, 
+                       int input_size)
+{
+  switch(midi_status){
+  case 0xf0:
+    /* Sysex header: */
+    midi_in += 3; /* skip Manufacturer IDs n stuff TODO: think about this */
+    return synti2_misss_data(midi_in, misss_out, input_size-3);
+  default:
+    /* Other System Messages are swallowed by void, as of now.*/
+    /*printf("Unhandled System Message type! \n");*/
+    return 0;
+  }  
+}
+
+
+
 /**
  * Converts a MIDI message (complete; no running status) into a MISSS
  * message that the synti2 synthesizer can handle; returns the length
@@ -141,8 +193,8 @@ synti2_midi_to_misss(byte_t *midi_in,
        synti2_misss_mapPitchDest(), 
        synti2_misss_mapPitchValue(midi_bendval));
   case MIDI_STATUS_SYSTEM:
-    /* return synti2_misss_data(xx,yy,zz)*/
-    return 0;
+    return synti2_sysmsg_to_misss(midi_status, midi_in, 
+                                  misss_out, input_size-1);
   default:
     return 0;
   }

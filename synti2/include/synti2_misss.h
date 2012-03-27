@@ -76,4 +76,13 @@
 #define MISSS_MSG_SETF 0x01
 #define MISSS_MSG_DATA 0x02
 
+/* FIXME: These are used in synti2 now, but not in sound editor!
+  But... these are not actually misss-specific, but also in the
+  SysEx that is visible to the world. So make these SYNTI2_MIDI_ 
+ */
+#define MISSS_OP_FILL_PATCHES 0
+#define MISSS_OP_SET_3BIT 1
+#define MISSS_OP_SET_7BIT 2
+#define MISSS_OP_SET_F 3
+
 #endif

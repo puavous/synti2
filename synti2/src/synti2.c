@@ -157,6 +157,7 @@ synti2_player_merge_chunk(synti2_player *pl,
       case MISSS_LAYER_CONTROLLER_RAMPS:
       /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
       case MISSS_LAYER_SYSEX_OR_ARBITRARY:
+        /* Not yet implemented. FIXME: not really necessary for 4k?*/
       default:
         /* Unexpected input; maybe handle somehow as an error.. */
         break;
@@ -345,66 +346,40 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
 
 
 #ifndef NO_RECEIVE_SYSEX
-/** Receive a MIDI SysEx. (Convenient for sound editing, but not
- *  strictly necessary for stand-alone 4k synth.)
+/** Receive arbitrary data (one instance of which can be the contents
+ *  of a "MIDI SysEx". (Convenient for sound editing, but not strictly
+ *  necessary for stand-alone 4k synth. Therefore optional
+ *  compilation). The actual SysEx things have been dealt with prior
+ *  to entry, and this can receive just the bulk data.
  *
- * FIXME: Move this to the MIDI adapter module. I suppose this should
- * create a MISSS_MSG_DATA message, maybe.
- *
- * FIXME: Manufacturer ID check.. Should also check that there is F7
- *  in the end :) length check; checksums :) could (and should) have
- *  checks now that this code is moved outside the stand-alone synth
- *  and thus is not size critical anymore..
+ * FIXME: Verify the sanity of this function...
  */
-
 static
 void
-synti2_do_receiveSysEx(synti2_synth *s, const byte_t * data){
+synti2_do_receiveData(synti2_synth *s, const byte_t * data){
   int opcode, offset, ir;
-  int a, adjust_byte = 0;
   synti2_patch *pat;
-  float decoded;  
-  /*static int stride = SYNTI2_F_NPARS;*/ /* Constant, how to do?*/
-  
-  /* Sysex header: */
-  data += 4; /* skip Manufacturer IDs n stuff TODO: think about this */
+
+  /* Data header: */
   opcode = *data++; opcode <<= 7; opcode += *data++;  /* what to do */
   offset = *data++; offset <<= 7; offset += *data++;  /* in where */
 
-  /* Sysex data: */
+  /* "Sysex" data: */
   /* As of yet, offset==patch index. TODO: More elaborate addressing? */
 
-  if (opcode==0){
-    /* Opcode 0: fill in patch memory (one or more patches at a
-     * time). Data must be complete and without errors; no checks are
-     * made in here.
-     */
+  if (opcode==MISSS_OP_FILL_PATCHES){
     synti2_fill_patches_from(s->patch + (offset & 0x7f), data);
-
-#ifndef NO_EXTRA_SYSEX
-  } else if (opcode==1) {
-    /* Receive one 3-bit parameter at location (patch,i3par_index) */
+  } else if (opcode==MISSS_OP_SET_3BIT) {
+    /* Receive one (supposedly 3-bit) parameter at location
+     * (patch,i3par_index) */
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
     pat->ipar3[ir] = *data;
-    /*jack_info("Rcv patch %d I3 param %d: %d", offset & 0x7f, ir, *data);*/
-  } else if (opcode==2) {
-    /* Receive one 7-bit parameter at location (patch,i7par_index) */
-    /* (These were removed from the synth. Opdoce 2 no longer used!) */
-    /*pat = s->patch + (offset & 0x7f); ir = offset >> 7;
-      pat->ipar7[ir] = *data; */
-  } else if (opcode==3) {
-    /* Receive one fixed point parameter at location (patch,fpar_index) */
+  } else if (opcode==MISSS_OP_SET_F){
+    /* Receive one float parameter at location (patch,fpar_index) */
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
-    /* FIXME: Decoding should be a static function instead of copy-paste:*/
-    decoded = ((data[0] & 0x03) << 7) + data[1];   /* 2 + 7 bits accuracy*/
-    decoded = ((data[0] & 0x40)>0) ? -decoded : decoded;  /* sign */
-    decoded *= .001f;                            /* default e-3 */
-    for (a=0; a < ((data[0] & 0x0c)>>2); a++) decoded *= 10.f;  /* or more */
-    pat->fpar[ir] = (adjust_byte >> 4) ? -decoded : decoded; /* sign.*/
-    /*jack_info("Rcv patch %d F param %d: %f", offset & 0x7f, ir, decoded);*/
-#endif
+    pat->fpar[ir] = synti2_decode_fpar(data[0], data[1]);
   } else {
     /* Unknown opcode - should be an error. */
   }
@@ -462,7 +437,7 @@ synti2_handleInput(synti2_synth *s,
       /* Receiving SysEx is nice, but not strictly necessary if the
        * initial patch data is given upon creation.
        */      
-      synti2_do_receiveSysEx(s, midibuf);
+      synti2_do_receiveData(s, midibuf+1);
 #endif
 
     } else {

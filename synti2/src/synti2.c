@@ -20,19 +20,6 @@
 #include "synti2_guts.h"
 #include "synti2_misss.h"
 
-/* Synti2 can be compiled as a Jack-MIDI compatible real-time soft
- * synth. Jack headers are not necessary otherwise...
- */
-#ifdef JACK_MIDI
-#include "synti2_jack.h"
-/* If any foreign MIDI protocol is used, note-offs should be converted
- * to our own protocol (also a well-known MIDI variant) in which
- * note-on with zero velocity means a note-off.
- * */
-#define DO_CONVERT_OFFS
-#endif
-
-
 
 /* Number of inner loop iterations (audio frame evaluations) between
  * evaluating "slow-motion stuff" such as MIDI input and

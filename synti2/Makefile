@@ -123,7 +123,7 @@ benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 
 
 # This is a template for an easy 4k-builder 
-tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
+tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 		midi2synti2 cbank
 	-mkdir hackpack
 	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
@@ -155,7 +155,7 @@ tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 	@ls -lat $@
 
 
-visexe: $(VISEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
+visexe: $(VISEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 		midi2synti2 cbank
 	-mkdir hackpack
 

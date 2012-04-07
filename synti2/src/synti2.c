@@ -26,11 +26,18 @@
  * envelopes. Must be a divisor of the buffer length. Example: 48000/8
  * would yield 6000 Hz (or faster than midi wire rate) responsiveness.
  * Hmm.. there is an audible problem with "jagged volume" (producing a
- * pitched artefact) if the volume envelope is outside of the inner
+ * pitched artefact) if the amplitude envelope is outside of the inner
  * loop... So I'll keep at least the envelope progression counter code
- * inside. Same must be true for panning which is essentially a volume
+ * inside. Same must be true for panning which is essentially an amplitude
  * env. Could it be that pitch or filter envelopes could be outside?
  * TODO: test..
+ *
+ * FIXME: As a second thought, I think now that for 4k/tiny stuff it
+ * would be best to not separate the inner loop at all. The
+ * performance hit could be compensated by other means in composition
+ * mode, and in playback mode we can have a longer output buffer in
+ * any case. So the actual to-do is to merge the inner loop to the
+ * outer one, maintaining real-time capacity in composition mode.
  */
 #define NINNERLOOP 16
 

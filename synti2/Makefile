@@ -1,3 +1,5 @@
+.PHONY: mostlyclean clean veryveryclean
+
 S2HEADERS = include/synti2_guts.h \
 		include/synti2.h \
 		include/synti2_jack.h \
@@ -12,7 +14,7 @@ PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp
 # Ahaa.. you can have a make inside a make... 
 
 cube_thing:
-	make tinyexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC'
+	make tinyexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO'
 	mv tinyexe cube_thing
 
 jacksynti2:
@@ -46,21 +48,6 @@ PATCHEDITDEPS = tools/patchedit.cxx $(PTSOURCES)
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -g -Wall -Wextra -pedantic
 
-## For normal 64-bit build:
-ARCHFLAGS = 
-ARCHLIBS = `sdl-config --libs` -lm -lGL
-ARCHSTRIP = strip
-ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
-		-R .note.gnu.build-id -R .gnu.hash \
-		-R .eh_frame_hdr -R .eh_frame 
-
-# For linking against 32-bit libraries (approx. 5% smaller packed exe):
-# (and even 10 % when sstrip is used instead of strip!!
-#ARCHFLAGS = -m32 -DNO_I64
-#ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
-#ARCHSTRIP = sstrip
-#ARCHSTRIPOPT = 
-
 # The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
@@ -68,6 +55,24 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 HCFLAGS = -Os  -Wextra -pedantic \
 	$(NONOS)
 
+## For normal 64-bit build:
+ARCHFLAGS = `sdl-config --cflags`
+ARCHLIBS = `sdl-config --libs` -lm -lGL
+
+# For linking against 32-bit libraries (approx. 5% smaller packed exe):
+# On my Fedora 16, as of now, the 32 bit SDL fails to init audio
+# (according to the error message, there is no available device). This
+# worked fine on Fedora 14, so I sort of think this is an issue in the
+# current version of SDL.i686)
+#ARCHFLAGS = -m32 -DNO_I64 `sdl-config --cflags` 
+#ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
+
+# Looks as if it is best to strip first with strip and then sstrip..
+ARCHSTRIP = strip
+ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
+		-R .note.gnu.build-id -R .gnu.hash \
+		-R .eh_frame_hdr -R .eh_frame 
+SSTRIP = sstrip
 
 # For some reason at least -msse4 seems to shave bytes.. so it is
 # worthwhile to keep the following memories. I used the following the
@@ -75,7 +80,6 @@ HCFLAGS = -Os  -Wextra -pedantic \
 # machine...
 
 # -fno-strict-aliasing \
-#          -nostdlib -nostartfiles -DULTRASMALL \
 #          -ffast-math -fomit-frame-pointer \
 #	  -fpredictive-commoning \
 #          --param max-unroll-times=0 \
@@ -108,21 +112,17 @@ cbank: tools/cbank.cxx tools/patchtool.cxx tools/patchtool.hpp Makefile
 
 
 # While still designing the patch system, we generate this for ease:
-
 include/synti2_params.h: src/patchdesign.dat genpar
 	./genpar $< $@
 
 
 # Experiments with dry runs, benchmarking, and SDL
-
 benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -I./ -o $@ \
 		$(filter %.c , $^) -lm
 
 
 # This is a template for an easy 4k-builder 
-dummy: # this is a hack to make the other hack always re-compile
-
 tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		midi2synti2 cbank
 	-mkdir hackpack
@@ -140,12 +140,10 @@ tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		hackpack/songdata.c hackpack/patchdata.c \
 		$(ARCHLIBS)
 
-#		-combine -fwhole-program -flto \
-
-
 	cp hackpack/$@.unstripped.payload hackpack/$@.payload 
 
 	$(ARCHSTRIP) $(ARCHSTRIPOPT) hackpack/$@.payload
+	$(SSTRIP) hackpack/$@.payload
 
 	7za a -tgzip -mx=9 tmp.gz hackpack/$@.payload
 	cat tests/selfextr.stub tmp.gz > $@
@@ -171,7 +169,6 @@ visexe: $(VISEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile dummy \
 		hackpack/songdata.c hackpack/patchdata.c \
 		`pkg-config --cflags --libs jack` \
 		`sdl-config --cflags --libs` -lm -lGL -lGLU
-
 
 
 # Clean-up targets:

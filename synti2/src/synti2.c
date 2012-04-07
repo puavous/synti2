@@ -73,14 +73,28 @@ varlength(const byte_t * source, unsigned int * dest){
       return nread; 
     else *dest <<= 7;
   }
-  return 0; /* Longer than 4 bytes! Actually unexpected input!*/
+#ifndef ULTRASMALL
+  /* Longer than 4 bytes! Actually unexpected input which should be
+     caught as a bug. */
+  return 0;
+#endif
 }
 
 
 
 /** Adds an event to its correct location; makes no checks for empty
  * messages, i.e., assumes n >= 1. Also assumes that the pre-existing
- * events are ordered.
+ * events are ordered. This can be static for playback-mode, but in
+ * real-time mode the MIDI interface module needs to see this. 
+ *
+ * TODO: relevant to any MIDI interface, not only jack, so rename the
+ * macro...
+ *
+ * FIXME: Now that I'm using an internal event format in any case,
+ * could I fix the length? I suppose I could... there are not so many
+ * different messages, and the bulk data message (which is the only
+ * variable-length event) could contain a native pointer to a memory
+ * area... maybe?
  */
 #ifndef JACK_MIDI
 static
@@ -149,12 +163,22 @@ synti2_player_merge_chunk(synti2_player *pl,
     } else {
       switch (type){
       case MISSS_LAYER_CONTROLLER_RAMPS:
-      /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
+	/* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
+	/* FIXME: Is it possible to use the counter logic for these? */
+	break;
+#if 0
       case MISSS_LAYER_SYSEX_OR_ARBITRARY:
-        /* Not yet implemented. FIXME: not really necessary for 4k?*/
+        /* Not yet implemented. FIXME: not really necessary for 4k?
+	   I'm getting the feeling that in 4k playback mode this is
+	   definitely not needed. So I really only have two types of
+	   layers?*/
+	break;
+#endif
+#ifndef ULTRASMALL:
       default:
         /* Unexpected input; maybe handle somehow as an error.. */
         break;
+#endif
       }
     }
   }

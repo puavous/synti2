@@ -24,6 +24,7 @@
 #define NO_VELOCITY
 #define NO_CC
 #define NO_PHASE_RESET
+#define NO_STEREO
 #endif
 
 /* don't know if this is nice, but doing it still: */
@@ -33,6 +34,10 @@
 #ifdef BUT_USE_PITCH_ENV
 #undef NO_PITCH_ENV
 #endif
+#ifdef BUT_USE_PHASE_RESET
+#undef NO_PHASE_RESET
+#endif
+
 
 typedef float synti2_smp_t;
 
@@ -71,8 +76,7 @@ synti2_do_noteon(synti2_synth *s, unsigned char voice,
 /* ------- Realtime control interface ------- */
 
 /* So far only jack MIDI is supported. It would be easy to support
- * others (at least as of yet, when the synth listens to plain
- * MIDI:)).
+ * others.
  */
 
 #ifdef JACK_MIDI

@@ -301,7 +301,8 @@ synti2_do_noteon(synti2_synth *s,
      vs TRIGGERSTAGE, and note,vel&sustain select. Note number is
      meaningless at note-off for our monophonic internals, but is it
      problematic? Velocity must not change upon release if it is used
-     for sound control */
+     for sound control. NOTE: See if memset could be economical in
+     zeroing the counters? sustain[voice]=vel is possible, if useful?*/
   /* note off */
   if (vel==0){
     /* TODO: release all envelopes.. */
@@ -365,12 +366,21 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
 
 #ifndef NO_RECEIVE_SYSEX
 /** Receive arbitrary data (one instance of which can be the contents
- *  of a "MIDI SysEx". (Convenient for sound editing, but not strictly
- *  necessary for stand-alone 4k synth. Therefore optional
+ *  of a "MIDI SysEx"). (Convenient for sound editing, but not
+ *  strictly necessary for stand-alone 4k synth. Therefore optional
  *  compilation). The actual SysEx things have been dealt with prior
  *  to entry, and this can receive just the bulk data.
  *
- * FIXME: Verify the sanity of this function...
+ * FIXME: Verify the sanity of this function... In particular (at
+ * least): This is unlikely to be used in 4k mode, so there's no limit
+ * in code size of this function. This is not visible to the outside,
+ * so the 7 bit restriction from the MIDI sysex world is not necessary
+ * if the 8th bit can be used for something more useful.
+ *
+ * FIXME: The 7bit restriction is as invalid for all the other parts
+ * of the synth core, now that the MIDI interface is cleaned away from
+ * here. And thus the 3bit parameters could be extended to as much as
+ * 4 bits?
  */
 static
 void
@@ -434,10 +444,6 @@ synti2_handleInput(synti2_synth *s,
   while((pl->playloc->next != NULL) 
         && (pl->playloc->next->frame < upto_frames )) {
     pl->playloc = pl->playloc->next;
-
-      /* FIXME: And yes, separate the midi receiver module from other
-         sources! 
-       */
 
     midibuf = pl->playloc->data;
     if (midibuf[0] == MISSS_MSG_NOTE){
@@ -616,13 +622,17 @@ synti2_updateFrequencies(synti2_synth *s){
 #endif
 
 #ifndef NO_PITCH_BEND
-      /* Pitch bends for all oscillators. TODO: Allow weird effects?*/
+      /* Pitch bends for all oscillators. FIXME: Allow weird effects by
+	 [SYNTI2_F_PBAM+iosc]? In code, it is only one plus; in patch
+	 data it is number of channels times number of oscillators
+	 fpars, which is a lot. Unless I come up with a new, sparse,
+	 storage for the patch data. Hmm.. why not, indeed.. */
       notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM];
 #endif
 
       note = notemod; /* should make a floor (does it? check spec)*/
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
-      freq = interm * s->note2freq[note];
+      freq = interm * s->note2freq[note]; /* could be note2delta[] */
       s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;
     }
   }
@@ -672,10 +682,10 @@ static void apply_filter(synti2_synth *s,
      envelope later? FIXME: Check the value range once again..? */
 
   f = 1000.f * pat->fpar[SYNTI2_F_FFREQ] / s->sr;
-
   q = 1.0f - pat->fpar[SYNTI2_F_FRESO];
+
   store[FIL_LP] += f * store[FIL_BP];
-  store[FIL_HP] = q * store[FIL_IN] - store[FIL_LP] - q * store[FIL_BP];
+  store[FIL_HP]  = q * store[FIL_IN] - store[FIL_LP] - q * store[FIL_BP];
   store[FIL_BP] += f * store[FIL_HP];
 #ifndef NO_NOTCH_FILTER
   store[FIL_NF] = store[FIL_LP] + store[FIL_HP];
@@ -726,7 +736,8 @@ synti2_render(synti2_synth *s,
       for(iv=0;iv<NPARTS;iv++){
 
         pat = s->patch + iv;
-        /* FIXME: Need logic for "unsounding"? */
+        /* FIXME: Need logic for "unsounding"? Yes, an #ifndef NO_SKIP_UNPLAYING 
+	 but then what is the rule? op4amp? how about delay tricks then? */
 
         sigin  = signal = &(s->outp[iv][0]);
   
@@ -743,7 +754,7 @@ synti2_render(synti2_synth *s,
           interm  = s->wave[0][wtoffs];
 #endif
 
-          /*interm *= (s->velocity[iv]/128.0f);*/  /* Velocity sensitivity */
+	  /* parallel mix could be optional? Actually also FM could be? */
           /* could reorganize I3 parameters for shorter code here(?): */
           interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
           interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
@@ -777,7 +788,7 @@ synti2_render(synti2_synth *s,
 #endif
 
 #ifndef NO_FILTER
-        /* Skip for faster computation. Could do the same for delays? */
+        /* Skip for faster computation. Should do the same for delays! */
         if(pat->ipar3[SYNTI2_I3_FILT]) {
           signal[0] = interm;
           apply_filter(s, pat, signal);
@@ -795,8 +806,7 @@ synti2_render(synti2_synth *s,
 #endif
 
         /* result is both in *signal and in interm (like before). Mix
-         * (no stereo as of yet - wow, that was just like a bit
-         * forgotten...)
+         * (no stereo as of yet) FIXME: stereo mix, pan/panenv?.
          */
         buffer[iframe+ii] += interm;
 
@@ -807,6 +817,7 @@ synti2_render(synti2_synth *s,
 #endif
 
 #ifndef NO_DELAY
+      /* "erase the delay tape" so it can be used again. */
       for(dsamp=0; dsamp<NDELAYS; dsamp++){
         s->delay[dsamp][s->framecount.val % DELAYSAMPLES] = 0.f; 
       }

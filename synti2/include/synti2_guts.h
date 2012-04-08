@@ -176,6 +176,10 @@ struct synti2_synth {
    * yield smallest compressed code (with current function
    * implementations) when the player is dynamically allocated and the
    * pointer is stored as the very first field of the synth structure.
+   * FIXME: I already let go of all dynamic allocations for the sake
+   * 4k, so now maybe should replace s->pl with &s->_actual_player all
+   * around the code. Or just move the few attributes of the player to
+   * be attributes of the synth itself..
    */
   synti2_player *pl;
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/

@@ -107,7 +107,7 @@ static void main2(){
 
   SDL_Quit();  /* This must happen. Otherwise problems with exit!*/
 
-#else /*end DRYRUN */
+#else /*else do DRYRUN */
   /* This should effectively do the tiniest thing possible with synti2: */
   synti2_init(&st, MY_SAMPLERATE, patch_sysex, NULL);
   sound_callback(NULL, audiobuf, AUDIOBUFSIZE);

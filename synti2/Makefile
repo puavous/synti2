@@ -21,6 +21,10 @@ jacksynti2:
 	make visexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid 
 	mv visexe jacksynti2
 
+withoutseq:
+	make tinyexe MAIN=tests/withoutseq.c SND=patches/miniFMset.s2bank SMF=example/minimal.mid GFX='' NONOS='-DNO_NOTHING -DEXTREME_NO_SEQUENCER'
+	mv tinyexe withoutseq
+
 pikkune:
 	make tinyexe GFX=example/pikkune_gfx.c
 

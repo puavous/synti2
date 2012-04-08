@@ -78,18 +78,6 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 		-R .eh_frame_hdr -R .eh_frame 
 SSTRIP = sstrip
 
-# For some reason at least -msse4 seems to shave bytes.. so it is
-# worthwhile to keep the following memories. I used the following the
-# last time.. but there were some stability problems with the compo
-# machine...
-
-# -fno-strict-aliasing \
-#          -ffast-math -fomit-frame-pointer \
-#	  -fpredictive-commoning \
-#          --param max-unroll-times=0 \
-#          --param max-unrolled-insns=0 \
-#          -msse4 -mavx -mhard-float 
-
 
 nodefaultmake:
 	@echo "No default target is specified as of now."

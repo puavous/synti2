@@ -21,25 +21,13 @@
 #include "synti2_misss.h"
 
 
-/* Number of inner loop iterations (audio frame evaluations) between
- * evaluating "slow-motion stuff" such as MIDI input and
- * envelopes. Must be a divisor of the buffer length. Example: 48000/8
- * would yield 6000 Hz (or faster than midi wire rate) responsiveness.
- * Hmm.. there is an audible problem with "jagged volume" (producing a
- * pitched artefact) if the amplitude envelope is outside of the inner
- * loop... So I'll keep at least the envelope progression counter code
- * inside. Same must be true for panning which is essentially an amplitude
- * env. Could it be that pitch or filter envelopes could be outside?
- * TODO: test..
- *
- * FIXME: As a second thought, I think now that for 4k/tiny stuff it
- * would be best to not separate the inner loop at all. The
- * performance hit could be compensated by other means in composition
- * mode, and in playback mode we can have a longer output buffer in
- * any case. So the actual to-do is to merge the inner loop to the
- * outer one, maintaining real-time capacity in composition mode.
+/*
+ * TODO: I let go of the old separation of inner and outer loop; so
+ * just note that there is probably a real-time computation congestion
+ * on its way which will require some additional means of handling
+ * (compute less where possible, like use dynamic polyphony...).
  */
-#define NINNERLOOP 16
+
 
 
 /* local subr. declared here */
@@ -94,7 +82,8 @@ varlength(const byte_t * source, unsigned int * dest){
  * could I fix the length? I suppose I could... there are not so many
  * different messages, and the bulk data message (which is the only
  * variable-length event) could contain a native pointer to a memory
- * area... maybe?
+ * area... maybe? This issue needs to be attended while looking at the
+ * tool programs as well.
  */
 #ifndef JACK_MIDI
 static
@@ -468,7 +457,7 @@ synti2_handleInput(synti2_synth *s,
   pl = s->pl;  /* TODO: Think about the role of the player structure...*/
 
   while((pl->playloc->next != NULL) 
-        && (pl->playloc->next->frame < upto_frames )) {
+        && (pl->playloc->next->frame <= upto_frames )) {
     pl->playloc = pl->playloc->next;
 
     midibuf = pl->playloc->data;
@@ -500,7 +489,7 @@ synti2_handleInput(synti2_synth *s,
        */
     }
   }
-  pl->frames_done = upto_frames;
+  pl->frames_done = upto_frames; /* FIXME: used only by rt midi module?*/
 }
 #endif
 
@@ -675,11 +664,13 @@ synti2_updateFrequencies(synti2_synth *s){
 #endif
 
 #ifndef NO_PITCH_BEND
-      /* Pitch bends for all oscillators. FIXME: Allow weird effects by
-	 [SYNTI2_F_PBAM+iosc]? In code, it is only one plus; in patch
-	 data it is number of channels times number of oscillators
-	 fpars, which is a lot. Unless I come up with a new, sparse,
-	 storage for the patch data. Hmm.. why not, indeed.. */
+      /* Pitch bends for all oscillators. FIXME: Allow weird effects
+	 by [SYNTI2_F_PBAM+iosc]? In code, it is only one plus; in
+	 patch data it is number of channels times number of
+	 oscillators fpars, which is a lot. Unless I come up with a
+	 new, sparse, storage for the patch data. Hmm.. why not,
+	 indeed.. So do that, and leave the actual fixme which is the
+	 storage format. */
       notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM];
 #endif
 
@@ -763,126 +754,121 @@ synti2_render(synti2_synth *s,
   float *sigin;  /* Input signal table during computation. */
   float *signal; /* Output signal destination during computation. */
 
-  for (iframe=0; iframe<nframes; iframe += NINNERLOOP){
-    /* Outer loop for things that are allowed some jitter. (further
-     * elaboration in comments near the definition of NINNERLOOP).
-     */
+  for (iframe=0; iframe<nframes; iframe++){
     
 #ifndef EXTREME_NO_SEQUENCER
     /* If they wish to generate do_note_on() without my beautiful
        sequencer interface, by all means let them ... */
-    synti2_handleInput(s, s->framecount.val + iframe + NINNERLOOP);
+    synti2_handleInput(s, s->framecount.val + iframe);
 #endif
     synti2_updateEnvelopeStages(s); /* move on if need be. */
     synti2_updateFrequencies(s);    /* frequency upd. */
     
-    /* Inner loop runs the oscillators and audio generation. */
-    for(ii=0;ii<NINNERLOOP;ii++){
+    /* Oscillators and audio generation. */
       
-      /* Could I put all counter upds in one big awesomely parallel loop? */
-      synti2_evalCounters(s);  /* .. apparently yes ..*/
+    /* Could I put all counter upds in one big awesomely parallel loop? */
+    synti2_evalCounters(s);  /* .. apparently yes ..*/
       
-      /* Sound output. Getting more realistic as we speak... */
-      buffer[iframe+ii] = 0.0f;
+    /* Sound output. Getting more realistic as we speak... */
+    buffer[iframe] = 0.0f;
       
-      for(iv=0;iv<NPARTS;iv++){
+    for(iv=0;iv<NPARTS;iv++){
 
-        pat = s->patch + iv;
-        /* FIXME: Need logic for "unsounding"? Yes, an #ifndef NO_SKIP_DEAD
+      pat = s->patch + iv;
+      /* FIXME: Need logic for "unsounding"? Yes, an #ifndef NO_SKIP_DEAD
 	 but then what is the rule? op4amp? how about delay tricks then? */
-	/* I think the following neverhappen was an early placeholder for
-	   such... */
-	/* if (pat==NULL) continue; */
-
-        sigin  = signal = &(s->outp[iv][0]);
-  
-        for(iosc = 0; iosc < NOSCILLATORS; iosc++){
-          signal++; /* Go to next output slot. */
-          wtoffs = (unsigned int)
-            ((s->c[iv*NOSCILLATORS+iosc].fr 
-              + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* phase modulator */
-              * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
-
+      /* I think the following neverhappen was an early placeholder for
+	 such... */
+      /* if (pat==NULL) continue; */
+      
+      sigin  = signal = &(s->outp[iv][0]);
+      
+      for(iosc = 0; iosc < NOSCILLATORS; iosc++){
+	signal++; /* Go to next output slot. */
+	wtoffs = (unsigned int)
+	  ((s->c[iv*NOSCILLATORS+iosc].fr 
+	    + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* phase modulator */
+	   * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
+	
 #ifndef NO_EXTRA_WAVETABLES
-          interm  = s->wave[pat->ipar3[SYNTI2_I3_HARM1+iosc]][wtoffs];
+	interm  = s->wave[pat->ipar3[SYNTI2_I3_HARM1+iosc]][wtoffs];
 #else
-          interm  = s->wave[0][wtoffs];
+	interm  = s->wave[0][wtoffs];
 #endif
-
-	  /* parallel mix could be optional? Actually also FM could be? */
-          /* could reorganize I3 parameters for shorter code here(?): */
-          interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
-          interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
-          interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
+	
+	/* parallel mix could be optional? Actually also FM could be? */
+	/* could reorganize I3 parameters for shorter code here(?): */
+	interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
+	interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
+	interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
 #ifndef NO_VELOCITY
-          /* Optional velocity sensitivity */
-          if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
-	    /* TODO: (in a later project) Table lookup? Now just
-             * linear velocity sensitivity, although tools could map
-             * it nonlinearly.
-             */
-            interm *= s->velocity[iv] / 127.f;
-          }
+	/* Optional velocity sensitivity */
+	if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
+	  /* TODO: (in a later project) Table lookup? Now just
+	   * linear velocity sensitivity, although tools could map
+	   * it nonlinearly.
+	   */
+	  interm *= s->velocity[iv] / 127.f;
+	}
 #endif
-          *signal = interm;
-        }
-
-        /* Optional additive noise after FM operator synthesis:
-           (FIXME: could/should use wavetable for noise? Should try..) */
+	*signal = interm;
+      }
+      
+      /* Optional additive noise after FM operator synthesis:
+	 (FIXME: could/should use wavetable for noise? Should try..) */
 #ifndef NO_NOISE
-        RandSeed *= 16807;
-        interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
-          * pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
-          * (float)RandSeed * 4.6566129e-010f; /*noise*/
+      RandSeed *= 16807;
+      interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
+	* pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
+	* (float)RandSeed * 4.6566129e-010f; /*noise*/
 #endif
-
+      
 #ifndef NO_DELAY
-        /* Additive mix from a delay line. FIXME: Could have wild
-           results from modulating with a delayed mix.. sort of like a
-           "feedback" operator. But the oscillator and envelope code
-           and sound parameters may need some rethinking in that case
-           (?) ... should make the delay line contents available in
-           sigin, and that's all, I guess.. looks easy enough? This
-           needs to be thought about while making some reverb
-           sound-alike. FIXME: Implement reverb somehow, btw. */
-        dsamp = s->framecount.val;
-        interm += s->delay[pat->ipar3[SYNTI2_I3_DIN]][dsamp % DELAYSAMPLES]
-          * pat->fpar[SYNTI2_F_DINLV];
+      /* Additive mix from a delay line. FIXME: Could have wild
+	 results from modulating with a delayed mix.. sort of like a
+	 "feedback" operator. But the oscillator and envelope code
+	 and sound parameters may need some rethinking in that case
+	 (?) ... should make the delay line contents available in
+	 sigin, and that's all, I guess.. looks easy enough? This
+	 needs to be thought about while making some reverb
+	 sound-alike. FIXME: Implement reverb somehow, btw. */
+      dsamp = s->framecount.val;
+      interm += s->delay[pat->ipar3[SYNTI2_I3_DIN]][dsamp % DELAYSAMPLES]
+	* pat->fpar[SYNTI2_F_DINLV];
 #endif
-
+      
 #ifndef NO_FILTER
-        /* Skip for faster computation. Should do the same for delays! */
-        if(pat->ipar3[SYNTI2_I3_FILT]) {
-          signal[0] = interm;
-          apply_filter(s, pat, signal);
-          interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
-        }
-#endif
-
-#ifndef NO_DELAY
-        /* mix also to a delay line.*/
-        dsamp += (int)(pat->fpar[SYNTI2_F_DLEN] * s->sr);
-        s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp % DELAYSAMPLES] 
-                 += pat->fpar[SYNTI2_F_DLEV] * interm;
-#endif
-
-        /* result is both in *signal and in interm (like before). Mix
-         * (no stereo as of yet) FIXME: stereo mix, pan/panenv?.
-         */
-        buffer[iframe+ii] += interm;
-
-      }
-
-#ifndef NO_OUTPUT_SQUASH
-      buffer[iframe+ii] = sin(buffer[iframe+ii]); /*Hack, but sounds nice*/
-#endif
-
-#ifndef NO_DELAY
-      /* "erase the delay tape" so it can be used again. */
-      for(dsamp=0; dsamp<NDELAYS; dsamp++){
-        s->delay[dsamp][s->framecount.val % DELAYSAMPLES] = 0.f; 
+      /* Skip for faster computation. Should do the same for delays! */
+      if(pat->ipar3[SYNTI2_I3_FILT]) {
+	signal[0] = interm;
+	apply_filter(s, pat, signal);
+	interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
       }
 #endif
+      
+#ifndef NO_DELAY
+      /* mix also to a delay line.*/
+      dsamp += (int)(pat->fpar[SYNTI2_F_DLEN] * s->sr);
+      s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp % DELAYSAMPLES] 
+	+= pat->fpar[SYNTI2_F_DLEV] * interm;
+#endif
+      
+      /* result is both in *signal and in interm (like before). Mix
+       * (no stereo as of yet) FIXME: stereo mix, pan/panenv?.
+       */
+      buffer[iframe] += interm;
+      
     }
+    
+#ifndef NO_OUTPUT_SQUASH
+    buffer[iframe] = sin(buffer[iframe]); /*Hack, but sounds nice*/
+#endif
+    
+#ifndef NO_DELAY
+    /* "erase the delay tape" so it can be used again. */
+    for(dsamp=0; dsamp<NDELAYS; dsamp++){
+      s->delay[dsamp][s->framecount.val % DELAYSAMPLES] = 0.f; 
+    }
+#endif
   }
 }

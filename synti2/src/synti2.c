@@ -284,7 +284,20 @@ synti2_init(synti2_synth * s,
 }
 
 
-/** Note on OR note off (upon velocity == 0) */
+/** 
+ * Note on OR note off (upon velocity == 0).
+ *
+ * Note or velocity must not jump at a note-off, when the parameters are
+ * likely both different from what they were at note-on.
+ *
+ * NOTE: I tried if memset could be economical in zeroing the
+ * counters. It might be, but the address computation compiles into so
+ * many instructions.. maybe some real savings could come from
+ * destroying the nice struct layout of things, if the pointers to
+ * things could be more easily remembered. Or, actually, if the
+ * resettable values were arranged together part-wise and only one
+ * memset(p,0,sz) would be required to perform note-on/off.
+ */
 #ifndef EXTREME_NO_SEQUENCER /* convenience for sequencer-less conduct */
 static
 #endif
@@ -296,37 +309,43 @@ synti2_do_noteon(synti2_synth *s,
 {
   int ie;
 
-#ifndef NO_NOTEOFF  /* Who needs note-offs anyway? */
-  /* FIXME: Notice that the code is identical, except for RELEASESTAGE
-     vs TRIGGERSTAGE, and note,vel&sustain select. Note number is
-     meaningless at note-off for our monophonic internals, but is it
-     problematic? Velocity must not change upon release if it is used
-     for sound control. NOTE: See if memset could be economical in
-     zeroing the counters? sustain[voice]=vel is possible, if useful?*/
-  /* note off */
+#ifndef NO_LOOPING_ENVELOPES
+  s->sustain[voice] = vel;
+#endif NO_LOOPING_ENVELOPES
+
+#ifndef NO_NOTEOFF
   if (vel==0){
     for (ie=0; ie<=NENVPERVOICE; ie++){
-      s->estage[voice][ie] = RELEASESTAGE; /* skip to end */
-      s->eprog[voice][ie].delta = 0; /* skip to end */
-      s->eprog[voice][ie].val = 0;   /* must skip also value!! FIXME: think(?)*/
-      s->sustain[voice] = 0;         /* don't renew loop. FIXME: necessary only if loop is used.*/
+      s->estage[voice][ie] = RELEASESTAGE; /
+      s->eprog[voice][ie].delta = 0;
+      s->eprog[voice][ie].val = 0;   /* must skip also value!? FIXME: think(?)*/
     }
-    return; /* Note off is now handled. Otherwise do note on. */
+    return; /* Note off done. */
   }
 #endif
  
   /* note on */
-  s->note[voice] = note;
+#ifndef NO_VELOCITY
   s->velocity[voice] = vel;
-#ifndef NO_LOOPING_ENVELOPES
-  s->sustain[voice] = vel;    /* FIXME: Needed only if loop env is used?*/
-#endif NO_LOOPING_ENVELOPES
+#endif
 
+  s->note[voice] = note;
   /* Trigger all envelopes. Just give a hint to the evaluator function.. */
   for (ie=0; ie<=NENVPERVOICE; ie++){
     s->estage[voice][ie] = TRIGGERSTAGE;
     s->eprog[voice][ie].delta = 0;
   }
+
+#ifdef DO_RESET_PHASE
+  /* Adds to code size and produces clicks when note tail is still
+   * sounding, but makes each note start with deterministic (zero)
+   * phase difference between oscillators.
+   */
+  for(ie=0;ie<NOSCILLATORS;ie++) {
+    s->c[NOSCILLATORS*voice+ie].val = 0;
+  }
+#endif
+
 }
 
 /** Decodes a "floating point" synthesis parameter. TODO: Maybe try

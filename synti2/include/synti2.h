@@ -23,7 +23,6 @@
 #define NO_FILTER
 #define NO_VELOCITY
 #define NO_CC
-#define NO_PHASE_RESET
 #define NO_STEREO
 #endif
 
@@ -31,12 +30,11 @@
 #ifdef BUT_USE_DETUNE
 #undef NO_DETUNE
 #endif
+
 #ifdef BUT_USE_PITCH_ENV
 #undef NO_PITCH_ENV
 #endif
-#ifdef BUT_USE_PHASE_RESET
-#undef NO_PHASE_RESET
-#endif
+
 
 
 typedef float synti2_smp_t;

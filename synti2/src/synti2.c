@@ -97,7 +97,16 @@ synti2_player_event_add(synti2_player *pl,
   while((pl->insloc->next != NULL) && (pl->insloc->next->frame <= frame)){
     pl->insloc = pl->insloc->next;
   }
-  ev_new = pl->freeloc++;  /*FIXME: Will spill over lethally! */
+  ev_new = pl->freeloc++;
+
+#ifndef ULTRASMALL
+  if (ev_new > (void*)pl->evpool+SYNTI2_MAX_SONGEVENTS){
+    ev_new = --(pl->freeloc);
+    pl->last_error_frame = frame;
+    pl->last_error_type = SYNTI2_ERROR_OUT_OF_EVENT_SPACE;
+    pl->last_error_info = *(unsigned int*)src;
+  } 
+#endif
 
   /* Fill in the node: */
   ev_new->data = src;         /* SHALLOW COPY here.*/

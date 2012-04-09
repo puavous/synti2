@@ -499,11 +499,18 @@ synti2_handleInput(synti2_synth *s,
 #endif
 
 
-/* Advance the oscillator counters. Consider using the xmms assembly
- * for these? Try to combine with the envelope counter code somehow..
- * Would be simple: Only difference is the detection and clamping!!
- * counters = {framecount, osc1, osc2, ..., oscN, ev1, ev2, ..., evM}
- * and an "if i>N".
+/* Advance the oscillator and envelope counters. Consider using the
+ * xmms assembly for these? The only difference between oscillators
+ * and envelope stages is the clamping. NOTE: I'm using the order of
+ * the counters {framecount, osc1, osc2, ..., oscN, ev1, ev2, ...,
+ * evM} to know which counters need clamping.
+ *
+ * FIXME: See if there would be size improvements from putting the
+ * counters inside parts (and leave out the only global one,
+ * framecount)
+ *
+ * TODO: (Before future projects with re-designed synths) Evaluate if
+ * this everything-is-a-counter thing was a good idea.
  */
 static 
 void
@@ -536,13 +543,14 @@ synti2_evalCounters(synti2_synth *s){
 
 
 /** 
- * Updates envelope stages as the patch data dictates. A looping
- * 5-knee envelope is used, and this is my final choice for the synti2
- * synth, mostly because I feel that it is simple in a
+ * Updates envelope stages as the patch data dictates. 
+ * 
+ * A looping 5-knee envelope is used. This is my final choice for the
+ * synti2 synth, mostly because I feel that it is simple in a
  * musician-friendly way, which is one leading design principle for
- * synti2, even though it conflicts with the size constraints. Another
- * reason is that it was in the original plan, and I want to fix the
- * feature set of synti2 very soon.
+ * synti2, even though it might conflict with the size
+ * constraints. Another reason is that it was in the original plan,
+ * and I want to fix the feature set of synti2 very soon.
  *
  * TODO: (In some later, re-designed project) the envelope code could
  * be made simpler by letting go of the whole loop idea, and, instead,
@@ -599,7 +607,9 @@ synti2_updateEnvelopeStages(synti2_synth *s){
         /* The loop logic seems to yield 55 bytes of compressed code!!
 	 * Whyyy so much?  Hmm... the address computation becomes
 	 * filthy long. FIXME: Consider some tricks? Pre-computation?
-	 * Re-ordering of storage?
+	 * Re-ordering of storage? Part-wise storage ordering seems to
+	 * appear in many of these remaining questions... so that may
+	 * be worth trying.
 	 */
         if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)){
           s->estage[iv][ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
@@ -646,7 +656,11 @@ synti2_updateFrequencies(synti2_synth *s){
     /* if (pat==NULL) continue; */
 
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
-      /* TODO: Pitch-note follow ratio .. */
+      /* TODO: Pitch-note follow ratio (for drum/sfx) as an optional
+       * parameter?
+       */
+      /* FIXME: Do I want legato? Then note should be another counter
+	 per channel. */
 
       notemod = s->note[iv];
 #ifndef NO_PITCH_ENV
@@ -754,8 +768,7 @@ synti2_render(synti2_synth *s,
     
 #ifndef EXTREME_NO_SEQUENCER
     /* If they wish to generate do_note_on() without my beautiful
-       sequencer interface, by all means let them!! FIXME:
-       do_note_on() needs to be non-static in that case, though. */
+       sequencer interface, by all means let them ... */
     synti2_handleInput(s, s->framecount.val + iframe + NINNERLOOP);
 #endif
     synti2_updateEnvelopeStages(s); /* move on if need be. */
@@ -773,7 +786,7 @@ synti2_render(synti2_synth *s,
       for(iv=0;iv<NPARTS;iv++){
 
         pat = s->patch + iv;
-        /* FIXME: Need logic for "unsounding"? Yes, an #ifndef NO_SKIP_UNPLAYING 
+        /* FIXME: Need logic for "unsounding"? Yes, an #ifndef NO_SKIP_DEAD
 	 but then what is the rule? op4amp? how about delay tricks then? */
 
         sigin  = signal = &(s->outp[iv][0]);
@@ -782,7 +795,7 @@ synti2_render(synti2_synth *s,
           signal++; /* Go to next output slot. */
           wtoffs = (unsigned int)
             ((s->c[iv*NOSCILLATORS+iosc].fr 
-              + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* FM modulator */
+              + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* phase modulator */
               * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
 
 #ifndef NO_EXTRA_WAVETABLES
@@ -806,7 +819,7 @@ synti2_render(synti2_synth *s,
         }
 
         /* Optional additive noise after FM operator synthesis:
-           (FIXME: could/should use wavetable for noise?) */
+           (FIXME: could/should use wavetable for noise? Should try..) */
 #ifndef NO_NOISE
         RandSeed *= 16807;
         interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
@@ -818,7 +831,9 @@ synti2_render(synti2_synth *s,
         /* Additive mix from a delay line. FIXME: Could have wild
            results from modulating with a delayed mix.. sort of like a
            "feedback" operator. But the oscillator and envelope code
-           may need some rethinking in that case (?) ... */
+           and sound parameters may need some rethinking in that case
+           (?) ... should make the delay line contents available in
+           sigin, and that's all, I guess.. looks easy enough?*/
         dsamp = s->framecount.val;
         interm += s->delay[pat->ipar3[SYNTI2_I3_DIN]][dsamp % DELAYSAMPLES]
           * pat->fpar[SYNTI2_F_DINLV];
@@ -834,9 +849,7 @@ synti2_render(synti2_synth *s,
 #endif
 
 #ifndef NO_DELAY
-        /* mix also to a delay line. FIXME: s->delaypos is a counter
-           like frame? FIXME: Was that everything-is-a-counter thing a
-           good idea in the first place?*/
+        /* mix also to a delay line.*/
         dsamp += (int)(pat->fpar[SYNTI2_F_DLEN] * s->sr);
         s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp % DELAYSAMPLES] 
                  += pat->fpar[SYNTI2_F_DLEV] * interm;

@@ -174,7 +174,7 @@ synti2_player_merge_chunk(synti2_player *pl,
 	   layers?*/
 	break;
 #endif
-#ifndef ULTRASMALL:
+#ifndef ULTRASMALL
       default:
         /* Unexpected input; maybe handle somehow as an error.. */
         break;
@@ -247,6 +247,7 @@ synti2_init(synti2_synth * s,
   /* Extreme hackers may have made a smaller sequencer/music generator:)*/
   synti2_player_init_from_misss(s->pl, songdata);
 #endif
+  /* Patches are to be made with some patch editor, though.*/
   synti2_fill_patches_from(s->patch, patchdata+8);
 #endif
 
@@ -311,7 +312,7 @@ synti2_do_noteon(synti2_synth *s,
 
 #ifndef NO_LOOPING_ENVELOPES
   s->sustain[voice] = vel;
-#endif NO_LOOPING_ENVELOPES
+#endif
 
 #ifndef NO_NOTEOFF
   if (vel==0){
@@ -396,6 +397,10 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
  * so the 7 bit restriction from the MIDI sysex world is not necessary
  * if the 8th bit can be used for something more useful.
  *
+ * FIXME: Verify the necessity of this function. There will be the
+ * MIDI translator module in any case, so see if it could deal
+ * directly with handleInput()
+ *
  * FIXME: The 7bit restriction is as invalid for all the other parts
  * of the synth core, now that the MIDI interface is cleaned away from
  * here. And thus the 3bit parameters could be extended to as much as
@@ -479,7 +484,7 @@ synti2_handleInput(synti2_synth *s,
     } else if (midibuf[0] == MISSS_MSG_DATA){
       /* Receiving SysEx is nice, but not strictly necessary if the
        * initial patch data is given upon creation.
-       */      
+       */
       synti2_do_receiveData(s, midibuf+1);
 #endif
 
@@ -530,13 +535,28 @@ synti2_evalCounters(synti2_synth *s){
 }
 
 
-/** Updates envelope stages as the patch data dictates. 
-
-  FIXME: just simple LFO stuff instead of this hack of a looping envelope?
-
-  FIXME: Or make looping optional by a simple sound parameter... 
-
-*/
+/** 
+ * Updates envelope stages as the patch data dictates. A looping
+ * 5-knee envelope is used, and this is my final choice for the synti2
+ * synth, mostly because I feel that it is simple in a
+ * musician-friendly way, which is one leading design principle for
+ * synti2, even though it conflicts with the size constraints. Another
+ * reason is that it was in the original plan, and I want to fix the
+ * feature set of synti2 very soon.
+ *
+ * TODO: (In some later, re-designed project) the envelope code could
+ * be made simpler by letting go of the whole loop idea, and, instead,
+ * using some kind of LFOs or inter-channel patching for modulation
+ * effects.
+ *
+ * TODO: (In some other later project) the envelopes could be made
+ * more interesting by combining more parts than just 5 linear
+ * interpolation knees. Consider a freely editable list of arbitrary
+ * combinations of constant+anyWaveTable at editable frequencies. I
+ * think that such code could (somehow, maybe) support both compact
+ * storage for 4k and, at the same time, unlimited flexibility for
+ * unconstrained productions.
+ */
 static
 void
 synti2_updateEnvelopeStages(synti2_synth *s){
@@ -545,13 +565,17 @@ synti2_updateEnvelopeStages(synti2_synth *s){
   float nexttime;
   synti2_patch *pat;
 #ifndef NO_SAFETY
+  /* Looping over all-zero times produces an infinite iteration which
+   * is not nice, especially in a real-time audio system. So, there is
+   * an optional safety mechanism for real-time work. In a
+   * pre-determined 4k setting you'd know that the patches contain no
+   * zero-time loops, and turn off this watchdog.
+   */
   int iter_watch;
 #endif
 
   /* remember that voice == part under the new design decisions.. */
   for(iv=0; iv<NPARTS; iv++){
-    /* FIXME: See if this needs some "completely finished sound" logic*/
-
     pat = s->patch + iv;
 
     /* Envelope 0 is never touched. Therefore it yields a constant
@@ -560,35 +584,28 @@ synti2_updateEnvelopeStages(synti2_synth *s){
      * loop begins from envelope 1:
      */
     for (ie=1; ie<=NENVPERVOICE; ie++){
-      /*printf("At %d voice %d env %d\n", s->framecount.val, iv,ie); fflush(stdout);*/
-      if (s->estage[iv][ie] == 0) continue; /* skip untriggered envs.FIXME: needed?*/
-      /* Think... delta==0 on a triggered envelope means endclamp??
-         NOTE: Need to set delta=0 upon note on!! and estage ==
-         NSTAGES+1 or so (=6?) means go to attack.. */
+      if (s->estage[iv][ie] == 0) continue; /* skip untriggered. */
+
+      /* reverse order in the stages, so a bit awkward indexing. */
       ipastend = SYNTI2_F_ENVS + (ie+1) * SYNTI2_NENVD;
 
-      /* Find next non-zero-timed knee (or end.) */
 #ifndef NO_SAFETY
-      /* Looping over all-zero times produces an infinite iteration
-         which is not nice, especially in a real-time audio
-         system. So, there is an optional safety mechanism. */
       iter_watch = 0;
 #endif
-
+      /* Find next non-zero-timed knee (or end). delta==0 on a
+	 triggered envelope means endclamp/noteon. */
       while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){
 #ifndef NO_LOOPING_ENVELOPES
-        /* Seems to yield 55 bytes of compressed code!! Whyyy so much? */
+        /* The loop logic seems to yield 55 bytes of compressed code!!
+	 * Whyyy so much?  Hmm... the address computation becomes
+	 * filthy long. FIXME: Consider some tricks? Pre-computation?
+	 * Re-ordering of storage?
+	 */
         if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)){
-          /*jack_info("Part %d: Env %d Reached stage %d, looping to %d", 
-                    part, ie, s->estage[iv][ie], 
-                    (int)s->patch[part*SYNTI2_NPARAMS 
-                    + SYNTI2_IENVLOOP+ie]);*/
           s->estage[iv][ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
-
 #ifndef NO_SAFETY
           if ((iter_watch++) > 5) s->sustain[iv] = 0; /* stop ifinite loop. */
 #endif
-
         }
 #endif
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
@@ -596,17 +613,14 @@ synti2_updateEnvelopeStages(synti2_synth *s){
         s->eprog[iv][ie].aa = s->eprog[iv][ie].f;
         s->eprog[iv][ie].bb = nextgoal;
         if (nexttime <= 0.0f) {
-          /*No time -> skip envelope knee. Force value to the new
-            level (next goal). Delta remains at 0, and we may skip many.*/
+          /* No time -> skip envelope knee. Force value to the new
+           * level (next goal). Delta remains at 0, so we may skip many.
+           */
           s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
         } else {
-          s->eprog[iv][ie].val = 0; /*FIXME: Is it necessary to reset val?*/
+          s->eprog[iv][ie].val = 0;
           s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
         }
-        /*if ((iv==0) && (ie<2))
-          printf("v%02de%02d(Rx%02d): stage %d at %.2f to %.2f in %.2fs (d=%d) \n", 
-                    iv, ie, part, s->estage[iv][ie], s->eprog[iv][ie].aa, 
-                    s->eprog[iv][ie].bb, nexttime, s->eprog[iv][ie].delta);*/
       }
     }
   }
@@ -625,7 +639,11 @@ synti2_updateFrequencies(synti2_synth *s){
   /* Frequency computation... where to put it after all? */
   for (iv=0; iv<NPARTS; iv++){
     pat = s->patch + iv;
-    if (pat==NULL) continue;
+
+    /* FIXME: See if "completely finished sound" logic is required? I
+       think the following neverhappen was an early placeholder for
+       such... */
+    /* if (pat==NULL) continue; */
 
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
       /* TODO: Pitch-note follow ratio .. */

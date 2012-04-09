@@ -211,11 +211,11 @@ struct synti2_synth {
   counter framecount;
 
   /* Envelope stages just a table? TODO: think.*/
-  int estage[NPARTS][NENVPERVOICE+1];
-  int sustain[NPARTS];
+  unsigned int estage[NPARTS][NENVPERVOICE+1];
+  unsigned int sustain[NPARTS];
 
-  int note[NPARTS];
-  int velocity[NPARTS];
+  unsigned int note[NPARTS];
+  unsigned int velocity[NPARTS];
 
   float outp[NPARTS][1+NOSCILLATORS+4]; /*"zero", oscillator outputs, 
                                           filter storage.

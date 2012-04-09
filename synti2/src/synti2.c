@@ -290,9 +290,9 @@ static
 #endif
 void
 synti2_do_noteon(synti2_synth *s, 
-                 unsigned char voice, 
-                 unsigned char note, 
-                 unsigned char vel)
+                 unsigned int voice, 
+                 unsigned int note, 
+                 unsigned int vel)
 {
   int ie;
 
@@ -305,7 +305,6 @@ synti2_do_noteon(synti2_synth *s,
      zeroing the counters? sustain[voice]=vel is possible, if useful?*/
   /* note off */
   if (vel==0){
-    /* TODO: release all envelopes.. */
     for (ie=0; ie<=NENVPERVOICE; ie++){
       s->estage[voice][ie] = RELEASESTAGE; /* skip to end */
       s->eprog[voice][ie].delta = 0; /* skip to end */
@@ -319,10 +318,11 @@ synti2_do_noteon(synti2_synth *s,
   /* note on */
   s->note[voice] = note;
   s->velocity[voice] = vel;
-  s->sustain[voice] = 1;    /* FIXME: Needed only if loop env is used?*/
- 
-  /* TODO: trigger all envelopes according to patch data..  Just give
-     a hint to the evaluator function.. */
+#ifndef NO_LOOPING_ENVELOPES
+  s->sustain[voice] = vel;    /* FIXME: Needed only if loop env is used?*/
+#endif NO_LOOPING_ENVELOPES
+
+  /* Trigger all envelopes. Just give a hint to the evaluator function.. */
   for (ie=0; ie<=NENVPERVOICE; ie++){
     s->estage[voice][ie] = TRIGGERSTAGE;
     s->eprog[voice][ie].delta = 0;

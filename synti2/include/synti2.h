@@ -68,8 +68,8 @@ synti2_render(synti2_synth *s,
  *  -DEXTREME_NO_SEQUENCER and jam with generated calls to noteon().
  */
 void
-synti2_do_noteon(synti2_synth *s, unsigned char voice, 
-                 unsigned char note, unsigned char vel);
+synti2_do_noteon(synti2_synth *s, unsigned int voice, 
+                 unsigned int note, unsigned int vel);
 #endif
 
 

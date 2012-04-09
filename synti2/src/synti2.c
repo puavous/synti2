@@ -164,19 +164,15 @@ synti2_player_merge_chunk(synti2_player *pl,
       switch (type){
       case MISSS_LAYER_CONTROLLER_RAMPS:
 	/* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
-	/* FIXME: Is it possible to use the counter logic for these? */
+	/* FIXME: Is it possible to use the counter logic for these?
+	   Would be best, actually. Go with a few selectable
+	   controller targets, and the outside MIDI interface will map
+	   the inputs to internal numbers 0-3 or whatever we'll have... */
 	break;
-#if 0
-      case MISSS_LAYER_SYSEX_OR_ARBITRARY:
-        /* Not yet implemented. FIXME: not really necessary for 4k?
-	   I'm getting the feeling that in 4k playback mode this is
-	   definitely not needed. So I really only have two types of
-	   layers?*/
-	break;
-#endif
 #ifndef ULTRASMALL
       default:
-        /* Unexpected input; maybe handle somehow as an error.. */
+        /* Unexpected input; maybe handle somehow as an error while in
+	   development/debug/composition mode.. */
         break;
 #endif
       }
@@ -317,9 +313,9 @@ synti2_do_noteon(synti2_synth *s,
 #ifndef NO_NOTEOFF
   if (vel==0){
     for (ie=0; ie<=NENVPERVOICE; ie++){
-      s->estage[voice][ie] = RELEASESTAGE; /
+      s->estage[voice][ie] = RELEASESTAGE;
       s->eprog[voice][ie].delta = 0;
-      s->eprog[voice][ie].val = 0;   /* must skip also value!? FIXME: think(?)*/
+      /*s->eprog[voice][ie].val = 0;*/ /* I think this was unnecessary.. */
     }
     return; /* Note off done. */
   }
@@ -385,26 +381,32 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
 
 
 #ifndef NO_RECEIVE_SYSEX
-/** Receive arbitrary data (one instance of which can be the contents
- *  of a "MIDI SysEx"). (Convenient for sound editing, but not
- *  strictly necessary for stand-alone 4k synth. Therefore optional
- *  compilation). The actual SysEx things have been dealt with prior
- *  to entry, and this can receive just the bulk data.
+/** 
+ * Receive arbitrary data. (Convenient for sound editing, but not
+ * necessary for the stand-alone 4k synth. Hence, this is compiled
+ * only when real-time midi input is used at compose time. Also, this
+ * function is not space-restricted.)
  *
- * FIXME: Verify the sanity of this function... In particular (at
- * least): This is unlikely to be used in 4k mode, so there's no limit
- * in code size of this function. This is not visible to the outside,
- * so the 7 bit restriction from the MIDI sysex world is not necessary
- * if the 8th bit can be used for something more useful.
+ * The MIDI SysEx things have been dealt with prior to entry, and this
+ * can receive just the bulk data in native C data formats.
+ *
+ * FIXME: This is not visible to the outside, so the 7 bit restriction
+ * from the MIDI sysex world is not necessary if the 8th bit can be
+ * used for something more useful. Native types should be used. NOTE:
+ * The 7bit restriction is as invalid for all the other parts of the
+ * synth core, now that the MIDI interface is banished from here. And
+ * thus the 3bit parameters could be extended to as much as 4 bits?
+ * Only case when SysEx-type of information would be embedded in a
+ * composition is a (non-4k) executable song that whould like to
+ * extend sound features by reassigning something in a patch while the
+ * song is playing. Could synti2 live with disallowing such activity?
  *
  * FIXME: Verify the necessity of this function. There will be the
  * MIDI translator module in any case, so see if it could deal
- * directly with handleInput()
+ * directly with handleInput(). Fixing this issue requires to
+ * simultaneously look at the sound editor and maybe other tool
+ * programs.
  *
- * FIXME: The 7bit restriction is as invalid for all the other parts
- * of the synth core, now that the MIDI interface is cleaned away from
- * here. And thus the 3bit parameters could be extended to as much as
- * 4 bits?
  */
 static
 void
@@ -416,7 +418,7 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
   opcode = *data++; opcode <<= 7; opcode += *data++;  /* what to do */
   offset = *data++; offset <<= 7; offset += *data++;  /* in where */
 
-  /* "Sysex" data: */
+  /* "Sysex" type data: */
   /* As of yet, offset==patch index. TODO: More elaborate addressing? */
 
   if (opcode==MISSS_OP_FILL_PATCHES){
@@ -490,7 +492,11 @@ synti2_handleInput(synti2_synth *s,
 
     } else {
       /* Other messages are actually an error. */
-      /* FIXME: Handle somehow?
+      /* FIXME: Handle somehow? Overall, what should be done upon an
+	 error!? Maybe have some #ifndef ULTRASMALL with a location
+	 (frame) and type of last error. This could be polled by tools
+	 to see if songs/patches play without errors. Yes, Make it so
+	 (will "fix" all of these particular FIXME issues).
        */
     }
   }
@@ -506,8 +512,8 @@ synti2_handleInput(synti2_synth *s,
  * evM} to know which counters need clamping.
  *
  * FIXME: See if there would be size improvements from putting the
- * counters inside parts (and leave out the only global one,
- * framecount)
+ * counters inside parts (and leave out what seems to be the only
+ * global one, framecount)
  *
  * TODO: (Before future projects with re-designed synths) Evaluate if
  * this everything-is-a-counter thing was a good idea.
@@ -655,7 +661,8 @@ synti2_updateFrequencies(synti2_synth *s){
        * parameter?
        */
       /* FIXME: Do I want legato? Then note should be another counter
-	 per channel. */
+	 per channel, and yet another sound parameter to set the delta
+	 upon note-on. */
 
       notemod = s->note[iv];
 #ifndef NO_PITCH_ENV
@@ -718,8 +725,8 @@ static void apply_filter(synti2_synth *s,
                          synti2_patch *pat, 
                          float *store){
 #define FIL_IN 0
-#define FIL_BP 1
-#define FIL_LP 2
+#define FIL_LP 1
+#define FIL_BP 2
 #define FIL_HP 3
 #define FIL_NF 4
 
@@ -808,9 +815,13 @@ synti2_render(synti2_synth *s,
           interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
           interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
 #ifndef NO_VELOCITY
-          /* Optional velocity FIXME: think. Table lookup? Hmm.. */
+          /* Optional velocity sensitivity */
           if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
-            interm *= s->velocity[iv] / 127.f; /* Now just linear. */
+	    /* TODO: (in a later project) Table lookup? Now just
+             * linear velocity sensitivity, although tools could map
+             * it nonlinearly.
+             */
+            interm *= s->velocity[iv] / 127.f;
           }
 #endif
           *signal = interm;
@@ -831,7 +842,9 @@ synti2_render(synti2_synth *s,
            "feedback" operator. But the oscillator and envelope code
            and sound parameters may need some rethinking in that case
            (?) ... should make the delay line contents available in
-           sigin, and that's all, I guess.. looks easy enough?*/
+           sigin, and that's all, I guess.. looks easy enough? This
+           needs to be thought about while making some reverb
+           sound-alike. FIXME: Implement reverb somehow, btw. */
         dsamp = s->framecount.val;
         interm += s->delay[pat->ipar3[SYNTI2_I3_DIN]][dsamp % DELAYSAMPLES]
           * pat->fpar[SYNTI2_F_DINLV];

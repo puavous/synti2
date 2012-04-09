@@ -67,6 +67,10 @@
  * Hmm... Hey: reset is a ramp with zero time, isn't it?! 
  */
 #define MISSS_LAYER_CONTROLLER_RAMPS 0x04
+/* Not yet implemented. FIXME: not really necessary for 4k?
+   I'm getting the feeling that in 4k playback mode this is
+   definitely not needed. So I really only have two types of
+   layers? Yep, make it so. */
 #define MISSS_LAYER_SYSEX_OR_ARBITRARY 0x05
 #define MISSS_LAYER_NOTHING_AS_OF_YET1 0x06
 #define MISSS_LAYER_NOTHING_AS_OF_YET2 0x07

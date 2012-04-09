@@ -318,7 +318,7 @@ MisssChunk::do_write_header_as_c(std::ostream &outs){
   outs << ", " << std::endl;
   fmt_comment(outs, "Channel"); fmt_hexbyte(outs, out_channel);
   outs << ", " << std::endl;
-  fmt_comment(outs, "Type"); outs << "MISSS_LAYER_NOTES_CVEL_CPITCH";
+  fmt_comment(outs, "Type"); outs << "MISSS_LAYER_NOTES";
   outs << ", " << std::endl;
 }
 

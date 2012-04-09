@@ -53,27 +53,13 @@
  */
 
 
-/* These are pretty much fixed, as the implementation depends on bit
- * patterns! Layer storage is where we are space limited the most,
- * because the song data will be in layers.
+/* Hmm.. so far my file format contains only two kinds of layers (one
+ * of which is implemented...) Layer storage is where we are space
+ * limited the most, because the song data will be in layers. So maybe
+ * these should be combined with other header information?
  */
-/* Layer identifier nibbles 0-7. FIXME: Using only one currently!  */
 #define MISSS_LAYER_NOTES 0x00
-#define MISSS_LAYER_NOTES_CPITCH 0x02
-#define MISSS_LAYER_NOTES_CVEL 0x01
-#define MISSS_LAYER_NOTES_CVEL_CPITCH 0x03
-/* TODO: Do I need two different controller commands, or could I use
- * just one, somehow parameterized to be either reset or ramp each? 
- * Hmm... Hey: reset is a ramp with zero time, isn't it?! 
- */
-#define MISSS_LAYER_CONTROLLER_RAMPS 0x04
-/* Not yet implemented. FIXME: not really necessary for 4k?
-   I'm getting the feeling that in 4k playback mode this is
-   definitely not needed. So I really only have two types of
-   layers? Yep, make it so. */
-#define MISSS_LAYER_SYSEX_OR_ARBITRARY 0x05
-#define MISSS_LAYER_NOTHING_AS_OF_YET1 0x06
-#define MISSS_LAYER_NOTHING_AS_OF_YET2 0x07
+#define MISSS_LAYER_CONTROLLER_RAMPS 0x01
 
 /* Only two bits needed for real-time synth control: */
 #define MISSS_MSG_NOTE 0x00

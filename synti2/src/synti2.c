@@ -141,7 +141,7 @@ synti2_player_merge_chunk(synti2_player *pl,
 
     msg = pl->data + pl->idata; /* Get next available data pool spot */
 
-    if (type <= MISSS_LAYER_NOTES_CVEL_CPITCH){
+    if (type == MISSS_LAYER_NOTES){
       /* Produce a 'Note on' message in our internal midi-like format. */
       msg[0] = MISSS_MSG_NOTE;
       msg[1] = chan;
@@ -149,23 +149,23 @@ synti2_player_merge_chunk(synti2_player *pl,
       msg[3] = (par[1]==0xff) ? *r++ : par[1];
       synti2_player_event_add(pl, frame, msg, 4);
       pl->idata += 4; /* Update the data pool top */
-    } else {
-      switch (type){
-      case MISSS_LAYER_CONTROLLER_RAMPS:
-	/* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
-	/* FIXME: Is it possible to use the counter logic for these?
-	   Would be best, actually. Go with a few selectable
-	   controller targets, and the outside MIDI interface will map
-	   the inputs to internal numbers 0-3 or whatever we'll have... */
-	break;
+    } 
+#ifndef NO_CC
+    /* FIXME: In fact, if NO_CC is used, then notes are the only layer type.. */
+    else if (type == MISSS_LAYER_CONTROLLER_RAMPS) {
+      /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
+      /* FIXME: Is it possible to use the counter logic for these?
+	 Would be best, actually. Go with a few selectable
+	 controller targets, and the outside MIDI interface will map
+	 the inputs to internal numbers 0-3 or whatever we'll have... */
+    }
+#endif
 #ifndef ULTRASMALL
-      default:
+    else {
         /* Unexpected input; maybe handle somehow as an error while in
 	   development/debug/composition mode.. */
-        break;
-#endif
-      }
     }
+#endif
   }
   return (byte_t*) r;
 }

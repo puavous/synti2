@@ -162,8 +162,9 @@ synti2_player_merge_chunk(synti2_player *pl,
 #endif
 #ifndef ULTRASMALL
     else {
-        /* Unexpected input; maybe handle somehow as an error while in
-	   development/debug/composition mode.. */
+      pl->last_error_frame = frame;
+      pl->last_error_type = SYNTI2_ERROR_UNKNOWN_LAYER;
+      pl->last_error_info = type;
     }
 #endif
   }
@@ -423,9 +424,14 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
     pat->fpar[ir] = synti2_decode_fpar(data[0], data[1]);
-  } else {
-    /* Unknown opcode - should be an error. */
+  } 
+#ifndef ULTRASMALL
+  else {
+    s->last_error_frame = s->framecount.val;
+    s->last_error_type = SYNTI2_ERROR_UNKNOWN_OPCODE;
+    s->last_error_info = opcode;
   }
+#endif
 }
 #endif
 
@@ -479,15 +485,14 @@ synti2_handleInput(synti2_synth *s,
       synti2_do_receiveData(s, midibuf+1);
 #endif
 
-    } else {
-      /* Other messages are actually an error. */
-      /* FIXME: Handle somehow? Overall, what should be done upon an
-	 error!? Maybe have some #ifndef ULTRASMALL with a location
-	 (frame) and type of last error. This could be polled by tools
-	 to see if songs/patches play without errors. Yes, Make it so
-	 (will "fix" all of these particular FIXME issues).
-       */
+    } 
+#ifndef ULTRASMALL
+    else {
+      s->last_error_frame = s->framecount.val;
+      s->last_error_type = SYNTI2_ERROR_UNKNOWN_MESSAGE;
+      s->last_error_info = midibuf[0];
     }
+#endif
   }
   pl->frames_done = upto_frames; /* FIXME: used only by rt midi module?*/
 }

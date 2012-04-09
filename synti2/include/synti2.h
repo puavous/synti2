@@ -35,7 +35,9 @@
 #undef NO_PITCH_ENV
 #endif
 
-
+#define SYNTI2_ERROR_UNKNOWN_LAYER     1
+#define SYNTI2_ERROR_UNKNOWN_MESSAGE   2
+#define SYNTI2_ERROR_UNKNOWN_OPCODE    3
 
 typedef float synti2_smp_t;
 

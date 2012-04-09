@@ -160,6 +160,12 @@ struct synti2_player {
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
   /* Data for events. */
   byte_t data[SYNTI2_MAX_SONGBYTES];
+
+#ifndef ULTRASMALL
+  unsigned int last_error_frame; /* Errors can be monitored by tools. */
+  unsigned int last_error_type;  /* Error position. */
+  unsigned int last_error_info;  /* Some key information about the error. */
+#endif
 };
 
 
@@ -225,6 +231,12 @@ struct synti2_synth {
 
   float delay[NDELAYS][DELAYSAMPLES]; /* Use of delays is optional,
                                          but the space costs nothing..*/
+
+#ifndef ULTRASMALL
+  unsigned int last_error_frame; /* Errors can be monitored by tools. */
+  unsigned int last_error_type;  /* Error position. */
+  unsigned int last_error_info;  /* Some key information about the error. */
+#endif
 };
 
 

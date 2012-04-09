@@ -17,6 +17,14 @@ cube_thing:
 	make tinyexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO'
 	mv tinyexe cube_thing
 
+example1:
+	make tinyexe GFX=example/cube_thing_gfx.c \
+		SND=example/example1.s2bank \
+		SMF=example/example1.mid \
+		NONOS='-DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO -DNO_VELOCITY'
+	mv tinyexe $@
+
+
 jacksynti2:
 	make visexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid 
 	mv visexe jacksynti2

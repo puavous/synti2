@@ -34,14 +34,19 @@ static void produce_hell(){
 
 
   if ((tick) % 8 == 0){
-    st.patch[0].fpar[SYNTI2_F_LV3] = sin(hmm += .03);
-    st.patch[0].fpar[SYNTI2_F_LV4] = sin(hmm * .01);
+    st.patch[0].fpar[SYNTI2_F_LV3] = sin(hmm += .03f);
+    st.patch[0].fpar[SYNTI2_F_LV4] = sin(hmm * .01f);
     synti2_do_noteon(&st, 0, 32+beat*3+beat, 100);
   }
 
-  if ((tick) % 16 == 0){
+  if ((tick) % 32 == 0){
     synti2_do_noteon(&st, 1, 27, 100);
   }
+
+  if ((tick) % 32 == 15){
+    synti2_do_noteon(&st, 3, 27, 100);
+  }
+
 
   if ((tick) % 32 == 0){
     neat += 1;

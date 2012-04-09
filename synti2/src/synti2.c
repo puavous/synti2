@@ -650,11 +650,6 @@ synti2_updateFrequencies(synti2_synth *s){
   for (iv=0; iv<NPARTS; iv++){
     pat = s->patch + iv;
 
-    /* FIXME: See if "completely finished sound" logic is required? I
-       think the following neverhappen was an early placeholder for
-       such... */
-    /* if (pat==NULL) continue; */
-
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
       /* TODO: Pitch-note follow ratio (for drum/sfx) as an optional
        * parameter?
@@ -788,6 +783,9 @@ synti2_render(synti2_synth *s,
         pat = s->patch + iv;
         /* FIXME: Need logic for "unsounding"? Yes, an #ifndef NO_SKIP_DEAD
 	 but then what is the rule? op4amp? how about delay tricks then? */
+	/* I think the following neverhappen was an early placeholder for
+	   such... */
+	/* if (pat==NULL) continue; */
 
         sigin  = signal = &(s->outp[iv][0]);
   

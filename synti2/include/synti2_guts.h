@@ -82,7 +82,7 @@
 
 
 /* Audio delay storage. Less delays means less computation, faster synth.*/
-#define NDELAYS 2
+#define NDELAYS 4
 #define DELAYSAMPLES 0x10000
 
 

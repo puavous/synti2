@@ -4,7 +4,12 @@
 #
 # The C code for patch format is generated from this file.
 #
-# As of now (2012-02-15), the sound algorithm is still on sketch level.
+#
+# As of now (2012-04-11), the sound algorithm is finally almost
+# finished for synti2. Only some things related to stereo panning and
+# delay effect routing is still lacking from the original plan/dream. 
+# And then some other things... but not too many changes anyway.
+#
 #
 # TODO: Think if there should be a "global envelope bank"? Noo.. would
 # be too different from a "usual synth interface" which I want to aim
@@ -60,6 +65,7 @@
 [I3]
 # Index of the envelope whose end is end-of-life for the sound.
 # For "normal" patches this presumably is the carrier volume envelope..
+# Will I ever use this one? Problematic with delay channels..
 ELIFE LifeEnvelope 0 6 0 1
 
 HARM1 Op1Wav 0 7   0 5
@@ -115,10 +121,12 @@ ADDTO2 MixTo2 0 1   0 4
 ADDTO3 MixTo3 0 2   0 4
 ADDTO4 MixTo4 0 3   0 4
 
+# How many delay/connection lines are turned on for input
+# summation and how many for output spread. Maximum 4.
+NDIN DlyLinesIn  0 4 0 5
+NDOUT DlyLinesOut 0 4 0 5
 
-DIN  DelayLineIn  0 1 0 5
-DNUM DelayLineOut 0 1 0 5
-
+# Filter LP,BP,HP,Notch
 FILT FilterMode 0 3 0 16
 
 # Need an even number of 3-bit parameters:
@@ -164,16 +172,16 @@ ENV3K4L En3:4L 0 12.7   1 8
 ENV3K5T En3:5T 0 2.55   2 8
 ENV3K5L En3:5L 0 12.7   1 8
 
-ENV4K1T Env4Knee1Time  0 0.255   3 9
-ENV4K1L Env4Knee1Level -1.27 1.27   2 9
-ENV4K2T Env4Knee2Time  0 1.27   2 9
-ENV4K2L Env4Knee2Level -1.27 1.27   2 9
-ENV4K3T Env4Knee3Time  0 2.56   2 9
-ENV4K3L Env4Knee3Level -1.27 1.27   2 9
-ENV4K4T Env4Knee4Time  0 5.11   2 9
-ENV4K4L Env4Knee4Level -1.27 1.27   2 9
-ENV4K5T Env4Knee5Time  0 2.56   2 9
-ENV4K5L Env4Knee5Level -1.27 1.27   2 9
+ENV4K1T En4:1T  0 0.255   3 9
+ENV4K1L En4:1L -1.27 1.27   2 9
+ENV4K2T En4:2T  0 1.27   2 9
+ENV4K2L En4:2L -1.27 1.27   2 9
+ENV4K3T En4:3T  0 2.56   2 9
+ENV4K3L En4:3L -1.27 1.27   2 9
+ENV4K4T En4:4T  0 5.11   2 9
+ENV4K4L En4:4L -1.27 1.27   2 9
+ENV4K5T En4:5T  0 2.56   2 9
+ENV4K5L En4:5L -1.27 1.27   2 9
 
 ENV5K1T Env5Knee1Time  0  1.27   2 10
 ENV5K1L Env5Knee1Level -63 +64   0 10
@@ -199,7 +207,6 @@ ENV6K5L Env6Knee5Level -31.0 32.0   1 11
 
 # Detune/Relative fundamental pitch (added to "note from keyboard")
 # FIXME: This might be better as a normal CC -> MIDI-controllability
-# FIXME: Think about CCs overall
 
 # NOTE: Order of these is hardcoded as of 2012-03-04:
 
@@ -223,9 +230,22 @@ LV4 Oper4Level -8.0 8.0   2 15
 LVN NoiseLevel -8.0 8.0   2 15
 
 
-DINLV DelayInLev  0.0 1.0   2 16
-DLEN DelayLen  0.0 1.0   3 16
-DLEV DelayLev  0.0 1.0   2 16
+# Delay lines in/out; maximum 4 global lines:
+
+DINLV1 Dly1InLev  -1.0 1.0   2 16
+DINLV2 Dly2InLev  -1.0 1.0   2 16
+DINLV3 Dly3InLev  -1.0 1.0   2 16
+DINLV4 Dly4InLev  -1.0 1.0   2 16
+
+DLEN1 Dly1Length  0.0 1.0   3 17
+DLEN2 Dly2Length  0.0 1.0   3 17
+DLEN3 Dly3Length  0.0 1.0   3 17
+DLEN4 Dly4Length  0.0 1.0   3 17
+
+DLEV1 Dly1OutLev  0.0 1.0   2 18
+DLEV2 Dly2OutLev  0.0 1.0   2 18
+DLEV3 Dly3OutLev  0.0 1.0   2 18
+DLEV4 Dly4OutLev  0.0 1.0   2 18
 
 FFREQ Cutoff  0.0 80.0   2 17
 FRESO Resonance   0.0 1.0   2 17

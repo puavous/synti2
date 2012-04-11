@@ -790,7 +790,7 @@ synti2_render(synti2_synth *s,
               int nframes)
 {
   unsigned int dsamp;
-  int iframe, ii, iv;
+  int iframe, ii, iv, id;
   int iosc;
   float interm;
   int wtoffs;
@@ -829,73 +829,77 @@ synti2_render(synti2_synth *s,
       sigin  = signal = &(s->outp[iv][0]);
       
       for(iosc = 0; iosc < NOSCILLATORS; iosc++){
-	signal++; /* Go to next output slot. */
-	wtoffs = (unsigned int)
-	  ((s->c[iv*NOSCILLATORS+iosc].fr 
-	    + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* phase modulator */
-	   * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
+        signal++; /* Go to next output slot. */
+        wtoffs = (unsigned int)
+          ((s->c[iv*NOSCILLATORS+iosc].fr 
+            + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* phase modulator */
+           * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
 	
 #ifndef NO_EXTRA_WAVETABLES
-	interm  = s->wave[pat->ipar3[SYNTI2_I3_HARM1+iosc]][wtoffs];
+        interm  = s->wave[pat->ipar3[SYNTI2_I3_HARM1+iosc]][wtoffs];
 #else
-	interm  = s->wave[0][wtoffs];
+        interm  = s->wave[0][wtoffs];
 #endif
 	
-	/* parallel mix could be optional? Actually also FM could be? */
-	/* could reorganize I3 parameters for shorter code here(?): */
-	interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
-	interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
-	interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
+        /* parallel mix could be optional? Actually also FM could be? */
+        /* could reorganize I3 parameters for shorter code here(?): */
+        interm *= (s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
+        interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
+        interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
 #ifndef NO_VELOCITY
-	/* Optional velocity sensitivity */
-	if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
-	  /* TODO: (in a later project) Table lookup? Now just
-	   * linear velocity sensitivity, although tools could map
-	   * it nonlinearly.
-	   */
-	  interm *= s->velocity[iv] / 127.f;
-	}
+        /* Optional velocity sensitivity */
+        if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
+          /* TODO: (in a later project) Table lookup? Now just
+           * linear velocity sensitivity, although tools could map
+           * it nonlinearly.
+           */
+          interm *= s->velocity[iv] / 127.f;
+        }
 #endif
-	*signal = interm;
+        *signal = interm;
       }
       
       /* Optional additive noise after FM operator synthesis:
-	 (FIXME: could/should use wavetable for noise? Should try..) */
+         (FIXME: could/should use wavetable for noise? Should try..) */
 #ifndef NO_NOISE
       RandSeed *= 16807;
       interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
-	* pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
-	* (float)RandSeed * 4.6566129e-010f; /*noise*/
+        * pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
+        * (float)RandSeed * 4.6566129e-010f; /*noise*/
 #endif
       
 #ifndef NO_DELAY
-      /* Additive mix from a delay line. FIXME: Could have wild
-	 results from modulating with a delayed mix.. sort of like a
-	 "feedback" operator. But the oscillator and envelope code
-	 and sound parameters may need some rethinking in that case
-	 (?) ... should make the delay line contents available in
-	 sigin, and that's all, I guess.. looks easy enough? This
-	 needs to be thought about while making some reverb
-	 sound-alike. FIXME: Implement reverb somehow, btw. */
+      /* Additive mix from delay lines. FIXME: Could have wild
+         results from modulating with a delayed mix.. sort of like a
+         "feedback" operator. But the oscillator and envelope code
+         and sound parameters may need some rethinking in that case
+         (?) ... should make the delay line contents available in
+         sigin, and that's all, I guess.. looks easy enough? This
+         needs to be thought about while making some reverb
+         sound-alike. FIXME: Implement reverb somehow, btw. */
       dsamp = s->framecount.val;
-      interm += s->delay[pat->ipar3[SYNTI2_I3_DIN]][dsamp % DELAYSAMPLES]
-	* pat->fpar[SYNTI2_F_DINLV];
+      for (id = 0; id < pat->ipar3[SYNTI2_I3_NDIN]; id++){
+        interm += s->delay[id][dsamp % DELAYSAMPLES]
+          * pat->fpar[SYNTI2_F_DINLV1+id];
+      }
 #endif
       
 #ifndef NO_FILTER
       /* Skip for faster computation. Should do the same for delays! */
       if(pat->ipar3[SYNTI2_I3_FILT]) {
-	signal[0] = interm;
-	apply_filter(s, pat, signal);
-	interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
+        signal[0] = interm;
+        apply_filter(s, pat, signal);
+        interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
       }
 #endif
       
 #ifndef NO_DELAY
-      /* mix also to a delay line.*/
-      dsamp += (int)(pat->fpar[SYNTI2_F_DLEN] * s->sr);
-      s->delay[pat->ipar3[SYNTI2_I3_DNUM]][dsamp % DELAYSAMPLES] 
-	+= pat->fpar[SYNTI2_F_DLEV] * interm;
+      /* mix also to the delay lines.*/
+      for (id = 0; id < pat->ipar3[SYNTI2_I3_NDOUT]; id++){
+        dsamp = s->framecount.val + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * s->sr);
+        s->delay[id][dsamp % DELAYSAMPLES] 
+          += pat->fpar[SYNTI2_F_DLEV1+id] * interm;
+      }
 #endif
       
       /* result is both in *signal and in interm (like before). Mix
@@ -910,9 +914,10 @@ synti2_render(synti2_synth *s,
 #endif
     
 #ifndef NO_DELAY
-    /* "erase the delay tape" so it can be used again. */
-    for(dsamp=0; dsamp<NDELAYS; dsamp++){
-      s->delay[dsamp][s->framecount.val % DELAYSAMPLES] = 0.f; 
+    /* "erase the delay tape" so it can be used again. Must be done
+       after each channel has read the current contents. */
+    for(id=0; id<NDELAYS; id++){
+      s->delay[id][s->framecount.val % DELAYSAMPLES] = 0.f; 
     }
 #endif
   }

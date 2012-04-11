@@ -30,7 +30,8 @@ jacksynti2:
 	mv visexe jacksynti2
 
 withoutseq:
-	make tinyexe MAIN=tests/withoutseq.c SND=patches/miniFMset.s2bank SMF=example/minimal.mid GFX='' NONOS='-DNO_NOTHING -DEXTREME_NO_SEQUENCER'
+	make tinyexe MAIN=tests/withoutseq.c SND=patches/miniFMset.s2bank SMF=example/minimal.mid GFX='' \
+		NONOS='-DNO_NOTHING -DDO_RESET_PHASE -DEXTREME_NO_SEQUENCER'
 	mv tinyexe withoutseq
 
 pikkune:

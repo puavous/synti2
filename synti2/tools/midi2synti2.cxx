@@ -222,7 +222,7 @@ int cmd_line_only(int argc, char **argv){
   ifs.close();
 
   /* FIXME: This needs to be made into a parameter very soon: */
-  /*ms.decimateTime(2);*/
+  ms.decimateTime(2);
 
   MidiEventTranslator tr;
 

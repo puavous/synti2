@@ -207,18 +207,27 @@ synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
 }
 
 
-/* Some inline assembler for i387 sin. Doesn't seem to work. Why? */
+/* Some tentative inline assembler for i387 sin. No immediate size
+ * improvements were gained. I would still like to try this path, but
+ * then more than just the sine instruction should be done with
+ * assembly, and maybe the actual improvement would come from absolutely
+ * letting go of -lm, which would require bigger changes than what I'm
+ * prepared for, at the moment.
+ */
+#if 0
+static
 float asm_sin(float t){
   float result;
   asm(
     "fld %1\n"
     "fsin\n"
-    "fst %0\n"
+    "fstp %0\n"
     : "=m"(result)
     : "m"(t)
       );
   return result;
 }
+#endif
 
 /** Initialize a new synth instance. To make the code smaller, we
  *  assume that somebody else has made the allocation. It can be a
@@ -289,16 +298,12 @@ synti2_init(synti2_synth * s,
 
     t = (float)ii/(WAVETABLE_SIZE-1);
     s->rise[ii] = t; 
-    t *= 2*(float)M_PI;
-    s->wave[0][ii] = sin(t);
-    //s->wave[0][ii] += t; //asm_sin(2*M_PI * t);
-    /*FIXME: the wavetable things need some more attention.  Why is my
-inline assembly not working?*/
+    s->wave[0][ii] = sin(2*(float)M_PI*t);
 #ifndef NO_EXTRA_WAVETABLES
     t = (float)ii/(WAVETABLE_SIZE-1);
     for(wt=1; wt<NHARM; wt++){
       s->wave[wt][ii] = s->wave[wt-1][ii] 
-        + 1.f/(wt+1) * sinf(2*M_PI * (wt+1) * t);
+        + 1.f/(wt+1) * sinf(2*(float)M_PI * (wt+1) * t);
     }
 #endif
 

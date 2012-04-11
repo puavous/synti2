@@ -21,7 +21,7 @@ synti2_synth st;
 extern unsigned char patch_sysex[];
 
 static void produce_hell(){
-  static int tick = 0;
+  static int tick = -1;
   static int beat = 0;
   static int neat = 0;
   static float hmm = 0.f;
@@ -37,23 +37,25 @@ static void produce_hell(){
     st.patch[0].fpar[SYNTI2_F_LV3] = sin(hmm += .03f);
     st.patch[0].fpar[SYNTI2_F_LV4] = sin(hmm * .01f);
     synti2_do_noteon(&st, 0, 32+beat*3+beat, 100);
+    synti2_do_noteon(&st, 3, 27, 100);
   }
 
   if ((tick) % 32 == 0){
     synti2_do_noteon(&st, 1, 27, 100);
   }
 
-  if ((tick) % 32 == 15){
-    synti2_do_noteon(&st, 3, 27, 100);
+  if ((tick) % 64 == 32){
+    synti2_do_noteon(&st, 2, 62, 100);
   }
 
 
+  /*
   if ((tick) % 32 == 0){
     neat += 1;
     neat &= 0x7f;
-    synti2_do_noteon(&st, 2, neat, 100);
+    synti2_do_noteon(&st, 3, neat, 100);
   }
-
+  */
 #endif
 }
 

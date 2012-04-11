@@ -207,6 +207,18 @@ synti2_player_init_from_misss(synti2_player *pl, const byte_t *r)
 }
 
 
+/* Some inline assembler for i387 sin. Doesn't seem to work. Why? */
+float asm_sin(float t){
+  float result;
+  asm(
+    "fld %1\n"
+    "fsin\n"
+    "fst %0\n"
+    : "=m"(result)
+    : "m"(t)
+      );
+  return result;
+}
 
 /** Initialize a new synth instance. To make the code smaller, we
  *  assume that somebody else has made the allocation. It can be a
@@ -220,6 +232,7 @@ synti2_init(synti2_synth * s,
 {
   int ii, wt;
   float t;
+  float hack;
 
   memset(s, 0, sizeof(s));     /* zero */
 
@@ -276,9 +289,13 @@ synti2_init(synti2_synth * s,
 
     t = (float)ii/(WAVETABLE_SIZE-1);
     s->rise[ii] = t; 
-    s->wave[0][ii] += sinf(2*M_PI * t);
-
+    t *= 2*(float)M_PI;
+    s->wave[0][ii] = sin(t);
+    //s->wave[0][ii] += t; //asm_sin(2*M_PI * t);
+    /*FIXME: the wavetable things need some more attention.  Why is my
+inline assembly not working?*/
 #ifndef NO_EXTRA_WAVETABLES
+    t = (float)ii/(WAVETABLE_SIZE-1);
     for(wt=1; wt<NHARM; wt++){
       s->wave[wt][ii] = s->wave[wt-1][ii] 
         + 1.f/(wt+1) * sinf(2*M_PI * (wt+1) * t);

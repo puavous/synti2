@@ -258,9 +258,18 @@ synti2_init(synti2_synth * s,
    * a bigger table here and let the pitch envelopes go beyond the
    * beyond!
    */
+  /* slightly inaccurate notes but without powf(). Many bytes shorter exe. */
+  /* FIXME: Listen and check if the output is tolerable! */
+  float freqf = 8.175798915643707f;
+  for(ii=0;ii<128;ii++){
+    s->note2freq[ii] = freqf;
+    freqf *= 1.0594630943592953f;
+  }
+#if 0
   for(ii=0; ii<128; ii++){
     s->note2freq[ii] = 440.0f * powf(2.0f, ((float)ii - 69.0f) / 12.0f );
   }
+#endif
 
   for(ii=0; ii<WAVETABLE_SIZE; ii++){
     /*s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));*/

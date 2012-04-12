@@ -51,8 +51,8 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
 
   frame += len/4;
   for(i=0;i<len/2;i+=2){
-    ((Sint16*)stream)[i+0] = (Sint16)(audiobuf[i/2]*vol); 
-    ((Sint16*)stream)[i+1] = (Sint16)(audiobuf[i/2]*vol);
+    ((Sint16*)stream)[i+0] = (Sint16)(audiobuf[i+0]*vol); 
+    ((Sint16*)stream)[i+1] = (Sint16)(audiobuf[i+1]*vol);
   }
 }
 

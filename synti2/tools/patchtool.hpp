@@ -88,6 +88,10 @@ namespace synti2{
 
     /** Returns the index of "name" in map["type"]. */
     int getValueID(std::string type, std::string name){
+      if (parind[type].count(name) == 0) {
+        return -1;
+      }
+
       return parind[type][name];
     }
 

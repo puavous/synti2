@@ -64,8 +64,8 @@ process_audio (jack_nframes_t nframes)
   synti2_render(&global_synth, global_buffer, nframes); 
 
   for (i=0;i<nframes;i++){
-    bufferL[i] = global_buffer[i];
-    bufferR[i] = global_buffer[i];
+    bufferL[i] = global_buffer[2*i];
+    bufferR[i] = global_buffer[2*i+1];
   }
 }
 

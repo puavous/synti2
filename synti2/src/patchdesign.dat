@@ -183,31 +183,38 @@ ENV4K4L En4:4L -1.27 1.27   2 9
 ENV4K5T En4:5T  0 2.56   2 9
 ENV4K5L En4:5L -1.27 1.27   2 9
 
-ENV5K1T Env5Knee1Time  0  1.27   2 10
-ENV5K1L Env5Knee1Level -63 +64   0 10
-ENV5K2T Env5Knee2Time  0  1.27   2 10
-ENV5K2L Env5Knee2Level -63 +64   0 10
-ENV5K3T Env5Knee3Time  0  1.27   2 10
-ENV5K3L Env5Knee3Level -63 +64   0 10
-ENV5K4T Env5Knee4Time  0  1.27   2 10
-ENV5K4L Env5Knee4Level -63 +64   0 10
-ENV5K5T Env5Knee5Time  0  1.27   2 10
-ENV5K5L Env5Knee5Level -63 +64   0 10
+ENV5K1T En5:1T  0  1.27   2 10
+ENV5K1L En5:1L -63 +64   0 10
+ENV5K2T En5:2T  0  1.27   2 10
+ENV5K2L En5:2L -63 +64   0 10
+ENV5K3T En5:3T  0  1.27   2 10
+ENV5K3L En5:3L -63 +64   0 10
+ENV5K4T En5:4T  0  1.27   2 10
+ENV5K4L En5:4L -63 +64   0 10
+ENV5K5T En5:5T  0  1.27   2 10
+ENV5K5L En5:5L -63 +64   0 10
 
-ENV6K1T Env6Knee1Time  0 1.27   2  11
-ENV6K1L Env6Knee1Level -31.0 32.0   1 11
-ENV6K2T Env6Knee2Time  0 1.27   2 11
-ENV6K2L Env6Knee2Level -31.0 32.0   1 11
-ENV6K3T Env6Knee3Time  0 1.27   2 11
-ENV6K3L Env6Knee3Level -31.0 32.0   1 11
-ENV6K4T Env6Knee4Time  0 1.27   2 11
-ENV6K4L Env6Knee4Level -31.0 32.0   1 11
-ENV6K5T Env6Knee5Time  0 1.27   2 11
-ENV6K5L Env6Knee5Level -31.0 32.0   1 11
+ENV6K1T En6:1T  0 1.27   2  11
+ENV6K1L En6:1L -31.0 32.0   1 11
+ENV6K2T En6:2T  0 1.27   2 11
+ENV6K2L En6:2L -31.0 32.0   1 11
+ENV6K3T En6:3T  0 1.27   2 11
+ENV6K3L En6:3L -31.0 32.0   1 11
+ENV6K4T En6:4T  0 1.27   2 11
+ENV6K4L En6:4L -31.0 32.0   1 11
+ENV6K5T En6:5T  0 1.27   2 11
+ENV6K5L En6:5L -31.0 32.0   1 11
+
+# Source Levels (before multiplicative amplitude envelope)
+# This is for additional "gain" or phase inversion.
+
+LV1 Oper1Level -8.0 8.0   2 15
+LV2 Oper2Level -8.0 8.0   2 15
+LV3 Oper3Level -8.0 8.0   2 15
+LV4 Oper4Level -8.0 8.0   2 15
+LVN NoiseLevel -8.0 8.0   2 15
 
 # Detune/Relative fundamental pitch (added to "note from keyboard")
-# FIXME: This might be better as a normal CC -> MIDI-controllability
-
 # NOTE: Order of these is hardcoded as of 2012-03-04:
 
 DT1  Op1Detune  -48.0 48.0   1 12
@@ -219,15 +226,11 @@ DT2F Op2Fine     -.5  .5     3 13
 DT3F Op3Fine     -.5  .5     3 13
 DT4F Op4Fine     -.5  .5     3 13
 
+# Notes to bend at positive maximum:
+PBAM  BendAmount 0.0 12.0 1 18
+# Bend value, not for editing but for pitch bend messages.
+PBVAL NOT_Editable -1.0  1.0  2 18
 
-# Source Levels (before multiplicative amplitude envelope)
-# This is for additional "gain" or phase inversion. TODO: Is this useful?
-
-LV1 Oper1Level -8.0 8.0   2 15
-LV2 Oper2Level -8.0 8.0   2 15
-LV3 Oper3Level -8.0 8.0   2 15
-LV4 Oper4Level -8.0 8.0   2 15
-LVN NoiseLevel -8.0 8.0   2 15
 
 
 # Delay lines in/out; maximum 4 global lines:
@@ -236,6 +239,9 @@ DINLV1 Dly1InLev  -1.0 1.0   2 16
 DINLV2 Dly2InLev  -1.0 1.0   2 16
 DINLV3 Dly3InLev  -1.0 1.0   2 16
 DINLV4 Dly4InLev  -1.0 1.0   2 16
+
+FFREQ Cutoff  0.0 80.0   2 17
+FRESO Resonance   0.0 1.0   2 17
 
 DLEN1 Dly1Length  0.0 1.0   3 17
 DLEN2 Dly2Length  0.0 1.0   3 17
@@ -247,15 +253,10 @@ DLEV2 Dly2OutLev  0.0 1.0   2 18
 DLEV3 Dly3OutLev  0.0 1.0   2 18
 DLEV4 Dly4OutLev  0.0 1.0   2 18
 
-FFREQ Cutoff  0.0 80.0   2 17
-FRESO Resonance   0.0 1.0   2 17
-
-PBAM  BendAmount 0.0 12.0 1 18
-# Bend value, not for editing but for pitch bend messages.
-PBVAL NOT_Editable -1.0  1.0  2 18
+MIXLEV MixLevel 0.0 1.0  2 19
+MIXPAN MixPan  -1.0 1.0  2 19
 
 # Other patch data.. Hmm.. playground as of now:
-
 
 # Pitch note follow ratio (TODO: Useful?) Not using this
 # so-far.. could be nice for tom sounds, spezial effects, or for

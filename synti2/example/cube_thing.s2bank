@@ -485,6 +485,7 @@ xxx 0
 rampu
 # Patch data for 'rampu'begins
 [F]
+MIXLEV 1
 ENVS 0.004
 ENV1K1L 1
 ENV1K2T 1.27
@@ -606,6 +607,7 @@ xxx 0
 toystring
 # Patch data for 'toystring'begins
 [F]
+MIXLEV 1
 ENVS 0.007
 ENV1K1L 1.27
 ENV1K2T 0.08
@@ -727,6 +729,7 @@ xxx 0
 toystring
 # Patch data for 'toystring'begins
 [F]
+MIXLEV 1
 ENVS 0
 ENV1K1L 0
 ENV1K2T 0
@@ -969,6 +972,7 @@ xxx 0
 bass
 # Patch data for 'bass'begins
 [F]
+MIXLEV 1
 ENVS 0.003
 ENV1K1L 1
 ENV1K2T 0.33
@@ -1090,6 +1094,7 @@ xxx 0
 BDtry
 # Patch data for 'BDtry'begins
 [F]
+MIXLEV 1
 ENVS 0.001
 ENV1K1L 1.27
 ENV1K2T 0.15
@@ -1211,6 +1216,7 @@ xxx 0
 SDtry
 # Patch data for 'SDtry'begins
 [F]
+MIXLEV 1
 ENVS 0
 ENV1K1L 1.27
 ENV1K2T 0.07
@@ -1332,6 +1338,7 @@ xxx 0
 kohinn
 # Patch data for 'kohinn'begins
 [F]
+MIXLEV 1
 ENVS 0
 ENV1K1L 1
 ENV1K2T 0.02

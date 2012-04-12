@@ -815,7 +815,8 @@ synti2_render(synti2_synth *s,
     synti2_evalCounters(s);  /* .. apparently yes ..*/
       
     /* Sound output. Getting more realistic as we speak... */
-    buffer[iframe] = 0.0f;
+    buffer[2*iframe] = 0.0f;
+    buffer[2*iframe+1] = 0.0f;
       
     for(iv=0;iv<NPARTS;iv++){
 
@@ -902,15 +903,23 @@ synti2_render(synti2_synth *s,
       }
 #endif
       
-      /* result is both in *signal and in interm (like before). Mix
-       * (no stereo as of yet) FIXME: stereo mix, pan/panenv?.
-       */
-      buffer[iframe] += interm;
-      
+      /* result is both in *signal and in interm (like before). Main
+       * mix in either mono or stereo. FIXME: pan/panenv? */
+      /* FIXME: Look at synti for some preliminary size optimization.. */
+#ifdef NO_STEREO
+      buffer[2*iframe]   += pat->fpar[SYNTI2_F_MIXLEV] * interm;
+      buffer[2*iframe+1] += pat->fpar[SYNTI2_F_MIXLEV] * interm;
+#else
+      /* To cut down computations, panning increases volume ([0,2]): */
+      float pan = pat->fpar[SYNTI2_F_MIXPAN];
+      buffer[2*iframe]   += interm * (1.f-pan);
+      buffer[2*iframe+1] += interm * (1.f+pan);
+#endif
     }
     
 #ifndef NO_OUTPUT_SQUASH
-    buffer[iframe] = sin(buffer[iframe]); /*Hack, but sounds nice*/
+    buffer[2*iframe]   = sin(buffer[2*iframe]); /*Hack, but sounds nice*/
+    buffer[2*iframe+1] = sin(buffer[2*iframe+1]); /*Hack, but sounds nice*/
 #endif
     
 #ifndef NO_DELAY

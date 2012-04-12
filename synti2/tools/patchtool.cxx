@@ -247,13 +247,17 @@ synti2::Patch::read(std::istream &ifs){
     std::string parvals = line_chop(line);
     float val = std::strtod(parvals.c_str(), 0);
     int paraddr = pd->getValueID(curr_section, parname);
-    /* FIXME: Check if we don't have the corresponding index!! */
+
+    if (paraddr < 0) {
+      std::cerr << "Skipping! Not a "
+                << curr_section << "-parameter name in current format: " 
+                << parname << std::endl;
+      continue;
+    }
     setValue(curr_section, paraddr, val);
-    /*    std::cerr << "FIXME: read logic not implemented yet. Skipping "
-              << curr_section << "_" << parname << " " << val << " " << paraddr
-              << std::endl;
-    */
   }
+
+  
 }
 
 

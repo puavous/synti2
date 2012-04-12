@@ -815,8 +815,12 @@ synti2_render(synti2_synth *s,
     synti2_evalCounters(s);  /* .. apparently yes ..*/
       
     /* Sound output. Getting more realistic as we speak... */
+    /* TODO: Compare size and speed with zeroing the whole 
+       buffer by memset prior to synthesis. */
     buffer[2*iframe] = 0.0f;
+#ifndef NO_STEREO
     buffer[2*iframe+1] = 0.0f;
+#endif
       
     for(iv=0;iv<NPARTS;iv++){
 
@@ -907,8 +911,8 @@ synti2_render(synti2_synth *s,
        * mix in either mono or stereo. FIXME: pan/panenv? */
       /* FIXME: Look at synti for some preliminary size optimization.. */
 #ifdef NO_STEREO
+      /* We only output to the left channel. */
       buffer[2*iframe]   += pat->fpar[SYNTI2_F_MIXLEV] * interm;
-      buffer[2*iframe+1] += pat->fpar[SYNTI2_F_MIXLEV] * interm;
 #else
       /* To cut down computations, panning increases volume ([0,2]): */
       float pan = pat->fpar[SYNTI2_F_MIXPAN];

@@ -1,6 +1,7 @@
 pim
 # Patch data for 'pim'begins
 [F]
+MIXLEV 1
 ENVS 0.001
 ENV1K1L 0
 ENV1K2T 0
@@ -124,6 +125,7 @@ xxx 0
 BD_FMonly2
 # Patch data for 'BD_FMonly2'begins
 [F]
+MIXLEV 1
 ENVS 0.001
 ENV1K1L 1
 ENV1K2T 0.16
@@ -247,6 +249,7 @@ xxx 0
 haro
 # Patch data for 'haro'begins
 [F]
+MIXLEV 1
 ENVS 0.001
 ENV1K1L 1
 ENV1K2T 0.1
@@ -370,6 +373,7 @@ xxx 0
 HH_FMonly
 # Patch data for 'HH_FMonly'begins
 [F]
+MIXLEV 1
 ENVS 0.001
 ENV1K1L 1
 ENV1K2T 0.03

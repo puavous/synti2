@@ -514,9 +514,9 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     vi->callback(cb_new_i3_value);
   }
 
-  py=80; w=200;
+  py=80; w=160;
   int npars = pd->nPars("F");
-  int ncols = 3;
+  int ncols = 4;
   int nrows = (npars / ncols) + 1;
   int i = 0;
   for (int col=0; col < ncols; col++){
@@ -524,7 +524,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
       if (i==npars) break;
       /* Need to store all ptrs and have attach_to_values() */
       Fl_Roller *vsf = 
-        new Fl_Roller(px+col*400,py+row*(h+sp),w,h);
+        new Fl_Roller(px+col*285,py+row*(h+sp),w,h);
       widgets_f.push_back(vsf);
       /* FIXME: think? */
       vsf->bounds(pd->getMin("F",i),pd->getMax("F",i)); 

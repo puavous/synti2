@@ -160,13 +160,16 @@ synti2_player_merge_chunk(synti2_player *pl,
       pl->idata += 4; /* Update the data pool top */
     } 
 #ifndef NO_CC
-    /* FIXME: In fact, if NO_CC is used, then notes are the only layer type.. */
+    /* FIXME: In fact, if NO_CC is used, then notes are the only layer
+     * type.. Could optimize away the whole layer byte in that case,
+     * maybe... but then again, that might be just excess...
+     */
     else if (type == MISSS_LAYER_CONTROLLER_RAMPS) {
       /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
       /* FIXME: Is it possible to use the counter logic for these?
-	 Would be best, actually. Go with a few selectable
-	 controller targets, and the outside MIDI interface will map
-	 the inputs to internal numbers 0-3 or whatever we'll have... */
+         Would be best, actually. Go with a few selectable
+         controller targets, and the outside MIDI interface will map
+         the inputs to internal numbers 0-3 or whatever we'll have... */
     }
 #endif
 #ifndef ULTRASMALL
@@ -281,7 +284,7 @@ synti2_init(synti2_synth * s,
    * beyond!
    */
   /* slightly inaccurate notes but without powf(). Many bytes shorter exe. */
-  /* FIXME: Listen and check if the output is tolerable! */
+  /* My ears find the result very tolerable; I don't know about others... */
   float freqf = 8.175798915643707f;
   for(ii=0;ii<128;ii++){
     s->note2freq[ii] = freqf;
@@ -549,6 +552,9 @@ synti2_handleInput(synti2_synth *s,
  * counters inside parts (and leave out what seems to be the only
  * global one, framecount)
  *
+ * FIXME: Controllers would sound nicer if they were clamping counters
+ * (no artefacts from discrete value jumps)
+ *
  * TODO: (Before future projects with re-designed synths) Evaluate if
  * this everything-is-a-counter thing was a good idea.
  */
@@ -589,8 +595,9 @@ synti2_evalCounters(synti2_synth *s){
  * synti2 synth, mostly because I feel that it is simple in a
  * musician-friendly way, which is one leading design principle for
  * synti2, even though it might conflict with the size
- * constraints. Another reason is that it was in the original plan,
- * and I want to fix the feature set of synti2 very soon.
+ * constraints. Another reason is simply that it was in the original
+ * plan, and I don't want to wander too much off from it, even if
+ * better ideas may have been appearing during the project.
  *
  * TODO: (In some later, re-designed project) the envelope code could
  * be made simpler by letting go of the whole loop idea, and, instead,
@@ -603,7 +610,7 @@ synti2_evalCounters(synti2_synth *s){
  * combinations of constant+anyWaveTable at editable frequencies. I
  * think that such code could (somehow, maybe) support both compact
  * storage for 4k and, at the same time, unlimited flexibility for
- * unconstrained productions.
+ * sound design, when size limitations need not to be considered.
  */
 static
 void
@@ -645,12 +652,12 @@ synti2_updateEnvelopeStages(synti2_synth *s){
       while ((s->eprog[iv][ie].delta == 0) && ((--s->estage[iv][ie]) > 0)){
 #ifndef NO_LOOPING_ENVELOPES
         /* The loop logic seems to yield 55 bytes of compressed code!!
-	 * Whyyy so much?  Hmm... the address computation becomes
-	 * filthy long. FIXME: Consider some tricks? Pre-computation?
-	 * Re-ordering of storage? Part-wise storage ordering seems to
-	 * appear in many of these remaining questions... so that may
-	 * be worth trying.
-	 */
+         * Whyyy so much?  Hmm... the address computation becomes
+         * filthy long. FIXME: Consider some tricks? Pre-computation?
+         * Re-ordering of storage? Part-wise storage ordering seems to
+         * appear in many of these remaining questions... so that may
+         * be worth trying.
+         */
         if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)){
           s->estage[iv][ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
 #ifndef NO_SAFETY
@@ -664,7 +671,11 @@ synti2_updateEnvelopeStages(synti2_synth *s){
         s->eprog[iv][ie].bb = nextgoal;
         if (nexttime <= 0.0f) {
           /* No time -> skip envelope knee. Force value to the new
-           * level (next goal). Delta remains at 0, so we may skip many.
+           * level (next goal). Delta remains at 0, so we may skip
+           * many.  FIXME: There will be a value jump here. Should we
+           * instead force a minimum time of 0.001 seconds or 20
+           * samples or something? Try it... OR: what happens if we
+           * just don't force f:=bb in here?
            */
           s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
         } else {
@@ -694,9 +705,9 @@ synti2_updateFrequencies(synti2_synth *s){
       /* TODO: Pitch-note follow ratio (for drum/sfx) as an optional
        * parameter?
        */
-      /* FIXME: Do I want legato? Then note should be another counter
-	 per channel, and yet another sound parameter to set the delta
-	 upon note-on. */
+      /* FIXME: Do I want legato? Then note should be another clamping
+         counter per channel, and yet another sound parameter to set the
+         delta upon note-on. */
 
       notemod = s->note[iv];
 #ifndef NO_PITCH_ENV
@@ -710,12 +721,12 @@ synti2_updateFrequencies(synti2_synth *s){
 
 #ifndef NO_PITCH_BEND
       /* Pitch bends for all oscillators. FIXME: Allow weird effects
-	 by [SYNTI2_F_PBAM+iosc]? In code, it is only one plus; in
-	 patch data it is number of channels times number of
-	 oscillators fpars, which is a lot. Unless I come up with a
-	 new, sparse, storage for the patch data. Hmm.. why not,
-	 indeed.. So do that, and leave the actual fixme which is the
-	 storage format. */
+         by [SYNTI2_F_PBAM+iosc]? In code, it is only one plus; in
+         patch data it is number of channels times number of
+         oscillators fpars, which is a lot. Unless I come up with a
+         new, sparse, storage for the patch data. Hmm.. why not,
+         indeed.. So do that, and leave the actual fixme which is the
+         storage format. */
       notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM];
 #endif
 
@@ -908,8 +919,7 @@ synti2_render(synti2_synth *s,
 #endif
       
       /* result is both in *signal and in interm (like before). Main
-       * mix in either mono or stereo. FIXME: pan/panenv? */
-      /* FIXME: Look at synti for some preliminary size optimization.. */
+       * mix in either mono or stereo. FIXME: panenv? */
 #ifdef NO_STEREO
       /* We only output to the left channel. */
       buffer[2*iframe]   += pat->fpar[SYNTI2_F_MIXLEV] * interm;

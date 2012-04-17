@@ -21,25 +21,44 @@ synti2_synth st;
 extern unsigned char patch_sysex[];
 
 static void produce_hell(){
+  static unsigned int note[] = {0 , 33, 55, 27};
+  static unsigned int pat[] = {
+    0x00000000,
+    0x922292ae,
+    0x08090809,
+    0xbaaabaeb};
   static int tick = -1;
-  static int beat = 0;
-  static int neat = 0;
+  //static int beat = 0;
+  //static int neat = 0;
   static float hmm = 0.f;
+  int i;
+  int bits;
 
   tick++;
-  beat = tick >> 4;
-  tick &= 0x3f;
+  //beat = tick >> 4;
+  //tick &= 0x3f;
 
 #ifdef EXTREME_NO_SEQUENCER
 
-
+  
   if ((tick) % 8 == 0){
-    st.patch[0].fpar[SYNTI2_F_LV3] = sin(hmm += .03f);
-    st.patch[0].fpar[SYNTI2_F_LV4] = sin(hmm * .01f);
-    synti2_do_noteon(&st, 0, 32+beat*3+beat, 100);
-    synti2_do_noteon(&st, 3, 27, 100);
+    hmm += .02f;
+    st.patch[0].fpar[SYNTI2_F_LV1] = sin(hmm *.02f);
+    st.patch[0].fpar[SYNTI2_F_LV2] = sin(hmm *.05f);
+    st.patch[0].fpar[SYNTI2_F_LV3] = sin(hmm *.49f);
+    //st.patch[0].fpar[SYNTI2_F_LV4] = .4f+sin(hmm * .01f);
+    //synti2_do_noteon(&st, 0, 32+beat*3+beat, 100);
+    synti2_do_noteon(&st, 0, 42+(pat[1]&13), 100);
+    for(i=0;i<4;i++){
+      bits = pat[i];
+      if (bits >> 31) {
+	synti2_do_noteon(&st, i, note[i], 100);
+      }
+      pat[i] = (bits >> 31) ? (bits << 1)+1 : (bits << 1);
+    }
   }
 
+  /*
   if ((tick) % 32 == 0){
     synti2_do_noteon(&st, 1, 27, 100);
   }
@@ -47,7 +66,7 @@ static void produce_hell(){
   if ((tick) % 64 == 32){
     synti2_do_noteon(&st, 2, 62, 100);
   }
-
+  */
 
   /*
   if ((tick) % 32 == 0){
@@ -68,7 +87,7 @@ static void produce_hell(){
 static void sound_callback(void *udata, Uint8 *stream, int len)
 {
   int i;
-  static const float vol = 10000.0f;
+  static const float vol = 30000.0f;
   
   produce_hell();
   /* Call our own synth engine and convert samples to native type (SDL) */

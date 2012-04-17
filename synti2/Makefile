@@ -31,7 +31,7 @@ jacksynti2:
 
 withoutseq:
 	make tinyexe MAIN=tests/withoutseq.c SND=patches/miniFMset.s2bank SMF=example/minimal.mid GFX='' \
-		NONOS='-DNO_NOTHING -DDO_RESET_PHASE -DEXTREME_NO_SEQUENCER'
+		NONOS='-DNO_NOTHING -DBUT_USE_OUTPUT_SQUASH -DDO_RESET_PHASE -DEXTREME_NO_SEQUENCER'
 	mv tinyexe withoutseq
 
 pikkune:

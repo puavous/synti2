@@ -31,9 +31,18 @@
 #undef NO_DETUNE
 #endif
 
+#ifdef BUT_USE_NOISE
+#undef NO_NOISE
+#endif
+
 #ifdef BUT_USE_PITCH_ENV
 #undef NO_PITCH_ENV
 #endif
+
+#ifdef BUT_USE_OUTPUT_SQUASH
+#undef NO_OUTPUT_SQUASH
+#endif
+
 
 #define SYNTI2_ERROR_UNKNOWN_LAYER       1
 #define SYNTI2_ERROR_UNKNOWN_MESSAGE     2

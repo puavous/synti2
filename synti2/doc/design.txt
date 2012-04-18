@@ -1,0 +1,56 @@
+Some implementation notes.
+
+Final decisions and their rationale
+-----------------------------------
+
+I don't find many valid reasons (at least for myself) to take up such
+a silly and time consuming spare-time project as programming a tiny
+software synthesizer. The most defining and basic reson in this case
+was that I wanted to learn some new things, and to prove to myself
+with a finalized artefact that I have gained a substantial amount of
+knowledge on the initially chosen topics. Most of the final
+technology-limiting decisions arise quite directly from this
+fundamental goal setting.
+
+- The core synthesis part of Synti2 is implemented in pure, portable
+  ANSI C. For this project, one of the learning goals was the details
+  of creating a portable ANSI C program. While the project is still
+  going on in its final stages, I am already developing an
+  overwhelming urge to learn some contemporary x86_64 assembler
+  programming, and the hunger is growing to make the synth smaller,
+  leaner, and faster by applying floating point machine instructions
+  directly in assembly language. But I must soon get to the end of
+  this project, and leave assembly implementation, among other new
+  interests, for some future endeavour. Any inner loop in assembly
+  would immediately break this aspect of synti2, and couple it with a
+  specific processor model. The actual portability, of course, remains
+  to be proved by trying out different compilers and platforms. I'm
+  sure there is a bunch of stuff to learn in that process. As to
+  versions of C, I believe it will be my next goal to learn what new
+  things C99 offers and use them to the full extent in a later
+  project. But I'll take up one standard at a time.
+
+- Synti2 does not have a "proper" reverberation effect. It was one of
+  my goals to learn how digital reverb effect algorithms work, and
+  maybe even include one in synti2. There was as much learning as I
+  needed on this part, but I'll take the implementation part over to
+  some later project, simply to cut down the calendar time required to
+  finish with this one.
+
+- Synti2 is a "fully-featured" synthesizer, even if it costs in
+  executable file size. A main goal was to create a musically useable
+  software synthesizer "plug-in" - just to know how such things are
+  made in principle. This clearly conflicts with the other, equally
+  important target, which was to make the synthesis engine very
+  tiny. The compromising balance between these two goals must remain
+  equal till the end (even as the hunger for smaller and smaller
+  implementation grows). The whole thing wouldn't exist if it wasn't
+  equally (and highly) interesting to try both of the two things, not
+  only one or the other.
+
+- No more hacks or quirks (as of April, 2012). There are already some
+  things that I don't like, one of which is the tight coupling of the
+  sequence player and the synthesis engine. Let there be no more of
+  those, even at the cost of code size. I think I'll make some changes
+  to the overall architecture, but I hope I can stay clear of "ugly"
+  decisions. The program must be relatively cute even in the end.

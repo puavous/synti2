@@ -675,7 +675,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
            * many.  FIXME: There will be a value jump here. Should we
            * instead force a minimum time of 0.001 seconds or 20
            * samples or something? Try it... OR: what happens if we
-           * just don't force f:=bb in here?
+           * just don't force f:=bb in here? Note-off will fail?
            */
           s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
         } else {
@@ -890,9 +890,7 @@ synti2_render(synti2_synth *s,
          "feedback" operator. But the oscillator and envelope code
          and sound parameters may need some rethinking in that case
          (?) ... should make the delay line contents available in
-         sigin, and that's all, I guess.. looks easy enough? This
-         needs to be thought about while making some reverb
-         sound-alike. FIXME: Implement reverb somehow, btw. */
+         sigin, and that's all, I guess.. looks easy enough? */
       dsamp = s->framecount.val;
       for (id = 0; id < pat->ipar3[SYNTI2_I3_NDIN]; id++){
         interm += s->delay[id][dsamp % DELAYSAMPLES]

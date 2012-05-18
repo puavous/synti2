@@ -13,6 +13,11 @@ PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp
 
 # Ahaa.. you can have a make inside a make... 
 
+one_star_j:
+	make tinyexe MAIN=example/sdl_glfuncs_main.c \
+             GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO'
+	mv tinyexe $@
+
 cube_thing:
 	make tinyexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO'
 	mv tinyexe cube_thing
@@ -46,10 +51,11 @@ MAIN ?= example/sdl_main.c
 GFX ?= tests/tryout_gfx2.c
 SMF ?= example/example1.mid
 SND ?= example/example1.s2bank
+SHAD ?= example/one_star_j/shaders.h
 NONOS ?= 
 BUTDOS ?= 
 
-TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF) 
+TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF) $(SHAD)
 
 VISEXESOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
 
@@ -66,11 +72,16 @@ CFLAGS = -O3 -g -Wall -Wextra -pedantic
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
 HCFLAGS = -Os  -Wextra -pedantic \
+	 -DNO_I64 -m32 \
 	$(NONOS)
+
+
+
 
 ## For normal 64-bit build:
 ARCHFLAGS = `sdl-config --cflags`
-ARCHLIBS = `sdl-config --libs` -lm -lGL
+ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
+#-lGL
 
 # For linking against 32-bit libraries (approx. 5% smaller packed exe):
 # On my Fedora 16, as of now, the 32 bit SDL fails to init audio
@@ -130,11 +141,13 @@ tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
+#	cp $(SHAD) hackpack/
 
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o hackpack/$@.unstripped.payload \
 		-fwhole-program -flto \
 		-Iinclude \
+	        -Ihackpack \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYEXESOURCES)) \
 		$(filter %.c, $(S2SOURCES)) \

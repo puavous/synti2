@@ -21,30 +21,6 @@
 #define MY_SAMPLERATE 48000
 #define AUDIOBUFSIZE  4096
 
-#define NUMFUNCTIONS 7    //number of functions in *strs function array
-
-#define oglCreateProgram	            ((PFNGLCREATEPROGRAMPROC)myglfunc[0])
-#define oglCreateShader		            ((PFNGLCREATESHADERPROC)myglfunc[1])
-#define oglShaderSource                 ((PFNGLSHADERSOURCEPROC)myglfunc[2])
-#define oglCompileShader                ((PFNGLCOMPILESHADERPROC)myglfunc[3])
-#define oglAttachShader                 ((PFNGLATTACHSHADERPROC)myglfunc[4])
-#define oglLinkProgram                  ((PFNGLLINKPROGRAMPROC)myglfunc[5])
-#define oglUseProgram                   ((PFNGLUSEPROGRAMPROC)myglfunc[6])
-
-static char *strs[] = {
-	"glCreateProgram",
-	"glCreateShader",
-	"glShaderSource",
-	"glCompileShader",
-	"glAttachShader",
-	"glLinkProgram",
-	"glUseProgram",
-};
-
-void *myglfunc[NUMFUNCTIONS];
-
-
-
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
 float audiobuf[AUDIOBUFSIZE];
@@ -100,18 +76,11 @@ static void main2(){
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
 
-
-  // init external gl commands
-  int i;
-  for(i=0; i<NUMFUNCTIONS;i++)
-    {
-      myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
-#ifndef TINY
-      if( !myglfunc[i] )
-        return(0);
-#endif
-    }
-
+  /* Necessary?? Long names take up bytes!! (anyhow call before
+   * modeset) Actually, I think this should be quite unnecessary(?):
+   *
+   * SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+   */
 
   /* It costs 23-35 bytes (compressed) to politely query the display
    * mode. But it is definitely worth the ease! Oooh, but it won't

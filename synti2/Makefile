@@ -52,7 +52,7 @@ example1:
 
 
 jacksynti2:
-	make visexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid 
+	make visexe GFX=example/one_star_j/gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid 
 	mv visexe jacksynti2
 
 withoutseq:

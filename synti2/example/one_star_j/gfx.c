@@ -114,7 +114,7 @@ static void render_scene(const synti2_synth *s){
   int n = 10 + (a);
   for(i = 0; i<n; i++){
     //    glPushMatrix();
-    himpale(6, 10.f+cf);
+    himpale(6, 14.f+cf);
     //    glPopMatrix();
     glTranslatef(0.f, 0.f, 3.f-cf);
     glRotatef(360.f/n, 1.f, 0.f, 0.f);

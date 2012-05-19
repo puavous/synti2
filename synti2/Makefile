@@ -35,7 +35,8 @@ one_star_j:
 	make tinyexe \
 		MAIN=example/sdl_main.c \
 		GFX=example/one_star_j/gfx.c \
-              SND=example/cube_thing.s2bank SMF=example/cube_thing.mid \
+	        SND=example/one_star_j/one_star_j.s2bank \
+		SMF=example/cube_thing.mid \
               NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO'
 	mv tinyexe $@
 
@@ -52,7 +53,12 @@ example1:
 
 
 jacksynti2:
-	make visexe GFX=example/one_star_j/gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid 
+	make visexe \
+		GFX=example/one_star_j/gfx.c \
+	        SND=example/one_star_j/one_star_j.s2bank \
+		SMF=example/cube_thing.mid \
+		NONOS='-DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO -DNO_VELOCITY'
+
 	mv visexe jacksynti2
 
 withoutseq:

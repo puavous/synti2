@@ -29,6 +29,7 @@ static void face(){
 }
 
 static void star(){
+  //  static float s = 360.f/5;
   glPushMatrix();
   face();
   glRotatef(360.f/5, 0.f, 0.f, 1.f); face();
@@ -70,7 +71,7 @@ static void render_scene(const synti2_synth *s){
 
   //   GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
   GLfloat mat_specular[] = { 1.0f, .5f, .0f, 1.0f };
-  GLfloat mat_ambient[] = { 1.0f, .3f, 0.0f, 1.0f };
+  //  GLfloat mat_ambient[] = { 1.0f, .3f, 0.0f, 1.0f };
   //GLfloat mat_ambient[4];
   //  GLfloat mat_specular[4];
   /*
@@ -90,7 +91,7 @@ static void render_scene(const synti2_synth *s){
 
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_specular);
-   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_specular);
    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 

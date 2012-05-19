@@ -9,14 +9,21 @@
 #include "synti2_guts.h"
 
 static void face(){
+  static float data[] = {
+    -0.90451f,   0.29390f,   0.58779f
+  };
+
   glBegin(GL_TRIANGLES);
-  glNormal3f(-0.90451f,   0.29390f,   0.58779f);
+  //  glNormal3f(-0.90451f,   0.29390f,   0.58779f);
+  glNormal3fv(data);
   glVertex3f(  0.f,   1.f,   .0f);
 
-  glNormal3f(-0.90451f,   0.29390f,   0.58779f);
+  //  glNormal3f(-0.90451f,   0.29390f,   0.58779f);
+  glNormal3fv(data);
   glVertex3f( -.58779f,   -.80902f,   0.f);
 
-  glNormal3f(-0.90451f,   0.29390f,   0.58779f);
+  //  glNormal3f(-0.90451f,   0.29390f,   0.58779f);
+  glNormal3fv(data);
   glVertex3f(  0.f,  0.f,    .5f);
   glEnd();
 }
@@ -49,9 +56,6 @@ static void himpale(int par1, float par2){
     glPushMatrix();
     glTranslatef(par2, 0.f, 0.f);
     star();
-    /*    glRotatef(180.f, 0.f, 1.f, 0.f);
-    star();
-    */
     glPopMatrix();
   }
   glPopMatrix();

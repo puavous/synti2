@@ -1,5 +1,18 @@
 .PHONY: mostlyclean clean veryveryclean
 
+# A "demo" contains: main (which can be always the same!?), graphics,
+# patches (in original format), midi song (in sfm0/1 format)
+# (These can be overridden from the command line:)
+#MAIN ?= example/sdl_main.c
+MAIN ?= example/sdl_main.c
+GFX ?= tests/tryout_gfx2.c
+SMF ?= example/example1.mid
+SND ?= example/example1.s2bank
+SHAD ?= example/one_star_j/shaders.c
+NONOS ?= 
+BUTDOS ?= 
+
+
 S2HEADERS = include/synti2_guts.h \
 		include/synti2.h \
 		include/synti2_jack.h \
@@ -13,9 +26,14 @@ PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp
 
 # Ahaa.. you can have a make inside a make... 
 
+#		GFX=example/cube_thing_gfx.c \
+
+#		GFX=example/one_star_j/gfx.c \
+
 one_star_j:
 	make tinyexe \
-		MAIN=example/sdl_glfuncs_main.c \
+		MAIN=example/sdl_main.c \
+		GFX=example/one_star_j/gfx.c \
               SND=example/cube_thing.s2bank SMF=example/cube_thing.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO'
 	mv tinyexe $@
 
@@ -44,17 +62,6 @@ pikkune:
 	make tinyexe GFX=example/pikkune_gfx.c
 
 
-# A "demo" contains: main (which can be always the same!?), graphics,
-# patches (in original format), midi song (in sfm0/1 format)
-# (These can be overridden from the command line:)
-#MAIN ?= example/sdl_main.c
-MAIN ?= example/sdl_main.c
-GFX ?= tests/tryout_gfx2.c
-SMF ?= example/example1.mid
-SND ?= example/example1.s2bank
-SHAD ?= example/one_star_j/shaders.c
-NONOS ?= 
-BUTDOS ?= 
 
 TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF) $(SHAD)
 
@@ -76,16 +83,16 @@ HCFLAGS = -Os -Wextra -pedantic \
 	$(NONOS)
 
 ## For normal 64-bit build:
-#ARCHFLAGS = `sdl-config --cflags`
-#ARCHLIBS = `sdl-config --libs` -lm -lGL
+ARCHFLAGS = `sdl-config --cflags`
+ARCHLIBS = `sdl-config --libs` -lm -lGL
 
 # For linking against 32-bit libraries (approx. 5% smaller packed exe):
 # On my Fedora 16, as of now, the 32 bit SDL fails to init audio
 # (according to the error message, there is no available device). This
 # worked fine on Fedora 14, so I sort of think this is an issue in the
 # current version of SDL.i686)
-ARCHFLAGS = -m32 -DNO_I64 `sdl-config --cflags` 
-ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
+#ARCHFLAGS = -m32 -DNO_I64 `sdl-config --cflags` 
+#ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
 
 # Looks as if it is best to strip first with strip and then sstrip..
 ARCHSTRIP = strip

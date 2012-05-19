@@ -69,12 +69,15 @@ static void render_scene(const synti2_synth *s){
   float time = (float)(s->framecount.val) / s->sr;
 
   //   GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-  //GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-  GLfloat mat_ambient[4];
-  GLfloat mat_specular[4];
+  GLfloat mat_specular[] = { 1.0f, .5f, .0f, 1.0f };
+  GLfloat mat_ambient[] = { 1.0f, .3f, 0.0f, 1.0f };
+  //GLfloat mat_ambient[4];
+  //  GLfloat mat_specular[4];
+  /*
   for(i=0;i<4;i++){
     mat_specular[i] = 1.f - s->eprog[2][3].f;
   }
+  */
    
    //   GLfloat mat_diffuse[] = { 1.0f, 0.0f, 0.0f, 1.0f };
    GLfloat mat_shininess[] = { 50.0f };
@@ -87,6 +90,7 @@ static void render_scene(const synti2_synth *s){
 
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_specular);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
@@ -102,12 +106,7 @@ static void render_scene(const synti2_synth *s){
 
   glTranslatef(0.f, 0.f , -20.f); // +100. * sin(time) - .1*s->note[0]);
   glRotatef(90.f, 0.f, 0.f , 1.f); // +100. * sin(time) - .1*s->note[0]);
-  /*glTranslatef(data[400]*time,data[600]*time,-150);*/
 
-  // glScalef(mat_specular[0], mat_specular[0],mat_specular[0]);
-
-
-  //glRotatef(time*45.f, 0.f, 1.f, 0.f);
   glRotatef(time*(1.f+s->note[4]), 1.f, s->note[4] % 3, 0.f);
 
   int a = s->note[4] % 13;

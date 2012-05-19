@@ -28,6 +28,16 @@ static void star(){
   glRotatef(360.f/5, 0.f, 0.f, 1.f); face();
   glRotatef(360.f/5, 0.f, 0.f, 1.f); face();
   glRotatef(360.f/5, 0.f, 0.f, 1.f); face();
+
+  glRotatef(180.f, 0.f, 1.f, 0.f);
+
+  face();
+  glRotatef(360.f/5, 0.f, 0.f, 1.f); face();
+  glRotatef(360.f/5, 0.f, 0.f, 1.f); face();
+  glRotatef(360.f/5, 0.f, 0.f, 1.f); face();
+  glRotatef(360.f/5, 0.f, 0.f, 1.f); face();
+
+
   glPopMatrix();
 }
 
@@ -39,8 +49,9 @@ static void himpale(int par1, float par2){
     glPushMatrix();
     glTranslatef(par2, 0.f, 0.f);
     star();
-    glRotatef(180.f, 0.f, 1.f, 0.f);
+    /*    glRotatef(180.f, 0.f, 1.f, 0.f);
     star();
+    */
     glPopMatrix();
   }
   glPopMatrix();

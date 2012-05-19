@@ -8,7 +8,7 @@ MAIN ?= example/sdl_main.c
 GFX ?= tests/tryout_gfx2.c
 SMF ?= example/example1.mid
 SND ?= example/example1.s2bank
-SHAD ?= example/one_star_j/shaders.c
+SHAD ?= 
 NONOS ?= 
 BUTDOS ?= 
 

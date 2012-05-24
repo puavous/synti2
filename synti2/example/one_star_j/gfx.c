@@ -31,22 +31,17 @@ static void face(){
 
 static void star(){
   static float s = 360.f/5;
+  int i;
   glPushMatrix();
-  face();
-  glRotatef(s, 0.f, 0.f, 1.f); face();
-  glRotatef(s, 0.f, 0.f, 1.f); face();
-  glRotatef(s, 0.f, 0.f, 1.f); face();
-  glRotatef(s, 0.f, 0.f, 1.f); face();
-
-  glRotatef(180.f, 0.f, 1.f, 0.f);
-
-  face();
-  glRotatef(s, 0.f, 0.f, 1.f); face();
-  glRotatef(s, 0.f, 0.f, 1.f); face();
-  glRotatef(s, 0.f, 0.f, 1.f); face();
-  glRotatef(s, 0.f, 0.f, 1.f); face();
-
-
+  for(i=0;i<2;i++){
+    face();
+    glRotatef(s, 0.f, 0.f, 1.f); face();
+    glRotatef(s, 0.f, 0.f, 1.f); face();
+    glRotatef(s, 0.f, 0.f, 1.f); face();
+    glRotatef(s, 0.f, 0.f, 1.f); face();
+    
+    glRotatef(180.f, 0.f, 1.f, 0.f);
+  }
   glPopMatrix();
 }
 
@@ -87,6 +82,7 @@ static void render_scene(const synti2_synth *s){
 
   //   float cf = s->eprog[1][1].f;
   //   glClearColor (cf, cf, cf, 0.0);
+  //glClearColor(1.f,1.f,1.f,0.f);
 
    //   glShadeModel (GL_SMOOTH);  // Default?
 
@@ -134,7 +130,6 @@ void render_using_synti2(const synti2_synth *s){
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glFrustum(-1.33f,1.33f,-1.f,1.f,1.f,400.f);
-
 
   glMatrixMode(GL_MODELVIEW);
   glEnable(GL_DEPTH_TEST);

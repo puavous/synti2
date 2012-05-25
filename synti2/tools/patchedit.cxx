@@ -58,6 +58,9 @@
 //#include "synti2_inter.h"
 
 #define RINGBUFSZ 0x10000
+//#define RINGBUFSZ 0x8000
+
+#define MAX_EVENTS_IN_WINDOW 100
 
 /** Internal format for messages. */
 typedef struct {
@@ -179,10 +182,14 @@ process (jack_nframes_t nframes, void *arg)
   s2ed_msg_t s2m;
   size_t sz;
 
+  int nsent;
+
   jack_midi_clear_buffer(midi_out_buffer); 
   nev = jack_midi_get_event_count(midi_in_buffer);
 
   /* Read from UI thread. FIXME: think if synchronization issues persist? */
+
+  nsent = 0;
   while (jack_ringbuffer_read_space (global_rb) >= sizeof(s2ed_msg_t)) {
     /* Our maximum message size so far... */
     if (jack_midi_max_event_size(midi_out_buffer) < 11) break;
@@ -194,6 +201,11 @@ process (jack_nframes_t nframes, void *arg)
       jack_midi_max_event_size(midi_out_buffer));*/
 
     jack_midi_event_write(midi_out_buffer, 0, sysex_build_buf, sz);
+
+    /* The current synth engine cannot handle very many
+       events in real-time. */
+    nsent ++;
+    if (nsent > MAX_EVENTS_IN_WINDOW) break;
   }
 
   /* Handle incoming. TODO: The idea was that a midi control surface
@@ -240,6 +252,8 @@ void init_jack_or_die(){
     std::cerr << "Could not allocate ringbuffer. " << std::endl;
     exit(2);
   }
+  printf("Ringbuffer created with write space %d.\n",jack_ringbuffer_write_space (global_rb));
+  
 
   /* Activate client. */
   if (jack_activate (client)) {
@@ -310,8 +324,14 @@ void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
 /** Sends all patches of the patch bank to the synth over jack MIDI. */
 void cb_send_all(Fl_Widget* w, void* p){
   for(int ip=0; ip < pbank->size(); ip++){
+  // FIXME: The crashing bug starts from here (send_all_hang0)
+  // with 4 it works but with 5 the receiving synth crashes.
+  // so the buffer gets full or what?
+  //  for(int ip=0; ip < 5; ip++){
     std::cerr << "Sending " << ip << std::endl;
     send_patch_to_jack_port((*pbank)[ip], ip);
+    printf("Ringbuffer write space now %d.\n",jack_ringbuffer_write_space (global_rb));
+    //    usleep(10000);
   }
 }
 

@@ -78,6 +78,10 @@ varlength(const byte_t * source, unsigned int * dest){
  * TODO: relevant to any MIDI interface, not only jack, so rename the
  * macro...
  *
+ * FIXME: This cannot be used in the real-time synth due to O(n^2)
+ * event addition. What needs to be done is another function that
+ * assumes ordered events and doesn't do insertion!!
+ *
  * FIXME: Now that I'm using an internal event format in any case,
  * could I fix the length? I suppose I could... there are not so many
  * different messages, and the bulk data message (which is the only

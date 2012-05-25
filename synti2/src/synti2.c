@@ -75,12 +75,14 @@ varlength(const byte_t * source, unsigned int * dest){
  * events are ordered. This can be static for playback-mode, but in
  * real-time mode the MIDI interface module needs to see this. 
  *
- * TODO: relevant to any MIDI interface, not only jack, so rename the
- * macro...
- *
  * FIXME: This cannot be used in the real-time synth due to O(n^2)
  * event addition. What needs to be done is another function that
- * assumes ordered events and doesn't do insertion!!
+ * assumes ordered events and doesn't do insertion!! Oh but no... this
+ * is the case only if the insloc pointer is reset before calling this
+ * function for each new event. This *is* linear time, if the pointers
+ * are not updated outside. Hmm. the cause of the editor crash problem
+ * just evaded me again. Out of space on this side? Shallow copy
+ * unthought-of?
  *
  * FIXME: Now that I'm using an internal event format in any case,
  * could I fix the length? I suppose I could... there are not so many
@@ -88,6 +90,10 @@ varlength(const byte_t * source, unsigned int * dest){
  * variable-length event) could contain a native pointer to a memory
  * area... maybe? This issue needs to be attended while looking at the
  * tool programs as well.
+ */
+/*
+ * TODO: relevant to any MIDI interface, not only jack, so rename the
+ * macro...
  */
 #ifndef JACK_MIDI
 static

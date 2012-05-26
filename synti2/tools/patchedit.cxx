@@ -60,7 +60,7 @@
 #define RINGBUFSZ 0x10000
 //#define RINGBUFSZ 0x8000
 
-#define MAX_EVENTS_IN_WINDOW 100
+#define MAX_EVENTS_IN_SLICE 100
 
 /** Internal format for messages. */
 typedef struct {
@@ -200,12 +200,26 @@ process (jack_nframes_t nframes, void *arg)
     /*printf("jack event size %d\n", 
       jack_midi_max_event_size(midi_out_buffer));*/
 
-    jack_midi_event_write(midi_out_buffer, 0, sysex_build_buf, sz);
+    if (jack_midi_event_write(midi_out_buffer, 0, sysex_build_buf, sz) != 0){
+      printf("Error writing event %d\n", nsent);
+      break;
+    }
 
-    /* The current synth engine cannot handle very many
-       events in real-time. */
+    /* The current synth engine cannot handle very many events in
+       real-time. There is a crashing bug (git branch send_all_hang0
+       for trying to sort it out): sending few patches at once works
+       but with more patches at once the receiving synth crashes. It
+       is currently fixed by this kludge that limits the sending more
+       than a hard-coded number of events further from the ringbuffer
+       on each process() call. The real reason of the crash is not
+       known to me as of yet. Should make some tests to see if the
+       data is transmitted completely at all or if the problem lies
+       deeper in the processing. Anyway it seems to be a synth problem
+       that must be considered a limitation as of now. The evil thing
+       is that I don't really know why there needs to be this
+       limitation.. */
     nsent ++;
-    if (nsent > MAX_EVENTS_IN_WINDOW) break;
+    if (nsent > MAX_EVENTS_IN_SLICE) break;
   }
 
   /* Handle incoming. TODO: The idea was that a midi control surface
@@ -324,14 +338,9 @@ void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
 /** Sends all patches of the patch bank to the synth over jack MIDI. */
 void cb_send_all(Fl_Widget* w, void* p){
   for(int ip=0; ip < pbank->size(); ip++){
-  // FIXME: The crashing bug starts from here (send_all_hang0)
-  // with 4 it works but with 5 the receiving synth crashes.
-  // so the buffer gets full or what?
-  //  for(int ip=0; ip < 5; ip++){
-    std::cerr << "Sending " << ip << std::endl;
+    //std::cerr << "Sending " << ip << std::endl;
     send_patch_to_jack_port((*pbank)[ip], ip);
-    printf("Ringbuffer write space now %d.\n",jack_ringbuffer_write_space (global_rb));
-    //    usleep(10000);
+    //printf("Ringbuffer write space now %d.\n",jack_ringbuffer_write_space (global_rb));
   }
 }
 

@@ -158,6 +158,7 @@ synti2_player_merge_chunk(synti2_player *pl,
     r += varlength(r, &tickdelta);
     frame += pl->fpt * tickdelta;
 
+    /*FIXME: Song data might get filled up and overflow lethally.. */
     msg = pl->data + pl->idata; /* Get next available data pool spot */
 
     if (type == MISSS_LAYER_NOTES){

@@ -317,7 +317,6 @@ void send_to_jack_port(int type, int idx, int patch, float val){
   std::cout << "Send " << val 
             << " to " << idx
             << " of " << patch << std::endl;*/
-  std::cout << "s"; std::cout.flush();
   s2ed_msg_t msg = {0,0,0,0};
   msg.type = type;
   msg.location = (idx << 8) + patch;

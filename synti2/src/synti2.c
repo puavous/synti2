@@ -459,9 +459,8 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
   synti2_patch *pat;
 
   /* Data header: */
-  opcode = *data++; opcode <<= 7; opcode += *data++;  /* what to do */
+  opcode = *data++; //opcode <<= 7; opcode += *data++;  /* what to do */
   offset = *data++; offset <<= 7; offset += *data++;  /* in where */
-
   /* "Sysex" type data: */
   /* As of yet, offset==patch index. TODO: More elaborate addressing? */
 
@@ -474,6 +473,7 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
     ir = offset >> 7;
     pat->ipar3[ir] = *data;
   } else if (opcode==MISSS_OP_SET_F){
+    printf("f");
     /* Receive one float parameter at location (patch,fpar_index) */
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;

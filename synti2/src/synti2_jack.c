@@ -6,6 +6,9 @@
 
 #include <string.h>
 
+/* For debug: */
+#include <stdio.h>
+
 /* The whole thing is relevant only if compiling for Jack. */
 #ifdef JACK_MIDI
 

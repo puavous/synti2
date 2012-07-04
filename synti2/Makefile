@@ -56,8 +56,9 @@ jacksynti2:
 	make visexe \
 		GFX=example/one_star_j/gfx.c \
 	        SND=example/one_star_j/one_star_j.s2bank \
-		SMF=example/one_star_j/one_star_j.mid \
-		NONOS='-DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO -DNO_VELOCITY'
+		SMF=example/one_star_j/one_star_j.mid 
+
+#		NONOS='-DNO_PITCH_BEND -DNO_CC -DNO_STEREO -DNO_VELOCITY'
 
 	mv visexe jacksynti2
 
@@ -124,6 +125,7 @@ midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
 
 patchedit: $(PATCHEDITDEPS) Makefile
 	g++ -o $@ $(filter %.cxx %.hpp , $^) -lfltk \
+		-Iinclude \
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`
 

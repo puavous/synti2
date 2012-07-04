@@ -94,7 +94,7 @@ synti2_misss_data(byte_t *midi_in,
                   int input_size){
   int i;
   byte_t *p = misss_out;
-  *misss_out++ = MISSS_MSG_DATA;
+  //*misss_out++ = MISSS_MSG_DATA;
   for (i=0; i<input_size; i++){
     *misss_out++ = *midi_in++;
   }

@@ -56,11 +56,12 @@
 
 #include "patchtool.hpp"
 //#include "synti2_inter.h"
+#include "synti2_misss.h"
 
 #define RINGBUFSZ 0x10000
 //#define RINGBUFSZ 0x8000
 
-#define MAX_EVENTS_IN_SLICE 100
+#define MAX_EVENTS_IN_SLICE 80
 
 /** Internal format for messages. */
 typedef struct {
@@ -127,7 +128,7 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
   case 0:
     /*jack_error("Cannot do opcode 0 from here.");*/
     return 0;
-  case 1:
+  case MISSS_OP_SET_3BIT:
     intval = sm->value;
     /*if (intval > 0x07) jack_error("Too large to be 3bit value! %d", intval);*/
     sm->actual = (*buf = (intval &= 0x07));
@@ -137,7 +138,7 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
     /*if (intval > 0x7f) jack_error("Too large to be 7bit value! %d", intval);*/
     sm->actual = (*buf = (intval &= 0x7f));
     return 1;
-  case 3:
+  case MISSS_OP_SET_F:
     sm->actual = synti2::encode_f(sm->value, buf);
     return 2;
   default:
@@ -158,7 +159,7 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
 int build_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
   int payload_len;
   buf[0] = 0xF0; buf[1] = 0x00; buf[2] = 0x00; buf[3] = 0x00;
-  buf[4] = sm->type >> 7; buf[5] = sm->type & 0x7f;
+  buf[4] = MISSS_MSG_DATA; buf[5] = sm->type & 0x7f;
   buf[6] = (sm->location >> 8) & 0x7f; buf[7] = sm->location & 0x7f;
   payload_len = synti2_encode(sm, &(buf[8]));
   buf[8+payload_len] = 0xF7;
@@ -316,6 +317,7 @@ void send_to_jack_port(int type, int idx, int patch, float val){
   std::cout << "Send " << val 
             << " to " << idx
             << " of " << patch << std::endl;*/
+  std::cout << "s"; std::cout.flush();
   s2ed_msg_t msg = {0,0,0,0};
   msg.type = type;
   msg.location = (idx << 8) + patch;
@@ -326,10 +328,10 @@ void send_to_jack_port(int type, int idx, int patch, float val){
 /** Sends one complete patch to the synth over jack MIDI. */
 void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
   for (int i=0; i<patch.getNPars("I3"); i++){
-    send_to_jack_port(1, i, patnum, patch.getValue("I3",i));
+    send_to_jack_port(MISSS_OP_SET_3BIT, i, patnum, patch.getValue("I3",i));
   }
   for (int i=0; i<patch.getNPars("F"); i++){
-    send_to_jack_port(3, i, patnum, patch.getValue("F",i));
+    send_to_jack_port(MISSS_OP_SET_F, i, patnum, patch.getValue("F",i));
   }
 }
 
@@ -338,9 +340,9 @@ void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
 /** Sends all patches of the patch bank to the synth over jack MIDI. */
 void cb_send_all(Fl_Widget* w, void* p){
   for(int ip=0; ip < pbank->size(); ip++){
-    //std::cerr << "Sending " << ip << std::endl;
+    std::cerr << "Sending " << ip << std::endl;
     send_patch_to_jack_port((*pbank)[ip], ip);
-    //printf("Ringbuffer write space now %d.\n",jack_ringbuffer_write_space (global_rb));
+    printf("Ringbuffer write space now %d.\n",jack_ringbuffer_write_space (global_rb));
   }
 }
 
@@ -369,7 +371,8 @@ void cb_new_f_value(Fl_Widget* w, void* p){
   int d = (long)p;
 
   (*pbank)[curr_patch].setValue("F",d,val);
-  send_to_jack_port(3, d, curr_patch, val);
+  /** FIXME: Redo (and re-think) the message system. */
+  send_to_jack_port(MISSS_OP_SET_F, d, curr_patch, val);
 
   std::ostringstream vs;
   vs << flbl[d] << " = " << val << "         "; // hack..
@@ -382,7 +385,7 @@ void cb_new_i3_value(Fl_Widget* w, void* p){
   int d = (long)p;
 
   (*pbank)[curr_patch].setValue("I3",d,val);
-  send_to_jack_port(1, d, curr_patch, val);
+  send_to_jack_port(MISSS_OP_SET_3BIT, d, curr_patch, val);
 }
 
 bool file_exists(const char* fname){

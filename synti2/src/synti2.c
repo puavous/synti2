@@ -473,7 +473,6 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
     ir = offset >> 7;
     pat->ipar3[ir] = *data;
   } else if (opcode==MISSS_OP_SET_F){
-    printf("f");
     /* Receive one float parameter at location (patch,fpar_index) */
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;

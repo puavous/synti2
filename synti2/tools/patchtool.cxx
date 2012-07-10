@@ -7,6 +7,13 @@
 #include "patchtool.hpp"
 
 
+/* A hack (?) to have localized code that is useable as a static
+   function inside the core synth. Maybe there is a better way for
+   this... need to think.. later.*/
+#include "synti2_fdec.c"
+#include "synti2_fenc.c"
+
+
 /* helper functions */
 static
 bool line_is_whitespace(std::string &str){
@@ -33,65 +40,14 @@ std::string line_chop(std::string &str){
 /* Actual methods */
 
 /* Class methods */
-/** Decode a "floating point" parameter. 
-
-  FIXME: Encoding/decoding should be localized (as of today, they are
-  copy-pasted to at least two parts of the system.. And, of course,
-  the coding system should be determined for good...
-
-*/
+/** Decode a "floating point" parameter. */
 float synti2::decode_f(const unsigned char *buf){
-  int i;
-  float res;
-  res = ((buf[0] & 0x03) << 7) + buf[1];   /* 2 + 7 bits accuracy*/
-  res = ((buf[0] & 0x40)>0) ? -res : res;  /* sign */
-  res *= .001f;                            /* default e-3 */
-  for (i=0; i < ((buf[0] & 0x0c)>>2); i++) res *= 10.f;  /* can be more */
-  return res;
+  return synti2_decode_f(buf);
 }
 
-/** Encode a "floating point" parameter into 7 bit parts. 
-
-  FIXME: Encoding/decoding should be localized (as of today, they are
-  copy-pasted to at least two parts of the system.. And, of course,
-  the coding system should be determined for good...
-
- */
+/** Encode a "floating point" parameter into 7 bit parts. */
 float synti2::encode_f(float val, unsigned char * buf){
-  int high = 0;
-  int low = 0;
-  int intval = 0;
-  int timestimes10 = 0;
-  if (val < 0){ high |= 0x40; val = -val; } /* handle sign bit */
-  /* maximum precision strategy (?): */
-  /* TODO: check decimals first, and try less precise if possible */
-  if (val <= 0.511) {
-    timestimes10 = 0; intval = val * 1000;
-  } else if (val <= 5.11) {
-    timestimes10 = 1; intval = val * 100;
-  } else if (val <= 51.1) {
-    timestimes10 = 2; intval = val * 10;
-  } else if (val <= 511) {
-    timestimes10 = 3; intval = val * 1;
-  } else if (val <= 5110.f) {
-    timestimes10 = 4; intval = val * .1;
-  } else if (val <= 51100.f) {
-    timestimes10 = 5; intval = val * .01;
-  } else if (val <= 511000.f) {
-    timestimes10 = 6; intval = val * .001;
-  } else if (val <= 5110000.f){
-    timestimes10 = 7; intval = val * .0001;
-  } else {
-    timestimes10 = 1; intval = 0;
-    /*jack_error("Too large f value %f", val);*/
-  }
-  high |= (timestimes10 << 2); /* The powers of 10*/
-  high |= (intval >> 7);
-  low = intval & 0x7f;
-  buf[0] = high;
-  buf[1] = low;
-  // jack_info("%02x %02x", high, low);
-  return synti2::decode_f(buf);
+  return synti2_encode_f(val, buf);
 }
 
 
@@ -316,18 +272,12 @@ synti2::Patch::exportBytes(std::vector<unsigned char> &bvec){
     bvec.push_back(getValue("I7",i));
   }
 
-  /*Let's still use the stride even with the new encoding... TODO: wise? */
-  /* It's a stupid implementation, sry:*/
   unsigned char buf[2] = {0,0};
   for (int i=0; i<getNPars("F"); i++){
     synti2::encode_f(getValue("F", i), buf);
     bvec.push_back(buf[0]);
-  }
-  for (int i=0; i<getNPars("F"); i++){
-    synti2::encode_f(getValue("F", i), buf);
     bvec.push_back(buf[1]);
   }
-
 }
 
 

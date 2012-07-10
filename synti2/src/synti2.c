@@ -389,19 +389,9 @@ synti2_do_noteon(synti2_synth *s,
 
 }
 
-/** Decodes a "floating point" synthesis parameter. TODO: Maybe try
- * yet more different approaches to data storage?
- */
+/* FIXME: This too much of a hack?*/
 static
-float
-/*__attribute__ ((noinline))*/ /* longer code with an actual call..*/
-synti2_decode_fpar(unsigned char a, unsigned char b){
-  float decoded;
-  decoded = ((a & 0x03) << 7) + b;   /* 2 + 7 bits accuracy*/
-  decoded = (a & 0x40) ? -decoded : decoded;  /* sign */
-  for (a=((a & 0x0c) >> 2); a < 3; a++) decoded *= .1f; /* e-N; N=0..2) */
-  return decoded;
-}
+#include "synti2_fdec.c"
 
 
 static
@@ -416,10 +406,11 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
     }
 
     for (ir=0; ir<SYNTI2_F_NPARS; ir++){
-      pat->fpar[ir] = synti2_decode_fpar(data[ir],
-                                         data[ir+SYNTI2_F_NPARS]); 
+      pat->fpar[ir] = synti2_decode_f(data);
+      data += 2;
+      //printf("Read value (%02x %02x) %03d: %f\n", data[ir], data[ir+1], ir, pat->fpar[ir]);
     }
-    data += 2*SYNTI2_F_NPARS;
+    //data += 2*SYNTI2_F_NPARS;
   }
 }
 
@@ -476,7 +467,7 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
     /* Receive one float parameter at location (patch,fpar_index) */
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
-    pat->fpar[ir] = synti2_decode_fpar(data[0], data[1]);
+    pat->fpar[ir] = synti2_decode_f(data);
   } 
 #ifndef ULTRASMALL
   else {

@@ -125,15 +125,15 @@ midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
 
 patchedit: $(PATCHEDITDEPS) Makefile
 	g++ -o $@ $(filter %.cxx %.hpp , $^) -lfltk \
-		-Iinclude \
+		-Isrc -Iinclude \
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`
 
 genpar: $(GENPARDEPS)
-	g++ -Itools/ -o $@ $(filter %.cxx , $^)
+	g++ -Isrc -Itools/ -o $@ $(filter %.cxx , $^)
 
 cbank: tools/cbank.cxx tools/patchtool.cxx tools/patchtool.hpp Makefile
-	g++ -o $@ -Wextra $(filter %.cxx, $^)
+	g++ -Isrc/ -o $@ -Wextra $(filter %.cxx, $^)
 
 
 # While still designing the patch system, we generate this for ease:
@@ -206,7 +206,8 @@ mostlyclean:
 clean: mostlyclean
 	-rm *.payload tinyexe visexe \
 		benchmark testsong.c test.misss \
-		midi2synti2 patchedit genpar cbank
+		midi2synti2 patchedit genpar cbank \
+		one_star_j jacksynti2 
 
 veryveryclean: clean
 	-rm include/synti2_params.h

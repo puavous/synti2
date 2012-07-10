@@ -256,6 +256,30 @@ DLEV4 Dly4OutLev  0.0 1.0   2 18
 MIXLEV MixLevel 0.0 1.0  2 19
 MIXPAN MixPan  -1.0 1.0  2 19
 
+
+# Controller destinations (indices of fpars)
+# Hmm.. Should these be auxiliary as well?
+CDST1 Cont1Dest 0.0 127 1 20
+CDST2 Cont2Dest 0.0 127 1 20
+CDST3 Cont3Dest 0.0 127 1 20
+CDST4 Cont4Dest 0.0 127 1 20
+
+# Controller mins and maxes .. NO. These should be auxiliary (in the
+# same place with channel allocation) But then how can they be altered
+# in real-time vs. stored song mode.
+#
+# CMIN1 Cont1Min -2.0 +2.0   2 21
+# CMIN2 Cont2Min -4.0 +4.0   1 21
+# CMIN3 Cont3Min -8.0 +8.0   1 21
+# CMIN4 Cont4Min -16.0 +16.0 1 21
+#
+# CMAX1 Cont1Max -2.0 +2.0   2 22
+# CMAX2 Cont2Max -4.0 +4.0   1 22
+# CMAX3 Cont3Max -8.0 +8.0   1 22
+# CMAX4 Cont4Max -16.0 +16.0 1 22
+
+
+
 # Other patch data.. Hmm.. playground as of now:
 
 # Pitch note follow ratio (TODO: Useful?) Not using this

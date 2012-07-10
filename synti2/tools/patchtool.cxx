@@ -40,6 +40,7 @@ std::string line_chop(std::string &str){
 /* Actual methods */
 
 /* Class methods */
+
 /** Decode a "floating point" parameter. */
 float synti2::decode_f(const unsigned char *buf){
   return synti2_decode_f(buf);

@@ -825,6 +825,9 @@ synti2_render(synti2_synth *s,
   float interm;
   int wtoffs;
   synti2_patch *pat;
+#ifndef NO_CC
+  int ccdest;
+#endif
 
   float *sigin;  /* Input signal table during computation. */
   float *signal; /* Output signal destination during computation. */
@@ -862,9 +865,10 @@ synti2_render(synti2_synth *s,
       /* if (pat==NULL) continue; */
 
 #ifndef NO_CC
-      /* FIXME: Always op3 level */
-      //for (ii=0;ii<NPARTS;ii++){
-      pat->fpar[SYNTI2_F_LV3] = s->contr[iv][0].f;
+      for (ii=0;ii<NCONTROLLERS;ii++){
+        ccdest = pat->fpar[SYNTI2_F_CDST1+ii];
+        pat->fpar[ccdest] = s->contr[iv][ii].f;
+      }
 #endif
 
       
@@ -950,8 +954,8 @@ synti2_render(synti2_synth *s,
 #else
       /* To cut down computations, panning increases volume ([0,2]): */
       float pan = pat->fpar[SYNTI2_F_MIXPAN];
-      buffer[2*iframe]   += interm * (1.f-pan);
-      buffer[2*iframe+1] += interm * (1.f+pan);
+      buffer[2*iframe]   += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
+      buffer[2*iframe+1] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);
 #endif
     }
     

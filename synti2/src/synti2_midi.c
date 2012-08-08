@@ -24,7 +24,7 @@
 static
 byte_t
 synti2_misss_mapBendDest(){
-  return SYNTI2_F_PBVAL;
+  return 3; /* FIXME: Always cont. controller #3*/
 }
 
 /** Map MIDI controller value ccval to a synti2 parameter value. */

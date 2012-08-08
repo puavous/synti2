@@ -134,11 +134,15 @@ xxx UNUSED0 0 1 0 17
 
 
 
+
+[F]
 # "Floating point" parameters:
 
-# Envelopes need to be first, ordered and consistent with the existing code!
-[F]
+# This is a 'hack' for null controller target.
+# (Not used for sound generation.)
+NULLTRG NOT_Editable 0 0 0 1
 
+# After ENVS, envelope params need to be ordered and consistent with the code!
 ENVS    En1:1T 0 0.255   3 6
 ENV1K1L En1:1L 0 1.27   2 6
 ENV1K2T En1:2T  0 1.27   2 6
@@ -227,8 +231,9 @@ DT3F Op3Fine     -.5  .5     3 13
 DT4F Op4Fine     -.5  .5     3 13
 
 # Notes to bend at positive maximum:
-PBAM  BendAmount 0.0 12.0 1 18
+PBAM  BendAmount 0.0 24.0 1 18
 # Bend value, not for editing but for pitch bend messages.
+# Bend is used by patching controller #4 to this value.
 PBVAL NOT_Editable -1.0  1.0  2 18
 
 
@@ -240,33 +245,41 @@ DINLV2 Dly2InLev  -1.0 1.0   2 16
 DINLV3 Dly3InLev  -1.0 1.0   2 16
 DINLV4 Dly4InLev  -1.0 1.0   2 16
 
+# Filter parameters; quite basic
 FFREQ Cutoff  0.0 80.0   2 17
 FRESO Resonance   0.0 1.0   2 17
 
+# Delay lengths in seconds
 DLEN1 Dly1Length  0.0 1.0   3 17
 DLEN2 Dly2Length  0.0 1.0   3 17
 DLEN3 Dly3Length  0.0 1.0   3 17
 DLEN4 Dly4Length  0.0 1.0   3 17
 
+
+# Delay output levels
 DLEV1 Dly1OutLev  0.0 1.0   2 18
 DLEV2 Dly2OutLev  0.0 1.0   2 18
 DLEV3 Dly3OutLev  0.0 1.0   2 18
 DLEV4 Dly4OutLev  0.0 1.0   2 18
 
+
+# Global output mix level for convenience
 MIXLEV MixLevel 0.0 1.0  2 19
 MIXPAN MixPan  -1.0 1.0  2 19
 
 
 # Controller destinations (indices of fpars)
 # Hmm.. Should these be auxiliary as well?
+# No.. it is OK to have these per patch.
 CDST1 Cont1Dest 0.0 127 0 20
 CDST2 Cont2Dest 0.0 127 0 20
 CDST3 Cont3Dest 0.0 127 0 20
 CDST4 Cont4Dest 0.0 127 0 20
 
-# Controller mins and maxes .. NO. FIXME: These should be auxiliary (in the
-# same place with channel allocation) But then how can they be altered
-# in real-time vs. stored song mode.
+# Controller mins and maxes .. NO.... 
+#
+# FIXME: These should be auxiliary (in the same place with channel
+# allocation)
 #
 # CMIN1 Cont1Min -2.0 +2.0   2 21
 # CMIN2 Cont2Min -4.0 +4.0   1 21
@@ -297,4 +310,5 @@ CDST4 Cont4Dest 0.0 127 0 20
 
 # TODO: Padding to get a power-of-two length for the instrument patch?
 # hmmm.. why power of two? Well, just in case some bit-shifting..
-# Padding should be done by the tool programs... so far no need...
+# Padding should be done by the tool programs... so far no
+# need... could be final like this...

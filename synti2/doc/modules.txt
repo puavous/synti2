@@ -1,0 +1,35 @@
+Rough overview of modules in Synti2
+===================================
+
+Diagram in ASCII::
+
+   ------
+
+        "Outside world"               ____"Interface & Core"____
+                                loose coupling,          tight coupling,
+                                standard MIDI            native C data types
+                                      ||                       |
+                                      ||                       |                   
+   -Auxiliary programs               ======>  Midi filter     ======>  Synth engine
+   (patch editor,                    MIDI     synti2_midi.c   MISSS        synti2.c
+    GUI for midi filtering,          only                     (my internal
+    sequencer, e.g., Rosegarden)      ||                       format)
+                                      ||                       |
+                                      ||      Filter is        |  Engine only listens
+   -Hardware, e.g., keyboard          ||      controlled       |  to the internal
+                                      ||      via SysEx.       |  format.
+                                      ||      Only MIDI        |
+                                      ||      input is used.   |
+                                      ||                       |
+                                      ||      Space-unlimited  |  Space-limited
+   ------                             ||                       |
+                        ||++++++++++  ||                       |
+   Standard midi file  ====> SMF     ======>MIDI               | 
+                        SMF  filter   ||                       |
+                        ||   X.cxx   <=====MISSS               |
+                        ||            ||                       |
+                        ||           ============================> (player functions
+                        ||            ||     Synti2 sequence   |    in synti2.c)
+                        ||            ||     file              |
+                        ||            ||     Space-limited     |
+                        ||            ||                       |

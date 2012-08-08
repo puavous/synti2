@@ -7,7 +7,8 @@
 #define MISSS_INCLUDED
 
 /*
- * Misss data format ideas:
+ * Misss data format ideas 
+ * (FIXME: Out-of-sync with reality already):
  *
  * <songheader> <layer>+
  * <layer> = <layerheader> <layerdata>
@@ -53,7 +54,9 @@
  */
 
 
-/* Hmm.. so far my file format contains only two kinds of layers (one
+/* Layer types (stored). Space-limited.
+ *
+ * Hmm.. so far my file format contains only two kinds of layers (one
  * of which is implemented...) Layer storage is where we are space
  * limited the most, because the song data will be in layers. So maybe
  * these should be combined with other header information?
@@ -61,14 +64,22 @@
 #define MISSS_LAYER_NOTES 0x00
 #define MISSS_LAYER_CONTROLLER_RAMPS 0x01
 
-/* Only two bits needed for real-time synth control: */
+/* Message types (playable). Generated at run-time, and thus not
+ * space-limited.  Only two bits needed for real-time synth control.
+ *
+ * FIXME: Are SETF or DATA really needed? For these we have real-time
+ * operations (SET_x)
+ */
 #define MISSS_MSG_NOTE 0x00
 #define MISSS_MSG_SETF 0x01
 #define MISSS_MSG_DATA 0x02
+#define MISSS_MSG_RAMP 0x03
 
-/* FIXME: These are used in synti2 now, but not in sound editor!
-  But... these are not actually misss-specific, but also in the
-  SysEx that is visible to the world. So make these SYNTI2_SYSEX_
+/* Operations (instantaneous) at compose-time.
+ *
+ * FIXME: These are used in synti2 now, but not in sound editor!
+ * But... these are not actually misss-specific, but also in the
+ * SysEx that is visible to the world. So make these SYNTI2_SYSEX_
  */
 #define MISSS_OP_FILL_PATCHES 0
 #define MISSS_OP_SET_3BIT 1

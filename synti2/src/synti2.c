@@ -128,9 +128,9 @@ synti2_player_event_add(synti2_player *pl,
   
 }
 
-/** Merges a chunk, aka layer, to the list of events to be
- *  played. Returns a pointer to one past end of read in input data,
- *  i.e., next byte.
+/** Merges a chunk, aka layer, to the list of events to be played,
+ *  converting layers (stored) into messages (playable). Returns a
+ *  pointer to one past end of read in input data, i.e., next byte.
  */
 static
 byte_t *

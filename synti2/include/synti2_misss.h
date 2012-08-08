@@ -35,9 +35,11 @@
 
 /* Operations (instantaneous) at compose-time. Not space-limited.
  *
- * FIXME: These are used in synti2 now, but not in sound editor!
- * But... these are not actually misss-specific, but also in the
- * SysEx that is visible to the world. So make these SYNTI2_SYSEX_
+ * These are used within the SysEx wrappers, which is totally OK
+ * (FIXME: is it really?)
+ *
+ * FIXME: these are not actually misss-specific, but also in the SysEx
+ * that is visible to the world. So make these SYNTI2_SYSEX_ maybe?
  */
 #define MISSS_OP_FILL_PATCHES 0
 #define MISSS_OP_SET_3BIT 1

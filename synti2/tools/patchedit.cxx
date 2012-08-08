@@ -133,7 +133,7 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
     /*if (intval > 0x07) jack_error("Too large to be 3bit value! %d", intval);*/
     sm->actual = (*buf = (intval &= 0x07));
     return 1;
-  case 2:
+  case MISSS_OP_SET_7BIT:
     intval = sm->value;
     /*if (intval > 0x7f) jack_error("Too large to be 7bit value! %d", intval);*/
     sm->actual = (*buf = (intval &= 0x7f));

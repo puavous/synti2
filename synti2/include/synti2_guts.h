@@ -215,7 +215,7 @@ struct synti2_synth {
   /* Must be in this order and next to each other exactly!! Impl. specif?*/
   counter c[NCOUNTERS];
   counter eprog[NPARTS][NENVPERVOICE+1];
-  counter contr[NCONTROLLERS];
+  counter contr[NPARTS][NCONTROLLERS];
   counter framecount;
 
   /* Envelope stages just a table? TODO: think.*/

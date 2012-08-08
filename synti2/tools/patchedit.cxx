@@ -480,6 +480,13 @@ void cb_patch_name(Fl_Widget* w, void* p){
   pbank->at(curr_patch).setName(((Fl_Input*)w)->value());
 }
 
+std::string createFvalLabel(int index, std::string label){
+  std::stringstream res;
+  res << "(" << index << ")";
+  res << label;
+  return res.str();
+  /* FIXME: Remember C++ -- does this leak? No? It's a temporary copy? Make sure though... */
+}
 
 /** Builds the main window with widgets reflecting a patch description. */
 Fl_Window *build_main_window(synti2::PatchDescr *pd){
@@ -532,7 +539,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   box->callback(cb_exit); box->argument((long)window); box->labelsize(17); 
 
   /* Parameters Valuator Widgets */
-  px=5; py=50; w=30; h=20; sp=2;
+  px=5; py=50; w=25; h=20; sp=2;
   for (int i=0; i < pd->nPars("I3"); i++){
     /* Need to store all ptrs and have attach_to_values() */
     Fl_Value_Input *vi = new Fl_Value_Input(px+i*(w+sp),py,w,h);
@@ -545,7 +552,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     vi->callback(cb_new_i3_value);
   }
 
-  py=80; w=160;
+  py=80; w=110;
   int npars = pd->nPars("F");
   int ncols = 4;
   int nrows = (npars / ncols) + 1;
@@ -555,15 +562,15 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
       if (i==npars) break;
       /* Need to store all ptrs and have attach_to_values() */
       Fl_Roller *vsf = 
-        new Fl_Roller(px+col*285,py+row*(h+sp),w,h);
+        new Fl_Roller(px+col*250,py+row*(h+sp),w,h);
       widgets_f.push_back(vsf);
       /* FIXME: think? */
       vsf->bounds(pd->getMin("F",i),pd->getMax("F",i)); 
       vsf->precision(pd->getPrecision("F",i));
       vsf->color(colortab[pd->getGroup("F",i)]);
       vsf->type(FL_HOR_NICE_SLIDER);
-      vsf->label(pd->getDescription("F",i).c_str());
-      flbl.push_back(pd->getDescription("F",i)); // for use in the other part
+      vsf->label(createFvalLabel(i,pd->getDescription("F",i)).c_str());
+      flbl.push_back(createFvalLabel(i,pd->getDescription("F",i)));//pd->getDescription("F",i)); // for use in the other part
       vsf->align(FL_ALIGN_RIGHT);
       vsf->callback(cb_new_f_value);
       vsf->argument(i);

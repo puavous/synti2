@@ -23,7 +23,7 @@
 /** Map MIDI controller number ccn to a synti2 parameter number. */
 static
 byte_t
-synti2_misss_mapPitchDest(){
+synti2_misss_mapBendDest(){
   return SYNTI2_F_PBVAL;
 }
 
@@ -35,12 +35,21 @@ synti2_misss_mapPitchValue(int bendval){
   return (bendval - 0x2000)/(float)0x2000 * frange;
 }
 
-/** Map MIDI controller number ccn to a synti2 parameter number. */
+/** Map MIDI controller number ccn to a synti2 controller number. */
+/* FIXME: Should be based on channel number, too */
 static
 byte_t
 synti2_misss_mapControlDest(byte_t ccn){
   return 0; /* FIXME: Always the first controller. */
 }
+
+/** Map Pitch bend of a channel to a synti2 controller. */
+static
+byte_t
+synti2_misss_mapPitchDest(byte_t channel){
+  return 3; /* FIXME: Always cc3 for pitch. */
+}
+
 
 /** Map MIDI controller value ccval to a synti2 parameter value. */
 static
@@ -212,11 +221,17 @@ synti2_midi_to_misss(byte_t *midi_in,
        synti2_misss_mapPressureDest(), synti2_misss_mapPressureValue());*/
     return 0;
   case MIDI_STATUS_PITCH_WHEEL:
-    /* FIXME: Should be mapped to a controller (?). */
+    /* Pitch wheel is translated into a continuous controller */
     midi_bendval = (midi_in[1] << 7) + midi_in[0];
-    return synti2_misss_setf(misss_out, midi_chn, 
+    return synti2_misss_ramp(misss_out, midi_chn, 
+                             synti2_misss_mapBendDest(midi_chn), 
+                             INSTANT_RAMP_LENGTH,
+                             synti2_misss_mapPitchValue(midi_bendval));
+    /* FIXME: delete.. WAS:
+    return synti2_misss_ramp(misss_out, midi_chn, 
        synti2_misss_mapPitchDest(), 
        synti2_misss_mapPitchValue(midi_bendval));
+    */
   case MIDI_STATUS_SYSTEM:
     return synti2_sysmsg_to_misss(midi_status, midi_in, 
                                   misss_out, input_size-1);

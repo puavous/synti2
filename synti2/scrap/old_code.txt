@@ -1,6 +1,18 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+ * DONE: Controllers would sound nicer if they were clamping counters
+ * (no artefacts from discrete value jumps)
+ *
+
+
+#ifndef NO_SYSEX_RECEIVE
+    } else if (midibuf[0] == MISSS_MSG_DATA){
+      /* Receiving SysEx is nice, but not strictly necessary if the
+       * initial patch data is given upon creation.
+       */
+      synti2_do_receiveData(s, midibuf+1);
+#endif
 
 /*
  * Misss data format ideas 

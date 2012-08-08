@@ -82,7 +82,7 @@ varlength(const byte_t * source, unsigned int * dest){
  * function for each new event. This *is* linear time, if the pointers
  * are not updated outside. Hmm. the cause of the editor crash problem
  * just evaded me again. Out of space on this side? Shallow copy
- * unthought-of?
+ * unthought-of (hmm. THAT is unchecked as of yet!!)?
  *
  * FIXME: Now that I'm using an internal event format in any case,
  * could I fix the length? I suppose I could... there are not so many
@@ -176,11 +176,10 @@ synti2_player_merge_chunk(synti2_player *pl,
      * maybe... but then again, that might be just excess...
      */
     else if (type == MISSS_LAYER_CONTROLLER_RAMPS) {
-      /* Not yet implemented. FIXME: implement? Controller reset==fast ramp!*/
-      /* FIXME: Is it possible to use the counter logic for these?
-         Would be best, actually. Go with a few selectable
-         controller targets, and the outside MIDI interface will map
-         the inputs to internal numbers 0-3 or whatever we'll have... */
+      /* Not yet implemented. FIXME: implement. Of course, this is
+       * mostly a task for the tool programs, and the fpar data format
+       * should be fixed before attending this one.
+       */
     }
 #endif
 #ifndef ULTRASMALL
@@ -446,6 +445,9 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
  * simultaneously look at the sound editor and maybe other tool
  * programs.
  *
+ * FIXME: As of now, the use of this is a little bit awkwardly tangled
+ * in the outside code... needs to be considered, once and for all...
+ *
  */
 static
 void
@@ -569,9 +571,6 @@ synti2_handleInput(synti2_synth *s,
  * counters inside parts (and leave out what seems to be the only
  * global one, framecount)
  *
- * FIXME: Controllers would sound nicer if they were clamping counters
- * (no artefacts from discrete value jumps)
- *
  * TODO: (Before future projects with re-designed synths) Evaluate if
  * this everything-is-a-counter thing was a good idea.
  */
@@ -694,7 +693,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
            * many.  FIXME: There will be a value jump here. Should we
            * instead force a minimum time of 0.001 seconds or 20
            * samples or something? Try it... OR: what happens if we
-           * just don't force f:=bb in here? Note-off will fail?
+           * just don't force f:=bb in here? Note-off will fail???
            */
           s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
         } else {

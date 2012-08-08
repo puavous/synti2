@@ -587,7 +587,7 @@ MidiEventTranslator::rotate_notes(unsigned char *buffer){
     rotation_of_noteon[chn][note] = newrot;
   } else if (cmd == 0x08){
     /* FIXME: Instanssi speed hack: No note-offs ever:*/
-    return 0;
+    //return 0;
 
     /* Note off goes to the same channel, where the corresponding note
        on was located earlier. FIXME: should swallow if note on is no

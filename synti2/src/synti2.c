@@ -860,6 +860,13 @@ synti2_render(synti2_synth *s,
       /* I think the following neverhappen was an early placeholder for
 	 such... */
       /* if (pat==NULL) continue; */
+
+#ifndef NO_CC
+      /* FIXME: Always op3 level */
+      //for (ii=0;ii<NPARTS;ii++){
+      pat->fpar[SYNTI2_F_LV3] = s->contr[iv][0].f;
+#endif
+
       
       sigin  = signal = &(s->outp[iv][0]);
       

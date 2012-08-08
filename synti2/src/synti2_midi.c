@@ -7,7 +7,9 @@
  *
  * FIXME: This could be a place also for synti2 channel allocation?
  * Maybe? But that needs a bigger revamp of the tool-engine-interface
- * responsibility share?
+ * responsibility share? Yes. See the module diagram. This is to be
+ * controlled via SysEx (for which there will be an editor program,
+ * similar to the patch editor).
  *
  */
 
@@ -16,6 +18,7 @@
 #include "synti2_misss.h"
 #include "synti2_params.h"
 
+#define INSTANT_RAMP_LENGTH 0.005f
 
 /** Map MIDI controller number ccn to a synti2 parameter number. */
 static
@@ -36,7 +39,7 @@ synti2_misss_mapPitchValue(int bendval){
 static
 byte_t
 synti2_misss_mapControlDest(byte_t ccn){
-  return SYNTI2_F_LV3; /* FIXME: Always op3 level */
+  return 0; /* FIXME: Always the first controller. */
 }
 
 /** Map MIDI controller value ccval to a synti2 parameter value. */
@@ -92,13 +95,13 @@ synti2_misss_ramp(byte_t *misss_out,
                   byte_t misss_chn, 
                   byte_t cont_index,
                   float time,
-                  float dest){
+                  float dest_val){
   *misss_out++ = MISSS_MSG_RAMP;
   *misss_out++ = misss_chn; /* TODO: Channel dispersion logic in caller?*/
   *misss_out++ = cont_index;
   *(float*)misss_out = time;
   misss_out += sizeof(float);
-  *(float*)misss_out = dest;
+  *(float*)misss_out = dest_val;
   return 3+2*sizeof(float); /* Two native floats floats out. */
 }
 
@@ -198,7 +201,7 @@ synti2_midi_to_misss(byte_t *midi_in,
     midi_ccval = *midi_in++;
     return synti2_misss_ramp(misss_out, midi_chn, 
                              synti2_misss_mapControlDest(midi_ccnum), 
-                             0.001f,                             
+                             INSTANT_RAMP_LENGTH,
                              synti2_misss_mapControlValue(midi_ccval));
   case MIDI_STATUS_PROGRAM:
     /* Omit program change. Could have some sound bank logic... */

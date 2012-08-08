@@ -1,58 +1,12 @@
 /** @file synti2_misss.h
  *
- * MIDI-like Interface for the Synti2 Software Synthesizer
+ * MIDI-like Interface for the Synti2 Software Synthesizer.
  *
+ * MISSS_x are part of *internal* specification.
+ * SYNTI2_SYSEX_x are part of *external* specification
  */
 #ifndef MISSS_INCLUDED
 #define MISSS_INCLUDED
-
-/*
- * Misss data format ideas 
- * (FIXME: Out-of-sync with reality already):
- *
- * <songheader> <layer>+
- * <layer> = <layerheader> <layerdata>
- * <layerheader> = <length> <tickmultiplier> <type> <part#> <parameters>
- * <layerdata> = <event>+
- * <event> = <delta><byte>+
- *
- * ... more or less so... and... 
- *
- * Types of layers:
- *
- *  [- 0x8 note off
- *        <delta>  -- maybe unnecessary if using vel=0 for note off!]
- *  - 0x9 note on with variable velocity
- *        <delta><note#><velocity>
- *  - 0x1 note on with constant velocity (given as a parameter)
- *        (note off encoded as on with constant velocity==0)
- *        <delta><note#>
- *  - 0x2 note on with constant pitch (given as a parameter)
- *        <delta><velocity>
- *  - 0x3 note on with constant pitch and velocity (given as parameters)
- *        <delta>
- *
- *  OR... TODO: think if note on and note velocity could be separated?
- *              suppose they could.. could have accented beats and
- *              velocity ramps with little-ish overhead?
- *
- *  - 0xB controller instantaneous
- *        <delta><value>
- *  - 0x4 controller ramp from-to/during
- *        <delta><value1><delta2><value2>
- *  [- 0x5 pitch bend ramp from-to/during (or re-use controller ramp?
- *        DEFINITELY! because our values can be var-length which is 
- *        very natural for pitch bend MSB when needed..)
- *        <delta><bend1><delta2><bend2>]
- *  - 0xf sysex
- *        <delta><sysex>
- *
- *  - 0x6 0x7 0xA 0xC 0xD 0xE reserved. 0x5 probably too.
- *    Maybe could use the 4th bit of type nibble for something else?
- *
- *  Type and part fit in one byte.
- */
-
 
 /* Layer types (stored). Space-limited.
  *
@@ -60,22 +14,26 @@
  * of which is implemented...) Layer storage is where we are space
  * limited the most, because the song data will be in layers. So maybe
  * these should be combined with other header information?
+ *
+ * FIXME: If only one bit is used for layer identification in the end,
+ * then maybe use the remaining 7 for some useful aspect (could hold
+ * par[0], for example)
  */
 #define MISSS_LAYER_NOTES 0x00
 #define MISSS_LAYER_CONTROLLER_RAMPS 0x01
 
-/* Message types (playable). Generated at run-time, and thus not
- * space-limited.  Only two bits needed for real-time synth control.
+/* Message types (playable). Not space-limited (Generated at
+ * run-time).
  *
  * FIXME: Are SETF or DATA really needed? For these we have real-time
  * operations (SET_x)
  */
 #define MISSS_MSG_NOTE 0x00
-#define MISSS_MSG_SETF 0x01
-#define MISSS_MSG_DATA 0x02
-#define MISSS_MSG_RAMP 0x03
+#define MISSS_MSG_RAMP 0x01
+#define MISSS_MSG_SETF 0x02
+#define MISSS_MSG_DATA 0x03
 
-/* Operations (instantaneous) at compose-time.
+/* Operations (instantaneous) at compose-time. Not space-limited.
  *
  * FIXME: These are used in synti2 now, but not in sound editor!
  * But... these are not actually misss-specific, but also in the

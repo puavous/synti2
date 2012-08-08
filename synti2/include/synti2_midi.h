@@ -1,7 +1,9 @@
 #ifndef SYNTI2_MIDI_TRANSLATOR_H
 #define SYNTI2_MIDI_TRANSLATOR_H
 
-/* Some defines to make midi handling more clear in the code part: */
+/* Some defines to make midi handling more clear in the code part.
+ * These come directly from the MIDI standard: 
+ */
 #define MIDI_STATUS_NOTE_OFF 0x8
 #define MIDI_STATUS_NOTE_ON 0x9
 #define MIDI_STATUS_KEY_PRESSURE 0xa

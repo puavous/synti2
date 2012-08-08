@@ -207,7 +207,7 @@ clean: mostlyclean
 	-rm *.payload tinyexe visexe \
 		benchmark testsong.c test.misss \
 		midi2synti2 patchedit genpar cbank \
-		one_star_j jacksynti2 
+		one_star_j jacksynti2 cube_thing example1
 
 veryveryclean: clean
 	-rm include/synti2_params.h

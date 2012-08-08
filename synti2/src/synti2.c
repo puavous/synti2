@@ -414,6 +414,7 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
   }
 }
 
+/* FIXME: Should be ifdef USE_COMPOSE_MODE instead? */
 
 #ifndef NO_RECEIVE_SYSEX
 /** 
@@ -435,6 +436,9 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
  * composition is a (non-4k) executable song that whould like to
  * extend sound features by reassigning something in a patch while the
  * song is playing. Could synti2 live with disallowing such activity?
+ * I start to believe that yes, it could and should disallow
+ * non-compose SysEx. One more issue: What about non-restricted
+ * executable music, though?
  *
  * FIXME: Verify the necessity of this function. There will be the
  * MIDI translator module in any case, so see if it could deal
@@ -481,12 +485,12 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
 
 #ifndef EXTREME_NO_SEQUENCER
 /** 
- * Handles input that comes from the stored list of song events;
- * forwards control data for the synth and keeps track of song
- * position. All necessary conversion and event timing work has been
- * done by either a real-time midi adapter or the sequencer's song
- * loader, and we can just go with the pre-determined flow of our own
- * internal messages here.
+ * (Space-limited) Handles input that comes from the stored list of
+ * song events; forwards control data for the synth and keeps track of
+ * song position. All necessary conversion and event timing work has
+ * been done by either a real-time midi adapter or the sequencer's
+ * song loader, and we can just go with the pre-determined flow of our
+ * own internal messages here.
  *
  * Upon entry (and all times): pl->next points to the next event to be
  * played. pl->frames_done indicates how far the sequence has been
@@ -503,6 +507,9 @@ synti2_handleInput(synti2_synth *s,
 {
   const byte_t *midibuf;
   synti2_player *pl;
+#ifndef NO_CC
+  counter* c;
+#endif
 
   pl = s->pl;  /* TODO: Think about the role of the player structure...*/
 
@@ -515,21 +522,30 @@ synti2_handleInput(synti2_synth *s,
       synti2_do_noteon(s, midibuf[1], midibuf[2], midibuf[3]);
 
 #ifndef NO_CC
-    } else if (midibuf[0] == MISSS_MSG_SETF){
-      /* A native float format is provided for our convenience: */
-      s->patch[midibuf[1]].fpar[midibuf[2]] = *((float*)(midibuf+3));
+    } else if (midibuf[0] == MISSS_MSG_RAMP){
+      /* A ramp message contains controller number, time, and destination value: */
+      /* FIXME: Very similar code in envelope logic. See if these
+         could be combined to one function. */
+      c = &(s->contr[midibuf[1]][midibuf[2]]);
+      c->aa = c->f;  /* from current value */
+      c->bb = (*((float*)(midibuf+3+sizeof(float)))); /*to next*/
+      c->val = 0;
+      c->delta = MAX_COUNTER / s->sr / (*((float*)(midibuf+3))); /*in given time */
+      /*FIXME: delete.. WAS: s->patch[midibuf[1]].fpar[midibuf[2]] = *((float*)(midibuf+3));*/
       /* or synti2_do_setf(midibuf[1], midibuf[2], (float*)(midibuf+3)?*/
 #endif
 
 #ifndef NO_SYSEX_RECEIVE
     } else if (midibuf[0] == MISSS_MSG_DATA){
-      /* Receiving SysEx is nice, but not strictly necessary if the
-       * initial patch data is given upon creation.
+      /* Used only in compose mode (patch editor requires this) 
+       * 
+       * FIXME: See if we could live without this (midi filter would
+       * convert directly to OP_SETF.
        */
       synti2_do_receiveData(s, midibuf+1);
 #endif
-
     } 
+
 #ifndef ULTRASMALL
     else {
       s->last_error_frame = s->framecount.val;
@@ -666,6 +682,8 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 #endif
         }
 #endif
+        /* FIXME: See if this could be refactored into a function; almost
+        * identical use is with Controller ramps. */
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
         s->eprog[iv][ie].aa = s->eprog[iv][ie].f;

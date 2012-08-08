@@ -82,6 +82,26 @@ synti2_misss_setf(byte_t *misss_out,
   return 3+sizeof(float); /* A native float floats out. */
 }
 
+/** Creates a MISSS "Controller ramp" message; returns length of the 
+ * message. Output buffer must have enough space. Currently, the 
+ * length is 3 + 2 * sizeof(float).
+ */
+static
+int
+synti2_misss_ramp(byte_t *misss_out, 
+                  byte_t misss_chn, 
+                  byte_t cont_index,
+                  float time,
+                  float dest){
+  *misss_out++ = MISSS_MSG_RAMP;
+  *misss_out++ = misss_chn; /* TODO: Channel dispersion logic in caller?*/
+  *misss_out++ = cont_index;
+  *(float*)misss_out = time;
+  misss_out += sizeof(float);
+  *(float*)misss_out = dest;
+  return 3+2*sizeof(float); /* Two native floats floats out. */
+}
+
 
 /** As of now, this just forwards the bulk of a MIDI SysEx, replacing
  *  the SysEx header with a MISSS header. Expects input_size to be the
@@ -94,7 +114,6 @@ synti2_misss_data(byte_t *midi_in,
                   int input_size){
   int i;
   byte_t *p = misss_out;
-  //*misss_out++ = MISSS_MSG_DATA;
   for (i=0; i<input_size; i++){
     *misss_out++ = *midi_in++;
   }
@@ -177,17 +196,20 @@ synti2_midi_to_misss(byte_t *midi_in,
     /* TODO: So far, we do nothing to Channel Mode Messages. */
     midi_ccnum = *midi_in++;
     midi_ccval = *midi_in++;
-    return synti2_misss_setf(misss_out, midi_chn, 
-       synti2_misss_mapControlDest(midi_ccnum), 
-       synti2_misss_mapControlValue(midi_ccval));
+    return synti2_misss_ramp(misss_out, midi_chn, 
+                             synti2_misss_mapControlDest(midi_ccnum), 
+                             0.001f,                             
+                             synti2_misss_mapControlValue(midi_ccval));
   case MIDI_STATUS_PROGRAM:
     /* Omit program change. Could have some sound bank logic... */
     return 0;
   case MIDI_STATUS_CHANNEL_PRESSURE:
+    /* TODO: Should be mapped to a controller. */
     /* return synti2_misss_control(misss_out, midi_chn, 
        synti2_misss_mapPressureDest(), synti2_misss_mapPressureValue());*/
     return 0;
   case MIDI_STATUS_PITCH_WHEEL:
+    /* FIXME: Should be mapped to a controller (?). */
     midi_bendval = (midi_in[1] << 7) + midi_in[0];
     return synti2_misss_setf(misss_out, midi_chn, 
        synti2_misss_mapPitchDest(), 

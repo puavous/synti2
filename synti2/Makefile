@@ -40,7 +40,8 @@ one_star_j:
 	mv tinyexe $@
 
 cube_thing:
-	make tinyexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO'
+	make tinyexe GFX=example/cube_thing_gfx.c SND=example/cube_thing.s2bank SMF=example/cube_thing.mid \
+	     NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO'
 	mv tinyexe cube_thing
 
 example1:
@@ -53,7 +54,7 @@ example1:
 
 jacksynti2:
 	make visexe \
-		GFX=example/one_star_j/gfx.c \
+		GFX=tests/tryout_gfx2.c \
 	        SND=example/one_star_j/one_star_j.s2bank \
 		SMF=example/one_star_j/one_star_j.mid 
 

@@ -55,6 +55,7 @@
 #include <fstream>
 
 #include "patchtool.hpp"
+#include "midihelper.hpp"
 //#include "synti2_inter.h"
 #include "synti2_misss.h"
 
@@ -139,8 +140,9 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
     sm->actual = (*buf = (intval &= 0x7f));
     return 1;
   case MISSS_OP_SET_F:
-    sm->actual = synti2::encode_f(sm->value, buf);
-    return 2;
+    intval = synti2::encode_f(sm->value);
+    sm->actual = synti2::decode_f(intval);    
+    return encode_varlength(intval, buf);
   default:
     /* An error.*/
     /*jack_error("Unknown parameter type.");*/

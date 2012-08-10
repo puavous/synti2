@@ -8,6 +8,8 @@
 
 #include "jack/midiport.h"
 
+#include "midihelper.hpp"
+
 #define MIDI_NCHANNELS 16
 #define MIDI_NNOTES 128
 

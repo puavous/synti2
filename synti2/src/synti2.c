@@ -50,17 +50,18 @@ static int RandSeed = 1;
  * parameter format.
  */
 static 
-int
+size_t
 __attribute__ ((noinline))
-varlength(const byte_t * source, unsigned int * dest){
-  int nread;
-  byte_t byte;
+varlength(const unsigned char * source, unsigned int * dest){
+  size_t nread;
+  unsigned char byte;
   *dest = 0;
   for (nread=1; nread<=4; nread++){
     byte = *source++;
     *dest += (byte & 0x7f);
-    if ((byte & 0x80) == 0)
+    if ((byte & 0x80) == 0){
       return nread; 
+    }
     else *dest <<= 7;
   }
 #ifndef ULTRASMALL
@@ -400,6 +401,8 @@ void
 synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
 {
   int ir;
+  unsigned int intval;
+  size_t nbytes;
   for(; *data != 0xf7; pat++){
     for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
       pat->ipar3[ir] = *data >> 3;
@@ -407,9 +410,12 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
     }
 
     for (ir=0; ir<SYNTI2_F_NPARS; ir++){
-      pat->fpar[ir] = synti2_decode_f(data);
-      data += 2;
-      //printf("Read value (%02x %02x) %03d: %f\n", data[ir], data[ir+1], ir, pat->fpar[ir]);
+      //printf("Reading value %08lx: (%02x %02x)", data, data[0], data[1]);
+      nbytes = varlength(data, &intval);
+      data += nbytes;
+      pat->fpar[ir] = synti2_decode_f(intval);
+      //printf(" %04x len=%d %03d <- %f\n", intval, nbytes, ir, pat->fpar[ir]);
+      //fflush(stdout);
     }
     //data += 2*SYNTI2_F_NPARS;
   }
@@ -456,6 +462,7 @@ void
 synti2_do_receiveData(synti2_synth *s, const byte_t * data){
   int opcode, offset, ir;
   synti2_patch *pat;
+  unsigned int encoded_fval;
 
   /* Data header: */
   opcode = *data++; //opcode <<= 7; opcode += *data++;  /* what to do */
@@ -475,7 +482,8 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
     /* Receive one float parameter at location (patch,fpar_index) */
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
-    pat->fpar[ir] = synti2_decode_f(data);
+    varlength(data, &encoded_fval);
+    pat->fpar[ir] = synti2_decode_f(encoded_fval);
   } 
 #ifndef ULTRASMALL
   else {

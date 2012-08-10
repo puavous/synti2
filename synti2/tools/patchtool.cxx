@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdlib>
 
+#include "midihelper.hpp"
 #include "patchtool.hpp"
 
 
@@ -42,13 +43,13 @@ std::string line_chop(std::string &str){
 /* Class methods */
 
 /** Decode a "floating point" parameter. */
-float synti2::decode_f(const unsigned char *buf){
-  return synti2_decode_f(buf);
+float synti2::decode_f(unsigned int encoded_fval){
+  return synti2_decode_f(encoded_fval);
 }
 
 /** Encode a "floating point" parameter into 7 bit parts. */
-float synti2::encode_f(float val, unsigned char * buf){
-  return synti2_encode_f(val, buf);
+unsigned int synti2::encode_f(float val){
+  return synti2_encode_f(val);
 }
 
 
@@ -273,11 +274,13 @@ synti2::Patch::exportBytes(std::vector<unsigned char> &bvec){
     bvec.push_back(getValue("I7",i));
   }
 
-  unsigned char buf[2] = {0,0};
+  unsigned char buf[4] = {0,0,0,0};
   for (int i=0; i<getNPars("F"); i++){
-    synti2::encode_f(getValue("F", i), buf);
-    bvec.push_back(buf[0]);
-    bvec.push_back(buf[1]);
+    unsigned int intval = synti2::encode_f(getValue("F", i));
+    size_t len = encode_varlength(intval, buf);
+    for (int i=0;i<len;i++){
+      bvec.push_back(buf[i]);
+    }
   }
 }
 

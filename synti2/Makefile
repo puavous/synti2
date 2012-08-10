@@ -22,7 +22,7 @@ S2HEADERS = include/synti2_guts.h \
 
 S2SOURCES = src/synti2.c src/synti2_jack.c src/synti2_midi.c
 
-PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp 
+PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp tools/midihelper.cxx tools/midihelper.hpp
 
 # Ahaa.. you can have a make inside a make... 
 
@@ -118,7 +118,8 @@ nodefaultmake:
 tools: midi2synti2 patchedit genpar cbank
 
 midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
-		tools/miditool.hpp Makefile
+		tools/miditool.hpp tools/midihelper.hpp \
+		tools/midihelper.cxx Makefile
 	g++ -Wextra -o $@ $(filter %.cxx, $+) \
 		-lfltk `fltk-config --cxxflags` \
 		`pkg-config --cflags --libs jack`
@@ -132,7 +133,7 @@ patchedit: $(PATCHEDITDEPS) Makefile
 genpar: $(GENPARDEPS)
 	g++ -Isrc -Itools/ -o $@ $(filter %.cxx , $^)
 
-cbank: tools/cbank.cxx tools/patchtool.cxx tools/patchtool.hpp Makefile
+cbank: tools/cbank.cxx $(PTSOURCES) Makefile
 	g++ -Isrc/ -o $@ -Wextra $(filter %.cxx, $^)
 
 

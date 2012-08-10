@@ -11,8 +11,8 @@ namespace synti2{
 
   /* Functions - maybe belonging to some class? */
 
-  float decode_f(const unsigned char *buf);
-  float encode_f(float val, unsigned char * buf);
+  float decode_f(unsigned int encoded_fval);
+  unsigned int encode_f(float val);
 
   /* Classes for: Patch, PatchBank, ParamDescr, ParamValue */
 

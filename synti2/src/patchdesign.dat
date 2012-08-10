@@ -99,8 +99,11 @@ NDOUT DlyLinesOut 0 4 0 5
 # Filter LP,BP,HP,Notch
 FILT FilterMode 0 3 0 16
 
+# Use a delay line instead of zero as "input 0":
+FBACK FeedBack 0 4 0 17
+
 # Need an even number of 3-bit parameters:
-xxx UNUSED0 0 1 0 17
+#xxx UNUSED0 0 1 0 18
 
 
 

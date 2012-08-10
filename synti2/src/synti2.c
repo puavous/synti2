@@ -873,6 +873,27 @@ synti2_render(synti2_synth *s,
 #endif
       
       sigin  = signal = &(s->outp[iv][0]);
+
+#ifndef NO_FEEDBACK
+      /* Sort of like a "feedback" operator. */
+
+      /* TODO: OK.. this can do some pretty weird/nasty stuff, so I'll
+         let it be here. Not my favorite feature, at least when it is
+         crappy like this (i.e., modulates every oscillator by
+         default..) Consider a different implementation, if this seems
+         to become useful.. at all... But the oscillator and envelope
+         code and sound parameters may need some rethinking in that
+         case (?) ... should make the delay line contents available in
+         sigin, and that's all, I guess.. looks easy enough?
+         Yei. FIXME: Do it the easy way instead of this initial
+         attempt. */
+      id = pat->ipar3[SYNTI2_I3_FBACK];
+      if (id>0){
+        dsamp = s->framecount.val;
+        *signal = s->delay[id-1][dsamp % DELAYSAMPLES]
+          * pat->fpar[SYNTI2_F_DINLV1-1+id];
+      }
+#endif
       
       for(iosc = 0; iosc < NOSCILLATORS; iosc++){
         signal++; /* Go to next output slot. */
@@ -911,12 +932,7 @@ synti2_render(synti2_synth *s,
 #endif
       
 #ifndef NO_DELAY
-      /* Additive mix from delay lines. FIXME: Could have wild
-         results from modulating with a delayed mix.. sort of like a
-         "feedback" operator. But the oscillator and envelope code
-         and sound parameters may need some rethinking in that case
-         (?) ... should make the delay line contents available in
-         sigin, and that's all, I guess.. looks easy enough? */
+      /* Additive mix from delay lines. */
       dsamp = s->framecount.val;
       for (id = 0; id < pat->ipar3[SYNTI2_I3_NDIN]; id++){
         interm += s->delay[id][dsamp % DELAYSAMPLES]

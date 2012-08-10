@@ -554,7 +554,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     vi->callback(cb_new_i3_value);
   }
 
-  py=80; w=110;
+  py=80; w=95;
   int npars = pd->nPars("F");
   int ncols = 4;
   int nrows = (npars / ncols) + 1;

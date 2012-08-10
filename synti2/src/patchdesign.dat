@@ -125,26 +125,26 @@ ENV1K5T En1:5T  0 1.27   2 6
 ENV1K5L En1:5L 0 1.27   2 6
 
 ENV2K1T En2:1T  0 0.255   3 7
-ENV2K1L En2:1L 0 5.11   2 7
+ENV2K1L En2:1L 0 5.00   2 7
 ENV2K2T En2:2T  0 1.27   2 7
-ENV2K2L En2:2L 0 5.11   2 7
+ENV2K2L En2:2L 0 5.00   2 7
 ENV2K3T En2:3T  0 2.55   2 7
-ENV2K3L En2:3L 0 5.11   2 7
+ENV2K3L En2:3L 0 5.00   2 7
 ENV2K4T En2:4T  0 2.55   2 7
-ENV2K4L En2:4L 0 5.11   2 7
+ENV2K4L En2:4L 0 5.00   2 7
 ENV2K5T En2:5T  0 2.55   2 7
-ENV2K5L En2:5L 0 5.11   2 7
+ENV2K5L En2:5L 0 5.00   2 7
 
 ENV3K1T En3:1T 0 0.255   3 8
-ENV3K1L En3:1L 0 12.7   1 8
+ENV3K1L En3:1L 0 12.0   1 8
 ENV3K2T En3:2T 0 1.27   2 8
-ENV3K2L En3:2L 0 12.7   1 8
+ENV3K2L En3:2L 0 12.0   1 8
 ENV3K3T En3:3T 0 2.55   2 8
-ENV3K3L En3:3L 0 12.7   1 8
+ENV3K3L En3:3L 0 12.0   1 8
 ENV3K4T En3:4T 0 2.55   2 8
-ENV3K4L En3:4L 0 12.7   1 8
+ENV3K4L En3:4L 0 12.0   1 8
 ENV3K5T En3:5T 0 2.55   2 8
-ENV3K5L En3:5L 0 12.7   1 8
+ENV3K5L En3:5L 0 12.0   1 8
 
 ENV4K1T En4:1T  0 0.255   3 9
 ENV4K1L En4:1L -1.27 1.27   2 9
@@ -182,19 +182,19 @@ ENV6K5L En6:5L -31.0 32.0   1 11
 # Source Levels (before multiplicative amplitude envelope)
 # This is for additional "gain" or phase inversion.
 
-LV1 Oper1Level -8.0 8.0   2 15
-LV2 Oper2Level -8.0 8.0   2 15
-LV3 Oper3Level -8.0 8.0   2 15
-LV4 Oper4Level -8.0 8.0   2 15
-LVN NoiseLevel -8.0 8.0   2 15
+LV1 Oper1Lev -8.0 8.0   2 15
+LV2 Oper2Lev -8.0 8.0   2 15
+LV3 Oper3Lev -8.0 8.0   2 15
+LV4 Oper4Lev -8.0 8.0   2 15
+LVN NoiseLev -8.0 8.0   2 15
 
 # Detune/Relative fundamental pitch (added to "note from keyboard")
 # NOTE: Order of these is hardcoded as of 2012-03-04:
 
-DT1  Op1Detune  -48.0 48.0   1 12
-DT2  Op2Detune  -48.0 48.0   1 12
-DT3  Op3Detune  -48.0 48.0   1 12
-DT4  Op4Detune  -48.0 48.0   1 12
+DT1  Op1Crs  -48.0 48.0   1 12
+DT2  Op2Crs  -48.0 48.0   1 12
+DT3  Op3Crs  -48.0 48.0   1 12
+DT4  Op4Crs  -48.0 48.0   1 12
 DT1F Op1Fine     -.5  .5     3 13
 DT2F Op2Fine     -.5  .5     3 13
 DT3F Op3Fine     -.5  .5     3 13
@@ -234,7 +234,7 @@ DLEV4 Dly4OutLev  0.0 1.0   2 18
 
 
 # Global output mix level for convenience
-MIXLEV MixLevel 0.0 1.0  2 19
+MIXLEV MixLev 0.0 1.0  2 19
 
 # Global pan for some stereophonic aural excitation
 MIXPAN MixPan  -1.0 1.0  2 19

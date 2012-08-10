@@ -189,7 +189,8 @@ struct synti2_synth {
    * FIXME: I already let go of all dynamic allocations for the sake
    * 4k, so now maybe should replace s->pl with &s->_actual_player all
    * around the code. Or just move the few attributes of the player to
-   * be attributes of the synth itself..
+   * be attributes of the synth itself.. Yes, the latter would be the
+   * most lean (and mean) option for a 4k synth, I guess.
    */
   synti2_player *pl;
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
@@ -238,8 +239,9 @@ struct synti2_synth {
                                          but the space costs nothing..*/
 
 #ifndef ULTRASMALL
-  unsigned int last_error_frame; /* Errors can be monitored by tools. */
-  unsigned int last_error_type;  /* Error position. */
+  /* Errors could be monitored by tools. Ultrasmall exe assumes correct data.*/
+  unsigned int last_error_frame; /* Error position. */
+  unsigned int last_error_type;  /* Error type */
   unsigned int last_error_info;  /* Some key information about the error. */
 #endif
 };

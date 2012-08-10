@@ -1,7 +1,22 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
-#
+      /* TODO: (In a later project!) Need logic for skipping an
+         "unsounding channel"? Yes, an #ifndef NO_SKIP_DEAD but then
+         what is the rule? op4amp?  how about delay tricks then? */ /*
+         I think the following neverhappen was an early placeholder
+         for such... */ /* if (pat==NULL) continue; */
+
+      /* TODO: (in a later project) Table lookup for velocity
+       * sensitivity? Now just linear velocity sensitivity,
+       * although tools could map it nonlinearly.
+       *
+       * Overall, wavetables could be used much more creatively than they
+       * were in this synth (at least oscillators, velocity, envelopes).
+       */
+
+
+
 # As of now (2012-04-11), the sound algorithm is finally almost
 # finished for synti2. Only some things related to stereo panning and
 # delay effect routing is still lacking from the original plan/dream. 

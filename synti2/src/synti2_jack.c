@@ -1,3 +1,6 @@
+/* The whole thing is relevant only if compiling for Jack. */
+#ifdef JACK_MIDI
+
 #include "synti2.h"
 #include "synti2_jack.h"
 #include "synti2_misss.h"
@@ -9,16 +12,13 @@
 /* For debug: */
 #include <stdio.h>
 
-/* The whole thing is relevant only if compiling for Jack. */
-#ifdef JACK_MIDI
-
 /** Creates a future for the synti2 player/sequencer that will
  *  translate the next nframes of midi data from a jack audio
  *  connection kit midi port. Uses the midi conversion module for the
  *  midi-specific job.
  *
- * ... If need be.. this could be made into merging function on top of
- * the sequence being played.. but I won't bother for today's
+ * ... If need be.. this could be made into a midi merge function on
+ * top of the sequence being played.. but I won't bother for today's
  * purposes...
  */
 static

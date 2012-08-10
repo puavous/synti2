@@ -227,11 +227,6 @@ synti2_midi_to_misss(byte_t *midi_in,
                              synti2_misss_mapBendDest(midi_chn), 
                              INSTANT_RAMP_LENGTH,
                              synti2_misss_mapPitchValue(midi_bendval));
-    /* FIXME: delete.. WAS:
-    return synti2_misss_ramp(misss_out, midi_chn, 
-       synti2_misss_mapPitchDest(), 
-       synti2_misss_mapPitchValue(midi_bendval));
-    */
   case MIDI_STATUS_SYSTEM:
     return synti2_sysmsg_to_misss(midi_status, midi_in, 
                                   misss_out, input_size-1);

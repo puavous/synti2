@@ -1,4 +1,5 @@
-/** Encode a "floating point" parameter into 7 bit parts. 
+/** Encode a "floating point" parameter into 7 bit parts. See decoder
+    for format description.
 
   This code (and algorithm) is now localized here; it must match the
   decoding code in synti2_fdec.c

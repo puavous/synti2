@@ -42,12 +42,8 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data);
 static int RandSeed = 1;
 
 /** Reads a MIDI variable length number. "Varlengths" are used in my
- * native song format. I was thinking about re-using the scheme for
- * other stuff, like patch parameters, but I was unable to figure out
- * how to make significant improvements to code size that way. I may
- * have overlooked something, though, as always. FIXME: I have. See
- * encode/decode function comments for new ideas about the patch
- * parameter format.
+ * native song format for time deltas and fixed-point patch
+ * parameters.
  */
 static 
 size_t
@@ -421,7 +417,9 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
   }
 }
 
-/* FIXME: Should be ifdef USE_COMPOSE_MODE instead? */
+/* FIXME: Should be ifdef USE_COMPOSE_MODE instead? 
+ * Or ifndef NO_COMPOSE_MODE? Or ifndef NO_RECEIVE_DATA
+ */
 
 #ifndef NO_RECEIVE_SYSEX
 /** 
@@ -543,8 +541,6 @@ synti2_handleInput(synti2_synth *s,
       c->bb = (*((float*)(midibuf+3+sizeof(float)))); /*to next*/
       c->val = 0;
       c->delta = MAX_COUNTER / s->sr / (*((float*)(midibuf+3))); /*in given time */
-      /*FIXME: delete.. WAS: s->patch[midibuf[1]].fpar[midibuf[2]] = *((float*)(midibuf+3));*/
-      /* or synti2_do_setf(midibuf[1], midibuf[2], (float*)(midibuf+3)?*/
 #endif
 
 #ifndef NO_SYSEX_RECEIVE
@@ -566,7 +562,9 @@ synti2_handleInput(synti2_synth *s,
     }
 #endif
   }
-  pl->frames_done = upto_frames; /* FIXME: used only by rt midi module?*/
+#ifndef ULTRASMALL
+  pl->frames_done = upto_frames; /* So far used only by rt jack midi.. */
+#endif
 }
 #endif
 
@@ -751,10 +749,7 @@ synti2_updateFrequencies(synti2_synth *s){
       /* Pitch bends for all oscillators. FIXME: Allow weird effects
          by [SYNTI2_F_PBAM+iosc]? In code, it is only one plus; in
          patch data it is number of channels times number of
-         oscillators fpars, which is a lot. Unless I come up with a
-         new, sparse, storage for the patch data. Hmm.. why not,
-         indeed.. So do that, and leave the actual fixme which is the
-         storage format. */
+         oscillators fpars, which is a lot.. or is it? */
       notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM];
 #endif
 
@@ -807,7 +802,10 @@ static void apply_filter(synti2_synth *s,
 
   float f,q;
   /* At first use only a static filter frequency. TODO: Maybe use an
-     envelope later? FIXME: Check the value range once again..? */
+   * envelope later? FIXME: Check the value range once again..? 
+   *
+   * FIXME: Could there be a nicer filter?
+   */
 
   f = 1000.f * pat->fpar[SYNTI2_F_FFREQ] / s->sr;
   q = 1.0f - pat->fpar[SYNTI2_F_FRESO];
@@ -865,13 +863,7 @@ synti2_render(synti2_synth *s,
 #endif
       
     for(iv=0;iv<NPARTS;iv++){
-
       pat = s->patch + iv;
-      /* FIXME: Need logic for "unsounding"? Yes, an #ifndef NO_SKIP_DEAD
-	 but then what is the rule? op4amp? how about delay tricks then? */
-      /* I think the following neverhappen was an early placeholder for
-	 such... */
-      /* if (pat==NULL) continue; */
 
 #ifndef NO_CC
       for (ii=0;ii<NCONTROLLERS;ii++){
@@ -879,7 +871,6 @@ synti2_render(synti2_synth *s,
         pat->fpar[ccdest] = s->contr[iv][ii].f;
       }
 #endif
-
       
       sigin  = signal = &(s->outp[iv][0]);
       
@@ -904,10 +895,6 @@ synti2_render(synti2_synth *s,
 #ifndef NO_VELOCITY
         /* Optional velocity sensitivity */
         if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
-          /* TODO: (in a later project) Table lookup? Now just
-           * linear velocity sensitivity, although tools could map
-           * it nonlinearly.
-           */
           interm *= s->velocity[iv] / 127.f;
         }
 #endif

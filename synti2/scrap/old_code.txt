@@ -1,6 +1,61 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+#
+# As of now (2012-04-11), the sound algorithm is finally almost
+# finished for synti2. Only some things related to stereo panning and
+# delay effect routing is still lacking from the original plan/dream. 
+# And then some other things... but not too many changes anyway.
+#
+#
+# Global data (to be planned)
+#   TODO: *Can we use the same int3/int7/float -structure for global data
+#         and for patches. Simplifies reader maybe.. "Patch 0"== global
+#
+#   Ideas:
+#
+#   Patch selection on each channel/part (range 0-127?)?:
+#   0   0   0   0   0   0   0   0   0   0 
+#   0   0   0   0   0   0
+#
+#   Could be done with normal program change messages!?
+#     --> Yes, and the "midi filter module" would intercept this, 
+#         if somebody
+
+# Mixer section? --> No.. There is now a MIX_LEVEL per patch.
+#  (It is just a GUI issue if this feature is needed)
+# Volume -> Mix
+# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+# Volume -> Effect1  --> No.. There are no special effects in synti2
+# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+# Volume -> Effect2  --> No.. There are no special effects in synti2
+# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+# Pan?  --> No.. There is now a pan parameter per patch.
+#  (It is just a GUI issue if this feature is needed)
+# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
+# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+
+# Global parameters would be something like:
+#  Delay1                       Delay2
+#  length  feedback  LPcutoff   length  feedback  LPcutoff
+
+# Or... should the effects be abstracted as "imaginary part 17" etc.?
+#   Could be, of course! 
+#   But for now, let us just use some of the MIDI channels for these
+
+
+
+
+# TODO: Think if there should be a "global envelope bank"? Noo.. would
+# be too different from a "usual synth interface" which I want to aim
+# at (in addition to any other goals).. Maybe in a later project(!).
+
  * DONE: Controllers would sound nicer if they were clamping counters
  * (no artefacts from discrete value jumps)
  *

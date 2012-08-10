@@ -45,7 +45,9 @@ static int RandSeed = 1;
  * native song format. I was thinking about re-using the scheme for
  * other stuff, like patch parameters, but I was unable to figure out
  * how to make significant improvements to code size that way. I may
- * have overlooked something, though, as always.
+ * have overlooked something, though, as always. FIXME: I have. See
+ * encode/decode function comments for new ideas about the patch
+ * parameter format.
  */
 static 
 int

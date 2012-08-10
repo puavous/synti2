@@ -2,76 +2,41 @@
 #
 # Lines beginning with '#' and empty lines are ignored by tools.
 #
+# Captions in brackets '[thus]' begin a section of different data
+# type/precision.
+#
 # The C code for patch format is generated from this file.
 #
-#
-# As of now (2012-04-11), the sound algorithm is finally almost
-# finished for synti2. Only some things related to stereo panning and
-# delay effect routing is still lacking from the original plan/dream. 
-# And then some other things... but not too many changes anyway.
-#
-#
-# TODO: Think if there should be a "global envelope bank"? Noo.. would
-# be too different from a "usual synth interface" which I want to aim
-# at (in addition to any other goals)..
-#
-# Global data (to be planned)
-#   TODO: *Can we use the same int3/int7/float -structure for global data
-#         and for patches. Simplifies reader maybe.. "Patch 0"== global
-#
-#   Ideas:
-#
-#   Patch selection on each channel/part (range 0-127?)?:
-#   0   0   0   0   0   0   0   0   0   0 
-#   0   0   0   0   0   0
-#
-#   Could be done with normal program change messages!?
-# Mixer section?
 
-# Volume -> Mix
-# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
-# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
-
-# Volume -> Effect1
-# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
-# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
-
-# Volume -> Effect2
-# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
-# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
-
-# Pan?
-# 1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16
-# 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
-
-# Some two stereo effect lines would be nice.
-# Maybe just some sort of stereo delays..
-
-# Global parameters would be something like:
-#  Delay1                       Delay2
-#  length  feedback  LPcutoff   length  feedback  LPcutoff
-
-# Or... should the effects be abstracted as "imaginary part 17" etc.?
+# FIXME: It would be perfect if the whole patch design could be partly
+# compiled when some "NO_DONT_USE_SOME_FEATURE" is present. That would
+# reduce sound data size greatly, I believe! But then there would be a
+# problem with tool programs that are using indices at the
+# moment. Maybe yet another job for the midi filter module... Map from
+# original indices to restricted ones in compose mode? In playback
+# mode the code contains only macro names. Yep. Do this somehow!!
 
 ##############  Patch data 
 
 # Format, one line per parameter: NAME Description MIN MAX GUIPrecision GUIGroup
 
-# FIXME: Some more hints for the GUI should be given, like precision
-# and a background color!!
-
+[I3]
 # 3-bit integer parameters:
 # These end up as SYNTI2_I3_NAME
-[I3]
+
 # Index of the envelope whose end is end-of-life for the sound.
 # For "normal" patches this presumably is the carrier volume envelope..
 # Will I ever use this one? Problematic with delay channels..
 ELIFE LifeEnvelope 0 6 0 1
 
+# FIXME: A small C-like example of what I want here:
+# (but what about during compose-time?)
+#ifndef NO_EXTRA_WAVETABLES
 HARM1 Op1Wav 0 7   0 5
 HARM2 Op2Wav 0 7   0 5
 HARM3 Op3Wav 0 7   0 5
 HARM4 Op4Wav 0 7   0 5
+#endif
 
 
 # Indices of the operator amplitude envelopes
@@ -87,9 +52,14 @@ EPIT2 Op2PitchEnv 0 6   0 1
 EPIT3 Op3PitchEnv 0 6   0 1
 EPIT4 Op4PitchEnv 0 6   0 1
 
+# FIXME: Pan and filter envelopes! (And a final filter design...)
+
 # Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
 # Think about using some look-up tables to their full
 # capacity here... 0=no 1=linear 2=squared 3=inverse ...
+# (In a later project)
+# FIXME: There should be an assignable velocity target and range?
+# And hey, with a quite similar logic, a pitch sensitivity could be built?
 
 VS1 Oper1VelSens 0 1   2 14
 VS2 Oper2VelSens 0 1   2 14
@@ -140,7 +110,7 @@ xxx UNUSED0 0 1 0 17
 
 # This is a 'hack' for null controller target.
 # (Not used for sound generation.)
-NULLTRG NOT_Editable 0 0 0 1
+NULLTGT NOT_Editable 0 0 0 1
 
 # After ENVS, envelope params need to be ordered and consistent with the code!
 ENVS    En1:1T 0 0.255   3 6
@@ -245,7 +215,7 @@ DINLV2 Dly2InLev  -1.0 1.0   2 16
 DINLV3 Dly3InLev  -1.0 1.0   2 16
 DINLV4 Dly4InLev  -1.0 1.0   2 16
 
-# Filter parameters; quite basic
+# Filter parameters; the very basic ones
 FFREQ Cutoff  0.0 80.0   2 17
 FRESO Resonance   0.0 1.0   2 17
 
@@ -265,6 +235,8 @@ DLEV4 Dly4OutLev  0.0 1.0   2 18
 
 # Global output mix level for convenience
 MIXLEV MixLevel 0.0 1.0  2 19
+
+# Global pan for some stereophonic aural excitation
 MIXPAN MixPan  -1.0 1.0  2 19
 
 

@@ -25,6 +25,9 @@
  * (automatically, though, nowadays) at compile time. Adjacent copies
  * of exactly the same patch data should compress nicely, too.
  *
+ * FIXME: For 4k, a sound bank should contain no unused patches (even
+ * with zero parameters). Every saved byte matters :).
+ *
  * FIXME: The sysex_receive() could be hardwired to receive all the
  * patches at once (when compiled as stand-alone), starting from 0,
  * saving the bytes for the offset handling.
@@ -141,7 +144,7 @@ struct synti2_player_ev {
   synti2_player_ev *next;   /* link to next event */
   unsigned int frame;       /* Time of the event in frames */
   int len;                  /* length of the event data (hard-codable?) */
-  /* FIXME: Think something like {*next, frame, databytes[10]}? */
+  /* FIXME: Think something like {*next, frame, databytes[MAX_EVENT_DATA_SIZE]}? */
 };
 
 /** Player is the MIDI-like sequence playback engine. */

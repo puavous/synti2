@@ -421,7 +421,7 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
  * Or ifndef NO_COMPOSE_MODE? Or ifndef NO_RECEIVE_DATA
  */
 
-#ifndef NO_RECEIVE_SYSEX
+#ifndef NO_SYSEX_RECEIVE
 /** 
  * Receive arbitrary data. (Convenient for sound editing, but not
  * necessary for the stand-alone 4k synth. Hence, this is compiled

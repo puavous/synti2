@@ -204,7 +204,10 @@ DT3F Op3Fine     -.5  .5     3 13
 DT4F Op4Fine     -.5  .5     3 13
 
 # Notes to bend at positive maximum:
-PBAM  BendAmount 0.0 24.0 1 18
+PBAM   Op1BendAmt 0.0 24.0 1 18
+PBAM2  Op2BendAmt 0.0 24.0 1 18
+PBAM3  Op3BendAmt 0.0 24.0 1 18
+PBAM4  Op4BendAmt 0.0 24.0 1 18
 # Bend value, not for editing but for pitch bend messages.
 # Bend is used by patching controller #4 to this value.
 PBVAL NOT_Editable -1.0  1.0  2 18

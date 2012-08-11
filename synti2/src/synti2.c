@@ -254,6 +254,7 @@ synti2_init(synti2_synth * s,
   int ii, wt;
   float t;
   float hack;
+  float freqf;
 
   memset(s, 0, sizeof(s));     /* zero */
 
@@ -294,7 +295,7 @@ synti2_init(synti2_synth * s,
    */
   /* slightly inaccurate notes but without powf(). Many bytes shorter exe. */
   /* My ears find the result very tolerable; I don't know about others... */
-  float freqf = 8.175798915643707f;
+  freqf = 8.175798915643707f;
   for(ii=0;ii<128;ii++){
     s->note2freq[ii] = freqf;
     freqf *= 1.0594630943592953f;
@@ -406,14 +407,13 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
     }
 
     for (ir=0; ir<SYNTI2_F_NPARS; ir++){
-      //printf("Reading value %08lx: (%02x %02x)", data, data[0], data[1]);
+      /*printf("Reading value %08lx: (%02x %02x) ", data, data[0], data[1]);*/
       nbytes = varlength(data, &intval);
       data += nbytes;
       pat->fpar[ir] = synti2_decode_f(intval);
-      //printf(" %04x len=%d %03d <- %f\n", intval, nbytes, ir, pat->fpar[ir]);
-      //fflush(stdout);
+      /*printf("%04x len=%d %03d <- %f\n", intval, nbytes, ir, pat->fpar[ir]);*/
+      /*fflush(stdout);*/
     }
-    //data += 2*SYNTI2_F_NPARS;
   }
 }
 
@@ -463,7 +463,7 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
   unsigned int encoded_fval;
 
   /* Data header: */
-  opcode = *data++; //opcode <<= 7; opcode += *data++;  /* what to do */
+  opcode = *data++; /*opcode <<= 7; opcode += *data++;*/  /* what to do */
   offset = *data++; offset <<= 7; offset += *data++;  /* in where */
   /* "Sysex" type data: */
   /* As of yet, offset==patch index. TODO: More elaborate addressing? */
@@ -729,11 +729,16 @@ synti2_updateFrequencies(synti2_synth *s){
 
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
       /* TODO: Pitch-note follow ratio (for drum/sfx) as an optional
-       * parameter?
+       * parameter? Yep, maybe "parA+note*(1-parB)" so that zero
+       * parameters have no effect.
        */
+
       /* FIXME: Do I want legato? Then note should be another clamping
-         counter per channel, and yet another sound parameter to set the
-         delta upon note-on. */
+       * counter per channel, and yet another sound parameter to set
+       * the delta upon note-on. This would be one of the most final
+       * features to think about... Maybe never implemented in
+       * synti2.. maybe, maybe.
+       */
 
       notemod = s->note[iv];
 #ifndef NO_PITCH_ENV
@@ -746,11 +751,14 @@ synti2_updateFrequencies(synti2_synth *s){
 #endif
 
 #ifndef NO_PITCH_BEND
-      /* Pitch bends for all oscillators. FIXME: Allow weird effects
-         by [SYNTI2_F_PBAM+iosc]? In code, it is only one plus; in
-         patch data it is number of channels times number of
-         oscillators fpars, which is a lot.. or is it? */
-      notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM];
+      /* Pitch bend for each oscillator. Different values between
+       * oscillators allow some weird effects; normal synth default
+       * would be +2 notes on each oscillator. The cube_thing 4k intro
+       * actually got some bytes smaller after adding the 3 additional
+       * parameters, so I think my pitch bend system is now final like
+       * this.
+       */
+      notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM+iosc];
 #endif
 
       note = notemod; /* should make a floor (does it? check spec)*/
@@ -832,12 +840,16 @@ synti2_render(synti2_synth *s,
   float interm;
   int wtoffs;
   synti2_patch *pat;
-#ifndef NO_CC
-  int ccdest;
-#endif
 
   float *sigin;  /* Input signal table during computation. */
   float *signal; /* Output signal destination during computation. */
+
+#ifndef NO_CC
+  int ccdest;
+#endif
+#ifndef NO_STEREO
+  float pan;
+#endif
 
   for (iframe=0; iframe<nframes; iframe++){
     
@@ -965,7 +977,8 @@ synti2_render(synti2_synth *s,
       buffer[2*iframe]   += pat->fpar[SYNTI2_F_MIXLEV] * interm;
 #else
       /* To cut down computations, panning increases volume ([0,2]): */
-      float pan = pat->fpar[SYNTI2_F_MIXPAN];
+      pan = pat->fpar[SYNTI2_F_MIXPAN];
+      /* FIXME: See if size could be improved by precomputed iframeL, iframeR */
       buffer[2*iframe]   += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
       buffer[2*iframe+1] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);
 #endif

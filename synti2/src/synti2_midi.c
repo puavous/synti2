@@ -30,9 +30,8 @@ synti2_misss_mapBendDest(){
 /** Map MIDI controller value ccval to a synti2 parameter value. */
 static
 float
-synti2_misss_mapPitchValue(int bendval){
-  float frange = 1.0f; /* Range is now determined by the patch. */
-  return (bendval - 0x2000)/(float)0x2000 * frange;
+synti2_misss_mapBendValue(int bendval){
+  return (bendval - 0x2000)/(float)0x2000;
 }
 
 /** Map MIDI controller number ccn to a synti2 controller number. */
@@ -42,14 +41,6 @@ byte_t
 synti2_misss_mapControlDest(byte_t ccn){
   return 0; /* FIXME: Always the first controller. */
 }
-
-/** Map Pitch bend of a channel to a synti2 controller. */
-static
-byte_t
-synti2_misss_mapPitchDest(byte_t channel){
-  return 3; /* FIXME: Always cc3 for pitch. */
-}
-
 
 /** Map MIDI controller value ccval to a synti2 parameter value. */
 static
@@ -226,7 +217,7 @@ synti2_midi_to_misss(byte_t *midi_in,
     return synti2_misss_ramp(misss_out, midi_chn, 
                              synti2_misss_mapBendDest(midi_chn), 
                              INSTANT_RAMP_LENGTH,
-                             synti2_misss_mapPitchValue(midi_bendval));
+                             synti2_misss_mapBendValue(midi_bendval));
   case MIDI_STATUS_SYSTEM:
     return synti2_sysmsg_to_misss(midi_status, midi_in, 
                                   misss_out, input_size-1);

@@ -14,6 +14,25 @@
 #define MIDI_STATUS_SYSTEM 0xf
 
 #include "synti2.h"
+#include "synti2_guts.h"
+
+typedef struct {
+  int slave_channels;         /* polyphony */
+  int slave_channel_alg;      /* algorithm for poly allocate. 0=rotate; */
+  int use_sustain_pedal;      /* TODO: not yet implemented; maybe never?. */
+  int block_note_off;         /* 0=use note off; other=don't use n-off. */
+  int constant_velocity;      /* 0=free; 1-127 force constant velocity. */
+  int bend_destination;       /* Controller to use for pitch bend. */
+  int cc_destination[128];    /* 128 controllers (MIDI) to internal controls. */
+  float cc_min[NCONTROLLERS]; /* destination-specific min value. */
+  float cc_max[NCONTROLLERS]; /* destination-specific max value. */
+  float instant_ramp_length;  /* length of "intantaneous" transition */
+} synti2_midi_channel_map;
+
+typedef struct {
+  synti2_midi_channel_map chn[NPARTS];
+} synti2_midi_map;
+
 
 int
 synti2_midi_to_misss(byte_t *midi_in, 

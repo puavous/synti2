@@ -17,6 +17,7 @@
 #include "synti2_guts.h"
 
 typedef struct {
+  int output_base_channel;    /* can shift channels +/- */
   int slave_channels;         /* polyphony */
   int slave_channel_alg;      /* algorithm for poly allocate. 0=rotate; */
   int use_sustain_pedal;      /* TODO: not yet implemented; maybe never?. */
@@ -24,6 +25,7 @@ typedef struct {
   int constant_velocity;      /* 0=free; 1-127 force constant velocity. */
   int bend_destination;       /* Controller to use for pitch bend. */
   int cc_destination[128];    /* 128 controllers (MIDI) to internal controls. */
+  int note_channel_shift[128];/* For drum sounds and/or keyboard splits. */
   float cc_min[NCONTROLLERS]; /* destination-specific min value. */
   float cc_max[NCONTROLLERS]; /* destination-specific max value. */
   float instant_ramp_length;  /* length of "intantaneous" transition */

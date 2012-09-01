@@ -438,7 +438,7 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
  * synth core, now that the MIDI interface is banished from here. And
  * thus the 3bit parameters could be extended to as much as 4 bits?
  * Only case when SysEx-type of information would be embedded in a
- * composition is a (non-4k) executable song that whould like to
+ * composition is a (non-4k) executable song that would like to
  * extend sound features by reassigning something in a patch while the
  * song is playing. Could synti2 live with disallowing such activity?
  * I start to believe that yes, it could and should disallow
@@ -481,6 +481,12 @@ synti2_do_receiveData(synti2_synth *s, const byte_t * data){
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
     varlength(data, &encoded_fval);
+    /* FIXME: My mistake (which is to be fixed): There can be no
+       varlengths inside SysEx messages. This whole MIDI/Internal
+       thing needs to be re-thought. Varlengths are good for the
+       storage format, but not for real time editing, if I want this
+       to be a standard MIDI interface.
+     */
     pat->fpar[ir] = synti2_decode_f(encoded_fval);
   } 
 #ifndef ULTRASMALL

@@ -30,6 +30,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Counter.H>
 #include <FL/Fl_Dial.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Value_Slider.H>
@@ -494,20 +495,23 @@ std::string createFvalLabel(int index, std::string label){
 Fl_Window *build_main_window(synti2::PatchDescr *pd){
 
   /* Overall Operation Buttons */
-  Fl_Window *window = new Fl_Window(1200, 600);
+  Fl_Window *window = new Fl_Window(1200, 700);
   window->resizable(window);
   main_win = window;
 
-  Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,600);
+  Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,700);
 
-  Fl_Value_Input *patch = new Fl_Value_Input(50,20,40,25,"Patch");
+  Fl_Counter *patch = new Fl_Counter(50,20,50,25,"Patch");
+  patch->type(FL_SIMPLE_COUNTER);
+  patch->align(FL_ALIGN_LEFT);
   patch->bounds(0,15);
+  patch->precision(0);
   patch->callback(cb_change_patch);
 
   widget_patch_name = new Fl_Input(150,20,90,25,"Name");
   widget_patch_name->callback(cb_patch_name);
 
-  int px=280, py=20, w=80, h=25, sp=2;
+  int px=280, py=20, w=75, h=25, sp=2;
   int labsz = 16;
   Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
   box->callback(cb_send_current); box->labelsize(labsz); 

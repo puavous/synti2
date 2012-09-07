@@ -19,6 +19,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Box.H>
 
 /* Includes needed by jack */
 #include <jack/jack.h>
@@ -149,7 +150,27 @@ public:
     Fl_Button *b = new Fl_Button(10,10,50,20,"&Quit");
     b->callback(cb_exit); b->argument((long)this);
     end();
+    
+    int px=30, py=40, w=20, h=25, sp=2;
+    /* Channel operation specification widgets. One per MIDI channel. */
+    for (int i=0;i<16;i++){
+      Fl_Box *label = new Fl_Box(FL_NO_BOX, px, py, w, h, "jaah");
+      label->label("Humm");
+      /* ARGH.. think about this a bit more before implementing..
+         there is already a "patch description" system, so why not use it for 
+         midi filter data as well as patch data...
+         
+         Fl_Value_Input *vi = new Fl_Value_Input(px+i*(w+sp),py,w,h);
+         widgets_i3.push_back(vi);
+         vi->bounds(pd->getMin("I3",i),pd->getMax("I3",i)); 
+         vi->precision(0); vi->argument(i);
+         vi->tooltip(pd->getDescription("I3", i).c_str());
+         vi->argument(i);
+         vi->callback(cb_new_i3_value);
+      */
+    }
   }
+
 };
 
 /* 

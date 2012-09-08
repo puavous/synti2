@@ -115,9 +115,11 @@ void
 synti2::PatchDescr::headerFileForC(std::ostream &os){
   std::map<std::string, std::vector<ParamDescr> >::iterator it;
   os << "/** Parameter indices as C #defines. " 
+     << std::endl
      << " *  These have been automatically generated from the patch design"
      << std::endl
      << " *  specification file that includes more documentation."
+     << std::endl
      << " */" << std::endl;
   os << "#ifndef SYNTI2_PARAMETERS_H" << std::endl;
   os << "#define SYNTI2_PARAMETERS_H" << std::endl;

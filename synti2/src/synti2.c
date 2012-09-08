@@ -82,11 +82,7 @@ varlength(const unsigned char * source, unsigned int * dest){
  * area... maybe? This issue needs to be attended while looking at the
  * tool programs as well.
  */
-/*
- * TODO: relevant to any MIDI interface, not only jack, so rename the
- * macro...
- */
-#ifndef JACK_MIDI
+#ifndef USE_MIDI_INPUT
 static
 #endif
 void

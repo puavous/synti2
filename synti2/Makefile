@@ -12,15 +12,16 @@ SHAD ?=
 NONOS ?= 
 BUTDOS ?= 
 
-
-S2HEADERS = include/synti2_guts.h \
-		include/synti2.h \
-		include/synti2_jack.h \
-		include/synti2_midi.h \
-		include/synti2_misss.h \
+S2EXEHDR = include/synti2.h \
+		include/synti2_guts.h \
 		include/synti2_params.h \
+		include/synti2_misss.h 
+S2HEADERS = $(S2EXEHDR) \
+		include/synti2_jack.h \
+		include/synti2_midi.h 
 
-S2SOURCES = src/synti2.c src/synti2_jack.c src/synti2_midi.c
+S2EXESRC = src/synti2.c
+S2SOURCES = $(S2EXESRC) src/synti2_jack.c src/synti2_midi.c
 
 PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp tools/midihelper.cxx tools/midihelper.hpp
 
@@ -149,7 +150,7 @@ benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
 
 
 # This is a template for an easy 4k-builder 
-tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
+tinyexe: $(TINYEXESOURCES) $(S2EXESRC) $(S2EXEHDR) Makefile \
 		midi2synti2 cbank
 	-mkdir hackpack
 	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
@@ -163,7 +164,7 @@ tinyexe: $(TINYEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 	        -Ihackpack \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYEXESOURCES)) \
-		$(filter %.c, $(S2SOURCES)) \
+		$(filter %.c, $(S2EXESRC)) \
 		hackpack/songdata.c hackpack/patchdata.c \
 		$(ARCHLIBS)
 

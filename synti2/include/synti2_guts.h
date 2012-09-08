@@ -247,8 +247,8 @@ struct synti2_synth {
 };
 
 
-/* Jack interface needs to have this exposed. Otherwise can be static. */
-#ifndef JACK_MIDI
+/* A MIDI interface needs to have this exposed. Otherwise can be static. */
+#ifndef USE_MIDI_INPUT
 static
 #endif
 void

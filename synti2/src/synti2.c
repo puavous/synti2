@@ -63,16 +63,17 @@ varlength(const unsigned char * source, unsigned int * dest){
 /** Adds an event to its correct location; makes no checks for empty
  * messages, i.e., assumes n >= 1. Also assumes that the pre-existing
  * events are ordered. This can be static for playback-mode, but in
- * real-time mode the MIDI interface module needs to see this. 
+ * real-time/compose mode the MIDI interface module needs to see this.
  *
- * FIXME: This cannot be used in the real-time synth due to O(n^2)
- * event addition. What needs to be done is another function that
- * assumes ordered events and doesn't do insertion!! Oh but no... this
- * is the case only if the insloc pointer is reset before calling this
- * function for each new event. This *is* linear time, if the pointers
- * are not updated outside. Hmm. the cause of the editor crash problem
- * just evaded me again. Out of space on this side? Shallow copy
- * unthought-of (hmm. THAT is unchecked as of yet!!)?
+ * Note: Worst case for inserting n events is O(n^2), but this happens
+ * only if the insloc pointer is reset before calling this function
+ * for each new event. This *is* linear time, if the pointers are not
+ * updated in the middle of insertion. Naturally, this requires that
+ * the events are added in their natural (time) order.
+ *
+ * FIXME: Hmm. the cause of the editor crash problem just evaded me
+ * again. Out of space on this side? Shallow copy unthought-of
+ * (hmm. THAT is unchecked as of yet!!)?
  *
  * FIXME: Now that I'm using an internal event format in any case,
  * could I fix the length? I suppose I could... there are not so many

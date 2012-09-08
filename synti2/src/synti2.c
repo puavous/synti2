@@ -21,15 +21,6 @@
 #include "synti2_misss.h"
 
 
-/*
- * TODO: I let go of the old separation of inner and outer loop; so
- * just note that there is probably a real-time computation congestion
- * on its way which will require some additional means of handling
- * (compute less where possible, like use dynamic polyphony...).
- */
-
-
-
 /* local subr. declared here */
 static
 void

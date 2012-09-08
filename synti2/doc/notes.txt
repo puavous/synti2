@@ -84,3 +84,13 @@ gain. I think it is worth it!! What is introduced, is a machine
 architecture dependence and requirement that wavetables are
 power-of-two long, because a bit-shift division is needed to achieve
 the small code.
+
+
+
+A note about rt-optimizations:
+/*
+ * TODO: I let go of the old separation of inner and outer loop; so
+ * just note that there is probably a real-time computation congestion
+ * on its way which will require some additional means of handling
+ * (compute less where possible, like use dynamic polyphony...).
+ */

@@ -845,6 +845,7 @@ synti2_render(synti2_synth *s,
 {
   unsigned int dsamp;
   int iframe, ii, iv, id;
+  int iframeL;
   int iosc;
   float interm;
   int wtoffs;
@@ -858,10 +859,15 @@ synti2_render(synti2_synth *s,
 #endif
 #ifndef NO_STEREO
   float pan;
+  int iframeR;
 #endif
 
   for (iframe=0; iframe<nframes; iframe++){
-    
+    iframeL=2*iframe;
+#ifndef NO_STEREO
+    iframeR=iframeL+1;
+#endif
+
 #ifndef EXTREME_NO_SEQUENCER
     /* If they wish to generate do_note_on() without my beautiful
        sequencer interface, by all means let them ... */
@@ -878,9 +884,9 @@ synti2_render(synti2_synth *s,
     /* Sound output. Getting more realistic as we speak... */
     /* TODO: Compare size and speed with zeroing the whole 
        buffer by memset prior to synthesis. */
-    buffer[2*iframe] = 0.0f;
+    buffer[iframeL] = 0.0f;
 #ifndef NO_STEREO
-    buffer[2*iframe+1] = 0.0f;
+    buffer[iframeR] = 0.0f;
 #endif
       
     for(iv=0;iv<NPARTS;iv++){
@@ -983,19 +989,21 @@ synti2_render(synti2_synth *s,
        * mix in either mono or stereo. FIXME: panenv? */
 #ifdef NO_STEREO
       /* We only output to the left channel. */
-      buffer[2*iframe]   += pat->fpar[SYNTI2_F_MIXLEV] * interm;
+      buffer[iframeL]   += pat->fpar[SYNTI2_F_MIXLEV] * interm;
 #else
       /* To cut down computations, panning increases volume ([0,2]): */
       pan = pat->fpar[SYNTI2_F_MIXPAN];
       /* FIXME: See if size could be improved by precomputed iframeL, iframeR */
-      buffer[2*iframe]   += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
-      buffer[2*iframe+1] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);
+      buffer[iframeL]   += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
+      buffer[iframeR] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);
 #endif
     }
     
 #ifndef NO_OUTPUT_SQUASH
-    buffer[2*iframe]   = sin(buffer[2*iframe]); /*Hack, but sounds nice*/
-    buffer[2*iframe+1] = sin(buffer[2*iframe+1]); /*Hack, but sounds nice*/
+    buffer[iframeL]   = sin(buffer[iframeL]); /*Hack, but sounds nice*/
+#ifndef NO_STEREO
+    buffer[iframeR] = sin(buffer[iframeR]); /*Hack, but sounds nice*/
+#endif
 #endif
     
 #ifndef NO_DELAY

@@ -882,8 +882,6 @@ synti2_render(synti2_synth *s,
     synti2_evalCounters(s);  /* .. apparently yes ..*/
       
     /* Sound output. Getting more realistic as we speak... */
-    /* TODO: Compare size and speed with zeroing the whole 
-       buffer by memset prior to synthesis. */
     buffer[iframeL] = 0.0f;
 #ifndef NO_STEREO
     buffer[iframeR] = 0.0f;
@@ -993,8 +991,7 @@ synti2_render(synti2_synth *s,
 #else
       /* To cut down computations, panning increases volume ([0,2]): */
       pan = pat->fpar[SYNTI2_F_MIXPAN];
-      /* FIXME: See if size could be improved by precomputed iframeL, iframeR */
-      buffer[iframeL]   += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
+      buffer[iframeL] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
       buffer[iframeR] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);
 #endif
     }

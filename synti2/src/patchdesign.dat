@@ -15,6 +15,9 @@
 # moment. Maybe yet another job for the midi filter module... Map from
 # original indices to restricted ones in compose mode? In playback
 # mode the code contains only macro names. Yep. Do this somehow!!
+#
+# ... but then.. yet another new idea emerges, which conflicts with 
+# the previous one.
 
 ##############  Patch data 
 
@@ -104,8 +107,6 @@ FBACK FeedBack 0 4 0 17
 
 # Need an even number of 3-bit parameters:
 #xxx UNUSED0 0 1 0 18
-
-
 
 
 [F]

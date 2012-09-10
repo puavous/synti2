@@ -270,11 +270,11 @@ synti2::Patch::exportBytes(std::vector<unsigned char> &bvec){
    * could.. but it's not the biggest concern here, so let's hardcode
    * this..
    */
-  /*I3 goes by pairing the 3-bit snippets together: */
+  /*I3 goes by pairing the 4-bit snippets together: */
   for (int i=0; i<getNPars("I3"); i += 2){
     int v1 = getValue("I3",i);
     int v2 = getValue("I3",i+1);
-    unsigned char byt = ((v1 & 0x7) << 3) + (v2 & 0x7); 
+    unsigned char byt = ((v1 & 0xf) << 4) + (v2 & 0xf);
     bvec.push_back(byt);
   }
   for (int i=0; i<getNPars("I7"); i ++){

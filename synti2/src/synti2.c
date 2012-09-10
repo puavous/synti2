@@ -411,8 +411,8 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
   size_t nbytes;
   for(; *data != 0xf7; pat++){
     for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
-      pat->ipar3[ir] = *data >> 3;
-      pat->ipar3[ir+1] = (*data++) & 0x7;
+      pat->ipar3[ir] = *data >> 4;
+      pat->ipar3[ir+1] = (*data++) & 0xf;
     }
 
     for (ir=0; ir<SYNTI2_F_NPARS; ir++){

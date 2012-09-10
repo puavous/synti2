@@ -275,7 +275,7 @@ synti2_init(synti2_synth * s,
     synti2_player_init_from_misss(s->pl, songdata);
 
   if (patchdata != NULL)
-    synti2_fill_patches_from(s->patch, patchdata+8);
+    synti2_fill_patches_from(s->patch, patchdata);
 #else
   /* In "Ultrasmall" mode, we trust the user to provide all data.*/
 #ifndef EXTREME_NO_SEQUENCER
@@ -283,7 +283,7 @@ synti2_init(synti2_synth * s,
   synti2_player_init_from_misss(s->pl, songdata);
 #endif
   /* Patches are to be made with some patch editor, though.*/
-  synti2_fill_patches_from(s->patch, patchdata+8);
+  synti2_fill_patches_from(s->patch, patchdata);
 #endif
 
 

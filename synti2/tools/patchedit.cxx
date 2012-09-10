@@ -124,7 +124,8 @@ static void signal_handler(int sig)
 }
 
 
-int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
+/** Encode for realtime/compose SysEx messages. */
+int synti2_encode_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
   int intval;
   switch (sm->type){
   case 0:
@@ -142,8 +143,9 @@ int synti2_encode(s2ed_msg_t *sm, jack_midi_data_t * buf){
     return 1;
   case MISSS_OP_SET_F:
     intval = synti2::encode_f(sm->value);
-    sm->actual = synti2::decode_f(intval);    
-    return encode_varlength(intval, buf);
+    sm->actual = synti2::decode_f(intval);
+    encode_split7b4(intval, buf);
+    return 4;
   default:
     /* An error.*/
     /*jack_error("Unknown parameter type.");*/
@@ -164,7 +166,7 @@ int build_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
   buf[0] = 0xF0; buf[1] = 0x00; buf[2] = 0x00; buf[3] = 0x00;
   buf[4] = MISSS_MSG_DATA; buf[5] = sm->type & 0x7f;
   buf[6] = (sm->location >> 8) & 0x7f; buf[7] = sm->location & 0x7f;
-  payload_len = synti2_encode(sm, &(buf[8]));
+  payload_len = synti2_encode_sysex(sm, &(buf[8]));
   buf[8+payload_len] = 0xF7;
   return 8+1+payload_len;
 }

@@ -42,12 +42,13 @@ std::string line_chop(std::string &str){
 
 /* Class methods */
 
-/** Decode a "floating point" parameter. */
+/** Decode a "floating point" parameter from off-line storage. */
 float synti2::decode_f(unsigned int encoded_fval){
   return synti2_decode_f(encoded_fval);
 }
 
-/** Encode a "floating point" parameter into 7 bit parts. */
+/** Encode a "floating point" parameter into 7 bit parts
+    ("varlength"). */
 unsigned int synti2::encode_f(float val){
   return synti2_encode_f(val);
 }
@@ -254,9 +255,13 @@ synti2::Patch::copy_structure_from_descr(){
 }
 
 /** 
- * Exports the contents of this patch in the sysex binary format that
- * the synti2 engine expects. As of 2012-02-25, the format is I3, I7,
- * and F values, in this order, with their respective encoding.
+ * Exports the contents of this patch in the off-line binary format
+ * that the synti2 engine expects. This is not compatible with SysEx
+ * transmission, which is a low priority feature and not yet
+ * implemented.
+ *
+ * As of 2012-02-25, the format is I3, I7, and F values, in this
+ * order, with their respective encoding.
  */
 void
 synti2::Patch::exportBytes(std::vector<unsigned char> &bvec){

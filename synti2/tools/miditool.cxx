@@ -11,7 +11,7 @@
 
 #include <limits.h>
 
-/* Formatting tool functions */
+/* Formatting tool functions for exporting as C source */
 static
 void fmt_hexbyte(std::ostream &outs, unsigned char b){
   outs << std::setiosflags(std::ios::right)

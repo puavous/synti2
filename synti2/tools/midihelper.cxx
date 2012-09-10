@@ -1,15 +1,21 @@
 #include "midihelper.hpp"
 
+/* The 7 bits by 4 slots split*/
+void
+encode_split7b4(unsigned int value, unsigned char * dest){
+  dest[0] = (value >> 21) & 0x7f;
+  dest[1] = (value >> 14) & 0x7f;
+  dest[2] = (value >> 7) & 0x7f;
+  dest[3] = (value >> 0) & 0x7f;
+}
+
 /* For simplicity, use the varlength of SMF.*/
 int
 encode_varlength(unsigned int value, unsigned char *dest){
   unsigned char bytes[4];
   int i, vllen;
-  /* Chop to 7 bit pieces, MSB in position 0: */
-  bytes[0] = (value >> 21) & 0x7f;
-  bytes[1] = (value >> 14) & 0x7f;
-  bytes[2] = (value >> 7) & 0x7f;
-  bytes[3] = (value >> 0) & 0x7f;
+  encode_split7b4(value, bytes);
+
   /* Set the continuation bits where needed: */
   vllen = 0;
   for(i=0; i<=3; i++){
@@ -18,6 +24,7 @@ encode_varlength(unsigned int value, unsigned char *dest){
       if (i<3) bytes[i] |= 0x80; /* set cont. bit */ 
     }
   }
+
   /* Put to output buffer MSB first */
   for(i=4-vllen; i<4; i++){
     *(dest++) = bytes[i];

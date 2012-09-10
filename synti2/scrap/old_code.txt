@@ -16,6 +16,15 @@ Old contemplations of formats and stuff..
        */
 
 
+    /* TODO: Compare size and speed with zeroing the whole buffer by
+       memset prior to synthesis. Did.. larger code with using
+       memset.. So I'll just empty the buffer just prior to writing a
+       frame.*/
+
+    /* FIXME: See if size could be improved by precomputed iframeL, iframeR 
+       Saw: Not really... size (maybe even the code itself?) is the same as
+       when using buffer[2*iframe+1] for right channel. */
+
 
 # As of now (2012-04-11), the sound algorithm is finally almost
 # finished for synti2. Only some things related to stereo panning and

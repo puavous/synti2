@@ -33,7 +33,7 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
   void *midi_in_buffer = (void*) jack_port_get_buffer (inmidi_port, nframes);
   int out_size;
 
-  synti2_player *pl = &(s->_actual_player);
+  synti2_player *pl = &(s->seq);
 
   /* Re-initialize, and overwrite any former data. */
   pl->playloc = pl->evpool; /* This would "rewind" the song */

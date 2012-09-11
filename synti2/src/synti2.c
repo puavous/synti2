@@ -108,27 +108,27 @@ synti2_player_event_add(synti2_synth *s,
                         const byte_t *src, 
                         size_t n){
   synti2_player_ev *ev_new;
-  while((s->_actual_player.insloc->next != NULL)
-        && (s->_actual_player.insloc->next->frame <= frame)){
-    s->_actual_player.insloc = s->_actual_player.insloc->next;
+  while((s->seq.insloc->next != NULL)
+        && (s->seq.insloc->next->frame <= frame)){
+    s->seq.insloc = s->seq.insloc->next;
   }
-  ev_new = s->_actual_player.freeloc++;
+  ev_new = s->seq.freeloc++;
 
 #ifndef ULTRASMALL
-  if (ev_new > (void*)s->_actual_player.evpool+SYNTI2_MAX_SONGEVENTS){
-    ev_new = --(s->_actual_player.freeloc);
-    s->_actual_player.last_error_frame = frame;
-    s->_actual_player.last_error_type = SYNTI2_ERROR_OUT_OF_EVENT_SPACE;
-    s->_actual_player.last_error_info = *(unsigned int*)src;
+  if (ev_new > (void*)s->seq.evpool+SYNTI2_MAX_SONGEVENTS){
+    ev_new = --(s->seq.freeloc);
+    s->seq.last_error_frame = frame;
+    s->seq.last_error_type = SYNTI2_ERROR_OUT_OF_EVENT_SPACE;
+    s->seq.last_error_info = *(unsigned int*)src;
   } 
 #endif
 
   /* Fill in the node: */
   ev_new->data = src;         /* SHALLOW COPY here.*/
-  ev_new->next = s->_actual_player.insloc->next;
+  ev_new->next = s->seq.insloc->next;
   ev_new->frame = frame;
   ev_new->len = n;
-  s->_actual_player.insloc->next = ev_new;
+  s->seq.insloc->next = ev_new;
   /*printf("stored frame %d data %02x %02x %02x\n", frame, src[0], src[1], src[2]); fflush(stdout);*/
   
 }
@@ -153,7 +153,7 @@ synti2_player_merge_chunk(synti2_synth *s,
   type = *r++;
   par = r;
   frame = 0;
-  s->_actual_player.insloc = s->_actual_player.evpool; /* Re-start merging from frame 0. */
+  s->seq.insloc = s->seq.evpool; /* Re-start merging from frame 0. */
   r += 2; /* add number of parameters to r! */
   /* Always two parameters.. makes reader code simpler with not too
    * much storage overhead.
@@ -161,10 +161,10 @@ synti2_player_merge_chunk(synti2_synth *s,
 
   for(ii=0; ii<n_events; ii++){
     r += varlength(r, &tickdelta);
-    frame += s->_actual_player.fpt * tickdelta;
+    frame += s->seq.fpt * tickdelta;
 
     /*FIXME: Song data might get filled up and overflow lethally.. */
-    msg = s->_actual_player.data + s->_actual_player.idata; /* Get next available data pool spot */
+    msg = s->seq.data + s->seq.idata; /* Get next available data pool spot */
 
     if (type == MISSS_LAYER_NOTES){
       /* Produce a 'Note on' message in our internal midi-like format. */
@@ -173,7 +173,7 @@ synti2_player_merge_chunk(synti2_synth *s,
       msg[2] = (par[0]==0xff) ? *r++ : par[0];
       msg[3] = (par[1]==0xff) ? *r++ : par[1];
       synti2_player_event_add(s, frame, msg, 4);
-      s->_actual_player.idata += 4; /* Update the data pool top */
+      s->seq.idata += 4; /* Update the data pool top */
     } 
 #ifndef NO_CC
     /* FIXME: In fact, if NO_CC is used, then notes are the only layer
@@ -189,9 +189,9 @@ synti2_player_merge_chunk(synti2_synth *s,
 #endif
 #ifndef ULTRASMALL
     else {
-      s->_actual_player.last_error_frame = frame;
-      s->_actual_player.last_error_type = SYNTI2_ERROR_UNKNOWN_LAYER;
-      s->_actual_player.last_error_info = type;
+      s->seq.last_error_frame = frame;
+      s->seq.last_error_type = SYNTI2_ERROR_UNKNOWN_LAYER;
+      s->seq.last_error_info = type;
     }
 #endif
   }
@@ -206,9 +206,9 @@ synti2_player_init_from_misss(synti2_synth *s, const byte_t *r)
   unsigned int chunksize;
   unsigned int uspq;
   /* Initialize an "empty" "head event": (really necessary?) */
-  s->_actual_player.freeloc = s->_actual_player.evpool + 1;
+  s->seq.freeloc = s->seq.evpool + 1;
 
-  s->_actual_player.playloc = s->_actual_player.evpool; /* This would "rewind" the song */
+  s->seq.playloc = s->seq.evpool; /* This would "rewind" the song */
 
   /* TODO: Now we use the standard MIDI tempo unit of MSPQN. For our
    * 4k purposes, we might not need tpq at all. Just give us
@@ -216,11 +216,11 @@ synti2_player_init_from_misss(synti2_synth *s, const byte_t *r)
    * match it approximately by framecounts... TODO: Think about
    * accuracy vs. code size once more in here(?).
    */
-  r += varlength(r, &(s->_actual_player.tpq));  /* Ticks per quarter note */
+  r += varlength(r, &(s->seq.tpq));  /* Ticks per quarter note */
   r += varlength(r, &uspq);       /* Microseconds per quarter note */
-  s->_actual_player.fpt = 
-    ((float)uspq / s->_actual_player.tpq) 
-    / (1000000.0f / s->_actual_player.sr); /* frames-per-tick */
+  s->seq.fpt = 
+    ((float)uspq / s->seq.tpq) 
+    / (1000000.0f / s->seq.sr); /* frames-per-tick */
   for(r += varlength(r, &chunksize); chunksize > 0; r += varlength(r, &chunksize)){
     r = synti2_player_merge_chunk(s, r, chunksize); /* read a chunk... */
   }
@@ -267,7 +267,7 @@ synti2_init(synti2_synth * s,
   memset(s, 0, sizeof(s));     /* zero */
 
   /* Initialize the player module. (Not much to be done...) */
-  s->_actual_player.sr = sr;
+  s->seq.sr = sr;
   s->sr = sr;
   s->framecount.delta = 1;
 
@@ -530,11 +530,11 @@ synti2_handleInput(synti2_synth *s,
   counter* c;
 #endif
 
-  while((s->_actual_player.playloc->next != NULL) 
-        && (s->_actual_player.playloc->next->frame <= upto_frames )) {
-    s->_actual_player.playloc = s->_actual_player.playloc->next;
+  while((s->seq.playloc->next != NULL) 
+        && (s->seq.playloc->next->frame <= upto_frames )) {
+    s->seq.playloc = s->seq.playloc->next;
 
-    midibuf = s->_actual_player.playloc->data;
+    midibuf = s->seq.playloc->data;
     if (midibuf[0] == MISSS_MSG_NOTE){
       synti2_do_noteon(s, midibuf[1], midibuf[2], midibuf[3]);
 
@@ -570,7 +570,7 @@ synti2_handleInput(synti2_synth *s,
 #endif
   }
 #ifndef ULTRASMALL
-  s->_actual_player.frames_done = upto_frames; /* So far used only by rt jack midi.. */
+  s->seq.frames_done = upto_frames; /* So far used only by rt jack midi.. */
 #endif
 }
 #endif

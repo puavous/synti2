@@ -181,19 +181,15 @@ typedef struct synti2_patch {
 } synti2_patch;
 
 struct synti2_synth {
-  /* I'll actually put the player inside the synthesizer. Should
-   * probably call it "sequencer" instead of "player"... ? Seems to
-   * yield smallest compressed code (with current function
-   * implementations) when the player is dynamically allocated and the
-   * pointer is stored as the very first field of the synth structure.
+  /* I'll actually put the player inside the synthesizer.  
+   *
    * FIXME: I already let go of all dynamic allocations for the sake
-   * 4k, so now maybe should replace s->pl with &s->_actual_player all
-   * around the code. Or just move the few attributes of the player to
-   * be attributes of the synth itself.. Yes, the latter would be the
+   * 4k.. Maybe just move the few attributes of the player to be
+   * attributes of the synth itself.. Yes, the latter would be the
    * most lean (and mean) option for a 4k synth, I guess.
    */
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
-  synti2_player _actual_player;
+  synti2_player seq;
 
   float infranotes[128]; /* TODO: This space could be used for LFO's */
   float note2freq[128];  /* pre-computed frequencies of notes... Tuning

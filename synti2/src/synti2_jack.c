@@ -23,7 +23,7 @@
  */
 static
 void
-synti2_player_init_from_jack_midi(synti2_player *pl,
+synti2_player_init_from_jack_midi(synti2_synth *s,
                                   jack_port_t *inmidi_port,
                                   jack_nframes_t nframes)
 {
@@ -32,6 +32,8 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
   byte_t *msg;
   void *midi_in_buffer = (void*) jack_port_get_buffer (inmidi_port, nframes);
   int out_size;
+
+  synti2_player *pl = &(s->_actual_player);
 
   /* Re-initialize, and overwrite any former data. */
   pl->playloc = pl->evpool; /* This would "rewind" the song */
@@ -48,7 +50,7 @@ synti2_player_init_from_jack_midi(synti2_player *pl,
     out_size = synti2_midi_to_misss(ev.buffer, msg, ev.size);
     if (out_size > 0){
       pl->idata += out_size; /*Update the data pool top*/
-      synti2_player_event_add(pl, 
+      synti2_player_event_add(s, 
                               pl->frames_done + ev.time, 
                               msg, 
                               out_size);
@@ -65,7 +67,7 @@ synti2_read_jack_midi(synti2_synth *s,
                       jack_port_t *inmidi_port,
                       jack_nframes_t nframes)
 {
-  synti2_player_init_from_jack_midi(s->pl, inmidi_port, nframes);
+  synti2_player_init_from_jack_midi(s, inmidi_port, nframes);
 }
 
 #endif

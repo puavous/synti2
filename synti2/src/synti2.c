@@ -115,11 +115,11 @@ synti2_player_event_add(synti2_synth *s,
   ev_new = s->_actual_player.freeloc++;
 
 #ifndef ULTRASMALL
-  if (ev_new > (void*)pl->evpool+SYNTI2_MAX_SONGEVENTS){
-    ev_new = --(pl->freeloc);
-    pl->last_error_frame = frame;
-    pl->last_error_type = SYNTI2_ERROR_OUT_OF_EVENT_SPACE;
-    pl->last_error_info = *(unsigned int*)src;
+  if (ev_new > (void*)s->_actual_player.evpool+SYNTI2_MAX_SONGEVENTS){
+    ev_new = --(s->_actual_player.freeloc);
+    s->_actual_player.last_error_frame = frame;
+    s->_actual_player.last_error_type = SYNTI2_ERROR_OUT_OF_EVENT_SPACE;
+    s->_actual_player.last_error_info = *(unsigned int*)src;
   } 
 #endif
 
@@ -265,8 +265,6 @@ synti2_init(synti2_synth * s,
   float freqf;
 
   memset(s, 0, sizeof(s));     /* zero */
-
-  //s->pl = &s->_actual_player;  /* no more necessary (FIXME everywh.)*/
 
   /* Initialize the player module. (Not much to be done...) */
   s->_actual_player.sr = sr;

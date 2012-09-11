@@ -181,7 +181,7 @@ typedef struct synti2_patch {
 } synti2_patch;
 
 struct synti2_synth {
-  /* I'll actually put the player inside the synthesizer.  
+  /* I'll actually put the player inside the synthesizer.
    *
    * FIXME: I already let go of all dynamic allocations for the sake
    * 4k.. Maybe just move the few attributes of the player to be

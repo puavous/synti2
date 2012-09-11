@@ -192,7 +192,6 @@ struct synti2_synth {
    * be attributes of the synth itself.. Yes, the latter would be the
    * most lean (and mean) option for a 4k synth, I guess.
    */
-  synti2_player *pl;
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
   synti2_player _actual_player;
 
@@ -252,7 +251,7 @@ struct synti2_synth {
 static
 #endif
 void
-synti2_player_event_add(synti2_player *pl, 
+synti2_player_event_add(synti2_synth *s, 
                         unsigned int frame, 
                         const byte_t *src, 
                         size_t n);

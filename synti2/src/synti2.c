@@ -227,28 +227,6 @@ synti2_player_init_from_misss(synti2_synth *s, const byte_t *r)
 }
 
 
-/* Some tentative inline assembler for i387 sin. No immediate size
- * improvements were gained. I would still like to try this path, but
- * then more than just the sine instruction should be done with
- * assembly, and maybe the actual improvement would come from absolutely
- * letting go of -lm, which would require bigger changes than what I'm
- * prepared for, at the moment.
- */
-#if 0
-static
-float asm_sin(float t){
-  float result;
-  asm(
-    "fld %1\n"
-    "fsin\n"
-    "fstp %0\n"
-    : "=m"(result)
-    : "m"(t)
-      );
-  return result;
-}
-#endif
-
 /** Initialize a new synth instance. To make the code smaller, we
  *  assume that somebody else has made the allocation. It can be a
  *  static chunk of global data, for example.
@@ -261,7 +239,6 @@ synti2_init(synti2_synth * s,
 {
   int ii, wt;
   float t;
-  float hack;
   float freqf;
 
   memset(s, 0, sizeof(s));     /* zero */

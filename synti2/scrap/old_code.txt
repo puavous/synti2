@@ -26,6 +26,31 @@ Old contemplations of formats and stuff..
        when using buffer[2*iframe+1] for right channel. */
 
 
+/* Some tentative inline assembler for i387 sin. No immediate size
+ * improvements were gained. I would still like to try this path, but
+ * then more than just the sine instruction should be done with
+ * assembly, and maybe the actual improvement would come from absolutely
+ * letting go of -lm, which would require bigger changes than what I'm
+ * prepared for, at the moment.
+ */
+#if 0
+static
+float asm_sin(float t){
+  float result;
+  asm(
+    "fld %1\n"
+    "fsin\n"
+    "fstp %0\n"
+    : "=m"(result)
+    : "m"(t)
+      );
+  return result;
+}
+#endif
+  int sr;           /* Sample rate. */
+
+
+
 # As of now (2012-04-11), the sound algorithm is finally almost
 # finished for synti2. Only some things related to stereo panning and
 # delay effect routing is still lacking from the original plan/dream. 

@@ -353,6 +353,14 @@ synti2_do_noteon(synti2_synth *s,
 #endif
 
   s->note[voice] = note;
+
+  /* FIXME: Again code very similar to other parts.. */
+  s->pitch[voice].aa = s->pitch[voice].f;
+  s->pitch[voice].bb = note;
+  s->pitch[voice].val = 0;
+  s->pitch[voice].delta = 
+    MAX_COUNTER / s->sr / ((1.f/8192) + s->patch[voice].fpar[SYNTI2_F_LEGLEN]);
+
   /* Trigger all envelopes. Just give a hint to the evaluator function.. */
   for (ie=0; ie<=NENVPERVOICE; ie++){
     s->estage[voice][ie] = TRIGGERSTAGE;
@@ -724,7 +732,7 @@ synti2_updateFrequencies(synti2_synth *s){
        * synti2.. maybe, maybe.
        */
 
-      notemod = s->note[iv];
+      notemod = s->pitch[iv].f;
 #ifndef NO_PITCH_ENV
       notemod += s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
 #endif

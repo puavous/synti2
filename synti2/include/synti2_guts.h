@@ -131,7 +131,7 @@ typedef struct {
   unsigned int detect;
   unsigned int delta;
   float f;   /* current output value (interpolant) */
-  float fr;  /* current output value (0..1) */ /* (only f needed?) */
+  float fr;  /* current output value (0..1) */ /* (FIXME: only f needed?) */
   float aa;  /* for interpolation start */
   float bb;  /* for interpolation end */
 } counter;
@@ -215,6 +215,7 @@ struct synti2_synth {
   counter c[NCOUNTERS];
   counter eprog[NPARTS][NENVPERVOICE+1];
   counter contr[NPARTS][NCONTROLLERS];
+  counter pitch[NPARTS];
   counter framecount;
 
   /* Envelope stages just a table? TODO: think.*/

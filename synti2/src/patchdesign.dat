@@ -255,6 +255,8 @@ CDST2 Cont2Dest 0.0 127 0 20
 CDST3 Cont3Dest 0.0 127 0 20
 CDST4 Cont4Dest 0.0 127 0 20
 
+LEGLEN LegatoLen 0.0 1.0 2 17
+
 # Controller mins and maxes .. NO.... 
 #
 # FIXME: These should be auxiliary (in the same place with channel

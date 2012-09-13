@@ -185,12 +185,8 @@ typedef struct synti2_patch {
 } synti2_patch;
 
 struct synti2_synth {
-  /* I'll actually put the player inside the synthesizer.
-   *
-   * FIXME: I already let go of all dynamic allocations for the sake
-   * 4k.. Maybe just move the few attributes of the player to be
-   * attributes of the synth itself.. Yes, the latter would be the
-   * most lean (and mean) option for a 4k synth, I guess.
+  /* I'll actually put the player inside the synthesizer. Somewhat
+   * less 'modular', but seems to be a bit smaller size.
    */
   unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
   synti2_player seq;

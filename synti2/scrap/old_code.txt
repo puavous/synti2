@@ -617,3 +617,13 @@ misssify_options_parse(misssify_options *opt, int argc, char *argv[]){
     strncpy(opt->outfname, argv[optind], MAX_STRINGLENGTH);
   }
 }
+
+
+Regarding modularity and size:
+
+   * FIXME: I already let go of all dynamic allocations for the sake
+   * 4k.. Maybe just move the few attributes of the player to be
+   * attributes of the synth itself.. Yes, the latter would be the
+   * most lean (and mean) option for a 4k synth, I guess. No... this
+   * turned out to be untrue, at least when just trying out in the
+   * most obvious way.

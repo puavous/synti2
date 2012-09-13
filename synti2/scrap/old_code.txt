@@ -118,6 +118,12 @@ float asm_sin(float t){
       synti2_do_receiveData(s, midibuf+1);
 #endif
 
+ * FIXME: The sysex_receive() could be hardwired to receive all the
+ * patches at once (when compiled as stand-alone), starting from 0,
+ * saving the bytes for the offset handling.
+ *
+
+
 /*
  * Misss data format ideas 
  * (Old, deprecated, banished)

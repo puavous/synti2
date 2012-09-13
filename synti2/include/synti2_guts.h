@@ -28,10 +28,6 @@
  * FIXME: For 4k, a sound bank should contain no unused patches (even
  * with zero parameters). Every saved byte matters :).
  *
- * FIXME: The sysex_receive() could be hardwired to receive all the
- * patches at once (when compiled as stand-alone), starting from 0,
- * saving the bytes for the offset handling.
- *
  * Remain in the MIDI world - it is 7 bits per SysEx data bit. Or
  * should we move to our own world altogether? No... SysEx is nice :).
  */
@@ -50,24 +46,27 @@
 
 /* Length of envelope data block (K1T&L K2T&L K3T&L K4T&L K5T&L) */
 #define SYNTI2_NENVD 10
-/* (order of knees might be better reversed ??) 
-  FIXME: Think about this .. make envs simpler?
-*/
+/* TODO: (order of knees might be better reversed ?? 
+ * Think about this .. make envs simpler? Probably in some
+ * later project..
+ */
 
 /* Total number of "counters", i.e., oscillators/operators. */
 #define NCOUNTERS (NPARTS * NOSCILLATORS)
 
 /* Total number of envelopes. There is the magical "zero-envelope"
- * which is technically not operational. Hmm.. FIXME: Is the
- * zero-envelope needed anymore, when we are actually using separate
- * operator gains? It seems to be necessary only for pitch
- * envelopes. Would it make a shorter code if we used a "pitch gain"
- * and not use a zero-envelope?
+ * which is technically not operational. Hmm.. 
+ *
+ * FIXME: Is the zero-envelope needed anymore, when we are actually
+ * using separate operator gains? It seems to be necessary only for
+ * pitch envelopes. Would it make a shorter code if we used a "pitch
+ * gain" and not use a zero-envelope?
  */
 #define NENVS (NPARTS * (NENVPERVOICE+1))
 
 /* Maximum value of the counter type depends on C implementation, so
- * use limits.h -- TODO: Actually should probably use C99 and stdint.h !
+ * use limits.h -- Actually should probably use C99 and stdint.h but
+ * that's going to be in some later project.
  */
 #define MAX_COUNTER UINT_MAX
 
@@ -75,7 +74,9 @@
 #define WAVETABLE_SIZE 0x10000
 #define WAVETABLE_BITMASK 0xffff
 /* FIXME: This is implementation dependent! Hmm... is there some way
-   to get the implementation-dependent bit-count here? */
+ * to get the implementation-dependent bit-count here? Sure.. but it
+ * would require some configuration script..
+ */
 #define COUNTER_TO_TABLE_SHIFT 16
 
 /* Storage size. TODO: Would be nice to check bounds unless
@@ -85,7 +86,10 @@
 #define SYNTI2_MAX_SONGEVENTS 15000
 
 
-/* Audio delay storage. Less delays means less computation, faster synth.*/
+/* Audio delay storage. Less delays means less computation, faster
+ * synth.  FIXME: Would be nice to have more delay lines that can be
+ * used optionally.
+ */
 #define NDELAYS 4
 #define DELAYSAMPLES 0x10000
 

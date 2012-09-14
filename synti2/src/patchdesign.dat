@@ -255,41 +255,17 @@ CDST2 Cont2Dest 0.0 127 0 20
 CDST3 Cont3Dest 0.0 127 0 20
 CDST4 Cont4Dest 0.0 127 0 20
 
-LEGLEN LegatoLen 0.0 1.0 2 17
+# Note transition time in seconds
+LEGLEN LegatoLen  0.0 1.0 2 17
 
-# Controller mins and maxes .. NO.... 
-#
-# FIXME: These should be auxiliary (in the same place with channel
-# allocation)
-#
-# CMIN1 Cont1Min -2.0 +2.0   2 21
-# CMIN2 Cont2Min -4.0 +4.0   1 21
-# CMIN3 Cont3Min -8.0 +8.0   1 21
-# CMIN4 Cont4Min -16.0 +16.0 1 21
-#
-# CMAX1 Cont1Max -2.0 +2.0   2 22
-# CMAX2 Cont2Max -4.0 +4.0   1 22
-# CMAX3 Cont3Max -8.0 +8.0   1 22
-# CMAX4 Cont4Max -16.0 +16.0 1 22
-
-
-
-# Other patch data.. Hmm.. playground as of now:
-
-# Pitch note follow ratio (TODO: Useful?) Not using this
-# so-far.. could be nice for tom sounds, spezial effects, or for
-# including noise as yet another wavetable.  Hmm. What about... "Skip
-# freq" I3 parameter per oscillator. Then noise could be a wavetable
-# and the frequency would be set at 1/sr. FIXME: think about this,
-# maybe
-
-#PF1 Oper1NoteFollow 0 1   2 15
-#PF2 Oper2NoteFollow 0 1   2 15
-#PF3 Oper3NoteFollow 0 1   2 15
-#PF4 Oper4NoteFollow 0 1   2 15
+# Pitch scaling for toms and effects. "note*(1-pscale) + detune + envs"
+# Scaling could have been different for each operator, but I don't think
+# it could have created worthy enough effects.
+PSCALE PitchScale -1.0 2.0 2 18
 
 
 # TODO: Padding to get a power-of-two length for the instrument patch?
 # hmmm.. why power of two? Well, just in case some bit-shifting..
 # Padding should be done by the tool programs... so far no
-# need... could be final like this...
+# need... what should be done instead is stripping down the number of
+# parameters (?)

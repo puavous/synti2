@@ -42,7 +42,27 @@ synti2_misss_mapControlDest(byte_t ccn){
   return 0; /* FIXME: Always the first controller. */
 }
 
-/** Map MIDI controller value ccval to a synti2 parameter value. */
+/** Map MIDI controller value ccval to a synti2 parameter value. 
+
+This is a proper place for this old fixme from patchdesign.dat:
+
+# Controller mins and maxes .. NO.... 
+#
+# FIXME: These should be auxiliary (in the same place with channel
+# allocation)
+#
+# CMIN1 Cont1Min -2.0 +2.0   2 21
+# CMIN2 Cont2Min -4.0 +4.0   1 21
+# CMIN3 Cont3Min -8.0 +8.0   1 21
+# CMIN4 Cont4Min -16.0 +16.0 1 21
+#
+# CMAX1 Cont1Max -2.0 +2.0   2 22
+# CMAX2 Cont2Max -4.0 +4.0   1 22
+# CMAX3 Cont3Max -8.0 +8.0   1 22
+# CMAX4 Cont4Max -16.0 +16.0 1 22
+
+
+*/
 static
 float
 synti2_misss_mapControlValue(byte_t ccval){

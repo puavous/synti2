@@ -105,6 +105,26 @@ float asm_sin(float t){
 # be too different from a "usual synth interface" which I want to aim
 # at (in addition to any other goals).. Maybe in a later project(!).
 
+
+
+
+# Other patch data.. Hmm.. playground as of now:
+
+# Pitch note follow ratio (TODO: Useful?) Not using this
+# so-far.. could be nice for tom sounds, spezial effects, or for
+# including noise as yet another wavetable.  Hmm. What about... "Skip
+# freq" I3 parameter per oscillator. Then noise could be a wavetable
+# and the frequency would be set at 1/sr. FIXME: think about this,
+# maybe
+#
+# This was implemented but not per operator.
+
+#PF1 Oper1NoteFollow 0 1   2 15
+#PF2 Oper2NoteFollow 0 1   2 15
+#PF3 Oper3NoteFollow 0 1   2 15
+#PF4 Oper4NoteFollow 0 1   2 15
+
+
  * DONE: Controllers would sound nicer if they were clamping counters
  * (no artefacts from discrete value jumps)
  *

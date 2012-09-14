@@ -733,6 +733,9 @@ synti2_updateFrequencies(synti2_synth *s){
        * parameter? Yep, maybe "parA+note*(1-parB)" so that zero
        * parameters have no effect.
        */
+#ifndef NO_PITCH_SCALING
+      notemod *= (1.f + pat->fpar[SYNTI2_F_PSCALE]);
+#endif
 
 #ifndef NO_PITCH_ENV
       notemod += s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;

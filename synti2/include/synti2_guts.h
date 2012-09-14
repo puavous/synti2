@@ -215,7 +215,9 @@ struct synti2_synth {
   counter c[NCOUNTERS];
   counter eprog[NPARTS][NENVPERVOICE+1];
   counter contr[NPARTS][NCONTROLLERS];
+#ifndef NO_LEGATO
   counter pitch[NPARTS];
+#endif
   counter framecount;
 
   /* Envelope stages just a table? TODO: think.*/

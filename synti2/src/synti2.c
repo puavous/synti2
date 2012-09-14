@@ -722,23 +722,17 @@ synti2_updateFrequencies(synti2_synth *s){
     pat = s->patch + iv;
 
     for (iosc=0; iosc<NOSCILLATORS; iosc++){
-      /* TODO: Pitch-note follow ratio (for drum/sfx) as an optional
-       * parameter? Yep, maybe "parA+note*(1-parB)" so that zero
-       * parameters have no effect.
-       */
-
-      /* FIXME: Do I want legato? Then note should be another clamping
-       * counter per channel, and yet another sound parameter to set
-       * the delta upon note-on. This would be one of the most final
-       * features to think about... Maybe never implemented in
-       * synti2.. maybe, maybe.
-       */
-
+      /* Pitch either from legato counter or directly from note: */
 #ifndef NO_LEGATO
       notemod = s->pitch[iv].f;
 #else
       notemod = s->note[iv];
 #endif
+
+      /* TODO: Pitch-note follow ratio (for drum/sfx) as an optional
+       * parameter? Yep, maybe "parA+note*(1-parB)" so that zero
+       * parameters have no effect.
+       */
 
 #ifndef NO_PITCH_ENV
       notemod += s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;

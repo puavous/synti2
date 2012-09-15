@@ -946,13 +946,16 @@ synti2_render(synti2_synth *s,
 #endif
       
       /* result is both in *signal and in interm (like before). Main
-       * mix in either mono or stereo. FIXME: panenv? */
+       * mix in either mono or stereo. */
 #ifdef NO_STEREO
       /* We only output to the left channel. */
       buffer[iframeL]   += pat->fpar[SYNTI2_F_MIXLEV] * interm;
 #else
       /* To cut down computations, panning increases volume ([0,2]): */
       pan = pat->fpar[SYNTI2_F_MIXPAN];
+#ifndef NO_PAN_ENVELOPE
+      /*FIXME: panenv?*/
+#endif
       buffer[iframeL] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
       buffer[iframeR] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);
 #endif

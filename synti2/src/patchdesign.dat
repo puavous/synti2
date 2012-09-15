@@ -59,11 +59,6 @@ EPAN PanEnv      0 6   0 2
 EFILT FiltCutEnv 0 6   0 2
 
 # Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
-# Think about using some look-up tables to their full
-# capacity here... 0=no 1=linear 2=squared 3=inverse ...
-# (In a later project)
-# FIXME: There should be an assignable velocity target and range?
-# And hey, with a quite similar logic, a pitch sensitivity could be built?
 
 VS1 Oper1VelSens 0 1   2 14
 VS2 Oper2VelSens 0 1   2 14

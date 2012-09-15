@@ -105,7 +105,13 @@ float asm_sin(float t){
 # be too different from a "usual synth interface" which I want to aim
 # at (in addition to any other goals).. Maybe in a later project(!).
 
-
+# [Regarding velocity sensitivity]:
+#
+# Think about using some look-up tables to their full
+# capacity here... 0=no 1=linear 2=squared 3=inverse ...
+# (In a later project)
+# FIXME: There should be an assignable velocity target and range?
+# And hey, with a quite similar logic, a pitch sensitivity could be built?
 
 
 # Other patch data.. Hmm.. playground as of now:

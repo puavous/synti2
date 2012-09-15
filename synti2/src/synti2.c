@@ -568,7 +568,7 @@ synti2_evalCounters(synti2_synth *s){
     /* Linear interpolation using pre-computed "fall" and "rise"
      * tables. Also, the oscillator phases will be the rise values.
      * Phew.. shaved off a byte by letting go of "fall" table...
-     * FIXME: See if there is a significant performance hit.. likely not(?)
+     * TODO: See if there was a significant performance hit (?).
      */
     ind = c->val >> COUNTER_TO_TABLE_SHIFT;
     c->fr = s->rise[ind];

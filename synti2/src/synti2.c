@@ -729,19 +729,18 @@ synti2_updateFrequencies(synti2_synth *s){
       notemod = s->note[iv];
 #endif
 
-      /* TODO: Pitch-note follow ratio (for drum/sfx) as an optional
-       * parameter? Yep, maybe "parA+note*(1-parB)" so that zero
-       * parameters have no effect.
-       */
 #ifndef NO_PITCH_SCALING
+      /* Optional pitch scale */
       notemod *= (1.f + pat->fpar[SYNTI2_F_PSCALE]);
 #endif
 
 #ifndef NO_PITCH_ENV
+      /* Optional pitch envelope */
       notemod += s->eprog[iv][pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
 #endif
 
 #ifndef NO_DETUNE
+      /* Optional detune */
       notemod += pat->fpar[SYNTI2_F_DT1 + iosc];    /* "coarse" */
       notemod += pat->fpar[SYNTI2_F_DT1F + iosc];   /* "fine"   */
 #endif

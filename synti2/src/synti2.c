@@ -494,34 +494,35 @@ void
 synti2_handleInput(synti2_synth *s, 
                    unsigned int upto_frames)
 {
-  const byte_t *midibuf;
+  const byte_t *msgbuf;
 
   while((s->seq.playloc->next != NULL) 
         && (s->seq.playloc->next->frame <= upto_frames )) {
     s->seq.playloc = s->seq.playloc->next;
 
-    midibuf = s->seq.playloc->data;
-    if (midibuf[0] == MISSS_MSG_NOTE){
-      synti2_do_noteon(s, midibuf[1], midibuf[2], midibuf[3]);
+    msgbuf = s->seq.playloc->data;
+    if (msgbuf[0] == MISSS_MSG_NOTE){
+      synti2_do_noteon(s, msgbuf[1], msgbuf[2], msgbuf[3]);
 
 #ifndef NO_CC
-    } else if (midibuf[0] == MISSS_MSG_RAMP){
+    } else if (msgbuf[0] == MISSS_MSG_RAMP){
       /* A ramp message contains controller number, time, and destination value: */
-      synti2_counter_retarget(&(s->contr[midibuf[1]][midibuf[2]]),
-                              (*((float*)(midibuf+3))) /*in given time */,
-                              (*((float*)(midibuf+3+sizeof(float)))) /*to next*/,
+      synti2_counter_retarget(&(s->contr[msgbuf[1]][msgbuf[2]]),
+                              (*((float*)(msgbuf+3))) /*in given time */,
+                              (*((float*)(msgbuf+3+sizeof(float)))) /*to next*/,
                               s->sr);
 #endif
 
 #ifndef NO_SYSEX_RECEIVE
-    } else if (midibuf[0] == MISSS_MSG_DATA){
+    } else if (msgbuf[0] == MISSS_MSG_DATA){
       /* Used only in compose mode (patch editor requires this) 
        * 
        * FIXME: See if we could live without this (midi filter would
-       * convert directly to OP_SETF. ... Interesting idea.. But why?
-       * But yeah, everything is worth checking out of course...)
+       * convert directly to SYSEX_SETF. ... Interesting idea.. But
+       * why?  But yeah, everything is worth checking out of
+       * course...)
        */
-      synti2_do_receiveSysexData(s, midibuf+1);
+      synti2_do_receiveSysexData(s, msgbuf+1);
 #endif
     } 
 
@@ -529,7 +530,7 @@ synti2_handleInput(synti2_synth *s,
     else {
       s->last_error_frame = s->framecount.val;
       s->last_error_type = SYNTI2_ERROR_UNKNOWN_MESSAGE;
-      s->last_error_info = midibuf[0];
+      s->last_error_info = msgbuf[0];
     }
 #endif
   }

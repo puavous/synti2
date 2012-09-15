@@ -371,7 +371,6 @@ synti2_do_noteon(synti2_synth *s,
   s->note[voice] = note;
 
 #ifndef NO_LEGATO
-  /* FIXME: Again code very similar to other parts.. */
   synti2_counter_retarget(&(s->pitch[voice]),
                           s->patch[voice].fpar[SYNTI2_F_LEGLEN],
                           note, s->sr);
@@ -542,8 +541,6 @@ synti2_handleInput(synti2_synth *s,
 #ifndef NO_CC
     } else if (midibuf[0] == MISSS_MSG_RAMP){
       /* A ramp message contains controller number, time, and destination value: */
-      /* FIXME: Very similar code in envelope logic. See if these
-         could be combined to one function. */
       synti2_counter_retarget(&(s->contr[midibuf[1]][midibuf[2]]),
                               (*((float*)(midibuf+3))) /*in given time */,
                               (*((float*)(midibuf+3+sizeof(float)))) /*to next*/,
@@ -697,24 +694,21 @@ synti2_updateEnvelopeStages(synti2_synth *s){
         }
 #endif
 
-          /* No time -> skip envelope knee. Force value to the new
-           * level (next goal). Delta remains at 0, so we may skip
-           * many.
-           */
-          /* NOTE: There will be a value jump here, so be
-           * careful when creating patches... The reason for this
-           * whole thing was to make it possible to use less knees, if
-           * 5 knees is not necessary. As an after-thought, the whole
-           * envelope thing could have been made with less glitches,
-           * but that remains as a to-do for some later project. This
-           * envelope skip-and-jump is now a final feature of synti2.
-           */
-
-        /* FIXME: See if this could be refactored into a function; almost
-        * identical use is with Controller ramps. */
+        /* Move these comments to a documentation file...*/
+        /* No time -> skip envelope knee. Force value to the new
+         * level (next goal). Delta remains at 0, so we may skip
+         * many.
+         */
+        /* NOTE: There will be a value jump here, so be
+         * careful when creating patches... The reason for this
+         * whole thing was to make it possible to use less knees, if
+         * 5 knees is not necessary. As an after-thought, the whole
+         * envelope thing could have been made with less glitches,
+         * but that remains as a to-do for some later project. This
+         * envelope skip-and-jump is now a final feature of synti2.
+         */
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
-
         synti2_counter_retarget(&(s->eprog[iv][ie]), nexttime, nextgoal, s->sr);
       }
     }

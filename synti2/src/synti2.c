@@ -446,7 +446,6 @@ static
 void
 synti2_do_receiveSysexData(synti2_synth *s, const byte_t * data){
   int opcode, ipat, ir;
-  synti2_patch *pat;
   unsigned int encoded_fval;
 
   /* Data header: what to do, for which parameter of which patch:*/
@@ -954,7 +953,7 @@ synti2_render(synti2_synth *s,
       /* To cut down computations, panning increases volume ([0,2]): */
       pan = pat->fpar[SYNTI2_F_MIXPAN];
 #ifndef NO_PAN_ENVELOPE
-      pan += s->eprog[iv][pat->ipar3[SYNTI2_I3_EPAN]].f
+      pan += s->eprog[iv][pat->ipar3[SYNTI2_I3_EPAN]].f;
 #endif
       buffer[iframeL] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
       buffer[iframeR] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);

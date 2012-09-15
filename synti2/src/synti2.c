@@ -437,39 +437,30 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
  * The MIDI SysEx header and footer things have been dealt with prior
  * to entry, and this receives just the bulk data.
  *
- * FIXME: As of now, the use of this is a little bit awkwardly tangled
- * in the outside code... needs to be considered, once and for all...
+ * FIXME: Do I want SysEx to be stored in the playback data? At the
+ * moment, I think not.. but be sure and make it a synti2 feature or
+ * decide not to ever do that.
  *
  */
 static
 void
 synti2_do_receiveSysexData(synti2_synth *s, const byte_t * data){
-  int opcode, offset, ir;
+  int opcode, ipat, ir;
   synti2_patch *pat;
   unsigned int encoded_fval;
 
-  /* Data header: */
-  /* what to do, a 7 bit value: */
+  /* Data header: what to do, for which parameter of which patch:*/
   opcode = *data++;
-  /* where to do, a 14 bit value, MSB first: */
-  offset = *data++; offset <<= 7; offset += *data++; 
-
-  /* FIXME: As of now, addressing is really just patch index and data
-   * index. No need to pack and unpack so much here!
-   */
+  ir = *data++;
+  ipat = *data++;
 
   if (opcode==MISSS_SYSEX_SET_3BIT) {
-    /* Receive one parameter at location
-     * (patch,i3par_index) */
-    pat = s->patch + (offset & 0x7f); 
-    ir = offset >> 7;
-    pat->ipar3[ir] = *data;
+    /* Receive one parameter at location (patch,i3par_index) */
+    s->patch[ipat].ipar3[ir] = *data;
   } else if (opcode==MISSS_SYSEX_SET_F){
     /* Receive one float parameter at location (patch,fpar_index) */
-    pat = s->patch + (offset & 0x7f); 
-    ir = offset >> 7;
     decode7b4(data, &encoded_fval);
-    pat->fpar[ir] = synti2_decode_f(encoded_fval);
+    s->patch[ipat].fpar[ir] = synti2_decode_f(encoded_fval);
   } 
 #ifndef ULTRASMALL
   else {

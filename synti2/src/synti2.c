@@ -916,6 +916,9 @@ synti2_render(synti2_synth *s,
 #ifndef NO_NOISE
       RandSeed *= 16807;
       interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 
+#ifndef NO_VELOCITY
+        * ((pat->ipar3[SYNTI2_I3_VSN])?(s->velocity[iv] / 127.f) : 1.f)
+#endif
         * pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
         * (float)RandSeed * 4.6566129e-010f; /*noise*/
 #endif

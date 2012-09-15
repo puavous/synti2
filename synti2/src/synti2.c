@@ -495,9 +495,6 @@ synti2_handleInput(synti2_synth *s,
                    unsigned int upto_frames)
 {
   const byte_t *midibuf;
-#ifndef NO_CC
-  counter* c;
-#endif
 
   while((s->seq.playloc->next != NULL) 
         && (s->seq.playloc->next->frame <= upto_frames )) {

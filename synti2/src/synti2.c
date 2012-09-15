@@ -77,9 +77,17 @@ decode7b4(const unsigned char * source, unsigned int * dest){
 
 static
 void
-synti2_counter_reset(counter *c, float aa, float bb, 
-                     unsigned int val, unsigned int delta){
-
+synti2_counter_retarget(counter *c, float nexttime, float nextgoal, unsigned int sr)
+{
+  c->aa = c->f;     /* init from current value */
+  c->bb = nextgoal; /* aim to next goal*/
+  if (nexttime <= 0.0f) {
+    /* No time -> directly to nextgoal */
+    c->f = nextgoal;
+  } else {
+    c->val = 0;
+    c->delta = MAX_COUNTER / sr / nexttime;
+  }
 }
 
 /** Adds an event to its correct location; makes no checks for empty
@@ -363,11 +371,9 @@ synti2_do_noteon(synti2_synth *s,
 
 #ifndef NO_LEGATO
   /* FIXME: Again code very similar to other parts.. */
-  s->pitch[voice].aa = s->pitch[voice].f;
-  s->pitch[voice].bb = note;
-  s->pitch[voice].val = 0;
-  s->pitch[voice].delta = 
-    MAX_COUNTER / s->sr / ((1.f/8192) + s->patch[voice].fpar[SYNTI2_F_LEGLEN]);
+  synti2_counter_retarget(&(s->pitch[voice]),
+                          s->patch[voice].fpar[SYNTI2_F_LEGLEN],
+                          note, s->sr);
 #endif
 
   /* Trigger all envelopes. Just give a hint to the evaluator function.. */
@@ -537,11 +543,10 @@ synti2_handleInput(synti2_synth *s,
       /* A ramp message contains controller number, time, and destination value: */
       /* FIXME: Very similar code in envelope logic. See if these
          could be combined to one function. */
-      c = &(s->contr[midibuf[1]][midibuf[2]]);
-      c->aa = c->f;  /* from current value */
-      c->bb = (*((float*)(midibuf+3+sizeof(float)))); /*to next*/
-      c->val = 0;
-      c->delta = MAX_COUNTER / s->sr / (*((float*)(midibuf+3))); /*in given time */
+      synti2_counter_retarget(&(s->contr[midibuf[1]][midibuf[2]]),
+                              (*((float*)(midibuf+3))) /*in given time */,
+                              (*((float*)(midibuf+3+sizeof(float)))) /*to next*/,
+                              s->sr);
 #endif
 
 #ifndef NO_SYSEX_RECEIVE
@@ -690,16 +695,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
 #endif
         }
 #endif
-        /* FIXME: See if this could be refactored into a function; almost
-        * identical use is with Controller ramps. */
-        nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
-        nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
 
-        //synti2_counter_reset(&(s->eprog[iv][ie]), 1, 0.f, nextgoal);
-
-        s->eprog[iv][ie].aa = s->eprog[iv][ie].f;
-        s->eprog[iv][ie].bb = nextgoal;
-        if (nexttime <= 0.0f) {
           /* No time -> skip envelope knee. Force value to the new
            * level (next goal). Delta remains at 0, so we may skip
            * many.
@@ -712,11 +708,13 @@ synti2_updateEnvelopeStages(synti2_synth *s){
            * but that remains as a to-do for some later project. This
            * envelope skip-and-jump is now a final feature of synti2.
            */
-          s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
-        } else {
-          s->eprog[iv][ie].val = 0;
-          s->eprog[iv][ie].delta = MAX_COUNTER / s->sr / nexttime;
-        }
+
+        /* FIXME: See if this could be refactored into a function; almost
+        * identical use is with Controller ramps. */
+        nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
+        nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
+
+        synti2_counter_retarget(&(s->eprog[iv][ie]), nexttime, nextgoal, s->sr);
       }
     }
   }
@@ -773,7 +771,7 @@ synti2_updateFrequencies(synti2_synth *s){
 
       note = notemod; /* should make a floor (does it? check spec)*/
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
-      freq = interm * s->note2freq[note]; /* could be note2delta[] */
+      freq = interm * s->note2freq[note]; /* could be note2delta[] FIXME: think.*/
       s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;
     }
   }

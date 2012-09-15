@@ -160,7 +160,7 @@ struct synti2_player {
   unsigned int tpq; /* Ticks per quarter (no support for SMPTE). */
   synti2_player_ev *freeloc; /*pointer to next free event structure*/
   int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
-  int sr;           /* Sample rate. */
+  unsigned int sr;           /* Sample rate. */
 
   int idata;        /* index of next free data location */
 
@@ -188,7 +188,7 @@ struct synti2_synth {
   /* I'll actually put the player inside the synthesizer. Somewhat
    * less 'modular', but seems to be a bit smaller size.
    */
-  unsigned long sr; /* Better for code size to have indiv. attrib 1st?*/
+  unsigned int sr; /* Better for code size to have indiv. attrib 1st?*/
   synti2_player seq;
 
   float infranotes[128]; /* TODO: This space could be used for LFO's */

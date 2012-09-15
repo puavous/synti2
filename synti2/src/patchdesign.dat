@@ -55,7 +55,8 @@ EPIT2 Op2PitchEnv 0 6   0 1
 EPIT3 Op3PitchEnv 0 6   0 1
 EPIT4 Op4PitchEnv 0 6   0 1
 
-# FIXME: Pan and filter envelopes! (And a final filter design...)
+EPAN PanEnv      0 6   0 2
+EFILT FiltCutEnv 0 6   0 2
 
 # Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
 # Think about using some look-up tables to their full

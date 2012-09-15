@@ -75,7 +75,12 @@ decode7b4(const unsigned char * source, unsigned int * dest){
     + ((source[3] & 0x7f) << 0);
 }
 
+static
+void
+synti2_counter_reset(counter *c, float aa, float bb, 
+                     unsigned int val, unsigned int delta){
 
+}
 
 /** Adds an event to its correct location; makes no checks for empty
  * messages, i.e., assumes n >= 1. Also assumes that the pre-existing
@@ -93,11 +98,13 @@ decode7b4(const unsigned char * source, unsigned int * dest){
  * (hmm. THAT is unchecked as of yet!!)?
  *
  * FIXME: Now that I'm using an internal event format in any case,
- * could I fix the length? I suppose I could... there are not so many
+ * could I fix the length? Yes, I could... there are not so many
  * different messages, and the bulk data message (which is the only
  * variable-length event) could contain a native pointer to a memory
  * area... maybe? This issue needs to be attended while looking at the
- * tool programs as well.
+ * tool programs as well, and after the implementation of controller
+ * ramps is finished, since that probably dictates the maximum length
+ * of event data.
  */
 #ifndef USE_MIDI_INPUT
 static
@@ -687,15 +694,23 @@ synti2_updateEnvelopeStages(synti2_synth *s){
         * identical use is with Controller ramps. */
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
+
+        //synti2_counter_reset(&(s->eprog[iv][ie]), 1, 0.f, nextgoal);
+
         s->eprog[iv][ie].aa = s->eprog[iv][ie].f;
         s->eprog[iv][ie].bb = nextgoal;
         if (nexttime <= 0.0f) {
           /* No time -> skip envelope knee. Force value to the new
            * level (next goal). Delta remains at 0, so we may skip
-           * many.  FIXME: There will be a value jump here. Should we
-           * instead force a minimum time of 0.001 seconds or 20
-           * samples or something? Try it... OR: what happens if we
-           * just don't force f:=bb in here? Note-off will fail???
+           * many.
+           */
+          /* NOTE: There will be a value jump here, so be
+           * careful when creating patches... The reason for this
+           * whole thing was to make it possible to use less knees, if
+           * 5 knees is not necessary. As an after-thought, the whole
+           * envelope thing could have been made with less glitches,
+           * but that remains as a to-do for some later project. This
+           * envelope skip-and-jump is now a final feature of synti2.
            */
           s->eprog[iv][ie].f = s->eprog[iv][ie].bb;
         } else {

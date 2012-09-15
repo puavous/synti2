@@ -128,20 +128,17 @@ static void signal_handler(int sig)
 int synti2_encode_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
   int intval;
   switch (sm->type){
-  case 0:
-    /*jack_error("Cannot do opcode 0 from here.");*/
-    return 0;
-  case MISSS_OP_SET_3BIT:
+  case MISSS_SYSEX_SET_3BIT:
     intval = sm->value;
     /*if (intval > 0x07) jack_error("Too large to be 3bit value! %d", intval);*/
     sm->actual = (*buf = (intval &= 0x07));
     return 1;
-  case MISSS_OP_SET_7BIT:
+  case MISSS_SYSEX_SET_7BIT:
     intval = sm->value;
     /*if (intval > 0x7f) jack_error("Too large to be 7bit value! %d", intval);*/
     sm->actual = (*buf = (intval &= 0x7f));
     return 1;
-  case MISSS_OP_SET_F:
+  case MISSS_SYSEX_SET_F:
     intval = synti2::encode_f(sm->value);
     sm->actual = synti2::decode_f(intval);
     encode_split7b4(intval, buf);
@@ -332,10 +329,10 @@ void send_to_jack_port(int type, int idx, int patch, float val){
 /** Sends one complete patch to the synth over jack MIDI. */
 void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
   for (int i=0; i<patch.getNPars("I3"); i++){
-    send_to_jack_port(MISSS_OP_SET_3BIT, i, patnum, patch.getValue("I3",i));
+    send_to_jack_port(MISSS_SYSEX_SET_3BIT, i, patnum, patch.getValue("I3",i));
   }
   for (int i=0; i<patch.getNPars("F"); i++){
-    send_to_jack_port(MISSS_OP_SET_F, i, patnum, patch.getValue("F",i));
+    send_to_jack_port(MISSS_SYSEX_SET_F, i, patnum, patch.getValue("F",i));
   }
 }
 
@@ -376,7 +373,7 @@ void cb_new_f_value(Fl_Widget* w, void* p){
 
   (*pbank)[curr_patch].setValue("F",d,val);
   /** FIXME: Redo (and re-think) the message system. */
-  send_to_jack_port(MISSS_OP_SET_F, d, curr_patch, val);
+  send_to_jack_port(MISSS_SYSEX_SET_F, d, curr_patch, val);
 
   std::ostringstream vs;
   vs << flbl[d] << " = " << val << "         "; // hack..
@@ -389,7 +386,7 @@ void cb_new_i3_value(Fl_Widget* w, void* p){
   int d = (long)p;
 
   (*pbank)[curr_patch].setValue("I3",d,val);
-  send_to_jack_port(MISSS_OP_SET_3BIT, d, curr_patch, val);
+  send_to_jack_port(MISSS_SYSEX_SET_3BIT, d, curr_patch, val);
 }
 
 bool file_exists(const char* fname){

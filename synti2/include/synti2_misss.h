@@ -34,16 +34,10 @@
 #define MISSS_MSG_DATA 0x03
 
 /* Operations (instantaneous) at compose-time. Not space-limited.
- *
- * These are used within the SysEx wrappers, which is totally OK
- * (FIXME: is it really?)
- *
- * FIXME: these are not actually misss-specific, but also in the SysEx
- * that is visible to the world. So make these SYNTI2_SYSEX_ maybe?
+ * These are in the SysEx specification, visible to the world.
  */
-#define MISSS_OP_FILL_PATCHES 0
-#define MISSS_OP_SET_3BIT 1
-#define MISSS_OP_SET_7BIT 2
-#define MISSS_OP_SET_F 3
+#define MISSS_SYSEX_SET_3BIT 0
+#define MISSS_SYSEX_SET_7BIT 1
+#define MISSS_SYSEX_SET_F 2
 
 #endif

@@ -378,6 +378,23 @@ Old code for 2-byte F pars:
   /*pat->fpar[ir] = decoded * powf(10.f, ((a & 0x0c) >> 2)-3.f);*/
 
 
+Old text from the sysex receive function:
+
+ * FIXME: This is not visible to the outside, so the 7 bit restriction
+ * from the MIDI sysex world is not necessary if the 8th bit can be
+ * used for something more useful. Native types should be used. NOTE:
+ * The 7bit restriction is as invalid for all the other parts of the
+ * synth core, now that the MIDI interface is banished from here. And
+ * thus the 3bit parameters could be extended to as much as 4 bits?
+ * Only case when SysEx-type of information would be embedded in a
+ * composition is a (non-4k) executable song that would like to
+ * extend sound features by reassigning something in a patch while the
+ * song is playing. Could synti2 live with disallowing such activity?
+ * I start to believe that yes, it could and should disallow
+ * non-compose SysEx. One more issue: What about non-restricted
+ * executable music, though?
+
+
 
 Old Makefile parts:
 -------------------

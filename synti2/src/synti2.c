@@ -427,39 +427,15 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
   }
 }
 
-/* FIXME: Should be ifdef USE_COMPOSE_MODE instead? 
- * Or ifndef NO_COMPOSE_MODE? Or ifndef NO_RECEIVE_DATA
- */
-
 #ifndef NO_SYSEX_RECEIVE
 /** 
- * Receive arbitrary data. (Convenient for sound editing, but not
+ * Receive SysEx data. (Convenient for sound editing, but not
  * necessary for the stand-alone 4k synth. Hence, this is compiled
  * only when real-time midi input is used at compose time. Also, this
  * function is not space-restricted.)
  *
- * The MIDI SysEx things have been dealt with prior to entry, and this
- * can receive just the bulk data in native C data formats.
- *
- * FIXME: This is not visible to the outside, so the 7 bit restriction
- * from the MIDI sysex world is not necessary if the 8th bit can be
- * used for something more useful. Native types should be used. NOTE:
- * The 7bit restriction is as invalid for all the other parts of the
- * synth core, now that the MIDI interface is banished from here. And
- * thus the 3bit parameters could be extended to as much as 4 bits?
- * Only case when SysEx-type of information would be embedded in a
- * composition is a (non-4k) executable song that would like to
- * extend sound features by reassigning something in a patch while the
- * song is playing. Could synti2 live with disallowing such activity?
- * I start to believe that yes, it could and should disallow
- * non-compose SysEx. One more issue: What about non-restricted
- * executable music, though?
- *
- * FIXME: Verify the necessity of this function. There will be the
- * MIDI translator module in any case, so see if it could deal
- * directly with handleInput(). Fixing this issue requires to
- * simultaneously look at the sound editor and maybe other tool
- * programs.
+ * The MIDI SysEx header and footer things have been dealt with prior
+ * to entry, and this receives just the bulk data.
  *
  * FIXME: As of now, the use of this is a little bit awkwardly tangled
  * in the outside code... needs to be considered, once and for all...
@@ -467,26 +443,28 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
  */
 static
 void
-synti2_do_receiveData(synti2_synth *s, const byte_t * data){
+synti2_do_receiveSysexData(synti2_synth *s, const byte_t * data){
   int opcode, offset, ir;
   synti2_patch *pat;
   unsigned int encoded_fval;
 
   /* Data header: */
-  opcode = *data++; /*opcode <<= 7; opcode += *data++;*/  /* what to do */
-  offset = *data++; offset <<= 7; offset += *data++;  /* in where */
-  /* "Sysex" type data: */
-  /* As of yet, offset==patch index. TODO: More elaborate addressing? */
+  /* what to do, a 7 bit value: */
+  opcode = *data++;
+  /* where to do, a 14 bit value, MSB first: */
+  offset = *data++; offset <<= 7; offset += *data++; 
 
-  if (opcode==MISSS_OP_FILL_PATCHES){
-    synti2_fill_patches_from(s->patch + (offset & 0x7f), data);
-  } else if (opcode==MISSS_OP_SET_3BIT) {
-    /* Receive one (supposedly 3-bit) parameter at location
+  /* FIXME: As of now, addressing is really just patch index and data
+   * index. No need to pack and unpack so much here!
+   */
+
+  if (opcode==MISSS_SYSEX_SET_3BIT) {
+    /* Receive one parameter at location
      * (patch,i3par_index) */
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
     pat->ipar3[ir] = *data;
-  } else if (opcode==MISSS_OP_SET_F){
+  } else if (opcode==MISSS_SYSEX_SET_F){
     /* Receive one float parameter at location (patch,fpar_index) */
     pat = s->patch + (offset & 0x7f); 
     ir = offset >> 7;
@@ -552,9 +530,10 @@ synti2_handleInput(synti2_synth *s,
       /* Used only in compose mode (patch editor requires this) 
        * 
        * FIXME: See if we could live without this (midi filter would
-       * convert directly to OP_SETF.
+       * convert directly to OP_SETF. ... Interesting idea.. But why?
+       * But yeah, everything is worth checking out of course...)
        */
-      synti2_do_receiveData(s, midibuf+1);
+      synti2_do_receiveSysexData(s, midibuf+1);
 #endif
     } 
 

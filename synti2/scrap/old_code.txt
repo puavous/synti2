@@ -124,6 +124,10 @@ float asm_sin(float t){
 #PF3 Oper3NoteFollow 0 1   2 15
 #PF4 Oper4NoteFollow 0 1   2 15
 
+Related: (FIXME: could/should use wavetable for noise? Should try..)
+ No.. not going to try for synti2.. other more important features are
+ there. Or maybe yet.. hmm.. let's see.
+
 
  * DONE: Controllers would sound nicer if they were clamping counters
  * (no artefacts from discrete value jumps)
@@ -394,6 +398,12 @@ Old text from the sysex receive function:
  * non-compose SysEx. One more issue: What about non-restricted
  * executable music, though?
 
+ * FIXME: Verify the necessity of this function. There will be the
+ * MIDI translator module in any case, so see if it could deal
+ * directly with handleInput(). Fixing this issue requires to
+ * simultaneously look at the sound editor and maybe other tool
+ * programs.
+ *
 
 
 Old Makefile parts:

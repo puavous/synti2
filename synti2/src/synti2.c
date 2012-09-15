@@ -394,7 +394,7 @@ synti2_do_noteon(synti2_synth *s,
 
 }
 
-/* FIXME: This too much of a hack?*/
+/* TODO: This too much of a hack?*/
 static
 #include "synti2_fdec.c"
 
@@ -911,8 +911,11 @@ synti2_render(synti2_synth *s,
         *signal = interm;
       }
       
-      /* Optional additive noise after FM operator synthesis:
-         (FIXME: could/should use wavetable for noise? Should try..) */
+      /* Optional additive noise after FM operator synthesis: */
+      /* TODO: If noise was a wavetable like other oscillators, it
+       * would not require additional code here. But elsewhere it
+       * would.. worth trying or not? Probably not.
+       */
 #ifndef NO_NOISE
       RandSeed *= 16807;
       interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 

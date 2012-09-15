@@ -765,6 +765,7 @@ synti2_updateFrequencies(synti2_synth *s){
  */
 static void apply_filter(synti2_synth *s, 
                          synti2_patch *pat, 
+                         float fenv,
                          float *store){
 #define FIL_IN 0
 #define FIL_LP 1
@@ -773,13 +774,15 @@ static void apply_filter(synti2_synth *s,
 #define FIL_NF 4
 
   float f,q;
-  /* At first use only a static filter frequency. TODO: Maybe use an
-   * envelope later? FIXME: Check the value range once again..? 
+  /* FIXME: Check the value range once again..? 
    *
    * FIXME: Could there be a nicer filter?
+   *
+   * FIXME: The computation becomes unstable with some combinations of
+   * cutoff and resonance.
    */
 
-  f = 1000.f * pat->fpar[SYNTI2_F_FFREQ] / s->sr;
+  f = 1000.f * fenv / s->sr;
   q = 1.0f - pat->fpar[SYNTI2_F_FRESO];
 
   store[FIL_LP] += f * store[FIL_BP];
@@ -930,7 +933,15 @@ synti2_render(synti2_synth *s,
       /* Skip for faster computation. Should do the same for delays! */
       if(pat->ipar3[SYNTI2_I3_FILT]) {
         signal[0] = interm;
-        apply_filter(s, pat, signal);
+
+        float fenv = pat->fpar[SYNTI2_F_FFREQ];
+
+#ifndef NO_FILTER_ENVELOPE
+        /* Optionally read cutoff frequency from an envelope. */
+        fenv += s->eprog[iv][pat->ipar3[SYNTI2_I3_EFILT]].f;
+#endif
+
+        apply_filter(s, pat, fenv, signal);
         interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
       }
 #endif

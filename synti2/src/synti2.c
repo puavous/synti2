@@ -515,13 +515,7 @@ synti2_handleInput(synti2_synth *s,
 
 #ifndef NO_SYSEX_RECEIVE
     } else if (msgbuf[0] == MISSS_MSG_DATA){
-      /* Used only in compose mode (patch editor requires this) 
-       * 
-       * FIXME: See if we could live without this (midi filter would
-       * convert directly to SYSEX_SETF. ... Interesting idea.. But
-       * why?  But yeah, everything is worth checking out of
-       * course...)
-       */
+      /* Used only in compose mode (patch editor requires this) */
       synti2_do_receiveSysexData(s, msgbuf+1);
 #endif
     } 

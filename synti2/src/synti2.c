@@ -77,6 +77,7 @@ decode7b4(const unsigned char * source, unsigned int * dest){
 
 static
 void
+__attribute__ ((noinline))
 synti2_counter_retarget(counter *c, float nexttime, float nextgoal, unsigned int sr)
 {
   c->aa = c->f;     /* init from current value */

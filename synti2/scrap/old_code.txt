@@ -139,6 +139,15 @@ Related: (FIXME: could/should use wavetable for noise? Should try..)
  * (no artefacts from discrete value jumps)
  *
 
+Upon leaving the two different layer types..
+
+    /* FIXME: (depends: CC ramps) In fact, if NO_CC is used, then
+     * notes are the only layer type.. Could optimize away the whole
+     * layer byte in that case, maybe... but then again, that might be
+     * just too much optimization... Yep; it is... Ramps are a major
+     * element which I rarely want disabled anyway!
+     */
+
 
 #ifndef NO_SYSEX_RECEIVE
     } else if (midibuf[0] == MISSS_MSG_DATA){

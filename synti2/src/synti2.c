@@ -106,13 +106,13 @@ synti2_counter_retarget(counter *c, float nexttime, float nextgoal, unsigned int
  * in the sequencer's own buffer.
  *
  * FIXME: Now that I'm using an internal event format in any case,
- * could I fix the length? Yes, I could... there are not so many
- * different messages, and the bulk data message (which is the only
- * variable-length event) could contain a native pointer to a memory
- * area... maybe? This issue needs to be attended while looking at the
- * tool programs as well, and after the implementation of controller
- * ramps is finished, since that probably dictates the maximum length
- * of event data.
+ * could I fix the length? Yes, I could... but would that be useful??
+ * there are not so many different messages, and the bulk data message
+ * (which is the only variable-length event) could contain a native
+ * pointer to a memory area... maybe? This issue needs to be attended
+ * while looking at the tool programs as well, and after the
+ * implementation of controller ramps is finished, since that probably
+ * dictates the maximum length of event data.
  */
 #ifndef USE_MIDI_INPUT
 static
@@ -124,7 +124,6 @@ synti2_player_event_add(synti2_synth *s,
                         size_t n){
   synti2_player_ev *ev_new;
   byte_t *msg;
-  int i;
 
   while((s->seq.insloc->next != NULL)
         && (s->seq.insloc->next->frame <= frame)){
@@ -143,21 +142,21 @@ synti2_player_event_add(synti2_synth *s,
 
   /*FIXME: Song data might get filled up and overflow lethally.. */
   msg = s->seq.data + s->seq.idata; /* Get next available data pool spot */
-  s->seq.idata += n; /* Update the data pool top */
-
-  /* Copy data: (could obfuscate this to improve size.. but not doing it yet) */
-  for (i=0; i<n; i++){
-    msg[i] = src[i];
-  }
 
   /* Fill in the node: */
-  ev_new->data = msg; /* We made a local copy here. */
+  ev_new->data = msg; /* We'll make a local copy here, see below.. */
   ev_new->next = s->seq.insloc->next;
   ev_new->frame = frame;
   ev_new->len = n;
   s->seq.insloc->next = ev_new;
-  /*printf("stored frame %d data %02x %02x %02x\n", frame, src[0], src[1], src[2]); fflush(stdout);*/
-  
+
+  /* Actual copying of the data, and updating of the data pool top;
+   * done this way to minimize code size (no local ints etc.)
+   */
+  for(;n>0;n--){
+    *msg++ = *src++;
+    s->seq.idata++;
+  }
 }
 
 /** Merges a chunk, aka layer, to the list of events to be played,

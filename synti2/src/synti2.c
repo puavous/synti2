@@ -132,15 +132,30 @@ synti2_player_event_add(synti2_synth *s,
   ev_new = s->seq.freeloc++;
 
 #ifndef ULTRASMALL
+  /* Compose-mode checks for storage size. */
   if (ev_new > (void*)s->seq.evpool+SYNTI2_MAX_SONGEVENTS){
     ev_new = --(s->seq.freeloc);
     s->seq.last_error_frame = frame;
     s->seq.last_error_type = SYNTI2_ERROR_OUT_OF_EVENT_SPACE;
     s->seq.last_error_info = *(unsigned int*)src;
+    return; /* No need to proceed.. */
   } 
+
+  /* Song data could get filled up and overflow lethally without this
+   * limit check. But for "ultrasmall" final targets, you already know
+   * you're within limits, don't you. TODO: This might be different,
+   * if the maximum size of the message data would be fixed at some
+   * point.. we'll see.
+   */
+  if (s->seq.idata + n > SYNTI2_MAX_SONGBYTES) {
+    s->seq.last_error_frame = frame;
+    s->seq.last_error_type = SYNTI2_ERROR_OUT_OF_MESSAGE_SPACE;
+    s->seq.last_error_info = *(unsigned int*)src;
+    return; /* Must not proceed.. */
+  }
 #endif
 
-  /*FIXME: Song data might get filled up and overflow lethally.. */
+  /* In compose-mode, we have checked that everything fits.. */
   msg = s->seq.data + s->seq.idata; /* Get next available data pool spot */
 
   /* Fill in the node: */

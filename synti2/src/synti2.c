@@ -105,14 +105,14 @@ synti2_counter_retarget(counter *c, float nexttime, float nextgoal, unsigned int
  * This function makes a copy of the source data. The copy is stored
  * in the sequencer's own buffer.
  *
- * FIXME: Now that I'm using an internal event format in any case,
- * could I fix the length? Yes, I could... but would that be useful??
- * there are not so many different messages, and the bulk data message
- * (which is the only variable-length event) could contain a native
- * pointer to a memory area... maybe? This issue needs to be attended
- * while looking at the tool programs as well, and after the
- * implementation of controller ramps is finished, since that probably
- * dictates the maximum length of event data.
+ * FIXME: (depends: CC ramps) Now that I'm using an internal event
+ * format in any case, could I fix the length? Yes, I could... but
+ * would that be useful??  there are not so many different messages,
+ * and the bulk data message (which is the only variable-length event)
+ * could contain a native pointer to a memory area... maybe? This
+ * issue needs to be attended while looking at the tool programs as
+ * well, and after the implementation of controller ramps is finished,
+ * since that probably dictates the maximum length of event data.
  */
 #ifndef USE_MIDI_INPUT
 static
@@ -188,7 +188,7 @@ synti2_player_merge_chunk(synti2_synth *s,
   int ii;
   unsigned int frame, tickdelta;
   const byte_t *par;
-  byte_t msg[10]; /* FIXME: actual max. length!*/
+  byte_t msg[10]; /* FIXME: (depends: CC ramps) actual max. length!*/
 
   chan = *r++;
   type = *r++;
@@ -213,14 +213,16 @@ synti2_player_merge_chunk(synti2_synth *s,
       synti2_player_event_add(s, frame, msg, 4);
     }
 #ifndef NO_CC
-    /* FIXME: In fact, if NO_CC is used, then notes are the only layer
-     * type.. Could optimize away the whole layer byte in that case,
-     * maybe... but then again, that might be just excess...
+    /* FIXME: (depends: CC ramps) In fact, if NO_CC is used, then
+     * notes are the only layer type.. Could optimize away the whole
+     * layer byte in that case, maybe... but then again, that might be
+     * just excess...
      */
     else if (type == MISSS_LAYER_CONTROLLER_RAMPS) {
       /* Not yet implemented. FIXME: implement. Of course, this is
        * mostly a task for the tool programs, and the fpar data format
-       * should be fixed before attending this one.
+       * should be fixed before attending this one. (done; so this can
+       * be done right now)
        */
     }
 #endif

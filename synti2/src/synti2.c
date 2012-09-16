@@ -102,9 +102,15 @@ synti2_counter_retarget(counter *c, float nexttime, float nextgoal, unsigned int
  * updated in the middle of insertion. Naturally, this requires that
  * the events are added in their natural (time) order.
  *
- * FIXME: Hmm. the cause of the editor crash problem just evaded me
- * again. Out of space on this side? Shallow copy unthought-of
- * (hmm. THAT is unchecked as of yet!!)?
+ * Warning: There is a shallow copy here, which means that the space
+ * allocation for the message needs to be made somewhere else. This
+ * might be a bit awkward, and should be straightened out, if there is
+ * time and energy(!). But it doesn't seem to play a part in any
+ * actual errors at the moment (because callers of this function are
+ * careful). TODO: straighten this thing out if you have time.
+ *
+ * Actually, the TODO in the previous warning is very important if
+ * adding support for new midi interfaces.
  *
  * FIXME: Now that I'm using an internal event format in any case,
  * could I fix the length? Yes, I could... there are not so many
@@ -140,7 +146,7 @@ synti2_player_event_add(synti2_synth *s,
 #endif
 
   /* Fill in the node: */
-  ev_new->data = src;         /* SHALLOW COPY here.*/
+  ev_new->data = src;         /* SHALLOW COPY here. */
   ev_new->next = s->seq.insloc->next;
   ev_new->frame = frame;
   ev_new->len = n;

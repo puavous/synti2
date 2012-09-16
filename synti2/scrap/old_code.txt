@@ -411,6 +411,15 @@ Old text from the sysex receive function:
  * programs.
  *
 
+From the event addition function:
+
+ * FIXME: Hmm. the cause of the editor crash problem just evaded me
+ * again. Out of space on this side? Shallow copy unthought-of
+ * (hmm. THAT is unchecked as of yet!!)?  Well.. I checked this, and
+ * the shallow copy was OK here, because the (as of now, two) callers
+ * were careful in allocating space from the synthesizers data pool.
+
+
 
 Old Makefile parts:
 -------------------

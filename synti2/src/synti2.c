@@ -102,15 +102,8 @@ synti2_counter_retarget(counter *c, float nexttime, float nextgoal, unsigned int
  * updated in the middle of insertion. Naturally, this requires that
  * the events are added in their natural (time) order.
  *
- * Warning: There is a shallow copy here, which means that the space
- * allocation for the message needs to be made somewhere else. This
- * might be a bit awkward, and should be straightened out, if there is
- * time and energy(!). But it doesn't seem to play a part in any
- * actual errors at the moment (because callers of this function are
- * careful). TODO: straighten this thing out if you have time.
- *
- * Actually, the TODO in the previous warning is very important if
- * adding support for new midi interfaces.
+ * This function makes a copy of the source data. The copy is stored
+ * in the sequencer's own buffer.
  *
  * FIXME: Now that I'm using an internal event format in any case,
  * could I fix the length? Yes, I could... there are not so many
@@ -130,6 +123,9 @@ synti2_player_event_add(synti2_synth *s,
                         const byte_t *src, 
                         size_t n){
   synti2_player_ev *ev_new;
+  byte_t *msg;
+  int i;
+
   while((s->seq.insloc->next != NULL)
         && (s->seq.insloc->next->frame <= frame)){
     s->seq.insloc = s->seq.insloc->next;
@@ -145,8 +141,17 @@ synti2_player_event_add(synti2_synth *s,
   } 
 #endif
 
+  /*FIXME: Song data might get filled up and overflow lethally.. */
+  msg = s->seq.data + s->seq.idata; /* Get next available data pool spot */
+  s->seq.idata += n; /* Update the data pool top */
+
+  /* Copy data: (could obfuscate this to improve size.. but not doing it yet) */
+  for (i=0; i<n; i++){
+    msg[i] = src[i];
+  }
+
   /* Fill in the node: */
-  ev_new->data = src;         /* SHALLOW COPY here. */
+  ev_new->data = msg; /* We made a local copy here. */
   ev_new->next = s->seq.insloc->next;
   ev_new->frame = frame;
   ev_new->len = n;
@@ -169,7 +174,7 @@ synti2_player_merge_chunk(synti2_synth *s,
   int ii;
   unsigned int frame, tickdelta;
   const byte_t *par;
-  byte_t *msg;
+  byte_t msg[10]; /* FIXME: actual max. length!*/
 
   chan = *r++;
   type = *r++;
@@ -185,9 +190,6 @@ synti2_player_merge_chunk(synti2_synth *s,
     r += varlength(r, &tickdelta);
     frame += s->seq.fpt * tickdelta;
 
-    /*FIXME: Song data might get filled up and overflow lethally.. */
-    msg = s->seq.data + s->seq.idata; /* Get next available data pool spot */
-
     if (type == MISSS_LAYER_NOTES){
       /* Produce a 'Note on' message in our internal midi-like format. */
       msg[0] = MISSS_MSG_NOTE;
@@ -195,8 +197,7 @@ synti2_player_merge_chunk(synti2_synth *s,
       msg[2] = (par[0]==0xff) ? *r++ : par[0];
       msg[3] = (par[1]==0xff) ? *r++ : par[1];
       synti2_player_event_add(s, frame, msg, 4);
-      s->seq.idata += 4; /* Update the data pool top */
-    } 
+    }
 #ifndef NO_CC
     /* FIXME: In fact, if NO_CC is used, then notes are the only layer
      * type.. Could optimize away the whole layer byte in that case,

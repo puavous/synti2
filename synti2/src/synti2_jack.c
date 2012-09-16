@@ -29,7 +29,7 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
 {
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
-  byte_t *msg;
+  byte_t msg[1000]; /* FIXME: What size do we actually need!? */
   void *midi_in_buffer = (void*) jack_port_get_buffer (inmidi_port, nframes);
   int out_size;
 
@@ -45,11 +45,21 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
   nev = jack_midi_get_event_count(midi_in_buffer);
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) == ENODATA) break;
+
+#if 0
+    // Done in the engine function now:
     /* Get next available spot from the data pool */
     msg = pl->data + pl->idata;
+#endif
+
     out_size = synti2_midi_to_misss(ev.buffer, msg, ev.size);
     if (out_size > 0){
+
+#if 0
+      // Done in the engine function now:
       pl->idata += out_size; /*Update the data pool top*/
+#endif
+
       synti2_player_event_add(s, 
                               pl->frames_done + ev.time, 
                               msg, 

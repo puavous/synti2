@@ -268,6 +268,7 @@ public:
 };
 
 
+/* FIXME: Attend to this next!!*/
 class MisssRampChunk : public MisssChunk {
 private:
   /* parameters */
@@ -298,12 +299,7 @@ private:
 public:
   MisssSong(MidiSong &midi_song, 
             MidiEventTranslator &trans, 
-            std::istream &spec)
-  {
-    figure_out_tempo_from_midi(midi_song);
-    build_chunks_from_spec(spec);
-    translated_grab_from_midi(midi_song, trans);
-  }
+            std::istream &spec);
 
   void write_as_c(std::ostream &outs);
 };

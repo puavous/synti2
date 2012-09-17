@@ -114,8 +114,8 @@ protected:
    */
   MidiEvent* createNormalizedEvent(std::istream &ins);
 public:
-  MidiTrack(){current_tick = 0; current_type = 0; current_channel = 0;}
-  MidiTrack(std::istream &ins){MidiTrack(); readFrom(ins); rewind();}
+  MidiTrack();
+  MidiTrack(std::istream &ins);
   ~MidiTrack(){for(unsigned int i=0; i<vec_evs.size(); i++){delete vec_evs[i];}}
 
   void divideTimesBy(int divisor){

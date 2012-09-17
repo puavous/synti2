@@ -178,6 +178,18 @@ MidiTrack::createNormalizedEvent(std::istream &ins){
   return new MidiEvent(type, byte & 0xf, 0, ins);
 }
 
+MidiTrack::MidiTrack(){
+  current_tick = 0; 
+  current_type = 0; 
+  current_channel = 0;
+}
+
+MidiTrack::MidiTrack(std::istream &ins){
+  MidiTrack(); 
+  readFrom(ins); 
+  rewind();
+}
+
 void 
 MidiTrack::readFrom(std::istream &ins){
   unsigned int hdr = read_4byte(ins);

@@ -38,7 +38,7 @@ one_star_j:
 		GFX=example/one_star_j/gfx.c \
 	        SND=example/one_star_j/one_star_j.s2bank \
 		SMF=example/one_star_j/one_star_j.mid \
-              NONOS='-DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_FILTER -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_STEREO'
+              NONOS='-DNO_SAFETY -DNO_NOTEOFF -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_VELOCITY -DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_STEREO'
 	mv tinyexe $@
 
 cube_thing:

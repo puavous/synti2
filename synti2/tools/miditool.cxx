@@ -396,7 +396,7 @@ MisssSong::build_chunks_from_spec(std::istream &spec)
   chunks.push_back(new MisssNoteChunk(0xb, 0xb, 41, 123, 1, 127));
   chunks.push_back(new MisssNoteChunk(0xc, 0xc, 41, 123, 1, 127));
 
-#if 0
+#if 1
   for (int i=9; i<16; i++){
     /* note ons: */
     chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));

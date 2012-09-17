@@ -13,6 +13,8 @@
 #define MIDI_STATUS_PITCH_WHEEL 0xe
 #define MIDI_STATUS_SYSTEM 0xf
 
+#define MIDI_STATUS_SYSTEM_META 0xf
+
 #include "synti2.h"
 #include "synti2_guts.h"
 

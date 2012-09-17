@@ -5,6 +5,7 @@
 
 #include "miditool.hpp"
 #include "midihelper.hpp"
+#include "../include/synti2_midi.h"
 
 #include <iostream>
 #include <fstream>
@@ -120,17 +121,22 @@ MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel,
 
 
   switch(type){
-  case 0xc: case 0xd:
+  case MIDI_STATUS_PROGRAM: 
+  case MIDI_STATUS_CHANNEL_PRESSURE:
     /* Only one parameter for these. */
     return;
-  case 0x8: case 0x9:  case 0xa:  case 0xb:  case 0xe:
+  case MIDI_STATUS_NOTE_OFF: 
+  case MIDI_STATUS_NOTE_ON:
+  case MIDI_STATUS_KEY_PRESSURE:
+  case MIDI_STATUS_CONTROL:  
+  case MIDI_STATUS_PITCH_WHEEL:
     /* Two parameters for these. */
     this->par2 = ins.get();
     return;
-  case 0xf:
+  case MIDI_STATUS_SYSTEM:
 
     /* No parameters for these, but a bulk of other data may exist: */
-    if (subtype_or_channel == 0xf){
+    if (subtype_or_channel == MIDI_STATUS_SYSTEM){
       /* This means FF - meta event. */
       read_meta_ev(ins);
     } else {

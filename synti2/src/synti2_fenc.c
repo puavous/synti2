@@ -11,18 +11,20 @@ unsigned int synti2_encode_f(float val){
   int neg10 = 0;
   unsigned int intval = 0;
   float tol = 0.0005f;
-  float divis = .1f;  
+  float divis = .1f;
 
-  negative = (val < 0);
+  negative = (val < 0.f);
   val = negative?-val:val; /*abs*/
 
   /* find required accuracy: */
   for (neg10 = 0; neg10 <= 3; neg10++){
     divis *= 10;
-    if ((val*divis)-((int)(val*divis)) < tol){
+    if ((val*divis)-(floor(val*divis)) < tol){
       break;
     }
   }
+  /* if it fell through, neg10==4 !!*/
+  if (neg10==4) neg10--;
 
   intval = val*divis;
   intval <<= 2;

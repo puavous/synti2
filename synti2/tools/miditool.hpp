@@ -49,9 +49,12 @@ public:
       && (this->par1 == par1);
   }
   bool isNote() const {return ((type == 0x9) || (type == 0x8));}
+  bool isCC() const {return (type == 0xb);}
   /* quick hack for tempo setting: */
   int get3byte() const {return (bulk[0] << 16) + (bulk[1] << 8) + bulk[3];}
   int getNote(){return par1;}
+  int getCCnum(){return par1;} /*hmm*/
+  int getCCval(){return par2;} /*hmm*/
   int getVelocity(){return par2;}
   int getChannel(){return subtype_or_channel;}
   bool isEndOfTrack(){
@@ -272,9 +275,29 @@ public:
 class MisssRampChunk : public MisssChunk {
 private:
   /* parameters */
-  int control_target;
-  int range_min;
-  int range_max;
+  int control_input; /* midi controller to listen to. Hmm.. Pitch? Pressure? */
+  int control_target; /* synti2 controller */
+  float range_min;
+  float range_max;
+protected:
+  void do_write_header_as_c(std::ostream &outs);
+  void do_write_data_as_c(std::ostream &outs);
+public:
+  MisssRampChunk(int in_c, int out_c, 
+                 int midi_cc, 
+                 int s2_controller,
+                 float out_range_min,
+                 float out_range_max) 
+    : MisssChunk(in_c, out_c)
+  {
+    control_input = midi_cc;
+    control_target = s2_controller;
+    range_min = out_range_min;
+    range_max = out_range_max;
+  }
+  /** Must be called in increasing time-order. */
+  bool acceptEvent(unsigned int t, MidiEvent &ev);
+
   // mapping_type
 };
 

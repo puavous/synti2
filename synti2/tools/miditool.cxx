@@ -5,6 +5,7 @@
 
 #include "miditool.hpp"
 #include "midihelper.hpp"
+#include "patchtool.hpp"
 #include "../include/synti2_midi.h"
 
 #include <iostream>
@@ -345,12 +346,12 @@ MisssChunk::do_write_header_as_c(std::ostream &outs){
   outs << ", " << std::endl;
   fmt_comment(outs, "Channel"); fmt_hexbyte(outs, out_channel);
   outs << ", " << std::endl;
-  fmt_comment(outs, "Type"); outs << "MISSS_LAYER_NOTES";
-  outs << ", " << std::endl;
 }
 
 void MisssNoteChunk::do_write_header_as_c(std::ostream &outs){
   MisssChunk::do_write_header_as_c(outs);
+  fmt_comment(outs, "Type"); outs << "MISSS_LAYER_NOTES";
+  outs << ", " << std::endl;
   fmt_comment(outs, "Default note"); fmt_hexbyte(outs, default_note);
   outs << ", " << std::endl;
   fmt_comment(outs, "Default velocity"); fmt_hexbyte(outs, default_velocity);
@@ -400,6 +401,103 @@ MisssNoteChunk::acceptEvent(unsigned int t, MidiEvent &ev){
   return true;
 }
 
+void MisssRampChunk::do_write_header_as_c(std::ostream &outs){
+  MisssChunk::do_write_header_as_c(outs);
+  fmt_comment(outs, "Type"); outs << "MISSS_LAYER_CONTROLLER_RAMPS";
+  outs << ", " << std::endl;
+  fmt_comment(outs, "Synti2 controller number"); fmt_hexbyte(outs, control_target);
+  outs << ", " << std::endl;
+  fmt_comment(outs, "Unused parameter (dup)"); fmt_hexbyte(outs, control_target);
+  outs << ", " << std::endl;
+}
+
+void
+MisssRampChunk::do_write_data_as_c(std::ostream &outs){
+  //outs << "BROKEN: Not yet implemented: MisssRampChunk::do_write_data_as_c()*/ " << std::endl;
+
+  unsigned int di = 0;
+  outs << "/* delta and info : */ " << std::endl;
+  unsigned int prev_tick=0;
+  for (unsigned int i=0; i<tick.size(); i++){
+    unsigned int delta = tick[i] - prev_tick; /* assume order */
+    prev_tick = tick[i];
+    fmt_varlen(outs, delta);
+    outs << ", ";
+
+    /* no earlier than here starts the differences to notes */
+    size_t len;
+    /* FIXME: this should go into an overloaded function in midihelper.cxx:*/
+    unsigned char buf[8];
+    for(int i=0;(i<8)&&((di+i) < data.size()); i++){
+      buf[i] = data[di+i];
+    }
+
+    unsigned int intval;
+    float fval;
+    len = decode_varlength(buf, intval);
+    fval = synti2::decode_f(intval);
+    
+    for(int i=0;i<len;i++){
+      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
+      outs << ", ";
+    }
+    /* and value: */
+    len = decode_varlength(buf+len, intval);
+    fval = synti2::decode_f(intval);
+
+    for(int i=0;i<len;i++){
+      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
+      outs << ", ";
+    }
+
+    outs << std::endl;
+  }
+  outs << std::endl;
+}
+
+bool
+MisssRampChunk::acceptEvent(unsigned int t, MidiEvent &ev){
+  if (!ev.isCC()) return false;
+  if (!channelMatch(ev)) return false;
+  if (!(control_input == ev.getCCnum())) return false;
+
+  tick.push_back(t);
+  dataind.push_back(data.size());
+
+  /* FIXME: Determine and encode time and tgt value */
+  /* OR should it be done by the writer function?? */
+  /* Doesn't really matter.. I'm re-doing this thing anyway.*/
+  /* ... or am I?*/
+  /* Must think this through at some point, yeah..
+     time is ticks here, but seconds in the encoding, etc...*/
+  /* FIXME: So far, I'll just make an instant change for each midi
+     event*/
+
+  float fval = range_min + (ev.getCCval()/127.f) * (range_max - range_min);
+  float ftime = 0.004f;
+
+  unsigned int inttime = synti2::encode_f(ftime);
+  unsigned int intval = synti2::encode_f(fval);
+
+  unsigned byte buf[4];
+  size_t len;
+
+  len = encode_varlength(inttime, buf);
+  for (int i=0;i<len;i++){
+    data.push_back(buf[i]);
+  }
+
+  len = encode_varlength(intval, buf);
+  for (int i=0;i<len;i++){
+    data.push_back(buf[i]);
+  }
+
+  return true;
+}
+
+
+
+
 
 MisssSong::MisssSong(MidiSong &midi_song, 
             MidiEventTranslator &trans, 
@@ -440,6 +538,12 @@ MisssSong::build_chunks_from_spec(std::istream &spec)
   }
 #endif
 
+  /* Continuous controllers: */
+  /* FIXME: see that this works... */
+  chunks.push_back(new MisssRampChunk(0xc, 0xc, 0x01, 0x01, 
+                                      0.0f, 1.0f);
+
+
   /* FIXME: Implement. */
   std::cout << "/*FIXME: Cannot build from spec yet.*/ " << std::endl;
   std::string hmm;
@@ -470,6 +574,7 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
       evs[i].print(std::cout);*/
     }
 
+    /* Collect: */
     for(i=0; i<ticks.size(); i++){
       miditick_t t = ticks[i];
       MidiEvent ev = evs[i];
@@ -645,7 +750,7 @@ MidiEvent
 MidiEventTranslator::transformOffline(const MidiEvent &evin){
   /* Only mogrify notes, as of now... */
   /* FIXME: Most desperately I need CCs and pitch bends. 
-   * So implement that next.
+   * So implement that next. But CCs don't need mogrifying...
    */
   if (!evin.isNote()){ return evin; } 
 

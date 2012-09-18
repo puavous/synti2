@@ -19,7 +19,7 @@ unsigned int synti2_encode_f(float val){
   /* find required accuracy: */
   for (neg10 = 0; neg10 <= 3; neg10++){
     divis *= 10;
-    if ((val*divis)-(floor(val*divis)) < tol){
+    if ((val*divis)-((int)(val*divis)) < tol){
       break;
     }
   }

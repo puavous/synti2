@@ -32,10 +32,11 @@ encode_varlength(unsigned int value, unsigned char *dest){
   return vllen; /* return length of encoded byte stream */
 }
 
-size_t
-decode_varlength(const unsigned char *source, unsigned int *dest){
+int
+decode_varlength(const unsigned char *source, unsigned int *dest)
+{
   /* Just a copy-paste from the static function in the synth engine.. */
-  size_t nread;
+  int nread;
   unsigned char byte;
   *dest = 0;
   for (nread=1; nread<=4; nread++){

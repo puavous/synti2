@@ -12,8 +12,8 @@ encode_varlength(unsigned int value, unsigned char *dest);
  * A common helper function - Decodes an integer value from a
  * varlength bytestream; returns the number of bytes read.
  */
-size_t
-decode_varlength(const unsigned char *source, unsigned int *dest){
+int
+decode_varlength(const unsigned char *source, unsigned int *dest);
 
 /** 
  * A common helper function - Splits an integer (assumed to be at most

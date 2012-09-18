@@ -405,7 +405,7 @@ void MisssRampChunk::do_write_header_as_c(std::ostream &outs){
   MisssChunk::do_write_header_as_c(outs);
   fmt_comment(outs, "Type"); outs << "MISSS_LAYER_CONTROLLER_RAMPS";
   outs << ", " << std::endl;
-  fmt_comment(outs, "Synti2 controller number"); fmt_hexbyte(outs, control_target);
+  fmt_comment(outs, "Synti2 controller number (zero-based)"); fmt_hexbyte(outs, control_target);
   outs << ", " << std::endl;
   fmt_comment(outs, "Unused parameter (dup)"); fmt_hexbyte(outs, control_target);
   outs << ", " << std::endl;
@@ -434,18 +434,18 @@ MisssRampChunk::do_write_data_as_c(std::ostream &outs){
 
     unsigned int intval;
     float fval;
-    len = decode_varlength(buf, intval);
+    len = decode_varlength(buf, &intval);
     fval = synti2::decode_f(intval);
     
-    for(int i=0;i<len;i++){
+    for(unsigned int i=0;i<len;i++){
       fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
       outs << ", ";
     }
     /* and value: */
-    len = decode_varlength(buf+len, intval);
+    len = decode_varlength(buf+len, &intval);
     fval = synti2::decode_f(intval);
 
-    for(int i=0;i<len;i++){
+    for(unsigned int i=0;i<len;i++){
       fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
       outs << ", ";
     }
@@ -479,16 +479,16 @@ MisssRampChunk::acceptEvent(unsigned int t, MidiEvent &ev){
   unsigned int inttime = synti2::encode_f(ftime);
   unsigned int intval = synti2::encode_f(fval);
 
-  unsigned byte buf[4];
+  unsigned char buf[4];
   size_t len;
 
   len = encode_varlength(inttime, buf);
-  for (int i=0;i<len;i++){
+  for (size_t i=0;i<len;i++){
     data.push_back(buf[i]);
   }
 
   len = encode_varlength(intval, buf);
-  for (int i=0;i<len;i++){
+  for (size_t i=0;i<len;i++){
     data.push_back(buf[i]);
   }
 
@@ -535,13 +535,15 @@ MisssSong::build_chunks_from_spec(std::istream &spec)
     /* note ons: */
     chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
     /* no note offs, as can be seen :) */
-  }
-#endif
 
   /* Continuous controllers: */
   /* FIXME: see that this works... */
-  chunks.push_back(new MisssRampChunk(0xc, 0xc, 0x01, 0x01, 
-                                      0.0f, 1.0f);
+  chunks.push_back(new MisssRampChunk(i, i, 0x01, 0x00, 
+                                      0.0f, 1.0f));
+
+
+  }
+#endif
 
 
   /* FIXME: Implement. */

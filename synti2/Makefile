@@ -121,8 +121,10 @@ tools: midi2synti2 patchedit genpar cbank
 
 midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
 		tools/miditool.hpp tools/midihelper.hpp \
+		tools/patchtool.hpp tools/patchtool.cxx \
 		tools/midihelper.cxx Makefile
 	g++ -Wextra -o $@ $(filter %.cxx, $+) \
+		-Isrc/ \
 		-lfltk `fltk-config --cxxflags` \
 		`pkg-config --cflags --libs jack`
 

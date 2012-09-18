@@ -436,6 +436,7 @@ MisssRampChunk::do_write_data_as_c(std::ostream &outs){
     float fval;
     len = decode_varlength(buf, &intval);
     fval = synti2::decode_f(intval);
+    std::cout << "/* time " << fval << "s */";
     
     for(unsigned int i=0;i<len;i++){
       fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
@@ -444,6 +445,7 @@ MisssRampChunk::do_write_data_as_c(std::ostream &outs){
     /* and value: */
     len = decode_varlength(buf+len, &intval);
     fval = synti2::decode_f(intval);
+    std::cout << "/* value " << fval << " */";
 
     for(unsigned int i=0;i<len;i++){
       fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
@@ -488,9 +490,14 @@ MisssRampChunk::acceptEvent(unsigned int t, MidiEvent &ev){
   }
 
   len = encode_varlength(intval, buf);
+  //std::cout << "/*In goes: "; 
+  //std::cout << synti2::decode_f(intval) << " ";
   for (size_t i=0;i<len;i++){
+    //fmt_hexbyte(std::cout, buf[i]);
+    //std::cout << " ";
     data.push_back(buf[i]);
   }
+  //std::cout << "*/" << std::endl;
 
   return true;
 }

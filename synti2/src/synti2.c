@@ -223,15 +223,14 @@ synti2_player_merge_chunk(synti2_synth *s,
       msg[1] = chan;
       msg[2] = par[0]; /*cont_index*/
 
-      printf("Adding ramp: ");
       r += varlength(r, &intval); /* time */
       *((float*)(&msg[3])) = synti2_decode_f(intval);
       r += varlength(r, &intval); /* dest. value */
       *(((float*)(&msg[3]))+1) = synti2_decode_f(intval);
       /* Then two native floats float out, and the header piece:. */
-      printf("Time: %7.3fs Target: %7.3f\n",
+      /*printf("Adding ramp: Time: %7.3fs Target: %7.3f\n",
              *((float*)(&msg[3])),
-             *((float*)(&msg[3])+1));
+             *((float*)(&msg[3])+1));*/
 
       synti2_player_event_add(s, frame, msg, 3+2*sizeof(float));
     }

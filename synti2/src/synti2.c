@@ -692,13 +692,14 @@ synti2_updateEnvelopeStages(synti2_synth *s){
          * level (next goal). Delta remains at 0, so we may skip
          * many.
          */
-        /* NOTE: There will be a value jump here, so be
-         * careful when creating patches... The reason for this
-         * whole thing was to make it possible to use less knees, if
-         * 5 knees is not necessary. As an after-thought, the whole
-         * envelope thing could have been made with less glitches,
-         * but that remains as a to-do for some later project. This
-         * envelope skip-and-jump is now a final feature of synti2.
+        /* NOTE: There will be a value jump here, so be careful when
+         * creating patches... The reason for this whole thing was to
+         * make it possible to use less knees, if 5 knees is not
+         * necessary. As an after-thought, the whole envelope thing
+         * could have been made with less glitches, but that remains
+         * as a to-do for some later project. This envelope
+         * skip-and-jump is now a final feature of synti2. Sorry for
+         * the pops you get if using this as patch size optimization.
          */
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
@@ -901,7 +902,8 @@ synti2_render(synti2_synth *s,
          case (?) ... should make the delay line contents available in
          sigin, and that's all, I guess.. looks easy enough?
          Yei. FIXME: Do it the easy way instead of this initial
-         attempt. */
+         attempt. Actually there is now a new idea about delay lines,
+         which might solve this thing nicely, too. */
       id = pat->ipar3[SYNTI2_I3_FBACK];
       if (id>0){
         dsamp = s->framecount.val;

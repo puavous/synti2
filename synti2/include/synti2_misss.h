@@ -2,8 +2,10 @@
  *
  * MIDI-like Interface for the Synti2 Software Synthesizer.
  *
- * MISSS_x are part of *internal* specification.
- * SYNTI2_SYSEX_x are part of *external* specification
+ * MISSS_x are part of *internal* specification. 
+ *
+ * MISSS_SYSEX_x are part of both internal and also *external*
+ * specification (directly passed on to the engine in compose mode).
  */
 #ifndef MISSS_INCLUDED
 #define MISSS_INCLUDED
@@ -17,7 +19,7 @@
  *
  * FIXME: If only one bit is used for layer identification in the end,
  * then maybe use the remaining 7 for some useful aspect (could hold
- * par[0], for example)
+ * par[0], for example). But... do I want _LAYER_DATA !?
  */
 #define MISSS_LAYER_NOTES 0x00
 #define MISSS_LAYER_CONTROLLER_RAMPS 0x01

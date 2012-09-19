@@ -464,9 +464,14 @@ synti2_fill_patches_from(synti2_patch *pat, const unsigned char *data)
  * The MIDI SysEx header and footer things have been dealt with prior
  * to entry, and this receives just the bulk data.
  *
- * FIXME: Do I want SysEx to be stored in the playback data? At the
- * moment, I think not.. but be sure and make it a synti2 feature or
- * decide not to ever do that.
+ * TODO: Do I want SysEx to be stored in the playback data? Maybe...
+ * I don't find many reasons why it shouldn't be possible. No big bulk
+ * messages, but for convenience, some simple "set one parameter"-type
+ * of messages would make the stand-alone synth a lot more
+ * flexible.. Maybe in some cases some song data size optimization
+ * could be done by means of SysEx (?). But I deem this a very low
+ * priority now. To be thought about later if I happen to have the
+ * time and interest.
  *
  */
 static

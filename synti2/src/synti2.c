@@ -62,8 +62,8 @@ varlength(const unsigned char * source, unsigned int * dest){
  * Assemble a 28-bit integer from 7 bit parts that were used
  * in SysEx transfer.
  *
- * (This is static and should not get compiled in the standalone
- * synth...)
+ * Not size-limited. (This is static and should not get compiled in
+ * the standalone synth...)
  */
 static
 void

@@ -161,7 +161,6 @@ struct synti2_player {
   unsigned int tpq; /* Ticks per quarter (no support for SMPTE). */
   synti2_player_ev *freeloc; /*pointer to next free event structure*/
   int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
-  unsigned int sr;           /* Sample rate. */
 
   /* Playable events. The first will be at evpool[0]! */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];

@@ -239,7 +239,7 @@ synti2_player_init_from_misss(synti2_synth *s, const byte_t *r)
   r += varlength(r, &uspq);       /* Microseconds per quarter note */
   s->seq.fpt = 
     ((float)uspq / s->seq.tpq) 
-    / (1000000.0f / s->seq.sr); /* frames-per-tick */
+    / (1000000.0f / s->sr); /* frames-per-tick */
   for(r += varlength(r, &chunksize); chunksize > 0; r += varlength(r, &chunksize)){
     r = synti2_player_merge_chunk(s, r, chunksize); /* read a chunk... */
   }
@@ -263,7 +263,6 @@ synti2_init(synti2_synth * s,
   memset(s, 0, sizeof(s));     /* zero */
 
   /* Initialize the player module. (Not much to be done...) */
-  s->seq.sr = sr;
   s->sr = sr;
   s->framecount.delta = 1;
 

@@ -754,9 +754,9 @@ synti2_updateFrequencies(synti2_synth *s){
  *     pass. Easy to calculate coefficients, easy to process
  *     algorithm.
  *
- *    cutoff = cutoff freq in Hz
+ *    cutoff = cutoff freq in Hz  (parameter fenv)
  *    fs = sampling frequency //(e.g. 44100Hz)
- *    f = frqHz / sampleRate*4.;  hmm what it means..
+ *    f = 2*sin(M_PI*cutoff / fs)
  *    q = resonance/bandwidth [0 < q <= 1]  most res: q=1, less: q=0
  *    scale = q  OR scale = sqrt(q)?? 
  *
@@ -781,19 +781,23 @@ static void apply_filter(synti2_synth *s,
 #define FIL_NF 4
 
   float f,q;
-  /* FIXME: Check the value range once again..? 
-   *
-   * FIXME: Could there be a nicer filter?
+  /* FIXME: Could there be a nicer filter? No. This is nice for synti2.
    *
    * FIXME: The computation becomes unstable with some combinations of
-   * cutoff and resonance.
+   * cutoff and resonance. Does it really? When? Is it a problem?
+   *
+   * FIXME: Filter frequency should be given as a midi note actually..
+   *        Maybe go back to note2freq, or make another for filter
+   *        purposes...  yep, maybe that would do.. compile that part
+   *        only if filter is needed.
    */
 
-  f = 1000.f * fenv / s->sr;
+  f = 2.f*sinf(M_PI*(fenv) / s->sr);
+
   q = 1.0f - pat->fpar[SYNTI2_F_FRESO];
 
   store[FIL_LP] += f * store[FIL_BP];
-  store[FIL_HP]  = q * store[FIL_IN] - store[FIL_LP] - q * store[FIL_BP];
+  store[FIL_HP]  = q * store[FIL_IN] - store[FIL_LP] - (q*q) * store[FIL_BP];
   store[FIL_BP] += f * store[FIL_HP];
 #ifndef NO_NOTCH_FILTER
   store[FIL_NF] = store[FIL_LP] + store[FIL_HP];
@@ -948,6 +952,8 @@ synti2_render(synti2_synth *s,
         /* Optionally read cutoff frequency from an envelope. */
         fenv += s->eprog[iv][pat->ipar3[SYNTI2_I3_EFILT]].f;
 #endif
+
+        fenv *= 100.f; /* frequency scaling par 4.4 -> 440 Hz*/
 
         apply_filter(s, pat, fenv, signal);
         interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/

@@ -39,7 +39,6 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
   pl->playloc = pl->evpool; /* This would "rewind" the song */
   pl->insloc = pl->evpool; /* This would "rewind" the song */
   pl->freeloc = pl->evpool+1;
-  pl->idata = 0;
   pl->playloc->next = NULL; /* This effects the deletion of previous msgs.*/
   
   nev = jack_midi_get_event_count(midi_in_buffer);
@@ -50,8 +49,7 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
     if (out_size > 0){
       synti2_player_event_add(s, 
                               pl->frames_done + ev.time, 
-                              msg, 
-                              out_size);
+                              msg);
     }
   }
 }

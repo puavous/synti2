@@ -297,7 +297,7 @@ synti2_init(synti2_synth * s,
    */
   /* slightly inaccurate notes but without powf(). Many bytes shorter exe. */
   /* My ears find the result very tolerable; I don't know about others... */
-  freqf = 8.175798915643707f;
+  freqf = (8.175798915643707f* MAX_COUNTER) / s->sr;
   for(ii=0;ii<128;ii++){
     s->note2freq[ii] = freqf;
     freqf *= 1.0594630943592953f;
@@ -731,8 +731,9 @@ synti2_updateFrequencies(synti2_synth *s){
 
       note = notemod; /* should make a floor (does it? check spec)*/
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
-      freq = interm * s->note2freq[note]; /* could be note2delta[] FIXME: think.*/
-      s->c[iv*NOSCILLATORS+iosc].delta = freq / s->sr * MAX_COUNTER;
+      //freq = interm * s->note2freq[note]; /* could be note2delta[] FIXME: think.*/
+      s->c[iv*NOSCILLATORS+iosc].delta = 
+interm * s->note2freq[note]; /* could be note2delta[] FIXME: think.*/
     }
   }
 }

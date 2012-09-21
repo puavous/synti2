@@ -26,6 +26,16 @@ Old contemplations of formats and stuff..
        when using buffer[2*iframe+1] for right channel. */
 
 
+ * FIXME: (depends: CC ramps) Now that I'm using an internal event
+ * format in any case, could I fix the length? Yes, I could... but
+ * would that be useful??  there are not so many different messages,
+ * and the bulk data message (which is the only variable-length event)
+ * could contain a native pointer to a memory area... maybe? This
+ * issue needs to be attended while looking at the tool programs as
+ * well, and after the implementation of controller ramps is finished,
+ * since that probably dictates the maximum length of event data.
+
+
 /* Some tentative inline assembler for i387 sin. No immediate size
  * improvements were gained. I would still like to try this path, but
  * then more than just the sine instruction should be done with

@@ -91,28 +91,20 @@ synti2_counter_retarget(counter *c, float nexttime, float nextgoal, unsigned int
   }
 }
 
-/** Adds an event to its correct location; makes no checks for empty
- * messages, i.e., assumes n >= 1. Also assumes that the pre-existing
- * events are ordered. This can be static for playback-mode, but in
- * real-time/compose mode the MIDI interface module needs to see this.
+/**
+ * Adds an event to its correct location; event data is of fixed size,
+ * and this will copy the maximum number of bytes from the
+ * source. Assumes that the pre-existing events are ordered.
  *
  * Note: Worst case for inserting n events is O(n^2), but this happens
  * only if the insloc pointer is reset before calling this function
  * for each new event. This *is* linear time, if the pointers are not
- * updated in the middle of insertion. Naturally, this requires that
+ * updated in the middle of insertion. Of course, this requires that
  * the events are added in their natural (time) order.
  *
- * This function makes a copy of the source data. The copy is stored
- * in the sequencer's own buffer.
+ * This can be static for playback-mode, but in real-time/compose mode
+ * the MIDI interface module needs to see this.
  *
- * FIXME: (depends: CC ramps) Now that I'm using an internal event
- * format in any case, could I fix the length? Yes, I could... but
- * would that be useful??  there are not so many different messages,
- * and the bulk data message (which is the only variable-length event)
- * could contain a native pointer to a memory area... maybe? This
- * issue needs to be attended while looking at the tool programs as
- * well, and after the implementation of controller ramps is finished,
- * since that probably dictates the maximum length of event data.
  */
 #ifndef USE_MIDI_INPUT
 static

@@ -258,7 +258,7 @@ synti2_init(synti2_synth * s,
 {
   int ii, wt;
   float t;
-  float freqf;
+  float deltaf;
 
   memset(s, 0, sizeof(s));     /* zero */
 
@@ -297,12 +297,16 @@ synti2_init(synti2_synth * s,
    */
   /* slightly inaccurate notes but without powf(). Many bytes shorter exe. */
   /* My ears find the result very tolerable; I don't know about others... */
-  freqf = (8.175798915643707f* MAX_COUNTER) / s->sr;
+  /* Compute counter deltas directly, no need to know frequencies
+   * while playing.
+   */
+  deltaf = (MAX_COUNTER * 8.175798915643707f) / s->sr;
   for(ii=0;ii<128;ii++){
-    s->note2freq[ii] = freqf;
-    freqf *= 1.0594630943592953f;
+    s->note2delta[ii] = deltaf;
+    deltaf *= 1.0594630943592953f;
   }
 #if 0
+  /* Accurate, but need to link powf() */
   for(ii=0; ii<128; ii++){
     s->note2freq[ii] = 440.0f * powf(2.0f, ((float)ii - 69.0f) / 12.0f );
   }
@@ -313,12 +317,12 @@ synti2_init(synti2_synth * s,
 
     t = (float)ii/(WAVETABLE_SIZE-1);
     s->rise[ii] = t; 
-    s->wave[0][ii] = sin(2*(float)M_PI*t);
+    s->wave[0][ii] = sin((float)(2*M_PI)*t);
 #ifndef NO_EXTRA_WAVETABLES
     t = (float)ii/(WAVETABLE_SIZE-1);
     for(wt=1; wt<NHARM; wt++){
       s->wave[wt][ii] = s->wave[wt-1][ii] 
-        + 1.f/(wt+1) * sinf(2*(float)M_PI * (wt+1) * t);
+        + 1.f/(wt+1) * sinf((float)(2*M_PI) * (wt+1) * t);
     }
 #endif
 
@@ -731,9 +735,8 @@ synti2_updateFrequencies(synti2_synth *s){
 
       note = notemod; /* should make a floor (does it? check spec)*/
       interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
-      //freq = interm * s->note2freq[note]; /* could be note2delta[] FIXME: think.*/
       s->c[iv*NOSCILLATORS+iosc].delta = 
-interm * s->note2freq[note]; /* could be note2delta[] FIXME: think.*/
+        interm * s->note2delta[note];
     }
   }
 }

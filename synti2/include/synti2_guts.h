@@ -189,7 +189,7 @@ struct synti2_synth {
   synti2_player seq;
 
   float infranotes[128]; /* TODO: This space could be used for LFO's */
-  float note2freq[128];  /* pre-computed frequencies of notes... Tuning
+  float note2delta[128];  /* pre-computed frequencies of notes... Tuning
 			    systems would be easy to change - just
 			    compute a different table here (?)..*/
   float ultranotes[128]; /* TODO: This space could be used for noises? */

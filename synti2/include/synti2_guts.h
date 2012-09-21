@@ -143,12 +143,13 @@ typedef struct {
  */
 typedef struct synti2_player_ev synti2_player_ev;
 
+#define SYNTI2_MAX_EVDATA (1+3+2*sizeof(float))
+
+/* Events are small (I have now excluded bulk sysexes for patch data).*/
 struct synti2_player_ev {
-  const byte_t *data;       /* Event data */
   synti2_player_ev *next;   /* link to next event */
   unsigned int frame;       /* Time of the event in frames */
-  int len;                  /* length of the event data (hard-codable?) */
-  /* FIXME: Think something like {*next, frame, databytes[MAX_EVENT_DATA_SIZE]}? */
+  byte_t data[SYNTI2_MAX_EVDATA];       /* Event data */
 };
 
 /** Player is the MIDI-like sequence playback engine. */
@@ -162,12 +163,8 @@ struct synti2_player {
   int frames_done;  /* Runs continuously. Breaks after 12 hrs @ 48000fps !*/
   unsigned int sr;           /* Sample rate. */
 
-  int idata;        /* index of next free data location */
-
   /* Playable events. The first will be at evpool[0]! */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
-  /* Data for events. */
-  byte_t data[SYNTI2_MAX_SONGBYTES];
 
 #ifndef ULTRASMALL
   unsigned int last_error_frame; /* Errors can be monitored by tools. */
@@ -252,8 +249,7 @@ static
 void
 synti2_player_event_add(synti2_synth *s, 
                         unsigned int frame, 
-                        const byte_t *src, 
-                        size_t n);
+                        const byte_t *src);
 
 
 #endif

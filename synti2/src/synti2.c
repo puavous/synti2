@@ -120,10 +120,10 @@ static
 void
 synti2_player_event_add(synti2_synth *s, 
                         unsigned int frame, 
-                        const byte_t *src, 
-                        size_t n){
+                        const byte_t *src){
   synti2_player_ev *ev_new;
   byte_t *msg;
+  int i;
 
   while((s->seq.insloc->next != NULL)
         && (s->seq.insloc->next->frame <= frame)){
@@ -140,37 +140,16 @@ synti2_player_event_add(synti2_synth *s,
     s->seq.last_error_info = *(unsigned int*)src;
     return; /* No need to proceed.. */
   } 
-
-  /* Song data could get filled up and overflow lethally without this
-   * limit check. But for "ultrasmall" final targets, you already know
-   * you're within limits, don't you. TODO: This might be different,
-   * if the maximum size of the message data would be fixed at some
-   * point.. we'll see.
-   */
-  if (s->seq.idata + n > SYNTI2_MAX_SONGBYTES) {
-    s->seq.last_error_frame = frame;
-    s->seq.last_error_type = SYNTI2_ERROR_OUT_OF_MESSAGE_SPACE;
-    s->seq.last_error_info = *(unsigned int*)src;
-    return; /* Must not proceed.. */
-  }
 #endif
 
-  /* In compose-mode, we have checked that everything fits.. */
-  msg = s->seq.data + s->seq.idata; /* Get next available data pool spot */
-
-  /* Fill in the node: */
-  ev_new->data = msg; /* We'll make a local copy here, see below.. */
+  msg = ev_new->data;
   ev_new->next = s->seq.insloc->next;
   ev_new->frame = frame;
-  ev_new->len = n;
   s->seq.insloc->next = ev_new;
 
-  /* Actual copying of the data, and updating of the data pool top;
-   * done this way to minimize code size (no local ints etc.)
-   */
-  for(;n>0;n--){
+  /* Actual copying of the data. Always max size.*/
+  for(i=0;i<SYNTI2_MAX_EVDATA;i++){
     *msg++ = *src++;
-    s->seq.idata++;
   }
 }
 
@@ -193,7 +172,7 @@ synti2_player_merge_chunk(synti2_synth *s,
   int ii;
   unsigned int frame, tickdelta, intval;
   const byte_t *par;
-  byte_t msg[3+2*sizeof(float)]; /* FIXME: (depends: CC ramps) actual max. length!*/
+  byte_t msg[SYNTI2_MAX_EVDATA];
 
   chan = *r++;
   type = *r++;
@@ -215,7 +194,7 @@ synti2_player_merge_chunk(synti2_synth *s,
       msg[1] = chan;
       msg[2] = (par[0]==0xff) ? *r++ : par[0];
       msg[3] = (par[1]==0xff) ? *r++ : par[1];
-      synti2_player_event_add(s, frame, msg, 4);
+      synti2_player_event_add(s, frame, msg);
     }
 #ifndef NO_CC
     else if (type == MISSS_LAYER_CONTROLLER_RAMPS) {
@@ -232,7 +211,7 @@ synti2_player_merge_chunk(synti2_synth *s,
              *((float*)(&msg[3])),
              *((float*)(&msg[3])+1));*/
 
-      synti2_player_event_add(s, frame, msg, 3+2*sizeof(float));
+      synti2_player_event_add(s, frame, msg);
     }
 #endif
 #ifndef ULTRASMALL

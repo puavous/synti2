@@ -223,8 +223,8 @@ DINLV3 Dly3InLev  -1.0 1.0   2 16
 DINLV4 Dly4InLev  -1.0 1.0   2 16
 
 # Filter parameters; the very basic ones
-FFREQ Cutoff  0.0 80.0   2 17
-FRESO Resonance   0.0 1.0   2 17
+FFREQ Cutoff  0.0 128.0   1 17
+FRESO Resonance   0.0 1.0   1 17
 
 # Delay lengths in seconds
 DLEN1 Dly1Length  0.0 1.0   3 17

@@ -796,16 +796,6 @@ static void apply_filter(synti2_synth *s,
 #define FIL_NF 4
 
   float f,q;
-  /* FIXME: Could there be a nicer filter? No. This is nice for synti2.
-   *
-   * FIXME: The computation becomes unstable with some combinations of
-   * cutoff and resonance. Does it really? When? Is it a problem?
-   *
-   * FIXME: Filter frequency should be given as a midi note actually..
-   *        Maybe go back to note2freq, or make another for filter
-   *        purposes...  yep, maybe that would do.. compile that part
-   *        only if filter is needed.
-   */
 
   f = 2.f*sinf(M_PI*(fenv) / s->sr);
 

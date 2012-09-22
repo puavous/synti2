@@ -192,6 +192,7 @@ struct synti2_synth {
 			    systems would be easy to change - just
 			    compute a different table here (?)..*/
   float ultranotes[128]; /* TODO: This space could be used for noises? */
+  float note2freq[256]; /* For filter.. */
 
 #ifndef NO_EXTRA_WAVETABLES
 #define NHARM 8

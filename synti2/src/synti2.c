@@ -299,9 +299,10 @@ synti2_init(synti2_synth * s,
   /* Compute counter deltas directly, no need to know frequencies
    * while playing.
    */
-  deltaf = (MAX_COUNTER * 8.175798915643707f) / s->sr;
+  deltaf = 8.175798915643707f;
   for(ii=0;ii<128;ii++){
-    s->note2delta[ii] = deltaf;
+    s->note2freq[ii] = deltaf;
+    s->note2delta[ii] = ((MAX_COUNTER) / s->sr) * deltaf ;
     deltaf *= 1.0594630943592953f;
   }
 #if 0

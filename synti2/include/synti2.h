@@ -28,6 +28,12 @@
 #define NO_STEREO
 #endif
 
+#ifdef NO_FILTER
+#define NO_FILTER_PITCH_FOLLOW
+#define NO_FILTER_CUT_ENVELOPE
+#define NO_FILTER_RESO_ENVELOPE
+#endif
+
 /* don't know if this is nice, but doing it still: */
 #ifdef BUT_USE_DETUNE
 #undef NO_DETUNE

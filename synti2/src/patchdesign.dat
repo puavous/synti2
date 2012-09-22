@@ -56,7 +56,8 @@ EPIT3 Op3PitchEnv 0 6   0 1
 EPIT4 Op4PitchEnv 0 6   0 1
 
 EPAN PanEnv      0 6   0 2
-EFILT FiltCutEnv 0 6   0 2
+EFILT FiltCutEnv 0 6   0 3
+EFILR FiltResEnv 0 6   0 3
 
 # Ampl. Velocity sensitivity (0=no effect 1=fully sensitive) 
 
@@ -97,6 +98,9 @@ NDOUT DlyLinesOut 0 4 0 5
 
 # Filter LP,BP,HP,Notch
 FILT FilterMode 0 3 0 16
+
+# Filter pitch follow source operator
+FFOLL FiltFollowOsc 0 4 0 16
 
 # Use a delay line instead of zero as "input 0":
 FBACK FeedBack 0 4 0 17

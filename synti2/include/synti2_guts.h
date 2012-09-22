@@ -217,6 +217,10 @@ struct synti2_synth {
 #endif
   counter framecount;
 
+#ifndef NO_FILTER_PITCH_FOLLOW
+  float effnote[NCOUNTERS];
+#endif
+
   /* Envelope stages just a table? TODO: think.*/
   unsigned int estage[NPARTS][NENVPERVOICE+1];
   unsigned int sustain[NPARTS];

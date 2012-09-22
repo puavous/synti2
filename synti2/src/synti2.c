@@ -684,6 +684,15 @@ synti2_updateEnvelopeStages(synti2_synth *s){
   }
 }
 
+static
+float
+interpolate_note(const float* lookup, float value){
+  int basenote;
+  float interm;
+  basenote = value; /* should make a floor (does it? check spec)*/
+  interm = (1.0f + 0.05946f * (value - basenote)); /* +cents.. */
+  return interm * lookup[basenote];
+}
 
 /** Converts note values to counter deltas. */
 static
@@ -691,7 +700,7 @@ void
 synti2_updateFrequencies(synti2_synth *s){
   int iv, note;
   int iosc;
-  float notemod, interm, freq;
+  float notemod;
   synti2_patch *pat;
 
   /* Frequency computation... where to put it after all? */
@@ -733,10 +742,14 @@ synti2_updateFrequencies(synti2_synth *s){
       notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM+iosc];
 #endif
 
-      note = notemod; /* should make a floor (does it? check spec)*/
-      interm = (1.0f + 0.05946f * (notemod - note)); /* +cents.. */
+      /* Interpolate between two notes (deltas) in a look-up table: */
       s->c[iv*NOSCILLATORS+iosc].delta = 
-        interm * s->note2delta[note];
+        interpolate_note(s->note2delta,notemod);
+
+#ifndef NO_FILTER_PITCH_FOLLOW
+      /* Store effective note for filter pitch follow: */
+      s->effnote[iv*NOSCILLATORS+iosc] = notemod;
+#endif
     }
   }
 }
@@ -774,6 +787,7 @@ synti2_updateFrequencies(synti2_synth *s){
 static void apply_filter(synti2_synth *s, 
                          synti2_patch *pat, 
                          float fenv,
+                         float renv,
                          float *store){
 #define FIL_IN 0
 #define FIL_LP 1
@@ -795,7 +809,7 @@ static void apply_filter(synti2_synth *s,
 
   f = 2.f*sinf(M_PI*(fenv) / s->sr);
 
-  q = 1.0f - pat->fpar[SYNTI2_F_FRESO];
+  q = 1.0f - renv;
 
   store[FIL_LP] += f * store[FIL_BP];
   store[FIL_HP]  = q * store[FIL_IN] - store[FIL_LP] - (q*q) * store[FIL_BP];
@@ -826,6 +840,9 @@ synti2_render(synti2_synth *s,
 
 #ifndef NO_CC
   int ccdest;
+#endif
+#ifndef NO_FILTER
+  float fenv, renv;
 #endif
 #ifndef NO_STEREO
   float pan;
@@ -947,16 +964,35 @@ synti2_render(synti2_synth *s,
       if(pat->ipar3[SYNTI2_I3_FILT]) {
         signal[0] = interm;
 
-        float fenv = pat->fpar[SYNTI2_F_FFREQ];
-
-#ifndef NO_FILTER_ENVELOPE
-        /* Optionally read cutoff frequency from an envelope. */
-        fenv += s->eprog[iv][pat->ipar3[SYNTI2_I3_EFILT]].f;
+        /* Base frequency as note value from parameter. */
+        fenv = pat->fpar[SYNTI2_F_FFREQ];
+        
+        /* Follow the pitch of an oscillator, if requested: */
+#ifndef NO_FILTER_PITCH_FOLLOW
+        if (pat->ipar3[SYNTI2_I3_FFOLL] > 0){
+          fenv += s->effnote[iv*NOSCILLATORS+pat->ipar3[SYNTI2_I3_FFOLL]-1];
+        }
 #endif
 
-        fenv *= 100.f; /* frequency scaling par 4.4 -> 440 Hz*/
+        /* Convert to frequency at this point. */
+        fenv = interpolate_note(s->note2freq,fenv);
 
-        apply_filter(s, pat, fenv, signal);
+#ifndef NO_FILTER_CUT_ENVELOPE
+        /* Optionally _multiply_ cutoff frequency by an envelope. */
+        if (pat->ipar3[SYNTI2_I3_EFILT]>0){
+          fenv *= s->eprog[iv][pat->ipar3[SYNTI2_I3_EFILT]].f;
+        }
+#endif
+
+        renv = pat->fpar[SYNTI2_F_FRESO];
+#ifndef NO_FILTER_RESO_ENVELOPE
+        /* Optionally _multiply_ also resonance by an envelope. */
+        if (pat->ipar3[SYNTI2_I3_EFILR]>0){
+          renv *= s->eprog[iv][pat->ipar3[SYNTI2_I3_EFILR]].f;
+        }
+#endif
+
+        apply_filter(s, pat, fenv, renv, signal);
         interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
       }
 #endif

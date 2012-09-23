@@ -28,7 +28,7 @@
 #define NO_STEREO
 #endif
 
-#ifdef NO_FILTER
+#if defined (NO_FILTER) || defined (NO_FILTER_FRILLS)
 #define NO_FILTER_PITCH_FOLLOW
 #define NO_FILTER_CUT_ENVELOPE
 #define NO_FILTER_RESO_ENVELOPE

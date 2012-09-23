@@ -87,10 +87,9 @@
 
 
 /* Audio delay storage. Less delays means less computation, faster
- * synth.  FIXME: Would be nice to have more delay lines that can be
- * used optionally.
+ * synth.
  */
-#define NDELAYS 4
+#define NDELAYS 8
 #define DELAYSAMPLES 0x10000
 
 

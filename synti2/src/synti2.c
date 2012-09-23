@@ -956,6 +956,7 @@ synti2_render(synti2_synth *s,
 
         /* Base frequency as note value from parameter. */
         fenv = pat->fpar[SYNTI2_F_FFREQ];
+        renv = pat->fpar[SYNTI2_F_FRESO];
         
         /* Follow the pitch of an oscillator, if requested: */
 #ifndef NO_FILTER_PITCH_FOLLOW
@@ -974,7 +975,6 @@ synti2_render(synti2_synth *s,
         }
 #endif
 
-        renv = pat->fpar[SYNTI2_F_FRESO];
 #ifndef NO_FILTER_RESO_ENVELOPE
         /* Optionally _multiply_ also resonance by an envelope. */
         if (pat->ipar3[SYNTI2_I3_EFILR]>0){

@@ -24,8 +24,12 @@
 # Format, one line per parameter: NAME Description MIN MAX GUIPrecision GUIGroup
 
 [I3]
-# 3-bit integer parameters:
+# 4-bit (used to be 3-bit) integer parameters:
 # These end up as SYNTI2_I3_NAME
+
+# FIXME: Should encode the possible values by 16-bit bit-masks,
+# for better flexibility (mostly the feedback thing would require this)
+# i.e., 0xffff equals range 0-15, 0xfffe equals range 1-15 etc.
 
 # Index of the envelope whose end is end-of-life for the sound.
 # For "normal" patches this presumably is the carrier volume envelope..
@@ -78,8 +82,6 @@ ELOOP3 En3LoopLen 0 3   0 2
 ELOOP4 En4LoopLen 0 3   0 2
 ELOOP5 En5LoopLen 0 3   0 2
 ELOOP6 En6LoopLen 0 3   0 2
-
-# Total of 16 seem to be critically useful.. no.. there is more!!
 
 FMTO1 FModTo1 0 0   0 3
 FMTO2 FModTo2 0 1   0 3

@@ -93,7 +93,7 @@ static void main2(){
   float tnow;
 
   // gl shader stuff...
-  unsigned int vsh,fsh,pid;
+  GLuint vsh,fsh,pid;
 
   int i;
 
@@ -104,32 +104,44 @@ static void main2(){
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
 
-  // init external gl commands
-  for(i=0; i<NUMFUNCTIONS;i++)
-    {
-      myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
-      printf("%lx\n",myglfunc[i]);
-#ifndef TINY
-      if( !myglfunc[i] )
-        return(0);
-#endif
-    }
+  /* The shader here are stolen from somewhere and then re-stolen by me;
+     they are here just as an example/placeholder*/
+const GLchar *vs="\
+varying vec4 p;\
+void main(){\
+p=sin(gl_ModelViewMatrix[1]*9.0);\
+gl_Position=gl_Vertex;\
+}";
 
+const GLchar *fs= "\
+varying vec4 p;\
+void main(){\
+float r,t,j;\
+vec4 v=gl_FragCoord/400.0-1.0;\
+r=v.x*p.r;\
+for(int j=0;j<7;j++){\
+t=v.x+p.r*p.g;\
+v.x=t*t-v.y*v.y+r;\
+v.y=p.g*3.0*t*v.y+v.y;\
+}\
+gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
+}";
 
+  pid = glCreateProgram();
 
-  pid = oglCreateProgram();
- /*
-  vsh = oglCreateShader(GL_VERTEX_SHADER);
-  fsh = oglCreateShader(GL_FRAGMENT_SHADER);
+  vsh = glCreateShader(GL_VERTEX_SHADER);
+  fsh = glCreateShader(GL_FRAGMENT_SHADER);
 
-  oglShaderSource(vsh,1,&vs,0);
-  oglShaderSource(fsh,1,&fs,0);
-  oglCompileShader(vsh);
-  oglCompileShader(fsh);
-  oglAttachShader(pid,vsh);
-  oglAttachShader(pid,fsh);
-  oglLinkProgram(pid);
-  */
+  glShaderSource(vsh,1,&vs,0);
+  glShaderSource(fsh,1,&fs,0);
+
+  glCompileShader(vsh);
+  glCompileShader(fsh);
+
+  glAttachShader(pid,vsh);
+  glAttachShader(pid,fsh);
+  glLinkProgram(pid);
+
 
   /* It costs 23-35 bytes (compressed) to politely query the display
    * mode. But it is definitely worth the ease! Oooh, but it won't
@@ -152,6 +164,24 @@ static void main2(){
   SDL_ShowCursor(SDL_DISABLE);
 #endif
 
+  /* init external gl commands
+
+     This is a problem with my 64-bit libraries:
+     Addresses are returned, but calls to them crash.
+     It looks as if the dll doesn't even get linked (?)
+     so what are the addresses returned, and how should I
+     link the lib? Weird that 32-bit libraries seem to 
+     behave differently...
+   */
+  for(i=0; i<NUMFUNCTIONS;i++)
+    {
+      myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
+      printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
+#ifndef TINY
+      if( !myglfunc[i] )
+        return(0);
+#endif
+    }
 
   /* They say that OpenAudio needs to be called after video init. */
   aud.freq     = MY_SAMPLERATE;

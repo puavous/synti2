@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "GL/gl.h"
+#include "GL/glx.h"
 #include "SDL/SDL.h"
 
 #include "synti2.h"
@@ -41,7 +42,9 @@ static char *strs[] = {
 	"glUseProgram",
 };
 
-void *myglfunc[NUMFUNCTIONS];
+typedef void *func_t(void);
+
+func_t *myglfunc[NUMFUNCTIONS];
 
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
@@ -127,20 +130,42 @@ v.y=p.g*3.0*t*v.y+v.y;\
 gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
 }";
 
-  pid = glCreateProgram();
+  /* init external gl commands
 
-  vsh = glCreateShader(GL_VERTEX_SHADER);
-  fsh = glCreateShader(GL_FRAGMENT_SHADER);
+     Note to self... there was a crash with 64-bit libraries, but
+     things worked well with 32-bit lib. And I was puzzled for a
+     long time, and so were others who tried to help..
+     But, silly me, I'm coding C now... functions return an integer 
+     (32 bits) by default, and I was lacking the signature which is
+     found in "GL/glx.h". Then it was implicitly converted to an address
+     (64 bits), so *no wonder* it crashed. So, the note to sel would be:
+     add the "warnings as errors" compiler option as the first thing, when
+     starting a project in C...
+   */
+  for(i=0; i<NUMFUNCTIONS;i++)
+    {
+      myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
+#if 0
+      printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
+      if( !myglfunc[i] )
+        return(0);
+#endif
+    }
 
-  glShaderSource(vsh,1,&vs,0);
-  glShaderSource(fsh,1,&fs,0);
+  pid = oglCreateProgram();
 
-  glCompileShader(vsh);
-  glCompileShader(fsh);
+  vsh = oglCreateShader(GL_VERTEX_SHADER);
+  fsh = oglCreateShader(GL_FRAGMENT_SHADER);
 
-  glAttachShader(pid,vsh);
-  glAttachShader(pid,fsh);
-  glLinkProgram(pid);
+  oglShaderSource(vsh,1,&vs,0);
+  oglShaderSource(fsh,1,&fs,0);
+
+  oglCompileShader(vsh);
+  oglCompileShader(fsh);
+
+  oglAttachShader(pid,vsh);
+  oglAttachShader(pid,fsh);
+  oglLinkProgram(pid);
 
 
   /* It costs 23-35 bytes (compressed) to politely query the display
@@ -163,25 +188,6 @@ gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
   SDL_WM_SetCaption("Soft synth SDL interface",0);
   SDL_ShowCursor(SDL_DISABLE);
 #endif
-
-  /* init external gl commands
-
-     This is a problem with my 64-bit libraries:
-     Addresses are returned, but calls to them crash.
-     It looks as if the dll doesn't even get linked (?)
-     so what are the addresses returned, and how should I
-     link the lib? Weird that 32-bit libraries seem to 
-     behave differently...
-   */
-  for(i=0; i<NUMFUNCTIONS;i++)
-    {
-      myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
-      printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
-#ifndef TINY
-      if( !myglfunc[i] )
-        return(0);
-#endif
-    }
 
   /* They say that OpenAudio needs to be called after video init. */
   aud.freq     = MY_SAMPLERATE;

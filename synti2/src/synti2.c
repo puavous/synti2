@@ -822,6 +822,7 @@ synti2_render(synti2_synth *s,
   int iframeL;
   int iosc;
   float interm;
+  float dlev;
   int wtoffs;
   synti2_patch *pat;
 
@@ -943,9 +944,9 @@ synti2_render(synti2_synth *s,
 #ifndef NO_DELAY
       /* Additive mix from delay lines. */
       dsamp = s->framecount.val;
-      for (id = 0; id < pat->ipar3[SYNTI2_I3_NDIN]; id++){
-        interm += s->delay[id][dsamp % DELAYSAMPLES]
-          * pat->fpar[SYNTI2_F_DINLV1+id];
+      for (id = 0; id < NDELAYS; id++){
+	if ((dlev = (pat->fpar[SYNTI2_F_DINLV1+id])) == 0.0f) continue;
+        interm += s->delay[id][dsamp % DELAYSAMPLES] * dlev;
       }
 #endif
       
@@ -989,10 +990,10 @@ synti2_render(synti2_synth *s,
       
 #ifndef NO_DELAY
       /* mix also to the delay lines.*/
-      for (id = 0; id < pat->ipar3[SYNTI2_I3_NDOUT]; id++){
+      for (id = 0; id < NDELAYS; id++){
+	if ((dlev = (pat->fpar[SYNTI2_F_DLEV1+id])) == 0.0f) continue;
         dsamp = s->framecount.val + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * s->sr);
-        s->delay[id][dsamp % DELAYSAMPLES] 
-          += pat->fpar[SYNTI2_F_DLEV1+id] * interm;
+        s->delay[id][dsamp % DELAYSAMPLES] += dlev * interm;
       }
 #endif
       

@@ -37,6 +37,9 @@
 ELIFE LifeEnvelope 0 6 0 1
 
 # FIXME: A small C-like example of what I want here:
+#        Resolution: Do the precompilation first, and then generate only
+#        the parameters that are actually used in the remaining source!
+#        WARNING: Be careful with "SYNTI2_F_DLEV1+id" and the like!
 # (but what about during compose-time?)
 #ifndef NO_EXTRA_WAVETABLES
 HARM1 Op1Wav 0 7   0 5
@@ -95,8 +98,9 @@ ADDTO4 MixTo4 0 3   0 4
 
 # How many delay/connection lines are turned on for input
 # summation and how many for output spread. Maximum 4.
-NDIN DlyLinesIn  0 4 0 5
-NDOUT DlyLinesOut 0 4 0 5
+# The parameters are unused as of now. FIXME: delete.
+NDIN DlyLinesIn  0 8 0 5
+NDOUT DlyLinesOut 0 8 0 5
 
 # Filter LP,BP,HP,Notch
 FILT FilterMode 0 3 0 16
@@ -209,6 +213,7 @@ DT1  Op1Crs  -48.0 48.0   1 12
 DT2  Op2Crs  -48.0 48.0   1 12
 DT3  Op3Crs  -48.0 48.0   1 12
 DT4  Op4Crs  -48.0 48.0   1 12
+
 DT1F Op1Fine     -.5  .5     3 13
 DT2F Op2Fine     -.5  .5     3 13
 DT3F Op3Fine     -.5  .5     3 13
@@ -225,26 +230,33 @@ PBVAL NOT_Editable -1.0  1.0  2 18
 
 
 
-# Delay lines in/out; maximum 4 global lines:
+
+# Filter parameters; the very basic ones
+FFREQ Cutoff     0.0 128.0   1 17
+FRESO Resonance  0.0 1.0     2 17
+
+# Delay lines in/out; Number of parameters
+# must be consistent with code! TODO: Generate parameters
+# according to code instead of hard-wiring separately here.
 
 DINLV1 Dly1InLev  -1.0 1.0   2 16
 DINLV2 Dly2InLev  -1.0 1.0   2 16
 DINLV3 Dly3InLev  -1.0 1.0   2 16
 DINLV4 Dly4InLev  -1.0 1.0   2 16
+DINLV5 Dly5InLev  -1.0 1.0   2 16
+DINLV6 Dly6InLev  -1.0 1.0   2 16
+DINLV7 Dly7InLev  -1.0 1.0   2 16
+DINLV8 Dly8InLev  -1.0 1.0   2 16
 
-# Filter parameters; the very basic ones
-FFREQ Cutoff  0.0 128.0   1 17
-FRESO Resonance   0.0 1.0   1 17
-
-# Delay lengths in seconds
-DLEN1 Dly1Length  0.0 1.0   3 17
-DLEN2 Dly2Length  0.0 1.0   3 17
-DLEN3 Dly3Length  0.0 1.0   3 17
-DLEN4 Dly4Length  0.0 1.0   3 17
-DLEN5 Dly5Length  0.0 1.0   3 17
-DLEN6 Dly6Length  0.0 1.0   3 17
-DLEN7 Dly7Length  0.0 1.0   3 17
-DLEN8 Dly8Length  0.0 1.0   3 17
+# Delay lengths in milliseconds
+DLEN1 Dly1Length  0.0 2000   0 17
+DLEN2 Dly2Length  0.0 2000   0 17
+DLEN3 Dly3Length  0.0 2000   0 17
+DLEN4 Dly4Length  0.0 2000   0 17
+DLEN5 Dly5Length  0.0 200   2 17
+DLEN6 Dly6Length  0.0 200   2 17
+DLEN7 Dly7Length  0.0 200   2 17
+DLEN8 Dly8Length  0.0 200   2 17
 
 
 # Delay output levels

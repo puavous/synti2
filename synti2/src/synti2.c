@@ -890,7 +890,9 @@ synti2_render(synti2_synth *s,
          sigin, and that's all, I guess.. looks easy enough?
          Yei. FIXME: Do it the easy way instead of this initial
          attempt. Actually there is now a new idea about delay lines,
-         which might solve this thing nicely, too. */
+         which might solve this thing nicely, too. But I have since
+         forgotten what that idea was... Maybe let go of the feedback
+         operator?*/
       id = pat->ipar3[SYNTI2_I3_FBACK];
       if (id>0){
         dsamp = s->framecount.val;
@@ -992,7 +994,15 @@ synti2_render(synti2_synth *s,
       /* mix also to the delay lines.*/
       for (id = 0; id < NDELAYS; id++){
 	if ((dlev = (pat->fpar[SYNTI2_F_DLEV1+id])) == 0.0f) continue;
-        dsamp = s->framecount.val + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * s->sr);
+	/* Unit of the delay length parameter is now millisecond unless
+           otherwise specified. */
+#ifndef NO_MILLISECOND_DELAY
+        dsamp = s->framecount.val 
+	  + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * (s->sr / 1000));
+#else
+        dsamp = s->framecount.val 
+	  + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * s->sr);
+#endif
         s->delay[id][dsamp % DELAYSAMPLES] += dlev * interm;
       }
 #endif

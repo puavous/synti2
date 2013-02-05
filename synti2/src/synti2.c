@@ -879,12 +879,13 @@ synti2_render(synti2_synth *s,
 
 #ifndef NO_DELAY
       /* Additive mix from delay lines. */
-      sigin[NOSCILLATORS+1] = 0.0f;
+      interm = 0.0f;
       dsamp = s->framecount.val;
       for (id = 0; id < NDELAYS; id++){
 	if ((dlev = (pat->fpar[SYNTI2_F_DINLV1+id])) == 0.0f) continue;
-        sigin[NOSCILLATORS+1] += s->delay[id][dsamp % DELAYSAMPLES] * dlev;
+        interm += s->delay[id][dsamp % DELAYSAMPLES] * dlev;
       }
+      sigin[NOSCILLATORS+1] = interm;
 #endif
       
       for(iosc = 0; iosc < NOSCILLATORS; iosc++){

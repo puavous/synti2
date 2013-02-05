@@ -227,7 +227,7 @@ struct synti2_synth {
   unsigned int note[NPARTS];
   unsigned int velocity[NPARTS];
 
-  float outp[NPARTS][1+NOSCILLATORS+4]; /*"zero", oscillator outputs, 
+  float outp[NPARTS][1+NOSCILLATORS+1+4]; /*"zero", oscillator outputs, delay bus,
                                           filter storage.
                                         FIXME: could be a struct?*/
 

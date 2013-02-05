@@ -877,27 +877,13 @@ synti2_render(synti2_synth *s,
       
       sigin  = signal = &(s->outp[iv][0]);
 
-#ifndef NO_FEEDBACK
-      /* Sort of like a "feedback" operator. */
-
-      /* TODO: OK.. this can do some pretty weird/nasty stuff, so I'll
-         let it be here. Not my favorite feature, at least when it is
-         crappy like this (i.e., modulates every oscillator by
-         default..) Consider a different implementation, if this seems
-         to become useful.. at all... But the oscillator and envelope
-         code and sound parameters may need some rethinking in that
-         case (?) ... should make the delay line contents available in
-         sigin, and that's all, I guess.. looks easy enough?
-         Yei. FIXME: Do it the easy way instead of this initial
-         attempt. Actually there is now a new idea about delay lines,
-         which might solve this thing nicely, too. But I have since
-         forgotten what that idea was... Maybe let go of the feedback
-         operator?*/
-      id = pat->ipar3[SYNTI2_I3_FBACK];
-      if (id>0){
-        dsamp = s->framecount.val;
-        *signal = s->delay[id-1][dsamp % DELAYSAMPLES]
-          * pat->fpar[SYNTI2_F_DINLV1-1+id];
+#ifndef NO_DELAY
+      /* Additive mix from delay lines. */
+      sigin[NOSCILLATORS+1] = 0.0f;
+      dsamp = s->framecount.val;
+      for (id = 0; id < NDELAYS; id++){
+	if ((dlev = (pat->fpar[SYNTI2_F_DINLV1+id])) == 0.0f) continue;
+        sigin[NOSCILLATORS+1] += s->delay[id][dsamp % DELAYSAMPLES] * dlev;
       }
 #endif
       
@@ -944,12 +930,9 @@ synti2_render(synti2_synth *s,
 #endif
       
 #ifndef NO_DELAY
-      /* Additive mix from delay lines. */
-      dsamp = s->framecount.val;
-      for (id = 0; id < NDELAYS; id++){
-	if ((dlev = (pat->fpar[SYNTI2_F_DINLV1+id])) == 0.0f) continue;
-        interm += s->delay[id][dsamp % DELAYSAMPLES] * dlev;
-      }
+      interm += *(signal++) * pat->fpar[SYNTI2_F_LVD]  /*delay mix gain*/
+      ; /* Go to next output slot. */
+      /*sigin [NOSCILLATORS+1]*/
 #endif
       
 #ifndef NO_FILTER

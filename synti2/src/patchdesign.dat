@@ -86,15 +86,16 @@ ELOOP4 En4LoopLen 0 3   0 2
 ELOOP5 En5LoopLen 0 3   0 2
 ELOOP6 En6LoopLen 0 3   0 2
 
-FMTO1 FModTo1 0 0   0 3
-FMTO2 FModTo2 0 1   0 3
-FMTO3 FModTo3 0 2   0 3
-FMTO4 FModTo4 0 3   0 3
+# need to express 0..1,4
+FMTO1 FModTo1 0 4   0 3
+FMTO2 FModTo2 0 4   0 3
+FMTO3 FModTo3 0 4   0 3
+FMTO4 FModTo4 0 4   0 3
 
-ADDTO1 MixTo1 0 0   0 4
-ADDTO2 MixTo2 0 1   0 4
-ADDTO3 MixTo3 0 2   0 4
-ADDTO4 MixTo4 0 3   0 4
+ADDTO1 MixTo1 0 4   0 4
+ADDTO2 MixTo2 0 4   0 4
+ADDTO3 MixTo3 0 4   0 4
+ADDTO4 MixTo4 0 4   0 4
 
 # How many delay/connection lines are turned on for input
 # summation and how many for output spread. Maximum 4.
@@ -136,6 +137,7 @@ LV2 Oper2Lev -8.0 8.0   2 15
 LV3 Oper3Lev -8.0 8.0   2 15
 LV4 Oper4Lev -8.0 8.0   2 15
 LVN NoiseLev -8.0 8.0   2 15
+LVD DlyInLev -8.0 8.0   2 15
 
 
 # After ENVS, envelope params need to be ordered and consistent with the code!

@@ -31,11 +31,6 @@
 # for better flexibility (mostly the feedback thing would require this)
 # i.e., 0xffff equals range 0-15, 0xfffe equals range 1-15 etc.
 
-# Index of the envelope whose end is end-of-life for the sound.
-# For "normal" patches this presumably is the carrier volume envelope..
-# Will I ever use this one? Problematic with delay channels..
-ELIFE LifeEnvelope 0 6 0 1
-
 # FIXME: A small C-like example of what I want here:
 #        Resolution: Do the precompilation first, and then generate only
 #        the parameters that are actually used in the remaining source!
@@ -110,7 +105,8 @@ FILT FilterMode 0 3 0 16
 FFOLL FiltFollowOsc 0 4 0 16
 
 # Mute additive delay return (for feedback-only effect)
-FBACK FeedBack 0 1 0 17
+# (Not used after all?)
+#FBACK FeedBack 0 1 0 17
 
 # Need an even number of 3-bit parameters:
 #xxx UNUSED0 0 1 0 18

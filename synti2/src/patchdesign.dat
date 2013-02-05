@@ -95,8 +95,8 @@ ADDTO4 MixTo4 0 4   0 4
 # How many delay/connection lines are turned on for input
 # summation and how many for output spread. Maximum 4.
 # The parameters are unused as of now. FIXME: delete.
-NDIN DlyLinesIn  0 8 0 5
-NDOUT DlyLinesOut 0 8 0 5
+#NDIN DlyLinesIn  0 8 0 5
+#NDOUT DlyLinesOut 0 8 0 5
 
 # Filter LP,BP,HP,Notch
 FILT FilterMode 0 3 0 16

@@ -972,7 +972,7 @@ synti2_render(synti2_synth *s,
         interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
       }
 #endif
-      
+
 #ifndef NO_DELAY
       /* mix also to the delay lines.*/
       for (id = 0; id < NDELAYS; id++){

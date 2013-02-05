@@ -930,9 +930,9 @@ synti2_render(synti2_synth *s,
 #endif
       
 #ifndef NO_DELAY
-      interm += *(signal++) * pat->fpar[SYNTI2_F_LVD]  /*delay mix gain*/
-      ; /* Go to next output slot. */
-      /*sigin [NOSCILLATORS+1]*/
+      /* Additive mix from delay lines. */
+      signal++; /* Go to next output slot (=delay mix). */
+      interm += *(signal) * pat->fpar[SYNTI2_F_LVD];  /*delay mix gain*/
 #endif
       
 #ifndef NO_FILTER

@@ -5,7 +5,7 @@ Final decisions and their rationale
 
 I don't find many valid reasons (at least for myself) to take up such
 a silly and time consuming spare-time project as programming a tiny
-software synthesizer. The most defining and basic reson in this case
+software synthesizer. The most defining and basic reason in this case
 was that I wanted to learn some new things, and to prove to myself
 with a finalized artefact that I have gained a substantial amount of
 knowledge on the initially chosen topics. Most of the final
@@ -54,3 +54,31 @@ fundamental goal setting.
   those, even at the cost of code size. I think I'll make some changes
   to the overall architecture, but I hope I can stay clear of "ugly"
   decisions. The program must be relatively cute even in the end.
+
+
+
+Lessons learned
+---------------
+
+I'll gather some TODO-notes as "lessons learned", or things to be
+tried in some future project, if I happen to continue with similar
+synth projects (The TODO here is to go over the loads of abandoned
+code and scrap papers to find more of these)::
+
+ * TODO: (In some later, re-designed project) the envelope code could
+ * be made simpler by letting go of the whole loop idea, and, instead,
+ * using some kind of LFOs or inter-channel patching for modulation
+ * effects.
+ *
+ * TODO: (In some other later project) the envelopes could be made
+ * more interesting by combining more parts than just 5 linear
+ * interpolation knees. Consider a freely editable list of arbitrary
+ * combinations of constant+anyWaveTable at editable frequencies. I
+ * think that such code could (somehow, maybe) support both compact
+ * storage for 4k and, at the same time, unlimited flexibility for
+ * sound design, when size limitations need not to be considered.
+
+
+ * TODO: (Before future projects with re-designed synths) Evaluate if
+ * this everything-is-a-counter thing was a good idea.
+

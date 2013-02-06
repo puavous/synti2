@@ -551,8 +551,6 @@ synti2_handleInput(synti2_synth *s,
  * counters inside parts (and leave out what seems to be the only
  * global one, framecount)
  *
- * TODO: (Before future projects with re-designed synths) Evaluate if
- * this everything-is-a-counter thing was a good idea.
  */
 static 
 void
@@ -595,18 +593,6 @@ synti2_evalCounters(synti2_synth *s){
  * plan, and I don't want to wander too much off from it, even if
  * better ideas may have been appearing during the project.
  *
- * TODO: (In some later, re-designed project) the envelope code could
- * be made simpler by letting go of the whole loop idea, and, instead,
- * using some kind of LFOs or inter-channel patching for modulation
- * effects.
- *
- * TODO: (In some other later project) the envelopes could be made
- * more interesting by combining more parts than just 5 linear
- * interpolation knees. Consider a freely editable list of arbitrary
- * combinations of constant+anyWaveTable at editable frequencies. I
- * think that such code could (somehow, maybe) support both compact
- * storage for 4k and, at the same time, unlimited flexibility for
- * sound design, when size limitations need not to be considered.
  */
 static
 void
@@ -652,7 +638,8 @@ synti2_updateEnvelopeStages(synti2_synth *s){
          * filthy long. FIXME: Consider some tricks? Pre-computation?
          * Re-ordering of storage? Part-wise storage ordering seems to
          * appear in many of these remaining questions... so that may
-         * be worth trying.
+         * be worth trying. (The last thing to try before final synti2
+         * core).
          */
         if ((s->estage[iv][ie] == 1) && (s->sustain[iv] != 0)){
           s->estage[iv][ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
@@ -675,6 +662,7 @@ synti2_updateEnvelopeStages(synti2_synth *s){
          * as a to-do for some later project. This envelope
          * skip-and-jump is now a final feature of synti2. Sorry for
          * the pops you get if using this as patch size optimization.
+	 * It is an unfortunate mis-feature.
          */
         nexttime = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 0];
         nextgoal = pat->fenvpar[ipastend - s->estage[iv][ie] * 2 + 1];
@@ -775,10 +763,10 @@ synti2_updateFrequencies(synti2_synth *s){
  *    scale = q  OR scale = sqrt(q)?? 
  *
  *  Algorithm:
- *    f = frqHz / sampleRate*4   (mine comes as 0-1 sound param.)
- *                               (so Hz depends on sample rate!
+ *    f = frqHz / sampleRate*4   (so Hz depends on sample rate!
  *                                should check on 44.1kHz systems
- *                                to see if songs sound too bad..)
+ *                                to see if songs sound too bad..
+ *                                so far all tests have been 48kHz)
  *    low = low + f * band;
  *    high = scale * input - low - q*band;   was scale=sqrt(q) 
  *    band = f * high + band;
@@ -916,10 +904,6 @@ synti2_render(synti2_synth *s,
       }
       
       /* Optional additive noise after FM operator synthesis: */
-      /* TODO: If noise was a wavetable like other oscillators, it
-       * would not require additional code here. But elsewhere it
-       * would.. worth trying or not? Probably not.
-       */
 #ifndef NO_NOISE
       RandSeed *= 16807;
       interm += s->eprog[iv][pat->ipar3[SYNTI2_I3_EAMPN]].f 

@@ -1,6 +1,12 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+      /* TODO: If noise was a wavetable like other oscillators, it
+       * would not require additional code here. But elsewhere it
+       * would.. worth trying or not? Probably not.
+       */
+
+
       /* TODO: (In a later project!) Need logic for skipping an
          "unsounding channel"? Yes, an #ifndef NO_SKIP_DEAD but then
          what is the rule? op4amp?  how about delay tricks then? */ /*

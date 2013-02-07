@@ -63,7 +63,7 @@ static void himpale(int par1, float par2){
 static void render_scene(const synti2_synth *s){
   int i, j;
 
-  float time = (float)(s->framecount.val) / s->sr;
+  float time = (float)(s->framecount) / s->sr;
 
   //   GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
   GLfloat mat_specular[] = { 1.0f, .5f, .0f, 1.0f };

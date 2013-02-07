@@ -52,7 +52,7 @@
  */
 
 /* Total number of "counters", i.e., oscillators/operators. */
-#define NCOUNTERS (NPARTS * NOSCILLATORS)
+/* #define NCOUNTERS (NPARTS * NOSCILLATORS) */
 
 /* Total number of envelopes. There is the magical "zero-envelope"
  * which is technically not operational. Hmm.. 
@@ -62,7 +62,7 @@
  * pitch envelopes. Would it make a shorter code if we used a "pitch
  * gain" and not use a zero-envelope?
  */
-#define NENVS (NPARTS * (NENVPERVOICE+1))
+/* #define NENVS (NPARTS * (NENVPERVOICE+1)) */
 
 /* Maximum value of the counter type depends on C implementation, so
  * use limits.h -- Actually should probably use C99 and stdint.h but
@@ -179,6 +179,36 @@ typedef struct synti2_patch {
   int ipar3[SYNTI2_I3_NPARS];
 } synti2_patch;
 
+/** Call it voice. (TODO: rename everywhere) It could be channel,
+ *  part, source, ... but none of these is an accurate word for what
+ *  it stands for. So just call it voice.
+ */
+typedef struct synti2_voice {
+  /* Must be in this order and next to each other exactly!! Impl. specif?*/
+  counter c[NOSCILLATORS];
+  counter eprog[NENVPERVOICE+1];
+  counter contr[NCONTROLLERS];
+#ifndef NO_LEGATO
+  counter pitch;
+#endif
+#ifndef NO_FILTER_PITCH_FOLLOW
+  float effnote[NOSCILLATORS];
+#endif
+
+  /* Envelope stages just a table? TODO: think.*/
+  unsigned int estage[NENVPERVOICE+1];
+  unsigned int sustain;
+
+  unsigned int note;
+  unsigned int velocity;
+
+  float outp[1+NOSCILLATORS+1+4]; /*"zero", oscillator outputs, delay bus,
+                                          filter storage.
+                                        FIXME: could be a struct?*/
+
+  synti2_patch patch;   /* The sound parameters per part*/
+} synti2_voice;
+
 struct synti2_synth {
   /* I'll actually put the player inside the synthesizer. Somewhat
    * less 'modular', but seems to be a bit smaller size.
@@ -207,31 +237,9 @@ struct synti2_synth {
   /* Envelope progression also modeled by integer counters. Not much
    * difference between oscillators and envelopes!!
    */
-  /* Must be in this order and next to each other exactly!! Impl. specif?*/
-  counter c[NCOUNTERS];
-  counter eprog[NPARTS][NENVPERVOICE+1];
-  counter contr[NPARTS][NCONTROLLERS];
-#ifndef NO_LEGATO
-  counter pitch[NPARTS];
-#endif
-  counter framecount;
-
-#ifndef NO_FILTER_PITCH_FOLLOW
-  float effnote[NCOUNTERS];
-#endif
-
-  /* Envelope stages just a table? TODO: think.*/
-  unsigned int estage[NPARTS][NENVPERVOICE+1];
-  unsigned int sustain[NPARTS];
-
-  unsigned int note[NPARTS];
-  unsigned int velocity[NPARTS];
-
-  float outp[NPARTS][1+NOSCILLATORS+1+4]; /*"zero", oscillator outputs, delay bus,
-                                          filter storage.
-                                        FIXME: could be a struct?*/
-
-  synti2_patch patch[NPARTS];   /* The sound parameters per part*/
+  
+  synti2_voice voi[NPARTS];
+  unsigned int framecount;
 
   float delay[NDELAYS][DELAYSAMPLES]; /* Use of delays is optional,
                                          but the space costs nothing..*/

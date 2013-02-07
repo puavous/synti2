@@ -611,13 +611,13 @@ synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
   /* Envelope 0 is never touched. Therefore it yields a constant
    * 0. I don't know if this hack is very useful, but it is in its
    * own way very beautiful, so I leave it untouched. That's why the
-   * loop begins from envelope 1:
+   * loop goes through indices 1..NENVPERVOICE (in reverse order):
    */
-  for (ie=1; ie<=NENVPERVOICE; ie++){
+  for (ie=NENVPERVOICE; ie>0; ie--){
     if (v->estage[ie] == 0) continue; /* skip untriggered. */
     
     /* reverse order in the stages, so a bit awkward indexing. */
-    ipastend = SYNTI2_F_ENVS + (ie+1) * SYNTI2_NENVD;
+    ipastend = SYNTI2_F_ENVS + ie * SYNTI2_NENVD;
     
 #ifndef NO_SAFETY
     iter_watch = 0;
@@ -635,6 +635,7 @@ synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
         v->estage[ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
 #ifndef NO_SAFETY
         if ((iter_watch++) > 5) v->sustain = 0; /* stop ifinite loop. */
+        /* FIXME: Should mark an error, too... */
 #endif
       }
 #endif
@@ -654,10 +655,8 @@ synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
        * the pops you get if using this as patch size optimization.
        * It is an unfortunate mis-feature.
        */
-      /* FIXME: Think about this fenvpar hack once more... It can't be
-         correct anymore! */
-      nexttime = pat->fenvpar[ipastend - v->estage[ie] * 2 + 0];
-      nextgoal = pat->fenvpar[ipastend - v->estage[ie] * 2 + 1];
+      nexttime = pat->fpar[ipastend - v->estage[ie] * 2 + 0];
+      nextgoal = pat->fpar[ipastend - v->estage[ie] * 2 + 1];
       synti2_counter_retarget(&(v->eprog[ie]), nexttime, nextgoal, s->sr);
     }
   } 

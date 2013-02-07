@@ -25,7 +25,7 @@ static void produce_hell(){
   static unsigned int pat[] = {
     0x00000000,
     0x922292ae,
-    0x08090809,
+    0x0809080d,
     0xbaaabaeb};
   static int tick = -1;
   //static int beat = 0;
@@ -40,19 +40,18 @@ static void produce_hell(){
 
 #ifdef EXTREME_NO_SEQUENCER
 
-  
   if ((tick) % 8 == 0){
-    hmm += .02f;
-    st.patch[0].fpar[SYNTI2_F_LV1] = sin(hmm *.02f);
-    st.patch[0].fpar[SYNTI2_F_LV2] = sin(hmm *.05f);
-    st.patch[0].fpar[SYNTI2_F_LV3] = sin(hmm *.49f);
+    hmm += .11f;
+    st.voi[0].patch.fpar[SYNTI2_F_LV1] = sin(hmm * .03f);
+    st.voi[0].patch.fpar[SYNTI2_F_LV2] = .4f * sin(hmm * .05f);
+    st.voi[0].patch.fpar[SYNTI2_F_LV3] = .4f + .2f * sin(hmm * .11f);
     //st.patch[0].fpar[SYNTI2_F_LV4] = .4f+sin(hmm * .01f);
     //synti2_do_noteon(&st, 0, 32+beat*3+beat, 100);
-    synti2_do_noteon(&st, 0, 42+(pat[1]&13), 100);
+    synti2_do_noteon(&st, 0, 42+(pat[1] % 13), 100);
     for(i=0;i<4;i++){
       bits = pat[i];
       if (bits >> 31) {
-	synti2_do_noteon(&st, i, note[i], 100);
+        synti2_do_noteon(&st, i, note[i], 100);
       }
       pat[i] = (bits >> 31) ? (bits << 1)+1 : (bits << 1);
     }

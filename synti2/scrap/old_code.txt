@@ -1,6 +1,15 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+    /* [Old oscillator code]:
+     * Linear interpolation using pre-computed "fall" and "rise"
+     * tables. Also, the oscillator phases will be the rise values.
+     * Phew.. shaved off a byte by letting go of "fall" table...
+     * And finally, let go of the "rise" table as well. Performance
+     * showed no noticeable change.
+     */
+
+
      * TODO: See if there was a significant performance hit (?).
        ... Naah, performance is not of priority. Size is.
 

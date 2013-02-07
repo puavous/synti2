@@ -229,7 +229,6 @@ struct synti2_synth {
 #define NHARM 1
 #endif
 
-  float rise[WAVETABLE_SIZE];
   float wave[NHARM][WAVETABLE_SIZE];
   /*float noise[WAVETABLE_SIZE]; Maybe?? */
 

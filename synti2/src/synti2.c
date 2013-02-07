@@ -315,7 +315,6 @@ synti2_init(synti2_synth * s,
     /*s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));*/
     
     t = (float)ii/(WAVETABLE_SIZE-1);
-    s->rise[ii] = t; 
     s->wave[0][ii] = sin((float)(2*M_PI)*t);
 #ifndef NO_EXTRA_WAVETABLES
     t = (float)ii/(WAVETABLE_SIZE-1);
@@ -551,10 +550,8 @@ synti2_handleInput(synti2_synth *s,
  */
 static 
 void
-synti2_evalCounters(synti2_synth *s /* FIXME: only for sr */,
-                    synti2_voice *v){
+synti2_evalCounters(synti2_voice *v){
   counter *c;
-  unsigned int ind;
   unsigned int ic, icmax;
 #ifndef NO_LEGATO
   icmax = 1 + NOSCILLATORS + NENVPERVOICE+1 + NCONTROLLERS;
@@ -574,13 +571,7 @@ synti2_evalCounters(synti2_synth *s /* FIXME: only for sr */,
       }
     }
     
-    /* Linear interpolation using pre-computed "fall" and "rise"
-     * tables. Also, the oscillator phases will be the rise values.
-     * Phew.. shaved off a byte by letting go of "fall" table...
-     */
-    ind = c->val >> COUNTER_TO_TABLE_SHIFT;
-    c->fr = s->rise[ind];
-    //c->fr = c->val / MAX_COUNTER; //s->rise[ind];
+    c->fr = c->val / ((float)MAX_COUNTER);
     c->f = (1.0f-c->fr) * c->aa + c->fr * c->bb; 
   }
 }
@@ -853,7 +844,7 @@ synti2_render(synti2_synth *s,
       
       synti2_updateEnvelopeStages(s, voi, pat); /* move on if need be. */
       synti2_updateFrequencies(s, voi, pat);    /* frequency upd. */
-      synti2_evalCounters(s,voi);
+      synti2_evalCounters(voi);
       
 #ifndef NO_CC
       for (ii=0;ii<NCONTROLLERS;ii++){

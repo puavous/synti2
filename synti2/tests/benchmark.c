@@ -13,7 +13,7 @@
 #include "synti2_guts.h"
 
 /* How many seconds to run the synth. */
-#define BENCHMARK_SECONDS 10
+#define BENCHMARK_SECONDS 20
 
 synti2_synth global_synth;
 

@@ -213,7 +213,7 @@ mostlyclean:
 
 clean: mostlyclean
 	-rm *.payload tinyexe visexe \
-		benchmark testsong.c test.misss \
+		benchmark testdata.c test.misss \
 		midi2synti2 patchedit genpar cbank \
 		one_star_j jacksynti2 cube_thing example1
 

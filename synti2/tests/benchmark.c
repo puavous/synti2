@@ -10,22 +10,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "synti2.h"
+#include "synti2_guts.h"
 
 /* How many seconds to run the synth. */
 #define BENCHMARK_SECONDS 10
 
-synti2_synth *global_synth;
-synti2_player *global_player;
+synti2_synth global_synth;
 
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
 /* Test patch from the hack script: */
-extern unsigned char hack_patch_sysex[];
-extern int hack_patch_sysex_length;
+extern unsigned char patch_sysex[];
 
 /* And a test song: */
 extern unsigned char hacksong_data[];
-extern unsigned int hacksong_length;
 
 int main(int argc, char *argv[])
 {
@@ -34,15 +32,11 @@ int main(int argc, char *argv[])
   int frames_at_once = 128;
 
   /* My own soft synth to be created. */
-  global_synth = synti2_create(sr, hack_patch_sysex, hacksong_data);
-  if (global_synth == NULL){
-    fprintf (stderr, "Couldn't allocate synti-kaksi \n");
-    exit(1);
-  }
+  synti2_init(&global_synth, sr, patch_sysex, hacksong_data);
   //  synti2_do_receiveSysEx(global_synth, hack_patch_sysex); /* hack.. */
 
   for(iframe=0; iframe < sr * BENCHMARK_SECONDS; iframe += frames_at_once){
-    synti2_render(global_synth, 
+    synti2_render(&global_synth, 
                   global_buffer, frames_at_once); 
   }
   return 0;

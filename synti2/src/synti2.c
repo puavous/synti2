@@ -580,6 +580,7 @@ synti2_evalCounters(synti2_synth *s /* FIXME: only for sr */,
      */
     ind = c->val >> COUNTER_TO_TABLE_SHIFT;
     c->fr = s->rise[ind];
+    //c->fr = c->val / MAX_COUNTER; //s->rise[ind];
     c->f = (1.0f-c->fr) * c->aa + c->fr * c->bb; 
   }
 }

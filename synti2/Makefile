@@ -147,10 +147,13 @@ include/synti2_params.h: src/patchdesign.dat genpar
 
 
 # Experiments with dry runs, benchmarking, and SDL
-benchmark: tests/benchmark.c synti2.c synti2.h testdata.c Makefile
-	$(CC) $(CFLAGS) -I./ -o $@ \
+benchmark: tests/benchmark.c src/synti2.c include/synti2.h testdata.c Makefile
+	$(CC) $(CFLAGS) -I./ -I./include -o $@ \
 		$(filter %.c , $^) -lm
 
+testdata.c: example/one_star_j/one_star_j.mid  example/one_star_j/one_star_j.s2bank
+	./cbank $(filter %.s2bank, $^) testdata.c
+	./midi2synti2 $(filter %.mid, $^) >> testdata.c
 
 # This is a template for an easy 4k-builder 
 tinyexe: $(TINYEXESOURCES) $(S2EXESRC) $(S2EXEHDR) Makefile \

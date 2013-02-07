@@ -116,13 +116,13 @@ synti2_player_event_add(synti2_synth *s,
   synti2_player_ev *ev_new;
   byte_t *msg;
   unsigned int i;
-
+  
   while((s->seq.insloc->next != NULL)
         && (s->seq.insloc->next->frame <= frame)){
     s->seq.insloc = s->seq.insloc->next;
   }
   ev_new = s->seq.freeloc++;
-
+  
 #ifndef ULTRASMALL
   /* Compose-mode checks for storage size. */
   if (ev_new > (void*)s->seq.evpool+SYNTI2_MAX_SONGEVENTS){
@@ -133,12 +133,12 @@ synti2_player_event_add(synti2_synth *s,
     return; /* No need to proceed.. */
   } 
 #endif
-
+  
   msg = ev_new->data;
   ev_new->next = s->seq.insloc->next;
   ev_new->frame = frame;
   s->seq.insloc->next = ev_new;
-
+  
   /* Actual copying of the data. Always max size.*/
   for(i=0;i<SYNTI2_MAX_EVDATA;i++){
     *msg++ = *src++;
@@ -165,7 +165,7 @@ synti2_player_merge_chunk(synti2_synth *s,
   unsigned int frame, tickdelta, intval;
   const byte_t *par;
   byte_t msg[SYNTI2_MAX_EVDATA];
-
+  
   chan = *r++;
   type = *r++;
   par = r;
@@ -175,11 +175,11 @@ synti2_player_merge_chunk(synti2_synth *s,
   /* Always two parameters.. makes reader code simpler with not too
    * much storage overhead.
    */
-
+  
   for(ii=0; ii<n_events; ii++){
     r += varlength(r, &tickdelta);
     frame += s->seq.fpt * tickdelta;
-
+    
     if (type == MISSS_LAYER_NOTES){
       /* Produce a 'Note on' message in our internal midi-like format. */
       msg[0] = MISSS_MSG_NOTE;
@@ -193,16 +193,16 @@ synti2_player_merge_chunk(synti2_synth *s,
       msg[0] = MISSS_MSG_RAMP;
       msg[1] = chan;
       msg[2] = par[0]; /*cont_index*/
-
+      
       r += varlength(r, &intval); /* time */
       *((float*)(&msg[3])) = synti2_decode_f(intval);
       r += varlength(r, &intval); /* dest. value */
       *(((float*)(&msg[3]))+1) = synti2_decode_f(intval);
       /* Then two native floats float out, and the header piece:. */
       /*printf("Adding ramp: Time: %7.3fs Target: %7.3f\n",
-             *((float*)(&msg[3])),
-             *((float*)(&msg[3])+1));*/
-
+       *((float*)(&msg[3])),
+       *((float*)(&msg[3])+1));*/
+      
       synti2_player_event_add(s, frame, msg);
     }
 #endif
@@ -226,9 +226,9 @@ synti2_player_init_from_misss(synti2_synth *s, const byte_t *r)
   unsigned int uspq;
   /* Initialize an "empty" "head event": (really necessary?) */
   s->seq.freeloc = s->seq.evpool + 1;
-
+  
   s->seq.playloc = s->seq.evpool; /* This would "rewind" the song */
-
+  
   /* TODO: Now we use the standard MIDI tempo unit of MSPQN. For our
    * 4k purposes, we might not need tpq at all. Just give us
    * microseconds per tick, and we'll be quite happy here and try to
@@ -259,16 +259,16 @@ synti2_init(synti2_synth * s,
   int ii, wt;
   float t;
   float deltaf;
-
+  
   memset(s, 0, sizeof(s));     /* zero */
-
+  
   /* Initialize the player module. (Not much to be done...) */
   s->sr = sr;
-
+  
 #ifndef ULTRASMALL
   if (songdata != NULL) 
     synti2_player_init_from_misss(s, songdata);
-
+  
   if (patchdata != NULL)
     synti2_fill_patches_from(s, patchdata);
 #else
@@ -280,10 +280,10 @@ synti2_init(synti2_synth * s,
   /* Patches are to be made with some patch editor, though.*/
   synti2_fill_patches_from(s, patchdata);
 #endif
-
-
+  
+  
   /* Initialize the rest of the synth. */
-
+  
   /* Create a note-to-frequency look-up table (cents need interpolation). 
    * TODO: Which is more efficient / small code: linear interpolation 
    * on every eval or make a lookup table on the cent scale...
@@ -310,10 +310,10 @@ synti2_init(synti2_synth * s,
     s->note2freq[ii] = 440.0f * powf(2.0f, ((float)ii - 69.0f) / 12.0f );
   }
 #endif
-
+  
   for(ii=0; ii<WAVETABLE_SIZE; ii++){
     /*s->wave[ii] = sin(2*M_PI * ii/(WAVETABLE_SIZE-1));*/
-
+    
     t = (float)ii/(WAVETABLE_SIZE-1);
     s->rise[ii] = t; 
     s->wave[0][ii] = sin((float)(2*M_PI)*t);
@@ -324,7 +324,7 @@ synti2_init(synti2_synth * s,
         + 1.f/(wt+1) * sinf((float)(2*M_PI) * (wt+1) * t);
     }
 #endif
-
+    
   }
 }
 
@@ -353,11 +353,11 @@ synti2_do_noteon(synti2_synth *s,
                  unsigned int vel)
 {
   int ie;
-
+  
 #ifndef NO_LOOPING_ENVELOPES
   s->voi[voice].sustain = vel;
 #endif
-
+  
 #ifndef NO_NOTEOFF
   if (vel==0){
     for (ie=0; ie<=NENVPERVOICE; ie++){
@@ -367,26 +367,26 @@ synti2_do_noteon(synti2_synth *s,
     return; /* Note off done. */
   }
 #endif
- 
+  
   /* note on */
 #ifndef NO_VELOCITY
   s->voi[voice].velocity = vel;
 #endif
-
+  
   s->voi[voice].note = note;
-
+  
 #ifndef NO_LEGATO
   synti2_counter_retarget(&(s->voi[voice].pitch),
                           s->voi[voice].patch.fpar[SYNTI2_F_LEGLEN],
                           note, s->sr);
 #endif
-
+  
   /* Trigger all envelopes. Just give a hint to the evaluator function.. */
   for (ie=0; ie<=NENVPERVOICE; ie++){
     s->voi[voice].estage[ie] = TRIGGERSTAGE;
     s->voi[voice].eprog[ie].delta = 0;
   }
-
+  
 #ifdef DO_RESET_PHASE
   /* Adds to code size and produces clicks when note tail is still
    * sounding, but makes each note start with deterministic (zero)
@@ -396,7 +396,7 @@ synti2_do_noteon(synti2_synth *s,
     s->voi[voice].c[ie].val = 0;
   }
 #endif
-
+  
 }
 
 /** Reads patches (can be many) from off-line data, generated by the
@@ -412,14 +412,14 @@ synti2_fill_patches_from(synti2_synth *s, const unsigned char *data)
   size_t nbytes;
   unsigned int ipat;
   synti2_patch *pat;
-
+  
   for(ipat=0; *data != 0xf7; ipat++){
     pat = &(s->voi[ipat].patch);
     for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
       pat->ipar3[ir] = *data >> 4;
       pat->ipar3[ir+1] = (*data++) & 0xf;
     }
-
+    
     for (ir=0; ir<SYNTI2_F_NPARS; ir++){
       /*printf("Reading value %08lx: (%02x %02x) ", data, data[0], data[1]);*/
       nbytes = varlength(data, &intval);
@@ -456,12 +456,12 @@ void
 synti2_do_receiveSysexData(synti2_synth *s, const byte_t * data){
   int opcode, ipat, ir;
   unsigned int encoded_fval;
-
+  
   /* Data header: what to do, for which parameter of which patch:*/
   opcode = *data++;
   ir = *data++;
   ipat = *data++;
-
+  
   if (opcode==MISSS_SYSEX_SET_3BIT) {
     /* Receive one parameter at location (patch,i3par_index) */
     s->voi[ipat].patch.ipar3[ir] = *data;
@@ -503,15 +503,15 @@ synti2_handleInput(synti2_synth *s,
                    unsigned int upto_frames)
 {
   const byte_t *msgbuf;
-
+  
   while((s->seq.playloc->next != NULL) 
         && (s->seq.playloc->next->frame <= upto_frames )) {
     s->seq.playloc = s->seq.playloc->next;
-
+    
     msgbuf = s->seq.playloc->data;
     if (msgbuf[0] == MISSS_MSG_NOTE){
       synti2_do_noteon(s, msgbuf[1], msgbuf[2], msgbuf[3]);
-
+      
 #ifndef NO_CC
     } else if (msgbuf[0] == MISSS_MSG_RAMP){
       /* A ramp message contains controller number, time, and destination value: */
@@ -520,14 +520,14 @@ synti2_handleInput(synti2_synth *s,
                               (*((float*)(msgbuf+3+sizeof(float)))) /*to next*/,
                               s->sr);
 #endif
-
+      
 #ifndef NO_SYSEX_RECEIVE
     } else if (msgbuf[0] == MISSS_MSG_DATA){
       /* Used only in compose mode (patch editor requires this) */
       synti2_do_receiveSysexData(s, msgbuf+1);
 #endif
     } 
-
+    
 #ifndef ULTRASMALL
     else {
       s->last_error_frame = s->framecount;
@@ -552,7 +552,7 @@ synti2_handleInput(synti2_synth *s,
 static 
 void
 synti2_evalCounters(synti2_synth *s /* FIXME: only for sr */,
-		    synti2_voice *v){
+                    synti2_voice *v){
   counter *c;
   unsigned int ind;
   unsigned int ic, icmax;
@@ -566,14 +566,14 @@ synti2_evalCounters(synti2_synth *s /* FIXME: only for sr */,
     if (c->delta == 0) {continue;}  /* stopped.. not running*/
     c->detect = c->val; 
     c->val += c->delta;  /* Count 0 to MAX*/
-
+    
     if (ic > NOSCILLATORS) { /* Clamp only latter half of counters. */
       if (c->val < c->detect){         /* Detect overflow*/
         c->val = MAX_COUNTER;          /* Clamp. */
         c->delta = 0;                  /* Stop after cycle*/
       }
     }
-
+    
     /* Linear interpolation using pre-computed "fall" and "rise"
      * tables. Also, the oscillator phases will be the rise values.
      * Phew.. shaved off a byte by letting go of "fall" table...
@@ -600,12 +600,12 @@ synti2_evalCounters(synti2_synth *s /* FIXME: only for sr */,
 static
 void
 synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
-			    synti2_voice *v, 
-			    synti2_patch *pat){
+                            synti2_voice *v, 
+                            synti2_patch *pat){
   int ie, ipastend;
   float nextgoal;
   float nexttime;
-
+  
 #ifndef NO_SAFETY
   /* Looping over all-zero times produces an infinite iteration which
    * is not nice, especially in a real-time audio system. So, there is
@@ -615,59 +615,58 @@ synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
    */
   int iter_watch;
 #endif
-
-    /* Envelope 0 is never touched. Therefore it yields a constant
-     * 0. I don't know if this hack is very useful, but it is in its
-     * own way very beautiful, so I leave it untouched. That's why the
-     * loop begins from envelope 1:
-     */
-    for (ie=1; ie<=NENVPERVOICE; ie++){
-      if (v->estage[ie] == 0) continue; /* skip untriggered. */
-
-      /* reverse order in the stages, so a bit awkward indexing. */
-      ipastend = SYNTI2_F_ENVS + (ie+1) * SYNTI2_NENVD;
-
-#ifndef NO_SAFETY
-      iter_watch = 0;
-#endif
-      /* Find next non-zero-timed knee (or end). delta==0 on a
-	 triggered envelope means endclamp/noteon. */
-      while ((v->eprog[ie].delta == 0) && ((--v->estage[ie]) > 0)){
-#ifndef NO_LOOPING_ENVELOPES
-        /* The loop logic seems to yield 55 bytes of compressed code!!
-         * Whyyy so much?  Hmm... the address computation becomes
-         * filthy long. FIXME: Consider some tricks? Pre-computation?
-         * Re-ordering of storage?
-         */
-        if ((v->estage[ie] == 1) && (v->sustain != 0)){
-          v->estage[ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
-#ifndef NO_SAFETY
-          if ((iter_watch++) > 5) v->sustain = 0; /* stop ifinite loop. */
-#endif
-        }
-#endif
-
-        /* Move these comments to a documentation file...*/
-        /* No time -> skip envelope knee. Force value to the new
-         * level (next goal). Delta remains at 0, so we may skip
-         * many.
-         */
-        /* NOTE: There will be a value jump here, so be careful when
-         * creating patches... The reason for this whole thing was to
-         * make it possible to use less knees, if 5 knees is not
-         * necessary. As an after-thought, the whole envelope thing
-         * could have been made with less glitches, but that remains
-         * as a to-do for some later project. This envelope
-         * skip-and-jump is now a final feature of synti2. Sorry for
-         * the pops you get if using this as patch size optimization.
-	 * It is an unfortunate mis-feature.
-         */
-        nexttime = pat->fenvpar[ipastend - v->estage[ie] * 2 + 0];
-        nextgoal = pat->fenvpar[ipastend - v->estage[ie] * 2 + 1];
-        synti2_counter_retarget(&(v->eprog[ie]), nexttime, nextgoal, s->sr);
-      }
-    }
   
+  /* Envelope 0 is never touched. Therefore it yields a constant
+   * 0. I don't know if this hack is very useful, but it is in its
+   * own way very beautiful, so I leave it untouched. That's why the
+   * loop begins from envelope 1:
+   */
+  for (ie=1; ie<=NENVPERVOICE; ie++){
+    if (v->estage[ie] == 0) continue; /* skip untriggered. */
+    
+    /* reverse order in the stages, so a bit awkward indexing. */
+    ipastend = SYNTI2_F_ENVS + (ie+1) * SYNTI2_NENVD;
+    
+#ifndef NO_SAFETY
+    iter_watch = 0;
+#endif
+    /* Find next non-zero-timed knee (or end). delta==0 on a
+       triggered envelope means endclamp/noteon. */
+    while ((v->eprog[ie].delta == 0) && ((--v->estage[ie]) > 0)){
+#ifndef NO_LOOPING_ENVELOPES
+      /* The loop logic seems to yield 55 bytes of compressed code!!
+       * Whyyy so much?  Hmm... the address computation becomes
+       * filthy long. FIXME: Consider some tricks? Pre-computation?
+       * Re-ordering of storage?
+       */
+      if ((v->estage[ie] == 1) && (v->sustain != 0)){
+        v->estage[ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
+#ifndef NO_SAFETY
+        if ((iter_watch++) > 5) v->sustain = 0; /* stop ifinite loop. */
+#endif
+      }
+#endif
+      
+      /* Move these comments to a documentation file...*/
+      /* No time -> skip envelope knee. Force value to the new
+       * level (next goal). Delta remains at 0, so we may skip
+       * many.
+       */
+      /* NOTE: There will be a value jump here, so be careful when
+       * creating patches... The reason for this whole thing was to
+       * make it possible to use less knees, if 5 knees is not
+       * necessary. As an after-thought, the whole envelope thing
+       * could have been made with less glitches, but that remains
+       * as a to-do for some later project. This envelope
+       * skip-and-jump is now a final feature of synti2. Sorry for
+       * the pops you get if using this as patch size optimization.
+       * It is an unfortunate mis-feature.
+       */
+      nexttime = pat->fenvpar[ipastend - v->estage[ie] * 2 + 0];
+      nextgoal = pat->fenvpar[ipastend - v->estage[ie] * 2 + 1];
+      synti2_counter_retarget(&(v->eprog[ie]), nexttime, nextgoal, s->sr);
+    }
+  } 
 }
 
 static
@@ -684,60 +683,59 @@ interpolate_note(const float* lookup, float value){
 static
 void
 synti2_updateFrequencies(synti2_synth *s /*FIXME: Only for freq lookup table */,
-			 synti2_voice *v,
-			 synti2_patch *pat){
+                         synti2_voice *v,
+                         synti2_patch *pat){
   int iosc;
   float notemod;
-
+  
   /* Frequency computation... where to put it after all? */
-
   
-
-    for (iosc=0; iosc<NOSCILLATORS; iosc++){
-      /* Pitch either from legato counter or directly from note: */
+  
+  
+  for (iosc=0; iosc<NOSCILLATORS; iosc++){
+    /* Pitch either from legato counter or directly from note: */
 #ifndef NO_LEGATO
-      notemod = v->pitch.f;
+    notemod = v->pitch.f;
 #else
-      notemod = v->note;
+    notemod = v->note;
 #endif
-
+    
 #ifndef NO_PITCH_SCALING
-      /* Optional pitch scale */
-      notemod *= (1.f + pat->fpar[SYNTI2_F_PSCALE]);
+    /* Optional pitch scale */
+    notemod *= (1.f + pat->fpar[SYNTI2_F_PSCALE]);
 #endif
-
+    
 #ifndef NO_PITCH_ENV
-      /* Optional pitch envelope */
-      notemod += v->eprog[pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
+    /* Optional pitch envelope */
+    notemod += v->eprog[pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
 #endif
-
+    
 #ifndef NO_DETUNE
-      /* Optional detune */
-      notemod += pat->fpar[SYNTI2_F_DT1 + iosc];    /* "coarse" */
-      notemod += pat->fpar[SYNTI2_F_DT1F + iosc];   /* "fine"   */
+    /* Optional detune */
+    notemod += pat->fpar[SYNTI2_F_DT1 + iosc];    /* "coarse" */
+    notemod += pat->fpar[SYNTI2_F_DT1F + iosc];   /* "fine"   */
 #endif
-
+    
 #ifndef NO_PITCH_BEND
-      /* Pitch bend for each oscillator. Different values between
-       * oscillators allow some weird effects; normal synth default
-       * would be +2 notes on each oscillator. The cube_thing 4k intro
-       * actually got some bytes smaller after adding the 3 additional
-       * parameters, so I think my pitch bend system is now final like
-       * this.
-       */
-      notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM+iosc];
+    /* Pitch bend for each oscillator. Different values between
+     * oscillators allow some weird effects; normal synth default
+     * would be +2 notes on each oscillator. The cube_thing 4k intro
+     * actually got some bytes smaller after adding the 3 additional
+     * parameters, so I think my pitch bend system is now final like
+     * this.
+     */
+    notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM+iosc];
 #endif
-
-      /* Interpolate between two notes (deltas) in a look-up table: */
-      v->c[iosc].delta = 
-        interpolate_note(s->note2delta,notemod);
-
+    
+    /* Interpolate between two notes (deltas) in a look-up table: */
+    v->c[iosc].delta = 
+      interpolate_note(s->note2delta,notemod);
+    
 #ifndef NO_FILTER_PITCH_FOLLOW
-      /* Store effective note for filter pitch follow: */
-      v->effnote[iosc] = notemod;
+    /* Store effective note for filter pitch follow: */
+    v->effnote[iosc] = notemod;
 #endif
-    }
-  
+  } 
 }
 
 
@@ -779,13 +777,13 @@ static void apply_filter(synti2_synth *s,
 #define FIL_BP 2
 #define FIL_HP 3
 #define FIL_NF 4
-
+  
   float f,q;
-
+  
   f = 2.f*sinf(M_PI*(fenv) / s->sr);
-
+  
   q = 1.0f - renv;
-
+  
   store[FIL_LP] += f * store[FIL_BP];
   store[FIL_HP]  = q * store[FIL_IN] - store[FIL_LP] - (q*q) * store[FIL_BP];
   store[FIL_BP] += f * store[FIL_HP];
@@ -811,10 +809,10 @@ synti2_render(synti2_synth *s,
   int wtoffs;
   synti2_patch *pat;
   synti2_voice *voi;
-
+  
   float *sigin;  /* Input signal table during computation. */
   float *signal; /* Output signal destination during computation. */
-
+  
 #ifndef NO_CC
   int ccdest;
 #endif
@@ -825,13 +823,13 @@ synti2_render(synti2_synth *s,
   float pan;
   int iframeR;
 #endif
-
+  
   for (iframe=0; iframe<nframes; iframe++){
     iframeL=2*iframe;
 #ifndef NO_STEREO
     iframeR=iframeL+1;
 #endif
-
+    
 #ifndef EXTREME_NO_SEQUENCER
     /* If they wish to generate do_note_on() without my beautiful
        sequencer interface, by all means let them ... */
@@ -839,23 +837,23 @@ synti2_render(synti2_synth *s,
 #endif
     
     /* Oscillators and audio generation. */
-      
+    
     s->framecount++;
-      
+    
     /* Sound output begins. Mix channels additively to a cleared frame:*/
     buffer[iframeL] = 0.0f;
 #ifndef NO_STEREO
     buffer[iframeR] = 0.0f;
 #endif
-      
+    
     for(iv=0;iv<NPARTS;iv++){
       voi = &(s->voi[iv]);
       pat = &(voi->patch);
-
+      
       synti2_updateEnvelopeStages(s, voi, pat); /* move on if need be. */
       synti2_updateFrequencies(s, voi, pat);    /* frequency upd. */
       synti2_evalCounters(s,voi);
-
+      
 #ifndef NO_CC
       for (ii=0;ii<NCONTROLLERS;ii++){
         ccdest = pat->fpar[SYNTI2_F_CDST1+ii];
@@ -864,13 +862,13 @@ synti2_render(synti2_synth *s,
 #endif
       
       sigin  = signal = &(voi->outp[0]);
-
+      
 #ifndef NO_DELAY
       /* Additive mix from delay lines. */
       interm = 0.0f;
       dsamp = s->framecount;
       for (id = 0; id < NDELAYS; id++){
-	if ((dlev = (pat->fpar[SYNTI2_F_DINLV1+id])) == 0.0f) continue;
+        if ((dlev = (pat->fpar[SYNTI2_F_DINLV1+id])) == 0.0f) continue;
         interm += s->delay[id][dsamp % DELAYSAMPLES] * dlev;
       }
       sigin[NOSCILLATORS+1] = interm;
@@ -882,13 +880,13 @@ synti2_render(synti2_synth *s,
           ((voi->c[iosc].fr 
             + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* phase modulator */
            * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
-	
+        
 #ifndef NO_EXTRA_WAVETABLES
         interm  = s->wave[pat->ipar3[SYNTI2_I3_HARM1+iosc]][wtoffs];
 #else
         interm  = s->wave[0][wtoffs];
 #endif
-	
+        
         /* parallel mix could be optional? Actually also FM could be? */
         /* could reorganize I3 parameters for shorter code here(?): */
         interm *= (voi->eprog[pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
@@ -924,7 +922,7 @@ synti2_render(synti2_synth *s,
       /* Skip for faster computation. Should do the same for delays! */
       if(pat->ipar3[SYNTI2_I3_FILT]) {
         signal[0] = interm;
-
+        
         /* Base frequency as note value from parameter. */
         fenv = pat->fpar[SYNTI2_F_FFREQ];
         renv = pat->fpar[SYNTI2_F_FRESO];
@@ -935,41 +933,41 @@ synti2_render(synti2_synth *s,
           fenv += voi->effnote[pat->ipar3[SYNTI2_I3_FFOLL]-1];
         }
 #endif
-
+        
         /* Convert to frequency at this point. */
         fenv = interpolate_note(s->note2freq,fenv);
-
+        
 #ifndef NO_FILTER_CUT_ENVELOPE
         /* Optionally _multiply_ cutoff frequency by an envelope. */
         if (pat->ipar3[SYNTI2_I3_EFILT]>0){
           fenv *= voi->eprog[pat->ipar3[SYNTI2_I3_EFILT]].f;
         }
 #endif
-
+        
 #ifndef NO_FILTER_RESO_ENVELOPE
         /* Optionally _multiply_ also resonance by an envelope. */
         if (pat->ipar3[SYNTI2_I3_EFILR]>0){
           renv *= voi->eprog[pat->ipar3[SYNTI2_I3_EFILR]].f;
         }
 #endif
-
+        
         apply_filter(s, fenv, renv, signal);
         interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
       }
 #endif
-
+      
 #ifndef NO_DELAY
       /* mix also to the delay lines.*/
       for (id = 0; id < NDELAYS; id++){
-	if ((dlev = (pat->fpar[SYNTI2_F_DLEV1+id])) == 0.0f) continue;
-	/* Unit of the delay length parameter is now millisecond unless
+        if ((dlev = (pat->fpar[SYNTI2_F_DLEV1+id])) == 0.0f) continue;
+        /* Unit of the delay length parameter is now millisecond unless
            otherwise specified. */
 #ifndef NO_MILLISECOND_DELAY
         dsamp = s->framecount
-	  + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * (s->sr / 1000));
+          + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * (s->sr / 1000));
 #else
         dsamp = s->framecount
-	  + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * s->sr);
+          + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * s->sr);
 #endif
         s->delay[id][dsamp % DELAYSAMPLES] += dlev * interm;
       }

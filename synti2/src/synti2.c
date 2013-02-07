@@ -801,6 +801,7 @@ synti2_render(synti2_synth *s,
   int wtoffs;
   synti2_patch *pat;
   synti2_voice *voi;
+  counter *eprog;
   
   float *sigin;  /* Input signal table during computation. */
   float *signal; /* Output signal destination during computation. */
@@ -841,6 +842,7 @@ synti2_render(synti2_synth *s,
     for(iv=0;iv<NPARTS;iv++){
       voi = &(s->voi[iv]);
       pat = &(voi->patch);
+      eprog = &(voi->eprog);
       
       synti2_updateEnvelopeStages(s, voi, pat); /* move on if need be. */
       synti2_updateFrequencies(s, voi, pat);    /* frequency upd. */
@@ -881,7 +883,7 @@ synti2_render(synti2_synth *s,
         
         /* parallel mix could be optional? Actually also FM could be? */
         /* could reorganize I3 parameters for shorter code here(?): */
-        interm *= (voi->eprog[pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
+        interm *= (eprog[pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
         interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
         interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
 #ifndef NO_VELOCITY
@@ -896,7 +898,7 @@ synti2_render(synti2_synth *s,
       /* Optional additive noise after FM operator synthesis: */
 #ifndef NO_NOISE
       RandSeed *= 16807;
-      interm += voi->eprog[pat->ipar3[SYNTI2_I3_EAMPN]].f 
+      interm += eprog[pat->ipar3[SYNTI2_I3_EAMPN]].f 
 #ifndef NO_VELOCITY
         * ((pat->ipar3[SYNTI2_I3_VSN])?(voi->velocity / 127.f) : 1.f)
 #endif
@@ -932,14 +934,14 @@ synti2_render(synti2_synth *s,
 #ifndef NO_FILTER_CUT_ENVELOPE
         /* Optionally _multiply_ cutoff frequency by an envelope. */
         if (pat->ipar3[SYNTI2_I3_EFILT]>0){
-          fenv *= voi->eprog[pat->ipar3[SYNTI2_I3_EFILT]].f;
+          fenv *= eprog[pat->ipar3[SYNTI2_I3_EFILT]].f;
         }
 #endif
         
 #ifndef NO_FILTER_RESO_ENVELOPE
         /* Optionally _multiply_ also resonance by an envelope. */
         if (pat->ipar3[SYNTI2_I3_EFILR]>0){
-          renv *= voi->eprog[pat->ipar3[SYNTI2_I3_EFILR]].f;
+          renv *= eprog[pat->ipar3[SYNTI2_I3_EFILR]].f;
         }
 #endif
         
@@ -974,7 +976,7 @@ synti2_render(synti2_synth *s,
       /* To cut down computations, panning increases volume ([0,2]): */
       pan = pat->fpar[SYNTI2_F_MIXPAN];
 #ifndef NO_PAN_ENVELOPE
-      pan += voi->eprog[pat->ipar3[SYNTI2_I3_EPAN]].f; /*FIXME: precomp &eprog*/
+      pan += eprog[pat->ipar3[SYNTI2_I3_EPAN]].f; /*FIXME: precomp &eprog*/
 #endif
       buffer[iframeL] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
       buffer[iframeR] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);

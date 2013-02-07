@@ -1,6 +1,36 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+      /* NOTE: There will be a value jump here [in the envelope code],
+         so be careful when creating patches... The reason for this
+         whole thing was to make it possible to use less knees, if 5
+         knees is not necessary. As an after-thought, the whole
+         envelope thing could have been made with less glitches, but
+         that remains as a to-do for some later project. This envelope
+         skip-and-jump is now a final feature of synti2. Sorry for the
+         pops you get if using this as patch size optimization.  It is
+         an unfortunate mis-feature.
+       */
+
+
+      /* The loop logic seems to yield 55 bytes of compressed code!!
+       * Whyyy so much?  Hmm... the address computation becomes
+       * filthy long. FIXME: Consider some tricks? Pre-computation?
+       * Re-ordering of storage?
+
+       * ... no ... Any fix to this went totally beyond me, at least
+       * during this project. After some spying, it turned out that
+       * the code bloat didn't come only from the envelope logic, but
+       * from the fact that the couple of extra variables used would
+       * somehow force things in and out of registers in the whole
+       * outer loop (the thing is inlined, and things happen all
+       * around) and the size-optimizer can't keep pace. If you want
+       * looping envelopes in this synthesizer, you pay for the weight
+       * in executable size or fix this issue. I won't.
+
+       */
+
+
     /* [Old oscillator code]:
      * Linear interpolation using pre-computed "fall" and "rise"
      * tables. Also, the oscillator phases will be the rise values.

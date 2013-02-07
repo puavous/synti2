@@ -591,7 +591,7 @@ synti2_evalCounters(synti2_voice *v){
  */
 static
 void
-synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
+synti2_updateEnvelopeStages(synti2_synth *s,
                             synti2_voice *v, 
                             synti2_patch *pat){
   int ie, ipastend;
@@ -626,34 +626,22 @@ synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
        triggered envelope means endclamp/noteon. */
     while ((v->eprog[ie].delta == 0) && ((--v->estage[ie]) > 0)){
 #ifndef NO_LOOPING_ENVELOPES
-      /* The loop logic seems to yield 55 bytes of compressed code!!
-       * Whyyy so much?  Hmm... the address computation becomes
-       * filthy long. FIXME: Consider some tricks? Pre-computation?
-       * Re-ordering of storage?
-       */
       if ((v->estage[ie] == 1) && (v->sustain != 0)){
         v->estage[ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
 #ifndef NO_SAFETY
-        if ((iter_watch++) > 5) v->sustain = 0; /* stop ifinite loop. */
-        /* FIXME: Should mark an error, too... */
+        if ((iter_watch++) > 5){
+          v->sustain = 0; /* stop ifinite loop and mark error. */
+          s->seq.last_error_frame = s->framecount;
+          s->seq.last_error_type = SYNTI2_ERROR_INVALID_LOOPING_ENV;
+          s->seq.last_error_info = ie;
+        }
 #endif
       }
 #endif
       
-      /* Move these comments to a documentation file...*/
-      /* No time -> skip envelope knee. Force value to the new
-       * level (next goal). Delta remains at 0, so we may skip
-       * many.
-       */
-      /* NOTE: There will be a value jump here, so be careful when
-       * creating patches... The reason for this whole thing was to
-       * make it possible to use less knees, if 5 knees is not
-       * necessary. As an after-thought, the whole envelope thing
-       * could have been made with less glitches, but that remains
-       * as a to-do for some later project. This envelope
-       * skip-and-jump is now a final feature of synti2. Sorry for
-       * the pops you get if using this as patch size optimization.
-       * It is an unfortunate mis-feature.
+      /* No time -> skip envelope knee. Force value to the new level
+       * (next goal). Delta remains at 0, so we may skip many. There
+       * could be clicks and stuff.. More in the docs.
        */
       nexttime = pat->fpar[ipastend - v->estage[ie] * 2 + 0];
       nextgoal = pat->fpar[ipastend - v->estage[ie] * 2 + 1];
@@ -845,8 +833,9 @@ synti2_render(synti2_synth *s,
       pat = &(voi->patch);
       eprog = &(voi->eprog);
       
-      synti2_updateEnvelopeStages(s, voi, pat); /* move on if need be. */
-      synti2_updateFrequencies(s, voi, pat);    /* frequency upd. */
+      /* Update status of everything on this voice. */
+      synti2_updateEnvelopeStages(s, voi, pat);
+      synti2_updateFrequencies(s, voi, pat);
       synti2_evalCounters(voi);
       
 #ifndef NO_CC
@@ -855,7 +844,8 @@ synti2_render(synti2_synth *s,
         pat->fpar[ccdest] = voi->contr[ii].f;
       }
 #endif
-      
+
+      /* Start creating the sound from this voice. */
       sigin  = signal = &(voi->outp[0]);
       
 #ifndef NO_DELAY

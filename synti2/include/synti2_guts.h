@@ -196,7 +196,9 @@ typedef struct synti2_voice {
 
   /* Envelope stages just a table? TODO: think.*/
   unsigned int estage[NENVPERVOICE+1];
+#ifndef NO_LOOPING_ENVELOPES
   unsigned int sustain;
+#endif
 
   unsigned int note;
   unsigned int velocity;

@@ -654,6 +654,8 @@ synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
        * the pops you get if using this as patch size optimization.
        * It is an unfortunate mis-feature.
        */
+      /* FIXME: Think about this fenvpar hack once more... It can't be
+         correct anymore! */
       nexttime = pat->fenvpar[ipastend - v->estage[ie] * 2 + 0];
       nextgoal = pat->fenvpar[ipastend - v->estage[ie] * 2 + 1];
       synti2_counter_retarget(&(v->eprog[ie]), nexttime, nextgoal, s->sr);

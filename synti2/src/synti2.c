@@ -686,7 +686,6 @@ void
 synti2_updateFrequencies(synti2_synth *s /*FIXME: Only for freq lookup table */,
 			 synti2_voice *v,
 			 synti2_patch *pat){
-  int note;
   int iosc;
   float notemod;
 
@@ -772,7 +771,6 @@ synti2_updateFrequencies(synti2_synth *s /*FIXME: Only for freq lookup table */,
  *    (save low and band for next round.)
  */
 static void apply_filter(synti2_synth *s, 
-                         synti2_patch *pat, 
                          float fenv,
                          float renv,
                          float *store){
@@ -955,7 +953,7 @@ synti2_render(synti2_synth *s,
         }
 #endif
 
-        apply_filter(s, pat, fenv, renv, signal);
+        apply_filter(s, fenv, renv, signal);
         interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
       }
 #endif

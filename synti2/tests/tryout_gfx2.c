@@ -33,10 +33,10 @@ static void kuutio(){
 static void render_scene(const synti2_synth *s){
   int i, j;
 
-  float time = (float)(s->framecount.val) / s->sr;
-  glClearColor(s->eprog[0][1].f, 
-               s->eprog[1][1].f, 
-               s->eprog[2][1].f, 0.0f);
+  float time = (float)(s->framecount) / s->sr;
+  glClearColor(s->voi[0].eprog[1].f, 
+               s->voi[1].eprog[1].f, 
+               s->voi[2].eprog[1].f, 0.0f);
 
   glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
@@ -53,7 +53,7 @@ static void render_scene(const synti2_synth *s){
     for(j = 0; j<6; j++){
       glPushMatrix();
       glTranslatef(i*3.f, 0.f, j*3.f);
-      glScalef(1.f, s->eprog[i][j].f, 1.f);
+      glScalef(1.f, s->voi[i].eprog[j].f, 1.f);
       glTranslatef(0.f, 1.f, 0.f);
       kuutio();
       glPopMatrix();

@@ -548,11 +548,6 @@ synti2_handleInput(synti2_synth *s,
  * and envelope stages is the clamping. NOTE: I'm using the order of
  * the counters {framecount, osc1, osc2, ..., oscN, ev1, ev2, ...,
  * evM} to know which counters need clamping.
- *
- * FIXME: See if there would be size improvements from putting the
- * counters inside parts (and leave out what seems to be the only
- * global one, framecount)
- *
  */
 static 
 void
@@ -582,7 +577,6 @@ synti2_evalCounters(synti2_synth *s /* FIXME: only for sr */,
     /* Linear interpolation using pre-computed "fall" and "rise"
      * tables. Also, the oscillator phases will be the rise values.
      * Phew.. shaved off a byte by letting go of "fall" table...
-     * TODO: See if there was a significant performance hit (?).
      */
     ind = c->val >> COUNTER_TO_TABLE_SHIFT;
     c->fr = s->rise[ind];
@@ -643,10 +637,7 @@ synti2_updateEnvelopeStages(synti2_synth *s /*FIXME: only for s->sr ? */,
         /* The loop logic seems to yield 55 bytes of compressed code!!
          * Whyyy so much?  Hmm... the address computation becomes
          * filthy long. FIXME: Consider some tricks? Pre-computation?
-         * Re-ordering of storage? Part-wise storage ordering seems to
-         * appear in many of these remaining questions... so that may
-         * be worth trying. (The last thing to try before final synti2
-         * core).
+         * Re-ordering of storage?
          */
         if ((v->estage[ie] == 1) && (v->sustain != 0)){
           v->estage[ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/

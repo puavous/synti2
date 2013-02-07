@@ -1,6 +1,9 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+     * TODO: See if there was a significant performance hit (?).
+       ... Naah, performance is not of priority. Size is.
+
       /* TODO: If noise was a wavetable like other oscillators, it
        * would not require additional code here. But elsewhere it
        * would.. worth trying or not? Probably not.

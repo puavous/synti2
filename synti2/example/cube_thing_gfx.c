@@ -57,15 +57,19 @@ static void render_scene(const synti2_synth *s){
   //GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
   GLfloat mat_ambient[4];
   GLfloat mat_specular[4];
+  GLfloat mat_shininess[] = { 50.0f };
+  GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+
+  float cf;
+  int a,n;
+
   for(i=0;i<4;i++){
     mat_specular[i] = 1.f - s->voi[2].eprog[3].f;
   }
    
    //   GLfloat mat_diffuse[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-   GLfloat mat_shininess[] = { 50.0f };
-   GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
 
-   float cf = s->voi[1].eprog[1].f;
+   cf = s->voi[1].eprog[1].f;
    glClearColor (cf, cf, cf, 0.0);
 
    //   glShadeModel (GL_SMOOTH);  // Default?
@@ -93,9 +97,8 @@ static void render_scene(const synti2_synth *s){
   //glRotatef(time*45.f, 0.f, 1.f, 0.f);
   glRotatef(time*(1.f+s->voi[4].note), 1.f, s->voi[4].note % 3, 0.f);
 
-  int a = s->voi[4].note % 13;
-
-  int n = 10 + (a);
+  a = s->voi[4].note % 13;
+  n = 10 + (a);
   for(i = 0; i<n; i++){
     //    glPushMatrix();
     himpale(6, 10.f+cf);

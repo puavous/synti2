@@ -29,9 +29,15 @@
 #endif
 
 #if defined (NO_FILTER) || defined (NO_FILTER_FRILLS)
+#ifndef NO_FILTER_PITCH_FOLLOW
 #define NO_FILTER_PITCH_FOLLOW
+#endif
+#ifndef NO_FILTER_CUT_ENVELOPE
 #define NO_FILTER_CUT_ENVELOPE
+#endif
+#ifndef NO_FILTER_RESO_ENVELOPE
 #define NO_FILTER_RESO_ENVELOPE
+#endif
 #endif
 
 /* don't know if this is nice, but doing it still: */

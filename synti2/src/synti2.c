@@ -125,7 +125,7 @@ synti2_player_event_add(synti2_synth *s,
   
 #ifndef ULTRASMALL
   /* Compose-mode checks for storage size. */
-  if (ev_new > (void*)s->seq.evpool+SYNTI2_MAX_SONGEVENTS){
+  if (ev_new > (s->seq.evpool+SYNTI2_MAX_SONGEVENTS)){
     ev_new = --(s->seq.freeloc);
     s->seq.last_error_frame = frame;
     s->seq.last_error_type = SYNTI2_ERROR_OUT_OF_EVENT_SPACE;
@@ -194,15 +194,21 @@ synti2_player_merge_chunk(synti2_synth *s,
       msg[1] = chan;
       msg[2] = par[0]; /*cont_index*/
       
+      /* Hmm.. Come to think of it.. All along, I'm sort of assuming
+         byte is 8 bits and float is 4 bytes.. Will there be trouble
+         if this is not the case.. Hmmm... and what effects would
+         there be from alignment.. */
+
       r += varlength(r, &intval); /* time */
-      *((float*)(&msg[3])) = synti2_decode_f(intval);
+      *((float*)(msg+3)) = synti2_decode_f(intval);
       r += varlength(r, &intval); /* dest. value */
-      *(((float*)(&msg[3]))+1) = synti2_decode_f(intval);
-      /* Then two native floats float out, and the header piece:. */
+      *(((float*)(msg+3))+1) = synti2_decode_f(intval);
+
       /*printf("Adding ramp: Time: %7.3fs Target: %7.3f\n",
        *((float*)(&msg[3])),
        *((float*)(&msg[3])+1));*/
       
+      /* Then two native floats float out, and the header piece:. */
       synti2_player_event_add(s, frame, msg);
     }
 #endif
@@ -836,7 +842,7 @@ synti2_render(synti2_synth *s,
     for(iv=0;iv<NPARTS;iv++){
       voi = &(s->voi[iv]);
       pat = &(voi->patch);
-      eprog = &(voi->eprog);
+      eprog = voi->eprog;
       
       /* Update status of everything on this voice. */
       synti2_updateEnvelopeStages(s, voi, pat);

@@ -331,8 +331,13 @@ synti2_init(synti2_synth * s,
 /** 
  * Note on OR note off (upon velocity == 0).
  *
- * Note or velocity must not jump at a note-off, when the parameters are
- * likely both different from what they were at note-on.
+ * Note or velocity must not jump at a note-off, when the parameters
+ * are both likely to be different from what they were at note-on.
+ *
+ * Velocity is MIDI-like, i.e., range 0-127, and 0 means note-off
+ * instead of note-on with zero velocity. Velocity handling is
+ * optional code, but the zero/non-zero encoding is always used here
+ * for note on/note off.
  *
  * NOTE: I tried if memset could be economical in zeroing the
  * counters. It might be, but the address computation compiles into so
@@ -878,7 +883,7 @@ synti2_render(synti2_synth *s,
         interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
         interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
 #ifndef NO_VELOCITY
-        /* Optional velocity sensitivity. FIXME: Needs consideration. */
+        /* Optional velocity sensitivity. */
         if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
           interm *= voi->velocity / 127.f;
         }

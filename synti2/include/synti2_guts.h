@@ -201,7 +201,10 @@ typedef struct synti2_voice {
 #endif
 
   unsigned int note;
+
+#ifndef NO_VELOCITY
   unsigned int velocity;
+#endif
 
   float outp[1+NOSCILLATORS+1+4]; /*"zero", oscillator outputs, delay bus,
                                           filter storage.

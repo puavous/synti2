@@ -25,9 +25,6 @@
  * (automatically, though, nowadays) at compile time. Adjacent copies
  * of exactly the same patch data should compress nicely, too.
  *
- * FIXME: For 4k, a sound bank should contain no unused patches (even
- * with zero parameters). Every saved byte matters :).
- *
  * Remain in the MIDI world - it is 7 bits per SysEx data bit. Or
  * should we move to our own world altogether? No... SysEx is nice :).
  */
@@ -51,19 +48,6 @@
  * later project..
  */
 
-/* Total number of "counters", i.e., oscillators/operators. */
-/* #define NCOUNTERS (NPARTS * NOSCILLATORS) */
-
-/* Total number of envelopes. There is the magical "zero-envelope"
- * which is technically not operational. Hmm.. 
- *
- * FIXME: Is the zero-envelope needed anymore, when we are actually
- * using separate operator gains? It seems to be necessary only for
- * pitch envelopes. Would it make a shorter code if we used a "pitch
- * gain" and not use a zero-envelope?
- */
-/* #define NENVS (NPARTS * (NENVPERVOICE+1)) */
-
 /* Maximum value of the counter type depends on C implementation, so
  * use limits.h -- Actually should probably use C99 and stdint.h but
  * that's going to be in some later project.
@@ -75,7 +59,12 @@
 #define WAVETABLE_BITMASK 0xffff
 /* FIXME: This is implementation dependent! Hmm... is there some way
  * to get the implementation-dependent bit-count here? Sure.. but it
- * would require some configuration script..
+ * would require some configuration script.. Note that some
+ * configuration scrpit will appear at some point... There could be
+ * just a c code that tries out these things and then writes some
+ * "platform.h" with possibly varying stuff. And if 0.0f is not
+ * encoded as all-zero-bits, then that's it for the show on such a
+ * platform...
  */
 #define COUNTER_TO_TABLE_SHIFT 16
 
@@ -207,8 +196,8 @@ typedef struct synti2_voice {
 #endif
 
   float outp[1+NOSCILLATORS+1+4]; /*"zero", oscillator outputs, delay bus,
-                                          filter storage.
-                                        FIXME: could be a struct?*/
+                                          filter storage (lp,bp,hp,notch).
+                                        FIXME: could be a struct? should?*/
 
   synti2_patch patch;   /* The sound parameters per part*/
 } synti2_voice;

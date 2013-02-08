@@ -8,6 +8,65 @@
  *
  * @copyright 2012. MIT License, see LICENSE.txt
  */
+
+/*
+   FIXME: It wasn't final yet, after all. I'm totally going to need
+   one more revision of pretty much everything in the core. The idea
+   is here:
+
+     - For the 4k target, the synthesizer capacities must be
+       configurable on the level of what gets compiled in. By
+       capacities, I mean many things:
+
+         + Of course, the current 'optional' signal paths (filters,
+           delays)
+
+         + But also the number of voices, envelopes, oscillators,
+           delay lines, and maybe also number of envelope knees. With
+           only one delay / one envelope / one operator some loops
+           could be optimized away completely.
+
+         + The patch data must contain no unused parameters.
+
+     - This means that there must be a separate "synti_capacities.h"
+       that can be modified, and all the rest of the code AND patch
+       descriptions must be generated according to the defined
+       capacities.
+
+     - What about the compose-mode synth? It could be with full
+       capacities, but for the 4k target (preferrably generated from
+       the patch editor GUI), the patches could be analyzed, and the
+       restricted capacities automatically set to the minimum
+       requirements of the patch set being edited. For example, if no
+       patch uses velocity for anything, then NO_VELOCITY could be
+       used. Similarly, if only delay lines 1-3 have in-going signals,
+       then NDELAYS could be set to 3. If every parameter on patches
+       12-16 is zero then NPARTS could be set to 11. And so on... The
+       GUI could keep showing the status of restrictions available for
+       the current patch set. Maybe some quick-buttons for "disable
+       all legatos", and the like, could (destructive operations) be
+       available in the GUI. Yep... make it so.
+
+     - Some steps need to be taken:
+
+        + The configure/compile logic needs to be revamped (a
+          bit). The 4k target should become a generated source
+          directory with a Makefile, and so on (the current
+          'hackpack/' hack is almost such a thing already).
+
+        + Something like #ifdef ULTRASMALL .. #include
+          "synti2_cap_custom.h" .. #else .. #include
+          "synti2_cap_def.h"
+
+        + This core may need some changes. In particular, it would be
+          wonderful if the number of envelope knees and of oscillators
+          could be free. Their processing logic would have to be
+          redesigned a bit.
+
+  This note now contains the essential parts of many former
+  wishes.. So it'll be the next task to resolve.
+*/
+
 #include <math.h>
 #include <limits.h>
 #include <stdlib.h>

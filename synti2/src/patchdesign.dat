@@ -8,19 +8,6 @@
 # The C code for patch format is generated from this file.
 #
 
-# FIXME: It would be perfect if the whole patch design could be partly
-# compiled when some "NO_DONT_USE_SOME_FEATURE" is present. That would
-# reduce sound data size greatly, I believe! But then there would be a
-# problem with tool programs that are using indices at the
-# moment. Maybe yet another job for the midi filter module... Map from
-# original indices to restricted ones in compose mode? In playback
-# mode the code contains only macro names. Yep. Do this somehow!!
-#
-# ... but then.. yet another new idea emerges, which conflicts with 
-# the previous one.
-#
-# After all, maybe I'll create this design file programmatically..
-
 ##############  Patch data 
 
 # Format, one line per parameter: NAME Description MIN MAX GUIPrecision GUIGroup
@@ -33,17 +20,11 @@
 # for better flexibility (mostly the feedback thing would require
 # this) i.e., 0xffff equals range 0-15, 0xfffe equals range 1-15 etc.
 
-# FIXME: A small C-like example of what I want here:
-#        Resolution: Do the precompilation first, and then generate only
-#        the parameters that are actually used in the remaining source!
-#        WARNING: Be careful with "SYNTI2_F_DLEV1+id" and the like!
-# (but what about during compose-time?)
-#ifndef NO_EXTRA_WAVETABLES
 HARM1 Op1Wav 0 7   0 5
 HARM2 Op2Wav 0 7   0 5
 HARM3 Op3Wav 0 7   0 5
 HARM4 Op4Wav 0 7   0 5
-#endif
+
 
 
 # Indices of the operator amplitude envelopes

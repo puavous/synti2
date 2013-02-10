@@ -13,6 +13,7 @@ NONOS ?=
 BUTDOS ?= 
 
 S2EXEHDR = include/synti2.h \
+		include/synti2_cap_default.h \
 		include/synti2_guts.h \
 		include/synti2_params.h \
 		include/synti2_misss.h 

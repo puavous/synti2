@@ -56,7 +56,7 @@
 
         + Something like #ifdef ULTRASMALL .. #include
           "synti2_cap_custom.h" .. #else .. #include
-          "synti2_cap_def.h"
+          "synti2_cap_default.h"
 
         + This core may need some changes. In particular, it would be
           wonderful if the number of envelope knees and of oscillators

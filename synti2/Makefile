@@ -119,6 +119,11 @@ nodefaultmake:
 # Tools of all sorts have been popping about ...
 tools: midi2synti2 patchedit genpar cbank
 
+# Just for looking at the machine code being produced by gcc
+synti2.asm.annotated: $(S2SOURCES) $(S2HEADERS)
+	$(CC) $(HCFLAGS) -Iinclude -S -fverbose-asm -g src/synti2.c
+	as -alhnd synti2.s > $@
+
 midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
 		tools/miditool.hpp tools/midihelper.hpp \
 		tools/patchtool.hpp tools/patchtool.cxx \

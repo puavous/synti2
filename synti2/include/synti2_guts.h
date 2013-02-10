@@ -39,10 +39,12 @@
  */
 #define TRIGGERSTAGE 6
 #define RELEASESTAGE 2
+#define LOOPSTAGE 1
 
 
 /* Length of envelope data block (K1T&L K2T&L K3T&L K4T&L K5T&L) */
-#define SYNTI2_NENVD 10
+#define NENVKNEES 5
+#define SYNTI2_NENVD (NENVKNEES*2)
 /* TODO: (order of knees might be better reversed ?? 
  * Think about this .. make envs simpler? Probably in some
  * later project..

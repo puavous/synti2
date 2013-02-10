@@ -689,10 +689,10 @@ synti2_updateEnvelopeStages(synti2_synth *s,
        triggered envelope means endclamp/noteon. */
     while ((v->eprog[ie].delta == 0) && ((--v->estage[ie]) > 0)){
 #ifndef NO_LOOPING_ENVELOPES
-      if ((v->estage[ie] == 1) && (v->sustain != 0)){
+      if ((v->estage[ie] == LOOPSTAGE) && (v->sustain != 0)){
         v->estage[ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
 #ifndef NO_SAFETY
-        if ((iter_watch++) > 5){
+        if ((iter_watch++) > NENVKNEES){
           v->sustain = 0; /* stop ifinite loop and mark error. */
           s->seq.last_error_frame = s->framecount;
           s->seq.last_error_type = SYNTI2_ERROR_INVALID_LOOPING_ENV;

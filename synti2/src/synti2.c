@@ -95,7 +95,6 @@ static int RandSeed = 1;
  */
 static 
 size_t
-__attribute__ ((noinline))
 varlength(const unsigned char * source, unsigned int * dest){
   size_t nread;
   unsigned char byte;
@@ -115,6 +114,7 @@ varlength(const unsigned char * source, unsigned int * dest){
 #endif
 }
 
+#ifndef NO_SYSEX_RECEIVE
 /**
  * Assemble a 28-bit integer from 7 bit parts that were used
  * in SysEx transfer.
@@ -131,10 +131,10 @@ decode7b4(const unsigned char * source, unsigned int * dest){
     + ((source[2] & 0x7f) << 7)
     + ((source[3] & 0x7f) << 0);
 }
+#endif
 
 static
 void
-__attribute__ ((noinline))
 synti2_counter_retarget(counter *c, float nexttime, float nextgoal, unsigned int sr)
 {
   c->aa = c->f;     /* init from current value */

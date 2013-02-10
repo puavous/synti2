@@ -90,7 +90,7 @@ CFLAGS = -O3 -g -Wall -Wextra -pedantic
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -Wextra -pedantic \
+HCFLAGS = -Os -Wall -Wextra -pedantic \
 	$(NONOS)
 
 ## For normal 64-bit build:

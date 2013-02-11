@@ -33,6 +33,7 @@
 #include <FL/Fl_Counter.H>
 #include <FL/Fl_Dial.H>
 #include <FL/Fl_Scroll.H>
+#include <FL/Fl_Tabs.H>
 #include <FL/Fl_Value_Slider.H>
 #include <FL/Fl_Roller.H>
 #include <FL/Fl_Value_Input.H>
@@ -490,15 +491,9 @@ std::string createFvalLabel(int index, std::string label){
   /* FIXME: Remember C++ -- does this leak? No? It's a temporary copy? Make sure though... */
 }
 
-/** Builds the main window with widgets reflecting a patch description. */
-Fl_Window *build_main_window(synti2::PatchDescr *pd){
-
-  /* Overall Operation Buttons */
-  Fl_Window *window = new Fl_Window(1200, 700);
-  window->resizable(window);
-  main_win = window;
-
-  Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,700);
+/** Builds the patch editor widgets. */
+Fl_Group *build_patch_editor(synti2::PatchDescr *pd){
+  Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,740);
 
   Fl_Counter *patch = new Fl_Counter(50,20,50,25,"Patch");
   patch->type(FL_SIMPLE_COUNTER);
@@ -539,9 +534,12 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   box = new Fl_Button(px + 7*(w+sp),py,w,h,"Load all");
   box->callback(cb_load_all); box->labelsize(labsz);
 
+  /*
+    Quit will go to a menu.
   px += w/2;
   box = new Fl_Button(px + 8*(w+sp),py,w,h,"&Quit");
   box->callback(cb_exit); box->argument((long)window); box->labelsize(17); 
+  */
 
   /* Parameters Valuator Widgets */
   px=5; py=50; w=25; h=20; sp=2;
@@ -557,7 +555,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
     vi->callback(cb_new_i3_value);
   }
 
-  py=80; w=95;
+  py=80; w=85;
   int npars = pd->nPars("F");
   int ncols = 4;
   int nrows = (npars / ncols) + 1;
@@ -582,6 +580,26 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
       i++;
     }
   }
+
+}
+
+/** Builds the main window with widgets reflecting a patch description. */
+Fl_Window *build_main_window(synti2::PatchDescr *pd){
+
+  /* Overall Operation Buttons */
+  Fl_Window *window = new Fl_Window(1200, 740);
+  window->resizable(window);
+  main_win = window;
+
+  Fl_Tabs *tabs = new Fl_Tabs(0,0,1200,740);
+
+  Fl_Group *gr = new Fl_Group(0,22,1200,720, "Patches");
+  Fl_Group *patchedit = build_patch_editor(pd);
+  gr->end();
+  gr = new Fl_Group(0,22,1200,720, "Control");
+  gr->end();
+  gr = new Fl_Group(0,22,1200,720, "Exe Builder");
+  gr->end();
 
   window->end();
   return window;

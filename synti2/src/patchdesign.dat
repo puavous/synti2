@@ -50,8 +50,8 @@ VS1 Oper1VelSens 0 1   2 14
 VS2 Oper2VelSens 0 1   2 14
 VS3 Oper3VelSens 0 1   2 14
 VS4 Oper4VelSens 0 1   2 14
-VSN NoiseVelSens 0 1   2 14
-VSC FiltCutVelSens 0 1   2 14
+VSN NoiseVelSens 0 1   2 4
+VSC FiltCutVelSens 0 1   2 3
 
 
 # Number of envelope knees to jump backwards from last knee

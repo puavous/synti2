@@ -94,9 +94,12 @@ CFLAGS = -O3 -g -Wall -Wextra -pedantic
 HCFLAGS = -Os -Wall -Wextra -pedantic \
 	$(NONOS)
 
+# With these, the dependency of libm could be lifted (just a few bytes gained):
+#  -mfpmath=387 -funsafe-math-optimizations
+
 ## For normal 64-bit build:
 ARCHFLAGS = `sdl-config --cflags`
-ARCHLIBS = `sdl-config --libs` -lm -lGL
+ARCHLIBS = `sdl-config --libs` -lGL -lm
 
 # For linking against 32-bit libraries (approx. 5% smaller packed exe):
 # On my Fedora 16, as of now, the 32 bit SDL fails to init audio

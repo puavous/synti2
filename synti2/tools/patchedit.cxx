@@ -38,6 +38,7 @@
 #include <FL/Fl_Roller.H>
 #include <FL/Fl_Value_Input.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Choice.H>
 #include <FL/Fl_Select_Browser.H>
 #include <FL/Fl_File_Chooser.H>
 
@@ -580,7 +581,59 @@ Fl_Group *build_patch_editor(synti2::PatchDescr *pd){
       i++;
     }
   }
+  return scroll;
+}
 
+void build_message_mapper(){
+  Fl_Scroll *scroll = new Fl_Scroll(0,30,1200,740);
+
+  int x=0,y=30,w=100,h=20;
+
+  Fl_Group *chn = new Fl_Group(x,y,1200,90);
+  chn->box(FL_UP_BOX);
+  Fl_Choice *ch = new Fl_Choice(x+100,y,w,h,"Midi 1 ->");
+  ch->add("Mono-Dup",0,0,0,0);
+  ch->add("Poly Rot",0,0,0,0);
+  ch->add("Key Map",0,0,0,0);
+  ch->value(1);
+
+  Fl_Input *inp = new Fl_Input(x+250,y,w,h,"-> to: ");
+
+  w=30;
+  Fl_Value_Input *vi = new Fl_Value_Input(x+400,y,w,h,"Mod1");
+  vi = new Fl_Value_Input(x+480,y,w,h,"Mod2");
+  vi = new Fl_Value_Input(x+560,y,w,h,"Mod3");
+  vi = new Fl_Value_Input(x+640,y,w,h,"Mod4");
+  Fl_Check_Button *pb = new Fl_Check_Button(x+720,y,w,h,"Bend to 4");
+
+
+  /* Controllers 1-4 */
+  int px=80,py=52,sp=1;
+  for (int i=0;i<4;i++){
+    vi = new Fl_Value_Input(px,py,w*2,h,"C1min");
+    vi = new Fl_Value_Input(px+100,py,w*2,h,"max");
+    px += 220;
+  }
+  
+  /* key map */
+  px=2;py=74;sp=1;
+  w=30;h=20;
+  Fl_Scroll *keys = new Fl_Scroll(px,py,800,2*h);
+  int oct;
+  for(int i=0;i<128;i++){
+    Fl_Color notecol[] = {
+      0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00,
+      0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00};
+    
+    int note = i % 12;
+    int oct = i / 12;
+    int row = i / 128;
+    int col = i % 128;
+
+    Fl_Value_Input *vi = new Fl_Value_Input(px+col*(w+sp),py+row*(h+sp),w,h);
+    vi->color(notecol[note]);
+  }
+  keys->end();
 }
 
 /** Builds the main window with widgets reflecting a patch description. */
@@ -597,6 +650,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   Fl_Group *patchedit = build_patch_editor(pd);
   gr->end();
   gr = new Fl_Group(0,22,1200,720, "Control");
+  build_message_mapper();
   gr->end();
   gr = new Fl_Group(0,22,1200,720, "Exe Builder");
   gr->end();

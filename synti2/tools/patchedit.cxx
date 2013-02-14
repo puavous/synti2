@@ -494,19 +494,19 @@ std::string createFvalLabel(int index, std::string label){
 
 /** Builds the patch editor widgets. */
 Fl_Group *build_patch_editor(synti2::PatchDescr *pd){
-  Fl_Scroll *scroll = new Fl_Scroll(0,0,1200,740);
+  Fl_Scroll *scroll = new Fl_Scroll(0,25,1200,740);
 
-  Fl_Counter *patch = new Fl_Counter(50,20,50,25,"Patch");
+  Fl_Counter *patch = new Fl_Counter(50,25,50,25,"Patch");
   patch->type(FL_SIMPLE_COUNTER);
   patch->align(FL_ALIGN_LEFT);
   patch->bounds(0,15);
   patch->precision(0);
   patch->callback(cb_change_patch);
 
-  widget_patch_name = new Fl_Input(150,20,90,25,"Name");
+  widget_patch_name = new Fl_Input(150,25,90,25,"Name");
   widget_patch_name->callback(cb_patch_name);
 
-  int px=280, py=20, w=75, h=25, sp=2;
+  int px=280, py=25, w=75, h=25, sp=2;
   int labsz = 16;
   Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
   box->callback(cb_send_current); box->labelsize(labsz); 
@@ -584,41 +584,52 @@ Fl_Group *build_patch_editor(synti2::PatchDescr *pd){
   return scroll;
 }
 
-void build_message_mapper(){
-  Fl_Scroll *scroll = new Fl_Scroll(0,30,1200,740);
+Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
+  const char *clab[16] = {"1","2","3","4","5","6","7","8","9","10",
+                       "11","12","13","14","15","16"};
+  int px=ipx, py=ipy;
+  int w=100, h=20, sp=1;
 
-  int x=0,y=30,w=100,h=20;
-
-  Fl_Group *chn = new Fl_Group(x,y,1200,90);
+  Fl_Group *chn = new Fl_Group(ipx+1,ipy+1,ipw-2,iph-2);
   chn->box(FL_UP_BOX);
-  Fl_Choice *ch = new Fl_Choice(x+100,y,w,h,"Midi 1 ->");
+
+  chn->color(ic%2?0x99ee9900:0x66dd6600);
+
+  Fl_Box *lbl = new Fl_Box(ipx+2,ipy+2,30,30,clab[ic]);
+  lbl->align(FL_ALIGN_INSIDE);
+  lbl->labelsize(20);
+
+  py+=3;
+  Fl_Choice *ch = new Fl_Choice(ipx+32,py,w,h,"");
   ch->add("Mono-Dup",0,0,0,0);
   ch->add("Poly Rot",0,0,0,0);
   ch->add("Key Map",0,0,0,0);
-  ch->value(1);
+  ch->add("*Mute*",0,0,0,0);
+  ch->value(0);
 
-  Fl_Input *inp = new Fl_Input(x+250,y,w,h,"-> to: ");
+  Fl_Input *inp = new Fl_Input(ipx+32+50+w,py,w,h,"-> to: ");
 
   w=30;
-  Fl_Value_Input *vi = new Fl_Value_Input(x+400,y,w,h,"Mod1");
-  vi = new Fl_Value_Input(x+480,y,w,h,"Mod2");
-  vi = new Fl_Value_Input(x+560,y,w,h,"Mod3");
-  vi = new Fl_Value_Input(x+640,y,w,h,"Mod4");
-  Fl_Check_Button *pb = new Fl_Check_Button(x+720,y,w,h,"Bend to 4");
-
+  Fl_Value_Input *vi = new Fl_Value_Input(px+400,py,w,h,"Mod1");
+  vi = new Fl_Value_Input(px+480,py,w,h,"Mod2");
+  vi = new Fl_Value_Input(px+560,py,w,h,"Mod3");
+  vi = new Fl_Value_Input(px+640,py,w,h,"Mod4");
+  Fl_Check_Button *pb = new Fl_Check_Button(px+720,py,w,h,"Bend to 4");
 
   /* Controllers 1-4 */
-  int px=80,py=52,sp=1;
+  const char *contlab[] = {"C1","C2","C3","C4"};
+  px=55,py=24,sp=1,w=30;
   for (int i=0;i<4;i++){
-    vi = new Fl_Value_Input(px,py,w*2,h,"C1min");
-    vi = new Fl_Value_Input(px+100,py,w*2,h,"max");
-    px += 220;
+    vi = new Fl_Value_Input(ipx+px,ipy+py,w*2,h,contlab[i]);
+    vi = new Fl_Value_Input(ipx+px+w+50,ipy+py,w*2,h,"--");
+    px += 200;
   }
   
   /* key map */
-  px=2;py=74;sp=1;
+  ipx+=31;
+  px=2;py=48;sp=1;
   w=30;h=20;
-  Fl_Scroll *keys = new Fl_Scroll(px,py,800,2*h);
+  Fl_Scroll *keys = new Fl_Scroll(ipx+px,ipy+py,800,2*h);
   int oct;
   for(int i=0;i<128;i++){
     Fl_Color notecol[] = {
@@ -630,10 +641,20 @@ void build_message_mapper(){
     int row = i / 128;
     int col = i % 128;
 
-    Fl_Value_Input *vi = new Fl_Value_Input(px+col*(w+sp),py+row*(h+sp),w,h);
+    Fl_Value_Input *vi = new Fl_Value_Input(ipx+px+col*(w+sp),ipy+py+row*(h+sp),w,h);
     vi->color(notecol[note]);
   }
   keys->end();
+  chn->end();
+}
+
+void build_message_mapper(int x, int y, int w, int h){
+  Fl_Scroll *scroll = new Fl_Scroll(x+1,y+1,w-2,h-2);
+
+  for (int i=0;i<16;i++){
+    build_channel_mapper(x+2,y+2+i*100,900,96,i);
+  }
+  scroll->end();
 }
 
 /** Builds the main window with widgets reflecting a patch description. */
@@ -650,7 +671,7 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   Fl_Group *patchedit = build_patch_editor(pd);
   gr->end();
   gr = new Fl_Group(0,22,1200,720, "Control");
-  build_message_mapper();
+  build_message_mapper(1,23,1198,718);
   gr->end();
   gr = new Fl_Group(0,22,1200,720, "Exe Builder");
   gr->end();

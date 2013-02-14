@@ -7,6 +7,7 @@
 #include "midihelper.hpp"
 #include "patchtool.hpp"
 #include "../include/synti2_midi.h"
+#include "../include/midi_spec.h"
 
 #include <iostream>
 #include <fstream>

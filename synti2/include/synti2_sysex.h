@@ -1,0 +1,23 @@
+#ifndef SYNTI2_MIDI_SYSEX_H
+#define SYNTI2_MIDI_SYSEX_H
+
+/* My own SysEx opcodes. Could name these SysEx or Syx, but I think
+ * SEx sounds sexier.
+ */
+#define SYNTI2_SEX_PART_RESET     0
+#define SYNTI2_SEX_PART_MODE      1
+#define SYNTI2_SEX_PART_CHANLIST  2
+#define SYNTI2_SEX_PART_CHANMAP   3
+#define SYNTI2_SEX_PART_CONTROL   4
+#define SYNTI2_SEX_PART_PITCHDEST 5
+#define SYNTI2_SEX_PART_RECVNOFF  6
+#define SYNTI2_SEX_PART_VELOCITY  7
+#define SYNTI2_SEX_PART_INSTARAMP 8
+
+#define SYNTI2_PART_MODE_UNISON      0
+#define SYNTI2_PART_MODE_POLY_ROTATE 1
+#define SYNTI2_PART_MODE_POLY_STACK  2
+#define SYNTI2_PART_MODE_MAPPED      3
+#define SYNTI2_PART_MODE_MUTE        4
+
+#endif

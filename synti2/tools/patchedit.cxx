@@ -3,6 +3,11 @@
  * jack MIDI in real time, and exporting them for compiling a
  * stand-alone synti2 player.
  *
+ * This is awful throw-away code, just to be able to send messages for
+ * the interface which is still under development. Should re-work the
+ * GUIs (and other tool programs) when the core interface is stable..
+ * (FIXME: yep.. fix me indeed.)
+ *
  * UI idea:
  *
  *  File: experiments.s2patch

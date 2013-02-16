@@ -16,6 +16,7 @@
 #include "synti2.h"
 #include "midi_spec.h"
 #include "synti2_midi.h"
+#include "synti2_midi_guts.h"
 #include "synti2_misss.h"
 #include "synti2_params.h"
 

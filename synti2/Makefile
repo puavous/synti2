@@ -135,7 +135,7 @@ midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
 		tools/patchtool.hpp tools/patchtool.cxx \
 		tools/midihelper.cxx Makefile
 	g++ -Wextra -o $@ $(filter %.cxx, $+) \
-		-Isrc/ \
+		-Isrc/ -Iinclude \
 		-lfltk `fltk-config --cxxflags` \
 		`pkg-config --cflags --libs jack`
 

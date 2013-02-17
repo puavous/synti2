@@ -6,6 +6,7 @@
 
 #include "midihelper.hpp"
 #include "patchtool.hpp"
+#include "synti2_misss.h"
 
 
 /* A hack (?) to have localized code that is useable as a static
@@ -254,6 +255,26 @@ synti2::Patch::copy_structure_from_descr(){
   }
 }
 
+
+void 
+synti2::Patch::pushValToSysex(std::string type, int idx, std::vector<unsigned char> &v){
+  int intval;
+  float value = getValue(type, idx);
+  if (type == "I3") {
+    intval = value;
+    v.push_back(intval & 0x0f);
+  } else if (type == "F") {
+    intval = synti2::encode_f(value);
+    unsigned char buf[4];
+    encode_split7b4(intval, buf);
+    for(int i=0;i<4;i++){
+      v.push_back(buf[i]);
+    }
+  } else {
+    /* An error. Should shout to someone somehow..*/
+  }
+}
+
 /** 
  * Exports the contents of this patch in the off-line binary format
  * that the synti2 engine expects. This is not compatible with SysEx
@@ -319,3 +340,26 @@ synti2::PatchBank::exportStandalone(std::ostream &os){
 
 }
 
+
+std::vector<unsigned char> 
+synti2::PatchBank::getSysex(std::string type, int patnum, int parnum){
+  std::vector<unsigned char> res;
+  res.push_back(0xF0); 
+  res.push_back(0x00); 
+  res.push_back(0x00); 
+  res.push_back(0x00);
+
+  res.push_back(MISSS_MSG_DATA);
+  if (type=="I3"){
+    res.push_back(MISSS_SYSEX_SET_3BIT);
+  } else {
+    res.push_back(MISSS_SYSEX_SET_F);
+  }
+  res.push_back(parnum);
+  res.push_back(patnum);
+
+  at(patnum).pushValToSysex(type, parnum, res);
+
+  res.push_back(0xF7);
+  return res;
+}

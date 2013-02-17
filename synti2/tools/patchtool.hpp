@@ -129,6 +129,7 @@ namespace synti2{
     void setValue(std::string type, int idx, float value);
     float getValueByName(std::string type, std::string name){return 1.23;}
     float getValue(std::string type, int idx){return (values[type])[idx];}
+    void pushValToSysex(std::string type, int idx, std::vector<unsigned char> &v);
     int getNPars(std::string type){return values[type].size();}
     void exportBytes(std::vector<unsigned char> &bvec);
   };
@@ -141,6 +142,7 @@ namespace synti2{
       for(unsigned i=0;i<size();i++) at(i).read(is);
     }
     void exportStandalone(std::ostream &os);
+    std::vector<unsigned char> getSysex(std::string type, int patnum, int parnum);
   };
 
   /** Individual value of a parameter. Hmm.. necessary? Value can be

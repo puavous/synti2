@@ -73,14 +73,6 @@
 
 #define MAX_EVENTS_IN_SLICE 80
 
-/** Internal format for messages. */
-typedef struct {
-  int type;     /* see code for meaning 1 = 3 bits, 2 = 7 bits, 3 = float*/
-  int location; /* offset into the respective (3/7/float) parameter table */
-  float value;  /* value (internal) */
-  float actual; /* value (truncated to type and synti2 transmission format.)*/
-} s2ed_msg_t;
-
 
 /* Application logic that needs to be accessed globally */
 Fl_Color colortab[] = {
@@ -133,58 +125,15 @@ static void signal_handler(int sig)
 }
 
 
-/** Encode for realtime/compose SysEx messages. */
-int synti2_encode_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
-  int intval;
-  switch (sm->type){
-  case MISSS_SYSEX_SET_3BIT:
-    intval = sm->value;
-    /*if (intval > 0x07) jack_error("Too large to be 3bit value! %d", intval);*/
-    sm->actual = (*buf = (intval &= 0x07));
-    return 1;
-  case MISSS_SYSEX_SET_7BIT:
-    intval = sm->value;
-    /*if (intval > 0x7f) jack_error("Too large to be 7bit value! %d", intval);*/
-    sm->actual = (*buf = (intval &= 0x7f));
-    return 1;
-  case MISSS_SYSEX_SET_F:
-    intval = synti2::encode_f(sm->value);
-    sm->actual = synti2::decode_f(intval);
-    encode_split7b4(intval, buf);
-    return 4;
-  default:
-    /* An error.*/
-    /*jack_error("Unknown parameter type.");*/
-    break;
-  }
-  return 0;
-}
-
 /** FIXME: The midi mapper sysexes are different.. */
 /*int synti2_mapper_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
 }
 */
 
-/** 
- * Builds a synti2 compatible jack MIDI message from our internal
- * representation. The "actual value" field of the structure pointed
- * to by the parameter will be updated. Returns the length of the
- * complete jack MIDI message, headers and footers included.
- */
-int build_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
-  int payload_len;
-  buf[0] = 0xF0; buf[1] = 0x00; buf[2] = 0x00; buf[3] = 0x00;
-  buf[4] = MISSS_MSG_DATA; buf[5] = sm->type & 0x7f;
-  buf[6] = (sm->location >> 8) & 0x7f; buf[7] = sm->location & 0x7f;
-  payload_len = synti2_encode_sysex(sm, &(buf[8]));
-  buf[8+payload_len] = 0xF7;
-  return 8+1+payload_len;
-}
-
 
 /** send data to synth, if there is new stuff from the GUI. */
 static int
-process (jack_nframes_t nframes, void *arg)
+process(jack_nframes_t nframes, void *arg)
 {
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
@@ -195,7 +144,7 @@ process (jack_nframes_t nframes, void *arg)
   void *midi_in_buffer = (void*)jack_port_get_buffer (inmidi_port, nframes);
   void *midi_out_buffer = (void*)jack_port_get_buffer (outmidi_port, nframes);
 
-  s2ed_msg_t s2m;
+  unsigned char sysex_buf[2000];
   size_t sz;
 
   int nsent;
@@ -206,17 +155,25 @@ process (jack_nframes_t nframes, void *arg)
   /* Read from UI thread. FIXME: think if synchronization issues persist? */
 
   nsent = 0;
-  while (jack_ringbuffer_read_space (global_rb) >= sizeof(s2ed_msg_t)) {
-    /* Our maximum message size so far... */
-    if (jack_midi_max_event_size(midi_out_buffer) < 11) break;
+  //while (jack_ringbuffer_read_space (global_rb) >= sizeof(s2ed_msg_t)) {
+  for(;;){
+    /* This should be a call to a "has_message()" */
+    if (jack_ringbuffer_read_space (global_rb) < sizeof(size_t)) break;
+    jack_ringbuffer_peek (global_rb, (char*)&sz, sizeof(size_t));
+    if (jack_ringbuffer_read_space (global_rb) < sz) break;
 
-    jack_ringbuffer_read (global_rb, (char*)&s2m, sizeof(s2ed_msg_t));
-    sz = build_sysex(&s2m,sysex_build_buf);
+    /* Our maximum message size so far... FIXME: will change soon.*/
+    if (jack_midi_max_event_size(midi_out_buffer) < 11) break;
+    /* FIXME: This should be an error with an explosion anyway.. */
+
+    /* Read size and contents. */
+    jack_ringbuffer_read (global_rb, (char*)&sz, sizeof(size_t));
+    jack_ringbuffer_read (global_rb, (char*)&sysex_buf, sz);
 
     /*printf("jack event size %d\n", 
       jack_midi_max_event_size(midi_out_buffer));*/
 
-    if (jack_midi_event_write(midi_out_buffer, 0, sysex_build_buf, sz) != 0){
+    if (jack_midi_event_write(midi_out_buffer, 0, sysex_buf, sz) != 0){
       printf("Error writing event %d\n", nsent);
       break;
     }
@@ -327,33 +284,28 @@ void widgets_to_reflect_reality(){
 }
 
 /** Sends a prepared message over to the synth via the jack output port. */
-/* FIXME: redo
-void send_to_jack_port(std::vector<unsigned char> bytes){
-  
-  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
-}
-*/
+void send_to_jack_process(const std::vector<unsigned char> &bytes){
+  char sysex_buf[2000];
+  size_t len = bytes.size();
+  for (int i = 0; i<bytes.size(); i++){
+    sysex_buf[i] = bytes.at(i);
+    printf("0x%02x ", (int) ((unsigned char*)sysex_buf)[i]);
+  }
+  printf("\n"); fflush(stdout);
 
-/** Sends a value over to the synth via the jack output port. */
-void send_to_jack_port(int type, int idx, int patch, float val){
-  /*
-  std::cout << "Send " << val 
-            << " to " << idx
-            << " of " << patch << std::endl;*/
-  s2ed_msg_t msg = {0,0,0,0};
-  msg.type = type;
-  msg.location = (idx << 8) + patch;
-  msg.value = val;
-  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&len), sizeof(size_t));
+  nwrit = jack_ringbuffer_write (global_rb, sysex_buf, len);
 }
+
 
 /** Sends one complete patch to the synth over jack MIDI. */
-void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
+void send_patch_to_jack_port(synti2::PatchBank *pbank, int patnum){
+  synti2::Patch &patch = pbank->at(patnum);
   for (int i=0; i<patch.getNPars("I3"); i++){
-    send_to_jack_port(MISSS_SYSEX_SET_3BIT, i, patnum, patch.getValue("I3",i));
+    send_to_jack_process(pbank->getSysex("I3",patnum,i));
   }
   for (int i=0; i<patch.getNPars("F"); i++){
-    send_to_jack_port(MISSS_SYSEX_SET_F, i, patnum, patch.getValue("F",i));
+    send_to_jack_process(pbank->getSysex("F",patnum,i));
   }
 }
 
@@ -363,14 +315,14 @@ void send_patch_to_jack_port(synti2::Patch &patch, int patnum){
 void cb_send_all(Fl_Widget* w, void* p){
   for(int ip=0; ip < pbank->size(); ip++){
     std::cerr << "Sending " << ip << std::endl;
-    send_patch_to_jack_port((*pbank)[ip], ip);
+    send_patch_to_jack_port(pbank, ip);
     printf("Ringbuffer write space now %d.\n",jack_ringbuffer_write_space (global_rb));
   }
 }
 
 /** Sends the current patch to the synth over jack MIDI. */
 void cb_send_current(Fl_Widget* w, void* p){
-  send_patch_to_jack_port((*pbank)[curr_patch], curr_patch);
+  send_patch_to_jack_port(pbank, curr_patch);
 }
 
 /** Changes the current patch, and updates other widgets. */
@@ -395,7 +347,8 @@ void cb_new_f_value(Fl_Widget* w, void* p){
   (*pbank)[curr_patch].setValue("F",d,val);
   /** FIXME: Redo (and re-think) the message system. 
    * Should write the messages from the tool classes..*/
-  send_to_jack_port(MISSS_SYSEX_SET_F, d, curr_patch, val);
+  send_to_jack_process(pbank->getSysex("F",curr_patch,d));
+  //send_to_jack_port(MISSS_SYSEX_SET_F, d, curr_patch, val);
 
   std::ostringstream vs;
   vs << flbl[d] << " = " << val << "         "; // hack..
@@ -408,7 +361,8 @@ void cb_new_i3_value(Fl_Widget* w, void* p){
   int d = (long)p;
 
   (*pbank)[curr_patch].setValue("I3",d,val);
-  send_to_jack_port(MISSS_SYSEX_SET_3BIT, d, curr_patch, val);
+  send_to_jack_process(pbank->getSysex("I3",curr_patch,d));
+  //send_to_jack_port(MISSS_SYSEX_SET_3BIT, d, curr_patch, val);
 }
 
 bool file_exists(const char* fname){

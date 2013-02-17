@@ -112,8 +112,6 @@ jack_port_t *outmidi_port;
 unsigned long sr;
 const char * client_name = "synti2editor";
 
-std::string hack_filename = "tests/hack_patches.attempt";
-
 /* A small buffer for building one message... FIXME: local to the build func?*/
 unsigned char sysex_build_buf[] = {0xF0, 0x00, 0x00, 0x00,
                                    0x00, 0x00,

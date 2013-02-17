@@ -78,6 +78,11 @@ code and scrap papers to find more of these)::
  * storage for 4k and, at the same time, unlimited flexibility for
  * sound design, when size limitations need not to be considered.
 
+ * TODO: Velocity interacts is not connected nicely to the amp
+   envelopes. There is a pop when velocity changes, because it affects
+   the output volume instead of the envelope target value, which it
+   should! Remember to deal with this in future projects!
+
 
  * TODO: (Before future projects with re-designed synths) Evaluate if
  * this everything-is-a-counter thing was a good idea.

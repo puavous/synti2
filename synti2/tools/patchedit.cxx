@@ -66,6 +66,7 @@
 #include "midihelper.hpp"
 //#include "synti2_inter.h"
 #include "synti2_misss.h"
+#include "midimaptool.hpp"
 
 #define RINGBUFSZ 0x10000
 //#define RINGBUFSZ 0x8000
@@ -102,6 +103,9 @@ Fl_Window* main_win;
 /* Patch data: */
 synti2::PatchBank *pbank = NULL;
 synti2::Patchtool *pt = NULL;
+
+/* Midi map data: */
+synti2::MidiMap *midimap = NULL;
 
 /* Jack stuff */
 jack_ringbuffer_t* global_rb;
@@ -156,6 +160,10 @@ int synti2_encode_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
   return 0;
 }
 
+/** FIXME: The midi mapper sysexes are different.. */
+/*int synti2_mapper_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
+}
+*/
 
 /** 
  * Builds a synti2 compatible jack MIDI message from our internal
@@ -318,6 +326,14 @@ void widgets_to_reflect_reality(){
   main_win->redraw();
 }
 
+/** Sends a prepared message over to the synth via the jack output port. */
+/* FIXME: redo
+void send_to_jack_port(std::vector<unsigned char> bytes){
+  
+  size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&msg), sizeof(s2ed_msg_t));
+}
+*/
+
 /** Sends a value over to the synth via the jack output port. */
 void send_to_jack_port(int type, int idx, int patch, float val){
   /*
@@ -377,7 +393,8 @@ void cb_new_f_value(Fl_Widget* w, void* p){
   int d = (long)p;
 
   (*pbank)[curr_patch].setValue("F",d,val);
-  /** FIXME: Redo (and re-think) the message system. */
+  /** FIXME: Redo (and re-think) the message system. 
+   * Should write the messages from the tool classes..*/
   send_to_jack_port(MISSS_SYSEX_SET_F, d, curr_patch, val);
 
   std::ostringstream vs;
@@ -413,7 +430,7 @@ void cb_save_all(Fl_Widget* w, void* p){
 
   std::ofstream ofs(chooser.value(), std::ios::trunc);
   pbank->write(ofs);
-  /* FIXME: midimap->write(ofs); */
+  midimap->write(ofs);
 }
 
 /* FIXME: Used here? Even should be? */
@@ -489,6 +506,22 @@ void cb_exit(Fl_Widget* w, void* p){
 void cb_patch_name(Fl_Widget* w, void* p){
   pbank->at(curr_patch).setName(((Fl_Input*)w)->value());
 }
+
+/* Callbacks for midi mapper. */
+void cb_mapper_noff(Fl_Widget* w, void* p){
+  int chn = (long)p;
+  bool newstate;
+
+  newstate = (((Fl_Check_Button*)w)->value() == 1);
+  midimap->set_noff(chn, newstate);
+
+  /* FIXME: Send
+
+  midimap->write_sysex_noff(chn,
+*/
+
+}
+
 
 std::string createFvalLabel(int index, std::string label){
   std::stringstream res;
@@ -608,7 +641,7 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   py+=3;
   Fl_Choice *ch = new Fl_Choice(ipx+32,py,w,h,"");
   ch->add("Mono-Dup",0,0,0,0);
-  ch->add("Poly Rot",0,0,0,0);
+  ch->add("Poly Rotate",0,0,0,0);
   ch->add("Key Map",0,0,0,0);
   ch->add("*Mute*",0,0,0,0);
   ch->value(0);
@@ -620,7 +653,11 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   vi = new Fl_Value_Input(px+480,py,w,h,"Mod2");
   vi = new Fl_Value_Input(px+560,py,w,h,"Mod3");
   vi = new Fl_Value_Input(px+640,py,w,h,"Mod4");
-  Fl_Check_Button *pb = new Fl_Check_Button(px+720,py,w,h,"Bend to 4");
+  Fl_Check_Button *pb = new Fl_Check_Button(px+700,py,w,h,"Bend to 4");
+
+  pb = new Fl_Check_Button(px+780,py,w,h,"Rcv noff");
+  pb->argument(ic);
+  pb->callback(cb_mapper_noff);
 
   /* Controllers 1-4 */
   const char *contlab[] = {"C1","C2","C3","C4"};
@@ -691,6 +728,7 @@ int main(int argc, char **argv) {
 
   pt = new synti2::Patchtool("src/patchdesign.dat");
   pbank = pt->makePatchBank(16);
+  midimap = new synti2::MidiMap();
  
   init_jack_or_die();
 

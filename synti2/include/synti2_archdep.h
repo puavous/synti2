@@ -27,3 +27,5 @@
  * platform...
  */
 #define COUNTER_TO_TABLE_SHIFT 16
+
+typedef unsigned char byte_t; 

@@ -2,6 +2,7 @@
 #define SYNTI2_MIDI_TRANSLATOR_H
 
 #include "synti2.h"
+#include "synti2_archdep.h"
 
 int
 synti2_midi_to_misss(synti2_synth *s,

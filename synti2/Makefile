@@ -24,7 +24,9 @@ S2HEADERS = $(S2EXEHDR) \
 S2EXESRC = src/synti2.c
 S2SOURCES = $(S2EXESRC) src/synti2_jack.c src/synti2_midi.c
 
-PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp tools/midihelper.cxx tools/midihelper.hpp
+PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp \
+		tools/midihelper.cxx tools/midihelper.hpp \
+		tools/midimaptool.cxx tools/midimaptool.hpp
 
 # Ahaa.. you can have a make inside a make... 
 
@@ -144,10 +146,10 @@ patchedit: $(PATCHEDITDEPS) Makefile
 		`pkg-config --cflags --libs jack`
 
 genpar: $(GENPARDEPS)
-	g++ -Isrc -Itools/ -o $@ $(filter %.cxx , $^)
+	g++ -Isrc -Iinclude -Itools/ -o $@ $(filter %.cxx , $^)
 
 cbank: tools/cbank.cxx $(PTSOURCES) Makefile
-	g++ -Isrc/ -o $@ -Wextra $(filter %.cxx, $^)
+	g++ -Isrc/ -Iinclude/ -o $@ -Wextra $(filter %.cxx, $^)
 
 
 # While still designing the patch system, we generate this for ease:

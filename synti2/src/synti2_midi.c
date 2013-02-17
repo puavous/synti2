@@ -217,6 +217,7 @@ synti2_midi_to_misss(synti2_synth *s,
 
   switch(midi_status >> 4){
   case MIDI_STATUS_NOTE_OFF:
+    if (s->midimap.chn[midi_chn].receive_note_off == 0) return 0;
     for (ii=0;ii < NPARTS; ii++){
       voice = s->midimap.chn[midi_chn].voices[ii];
       if (voice==0) break;

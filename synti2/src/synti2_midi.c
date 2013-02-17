@@ -179,8 +179,118 @@ synti2_sysmsg_to_misss(byte_t midi_status,
   }  
 }
 
+static
+void
+intercept_noff(synti2_synth *s,
+               byte_t *midi_in)
+{
+  int ic = midi_in[0];
+  int value = midi_in[1];
+  s->midimap.chn[ic].receive_note_off = value;
+}
+
+static
+int
+intercept_mapper_msg(synti2_synth *s,
+                     byte_t midi_status, 
+                     byte_t *midi_in, 
+                     int input_size)
+{
+  int cmd;
+  if (midi_status != 0xf0) return 0;
+  
+  /* Sysex header: */
+  midi_in += 3; /* skip Manufacturer IDs n stuff TODO: think about this */
+  cmd = *midi_in++;
+  switch (cmd){
+  case MISSS_SYSEX_MM_SUST:
+    return 1;
+  case MISSS_SYSEX_MM_MODE:
+    return 1;
+  case MISSS_SYSEX_MM_NOFF:
+    intercept_noff(s, midi_in);
+    return 1;
+  case MISSS_SYSEX_MM_CVEL:
+    return 1;
+  case MISSS_SYSEX_MM_VOICES:
+    return 1;
+  case MISSS_SYSEX_MM_MAP:
+    return 1;
+  case MISSS_SYSEX_MM_BEND:
+    return 1;
+  case MISSS_SYSEX_MM_MODSRC:
+    return 1;
+  case MISSS_SYSEX_MM_MODMIN:
+    return 1;
+  case MISSS_SYSEX_MM_MODMAX:
+    return 1;
+  case MISSS_SYSEX_MM_RAMPLEN:
+    return 1;
+  }
+  return 0;
+}
 
 
+static
+int
+synti2_map_note_off(synti2_synth *s, 
+                    int ic,
+                    byte_t *midi_in,
+                    byte_t *misss_out,
+                    int *msgsizes)
+{
+  int ii=0;
+  int voice, note;
+  if (s->midimap.chn[ic].receive_note_off == 0) return 0;
+
+  note = *midi_in;
+
+  /* Solo/unison mode: */
+  if (s->midimap.chn[ic].mode == MM_MODE_DUP){
+    /* Swallow note-off if it isn't for previous on. */
+    if (note != s->midistate.chn[ic].prev_note){
+      return 0;
+    }
+    /* Create unison duplicates on the listed voices: */
+    for (ii=0;ii < NPARTS; ii++){
+      voice = s->midimap.chn[ic].voices[ii];
+      if (voice==0) break;
+      voice--; /* adjust index to base 0*/
+      
+      msgsizes[ii] = synti2_misss_note(misss_out, voice, note, 0);
+      misss_out += msgsizes[ii];
+    }
+    return ii;
+  }
+  return 0;
+}
+
+static
+int
+synti2_map_note_on(synti2_synth *s, 
+                    int ic,
+                    byte_t *midi_in,
+                    byte_t *misss_out,
+                    int *msgsizes)
+{
+  int ii=0, midi_note, midi_vel, voice;
+  midi_note = *midi_in++;
+  midi_vel = *midi_in++;
+  
+  if (s->midimap.chn[ic].mode == MM_MODE_DUP){
+    /* Create unison duplicates on the listed voices: */
+    for (ii=0;ii < NPARTS; ii++){
+      voice = s->midimap.chn[ic].voices[ii];
+      if (voice==0) break;
+      msgsizes[ii] = synti2_misss_note(misss_out, voice-1, midi_note, midi_vel);
+      misss_out += msgsizes[ii];
+    }
+    s->midistate.chn[ic].prev_note = midi_note;
+    return ii;
+  }
+  return 0;
+}
+  
 /**
  * Converts a MIDI message (complete; no running status) into a set of
  * MISSS messages that the synti2 synthesizer can handle. Applies midi
@@ -217,24 +327,9 @@ synti2_midi_to_misss(synti2_synth *s,
 
   switch(midi_status >> 4){
   case MIDI_STATUS_NOTE_OFF:
-    if (s->midimap.chn[midi_chn].receive_note_off == 0) return 0;
-    for (ii=0;ii < NPARTS; ii++){
-      voice = s->midimap.chn[midi_chn].voices[ii];
-      if (voice==0) break;
-      msgsizes[ii] = synti2_misss_note(misss_out, voice-1, *midi_in, 0);
-      misss_out += msgsizes[ii];
-    }
-    return ii;
+    return synti2_map_note_off(s, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_NOTE_ON:
-    midi_note = *midi_in++;
-    midi_vel = *midi_in++;
-    for (ii=0;ii < NPARTS; ii++){
-      voice = s->midimap.chn[midi_chn].voices[ii];
-      if (voice==0) break;
-      msgsizes[ii] = synti2_misss_note(misss_out, voice-1, midi_note, midi_vel);
-      misss_out += msgsizes[ii];
-    }
-    return ii;
+    return synti2_map_note_on(s, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_KEY_PRESSURE:
     /* Key pressure becomes channel pressure (no polyphonic pressure). */
     /* return synti2_misss_control(misss_out, midi_chn, 
@@ -267,6 +362,9 @@ synti2_midi_to_misss(synti2_synth *s,
     return 1;
   case MIDI_STATUS_SYSTEM:
     
+    if (intercept_mapper_msg(s, midi_status, midi_in, input_size-1)){
+      return 0;
+    }
     msgsizes[0] = synti2_sysmsg_to_misss(midi_status, midi_in, 
                                   misss_out, input_size-1);
     return 1;

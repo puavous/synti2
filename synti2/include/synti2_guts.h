@@ -182,7 +182,7 @@ struct synti2_synth {
                                          but the space costs nothing..*/
 #ifdef USE_MIDI_INPUT
   synti2_midi_map midimap;
-  /* FIXME: (implement) synti2_midi_state midistate; */
+  synti2_midi_state midistate;
 #endif
 
 #ifndef ULTRASMALL

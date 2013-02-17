@@ -23,7 +23,17 @@ typedef struct {
 } synti2_midi_channel_map;
 
 typedef struct {
-  synti2_midi_channel_map chn[NPARTS];
+  synti2_midi_channel_map chn[16]; /* There are 16 midi parts/channels. */
 } synti2_midi_map;
+
+typedef struct {
+  int prev_note;  /* Previous note on. */
+} synti2_channel_state;
+
+typedef struct {
+  synti2_channel_state chn[16];
+} synti2_midi_state;
+
+
 
 #endif

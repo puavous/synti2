@@ -413,8 +413,10 @@ void cb_save_all(Fl_Widget* w, void* p){
 
   std::ofstream ofs(chooser.value(), std::ios::trunc);
   pbank->write(ofs);
+  /* FIXME: midimap->write(ofs); */
 }
 
+/* FIXME: Used here? Even should be? */
 void cb_export_c(Fl_Widget* w, void* p){
   Fl_File_Chooser chooser(".","*.c",Fl_File_Chooser::CREATE,
                           "Export to C -- select destination file.");
@@ -456,6 +458,7 @@ void cb_load_all(Fl_Widget* w, void* p){
 
   std::ifstream ifs(chooser.value());
   pbank->read(ifs);
+  /* FIXME: midimap->read(ifs); */
   button_send_all->do_callback();
   widgets_to_reflect_reality();
 }

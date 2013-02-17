@@ -385,6 +385,14 @@ synti2_init(synti2_synth * s,
     }
 #endif
   }
+
+#ifdef USE_MIDI_INPUT
+  /* By default, map channel to voice one-to-one */
+  for(ii=0; ii<16; ii++){
+    s->midimap.chn[ii].voices[0]=ii+1;
+  }
+#endif
+
 }
 
 

@@ -14,11 +14,12 @@
  */
 
 #include "synti2.h"
-#include "midi_spec.h"
+#include "synti2_guts.h"
 #include "synti2_midi.h"
 #include "synti2_midi_guts.h"
 #include "synti2_misss.h"
 #include "synti2_params.h"
+#include "midi_spec.h"
 
 #define INSTANT_RAMP_LENGTH 0.005f
 
@@ -79,12 +80,13 @@ synti2_misss_mapControlValue(byte_t ccval){
  */
 static
 int
-synti2_misss_note(byte_t *misss_out, 
+synti2_misss_note(
+                  byte_t *misss_out, 
                   byte_t misss_chn, 
                   byte_t midi_note,
                   byte_t midi_vel){
   *misss_out++ = MISSS_MSG_NOTE;
-  *misss_out++ = misss_chn; /* TODO: Channel dispersion logic in caller?*/
+  *misss_out++ = misss_chn;
   *misss_out++ = midi_note;
   *misss_out++ = midi_vel;
   return 4;
@@ -180,18 +182,25 @@ synti2_sysmsg_to_misss(byte_t midi_status,
 
 
 /**
- * Converts a MIDI message (complete; no running status) into a MISSS
- * message that the synti2 synthesizer can handle; returns the length
- * of the output MISSS message. There must be enough space in the
- * output buffer (TODO: document the maximum message size increase).
+ * Converts a MIDI message (complete; no running status) into a set of
+ * MISSS messages that the synti2 synthesizer can handle. Applies midi
+ * mapping and filtering, as per current settings in the synth
+ * object. The state and settings are changed according to the
+ * incoming MIDI message stream.
  *
- * FIXME: Need a MIDI filter module in C, with parameters, after all?
- * If the whole synti2 interface is intended to be in one programming
- * language(?) probably so.. so do it, pls.
+ * Returns the number of output MISSS messages. The message bodies
+ * will be in the output byte buffer and the lengths of the messages
+ * will be in the integer array. Caller must make sure that there is
+ * enough space in the output buffers. (TODO: document the maximum
+ * message size increase; this is a function of maximum polyphony, I
+ * suppose.)
+ *
  */
 int
-synti2_midi_to_misss(byte_t *midi_in, 
+synti2_midi_to_misss(synti2_synth *s,
+                     const byte_t *midi_in, 
                      byte_t *misss_out, 
+                     int *msgsizes,
                      int input_size)
 {
   byte_t midi_status;
@@ -201,17 +210,30 @@ synti2_midi_to_misss(byte_t *midi_in,
   byte_t midi_ccnum = 0;
   byte_t midi_ccval = 0;
   int midi_bendval = 0x2000;
+  int ii, voice;
 
   midi_status = *midi_in++;
   midi_chn = midi_status & 0x0f;
 
   switch(midi_status >> 4){
   case MIDI_STATUS_NOTE_OFF:
-    return synti2_misss_note(misss_out, midi_chn, *midi_in, 0);
+    for (ii=0;ii < NPARTS; ii++){
+      voice = s->midimap.chn[midi_chn].voices[ii];
+      if (voice==0) break;
+      msgsizes[ii] = synti2_misss_note(misss_out, voice-1, *midi_in, 0);
+      misss_out += msgsizes[ii];
+    }
+    return ii;
   case MIDI_STATUS_NOTE_ON:
     midi_note = *midi_in++;
     midi_vel = *midi_in++;
-    return synti2_misss_note(misss_out, midi_chn, midi_note, midi_vel);
+    for (ii=0;ii < NPARTS; ii++){
+      voice = s->midimap.chn[midi_chn].voices[ii];
+      if (voice==0) break;
+      msgsizes[ii] = synti2_misss_note(misss_out, voice-1, midi_note, midi_vel);
+      misss_out += msgsizes[ii];
+    }
+    return ii;
   case MIDI_STATUS_KEY_PRESSURE:
     /* Key pressure becomes channel pressure (no polyphonic pressure). */
     /* return synti2_misss_control(misss_out, midi_chn, 
@@ -221,10 +243,11 @@ synti2_midi_to_misss(byte_t *midi_in,
     /* TODO: So far, we do nothing to Channel Mode Messages. */
     midi_ccnum = *midi_in++;
     midi_ccval = *midi_in++;
-    return synti2_misss_ramp(misss_out, midi_chn, 
+    msgsizes[0] = synti2_misss_ramp(misss_out, midi_chn, 
                              synti2_misss_mapControlDest(midi_ccnum), 
                              INSTANT_RAMP_LENGTH,
                              synti2_misss_mapControlValue(midi_ccval));
+    return 1;
   case MIDI_STATUS_PROGRAM:
     /* Omit program change. Could have some sound bank logic... */
     return 0;
@@ -236,13 +259,16 @@ synti2_midi_to_misss(byte_t *midi_in,
   case MIDI_STATUS_PITCH_WHEEL:
     /* Pitch wheel is translated into a continuous controller */
     midi_bendval = (midi_in[1] << 7) + midi_in[0];
-    return synti2_misss_ramp(misss_out, midi_chn, 
+    msgsizes[0] = synti2_misss_ramp(misss_out, midi_chn, 
                              synti2_misss_mapBendDest(midi_chn), 
                              INSTANT_RAMP_LENGTH,
                              synti2_misss_mapBendValue(midi_bendval));
+    return 1;
   case MIDI_STATUS_SYSTEM:
-    return synti2_sysmsg_to_misss(midi_status, midi_in, 
+    
+    msgsizes[0] = synti2_sysmsg_to_misss(midi_status, midi_in, 
                                   misss_out, input_size-1);
+    return 1;
   default:
     return 0;
   }

@@ -24,7 +24,7 @@ jack_port_t *output_portL;
 jack_port_t *output_portR;
 jack_port_t *inmidi_port;
 unsigned long sr;
-char * client_name = "avtest";
+char * client_name = "jacksynti2";
 
 synti2_synth global_synth;
 
@@ -33,12 +33,7 @@ int global_hack_playeronly = 0;
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
 extern unsigned char patch_sysex[];  /* Test patch */
-extern unsigned char hacksong_data[];  /* Test patch */
-
-/* Snapshot of audiodata, as was hacked for 'Teh 4k 3000': */
-#define AUDIOBUFSIZE  4096
-GLfloat snapshot[4*AUDIOBUFSIZE];
-static long frame = 0;
+extern unsigned char hacksong_data[];  /* Test song */
 
 
 static void signal_handler(int sig)

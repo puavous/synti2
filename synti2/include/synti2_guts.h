@@ -20,6 +20,11 @@
  */
 #endif
 
+#ifdef USE_MIDI_INPUT
+#include "synti2_midi_guts.h"
+
+#endif
+
 #ifndef NO_EXTRA_WAVETABLES
 #define NHARM 8
 #else
@@ -175,6 +180,10 @@ struct synti2_synth {
 
   float delay[NDELAYS][DELAYSAMPLES]; /* Use of delays is optional,
                                          but the space costs nothing..*/
+#ifdef USE_MIDI_INPUT
+  synti2_midi_map midimap;
+  /* FIXME: (implement) synti2_midi_state midistate; */
+#endif
 
 #ifndef ULTRASMALL
   /* Errors could be monitored by tools. Ultrasmall exe assumes correct data.*/

@@ -29,9 +29,10 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
 {
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
-  byte_t msg[1000]; /* FIXME: What size do we actually need!? */
+  byte_t msg[2000]; /* FIXME: What sizes do we actually need!? */
+  int msgsz[1000];  /* FIXME: What sizes do we actually need!? */
   void *midi_in_buffer = (void*) jack_port_get_buffer (inmidi_port, nframes);
-  int out_size;
+  int iout,nout,cumout;
 
   synti2_player *pl = &(s->seq);
 
@@ -45,11 +46,13 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) == ENODATA) break;
 
-    out_size = synti2_midi_to_misss(ev.buffer, msg, ev.size);
-    if (out_size > 0){
+    nout = synti2_midi_to_misss(s, ev.buffer, msg, msgsz, ev.size);
+    cumout = 0;
+    for (iout = 0; iout < nout; iout++){
       synti2_player_event_add(s, 
                               pl->frames_done + ev.time, 
-                              msg);
+                              &(msg[cumout]));
+      cumout += msgsz[iout];
     }
   }
 }

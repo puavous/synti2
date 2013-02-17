@@ -16,7 +16,7 @@ std::vector<unsigned char>
 synti2::MidiMap::sysexNoff(int midichn){
   std::vector<unsigned char> res;
   synti2_sysex_header(res);
-  res.push_back(MISSS_SYSEX_SET_NOFF);
+  res.push_back(MISSS_SYSEX_MM_NOFF);
   res.push_back(midichn);
   res.push_back(getNoff(midichn)?1:0);
   synti2_sysex_footer(res);

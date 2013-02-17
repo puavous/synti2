@@ -8,6 +8,7 @@
  *  module. The sound engine is totally unaware of this.
  */
 typedef struct {
+  int mode;                   /* solo/poly/map  */
   int use_sustain_pedal;      /* TODO: not yet implemented; maybe never?. */
   int receive_note_off;       /* 0=don't use note off; other=receive n-off. */
   int use_const_velocity;     /* 0=free; 1-127 force constant velocity. */

@@ -6,6 +6,7 @@
  *
  * MISSS_SYSEX_x are part of both internal and also *external*
  * specification (directly passed on to the engine in compose mode).
+ * Hmm.. that means that they should be in their own header file..
  */
 #ifndef MISSS_INCLUDED
 #define MISSS_INCLUDED
@@ -42,6 +43,23 @@
 #define MISSS_SYSEX_SET_7BIT 1
 #define MISSS_SYSEX_SET_F    2
 
-#define MISSS_SYSEX_SET_NOFF 10
+#define MISSS_SYSEX_MM_SUST    9
+#define MISSS_SYSEX_MM_MODE    10
+#define MISSS_SYSEX_MM_NOFF    11
+#define MISSS_SYSEX_MM_CVEL    12
+#define MISSS_SYSEX_MM_VOICES  13
+#define MISSS_SYSEX_MM_MAP     14
+#define MISSS_SYSEX_MM_BEND    15
+#define MISSS_SYSEX_MM_MODSRC  16
+#define MISSS_SYSEX_MM_MODMIN  17
+#define MISSS_SYSEX_MM_MODMAX  18
+#define MISSS_SYSEX_MM_RAMPLEN 19
+
+
+/* Channel modes. */
+#define MM_MODE_DUP     0
+#define MM_MODE_POLYROT 1
+#define MM_MODE_MAPPED  2
+#define MM_MODE_MUTE    3
 
 #endif

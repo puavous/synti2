@@ -467,13 +467,8 @@ void cb_mapper_noff(Fl_Widget* w, void* p){
   bool newstate;
 
   newstate = (((Fl_Check_Button*)w)->value() == 1);
-  midimap->set_noff(chn, newstate);
-
-  /* FIXME: Send
-
-  midimap->write_sysex_noff(chn,
-*/
-
+  midimap->setNoff(chn, newstate);
+  send_to_jack_process(midimap->sysexNoff(chn));
 }
 
 

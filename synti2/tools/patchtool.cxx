@@ -344,10 +344,7 @@ synti2::PatchBank::exportStandalone(std::ostream &os){
 std::vector<unsigned char> 
 synti2::PatchBank::getSysex(std::string type, int patnum, int parnum){
   std::vector<unsigned char> res;
-  res.push_back(0xF0); 
-  res.push_back(0x00); 
-  res.push_back(0x00); 
-  res.push_back(0x00);
+  synti2_sysex_header(res);
 
   res.push_back(MISSS_MSG_DATA);
   if (type=="I3"){
@@ -360,6 +357,6 @@ synti2::PatchBank::getSysex(std::string type, int patnum, int parnum){
 
   at(patnum).pushValToSysex(type, parnum, res);
 
-  res.push_back(0xF7);
+  synti2_sysex_footer(res);
   return res;
 }

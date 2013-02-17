@@ -40,6 +40,8 @@
  */
 #define MISSS_SYSEX_SET_3BIT 0
 #define MISSS_SYSEX_SET_7BIT 1
-#define MISSS_SYSEX_SET_F 2
+#define MISSS_SYSEX_SET_F    2
+
+#define MISSS_SYSEX_SET_NOFF 10
 
 #endif

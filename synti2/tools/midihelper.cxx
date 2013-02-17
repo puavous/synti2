@@ -51,3 +51,18 @@ decode_varlength(const unsigned char *source, unsigned int *dest)
      caught as a bug. */
   return 0;
 }
+
+
+void
+synti2_sysex_header(std::vector<unsigned char> &v){
+  v.push_back(0xF0); /* Start sysex*/
+  v.push_back(0x00); /* Device ID. I go as anonymous0..*/
+  v.push_back(0x00); 
+  v.push_back(0x00);
+}
+
+void
+synti2_sysex_footer(std::vector<unsigned char> &v){
+  /* TODO: Could have a checksum here..*/
+  v.push_back(0xF7); /*End sysex*/
+}

@@ -1,6 +1,7 @@
 #ifndef MIDIHELPER_H_INCLUDED
 #define MIDIHELPER_H_INCLUDED
 
+#include <vector>
 /** 
  * A common helper function - Encodes an integer value into a MIDI
  * varlength bytestream; returns number of bytes in the result.
@@ -27,6 +28,12 @@ decode_varlength(const unsigned char *source, unsigned int *dest);
 void
 encode_split7b4(unsigned int value, unsigned char * dest);
 
+/** Writes the header part of synti2 Sysex messages. */
+void
+synti2_sysex_header(std::vector<unsigned char> &v);
 
+/** Writes the footer part of synti2 Sysex messages. */
+void
+synti2_sysex_footer(std::vector<unsigned char> &v);
 
 #endif

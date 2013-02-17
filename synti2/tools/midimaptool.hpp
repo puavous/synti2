@@ -23,6 +23,10 @@ void setNoff(int midichn, bool val);
 bool getNoff(int midichn);
 std::vector<unsigned char> sysexNoff(int midichn);
 
+void setMode(int midichn, int val);
+int getMode(int midichn);
+std::vector<unsigned char> sysexMode(int midichn);
+
 };
 
   

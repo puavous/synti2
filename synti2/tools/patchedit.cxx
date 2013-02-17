@@ -471,6 +471,13 @@ void cb_mapper_noff(Fl_Widget* w, void* p){
   send_to_jack_process(midimap->sysexNoff(chn));
 }
 
+void cb_mapper_mode(Fl_Widget* w, void* p){
+  int chn = (long)p;
+  int mode = ((Fl_Choice*)w)->value();
+  midimap->setMode(chn, mode);
+  send_to_jack_process(midimap->sysexMode(chn));
+}
+
 
 std::string createFvalLabel(int index, std::string label){
   std::stringstream res;
@@ -594,6 +601,8 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   ch->add("Key Map",0,0,0,0);
   ch->add("*Mute*",0,0,0,0);
   ch->value(0);
+  ch->argument(ic);
+  ch->callback(cb_mapper_mode);
 
   Fl_Input *inp = new Fl_Input(ipx+32+50+w,py,w,h,"-> to: ");
 

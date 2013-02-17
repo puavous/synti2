@@ -189,6 +189,18 @@ intercept_noff(synti2_synth *s,
   s->midimap.chn[ic].receive_note_off = value;
 }
 
+/* Could be "intercept single byte"! */
+static
+void
+intercept_mode(synti2_synth *s,
+               byte_t *midi_in)
+{
+  int ic = midi_in[0];
+  int value = midi_in[1];
+  s->midimap.chn[ic].mode = value;
+}
+
+
 static
 int
 intercept_mapper_msg(synti2_synth *s,
@@ -206,6 +218,7 @@ intercept_mapper_msg(synti2_synth *s,
   case MISSS_SYSEX_MM_SUST:
     return 1;
   case MISSS_SYSEX_MM_MODE:
+    intercept_mode(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_NOFF:
     intercept_noff(s, midi_in);

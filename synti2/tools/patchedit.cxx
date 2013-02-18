@@ -462,21 +462,34 @@ void cb_patch_name(Fl_Widget* w, void* p){
 }
 
 /* Callbacks for midi mapper. */
-void cb_mapper_noff(Fl_Widget* w, void* p){
-  int chn = (long)p;
-  bool newstate;
-
-  newstate = (((Fl_Check_Button*)w)->value() == 1);
-  midimap->setNoff(chn, newstate);
-  send_to_jack_process(midimap->sysexNoff(chn));
-}
-
 void cb_mapper_mode(Fl_Widget* w, void* p){
   int chn = (long)p;
   int mode = ((Fl_Choice*)w)->value();
   midimap->setMode(chn, mode);
   send_to_jack_process(midimap->sysexMode(chn));
 }
+
+void cb_mapper_noff(Fl_Widget* w, void* p){
+  int chn = (long)p;
+  bool newstate  = (((Fl_Check_Button*)w)->value() == 1);
+  midimap->setNoff(chn, newstate);
+  send_to_jack_process(midimap->sysexNoff(chn));
+}
+
+void cb_mapper_voicelist(Fl_Widget* w, void* p){
+  int chn = (long)p;
+  std::cerr << "FIXME: Implement voicelist.." << std::endl;
+  /*  
+  std::vector<int> voicelist = parseCommaSepNum((Fl_Input*)w)->value();
+  midimap->setVoices(chn, voicelist);
+  send_to_jack_process(midimap->sysexVoicelist(chn));
+  */
+}
+
+
+
+
+
 
 
 std::string createFvalLabel(int index, std::string label){
@@ -604,7 +617,9 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   ch->argument(ic);
   ch->callback(cb_mapper_mode);
 
-  Fl_Input *inp = new Fl_Input(ipx+32+50+w,py,w,h,"-> to: ");
+  Fl_Input *vl = new Fl_Input(ipx+32+50+w,py,w,h,"-> to: ");
+  ch->argument(ic);
+  vl->callback(cb_mapper_voicelist);
 
   w=30;
   Fl_Value_Input *vi = new Fl_Value_Input(px+400,py,w,h,"Mod1");

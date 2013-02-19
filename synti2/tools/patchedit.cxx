@@ -469,6 +469,29 @@ void cb_mapper_mode(Fl_Widget* w, void* p){
   send_to_jack_process(midimap->sysexMode(chn));
 }
 
+void cb_mapper_fixvelo(Fl_Widget* w, void* p){
+  int chn = (long)p;
+  int velo = ((Fl_Choice*)w)->value();
+  midimap->setFixedVelo(chn, velo);
+  send_to_jack_process(midimap->sysexFixedVelo(chn));
+}
+
+void cb_mapper_bend(Fl_Widget* w, void* p){
+  int chn = (long)p;
+  int bdest = ((Fl_Choice*)w)->value();
+  midimap->setBendDest(chn, bdest);
+  send_to_jack_process(midimap->sysexBendDest(chn));
+}
+
+void cb_mapper_pressure(Fl_Widget* w, void* p){
+  int chn = (long)p;
+  int presdest = ((Fl_Choice*)w)->value();
+  midimap->setBendDest(chn, presdest);
+  send_to_jack_process(midimap->sysexPressureDest(chn));
+}
+
+
+
 void cb_mapper_noff(Fl_Widget* w, void* p){
   int chn = (long)p;
   bool newstate  = (((Fl_Check_Button*)w)->value() == 1);
@@ -659,10 +682,22 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   vi = new Fl_Value_Input(px+640,py,w,h,"Mod4");
   */
   vl = new Fl_Input(px+400,py,w,h,"Fix Velo");
+  vl->bounds(0,127); vl->precision(0); vl->argument(ic);
+  vl->callback(cb_mapper_fixvelo);
+
   Fl_Check_Button *pb;
   pb = new Fl_Check_Button(px+500,py,w,h,"Sust (NA)");
-  pb = new Fl_Check_Button(px+600,py,w,h,"Bend to 4");
-  pb = new Fl_Check_Button(px+700,py,w,h,"Rcv noff");
+
+  vl = new Fl_Value_Input(px+600,py,w*2,h,"Bend->");
+  vl->bounds(0,NCONTROLLERS); vl->precision(0); vl-argument(ic);
+  vl->callback(cb_mapper_bend);
+
+  vl = new Fl_Value_Input(px+680,py,w*2,h,"Pres->");
+  vl->bounds(0,NCONTROLLERS); vl->precision(0); vl-argument(ic);
+  vl->callback(cb_mapper_pressure);
+
+
+  pb = new Fl_Check_Button(px+740,py,w,h,"Rcv noff");
   pb->argument(ic);
   pb->callback(cb_mapper_noff);
 

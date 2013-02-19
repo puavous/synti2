@@ -374,13 +374,13 @@ synti2_midi_to_misss(synti2_synth *s,
                              synti2_misss_mapBendValue(midi_bendval));
     return 1;
   case MIDI_STATUS_SYSTEM:
-    
     if (intercept_mapper_msg(s, midi_status, midi_in, input_size-1)){
       return 0;
+    } else {
+      msgsizes[0] = synti2_sysmsg_to_misss(midi_status, midi_in, 
+                                           misss_out, input_size-1);
+      return 1;
     }
-    msgsizes[0] = synti2_sysmsg_to_misss(midi_status, midi_in, 
-                                  misss_out, input_size-1);
-    return 1;
   default:
     return 0;
   }

@@ -623,27 +623,39 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   vl->callback(cb_mapper_voicelist);
 
   w=30;
+
+  /*
   Fl_Value_Input *vi = new Fl_Value_Input(px+400,py,w,h,"Mod1");
   vi = new Fl_Value_Input(px+480,py,w,h,"Mod2");
   vi = new Fl_Value_Input(px+560,py,w,h,"Mod3");
   vi = new Fl_Value_Input(px+640,py,w,h,"Mod4");
-  Fl_Check_Button *pb = new Fl_Check_Button(px+700,py,w,h,"Bend to 4");
-
-  pb = new Fl_Check_Button(px+780,py,w,h,"Rcv noff");
+  */
+  vl = new Fl_Input(px+400,py,w,h,"Fix Velo");
+  Fl_Check_Button *pb;
+  pb = new Fl_Check_Button(px+500,py,w,h,"Sust (NA)");
+  pb = new Fl_Check_Button(px+600,py,w,h,"Bend to 4");
+  pb = new Fl_Check_Button(px+700,py,w,h,"Rcv noff");
   pb->argument(ic);
   pb->callback(cb_mapper_noff);
 
+
+  ipx+=31;
+
   /* Controllers 1-4 */
+  Fl_Value_Input *vi;
   const char *contlab[] = {"C1","C2","C3","C4"};
-  px=55,py=24,sp=1,w=30;
+  px=2,py=24,sp=1,w=15;
   for (int i=0;i<4;i++){
-    vi = new Fl_Value_Input(ipx+px,ipy+py,w*2,h,contlab[i]);
-    vi = new Fl_Value_Input(ipx+px+w+50,ipy+py,w*2,h,"--");
-    px += 200;
+    lbl = new Fl_Box(ipx+px+0*(w+sp),ipy+py,w,h,contlab[i]);
+    vi = new Fl_Value_Input(ipx+px+1*(w+sp),ipy+py,w*2,h);
+    lbl = new Fl_Box(ipx+px+3*(w+sp),ipy+py,w,h,"->");
+    vi = new Fl_Value_Input(ipx+px+4*(w+sp),ipy+py,w*3,h);
+    lbl = new Fl_Box(ipx+px+7*(w+sp),ipy+py,w,h,"--");
+    vi = new Fl_Value_Input(ipx+px+8*(w+sp),ipy+py,w*3,h);
+    px += 12*(w+sp);
   }
   
   /* key map */
-  ipx+=31;
   px=2;py=48;sp=1;
   w=30;h=20;
   Fl_Scroll *keys = new Fl_Scroll(ipx+px,ipy+py,800,2*h);

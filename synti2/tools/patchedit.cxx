@@ -728,7 +728,8 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
     int col = i % 128;
 
     Fl_Value_Input *vi = new Fl_Value_Input(ipx+px+col*(w+sp),ipy+py+row*(h+sp),w,h);
-    vi->color(notecol[note]);
+    if (i==0x24) vi->color(0xffcccc00);
+    else vi->color(notecol[note]);
     vi->argument((ic<<16)+i);
     vi->range(0,NPARTS); vi->precision(0);
     vi->callback(cb_mapper_keysingle);
@@ -759,9 +760,11 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
   Fl_Group *gr = new Fl_Group(0,22,1200,720, "Patches");
   Fl_Group *patchedit = build_patch_editor(pd);
   gr->end();
+
   gr = new Fl_Group(0,22,1200,720, "Control");
   build_message_mapper(1,23,1198,718);
   gr->end();
+
   gr = new Fl_Group(0,22,1200,720, "Exe Builder");
   gr->end();
 

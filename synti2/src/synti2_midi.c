@@ -200,6 +200,20 @@ intercept_mode(synti2_synth *s,
   s->midimap.chn[ic].mode = value;
 }
 
+static
+void
+intercept_mapsingle(synti2_synth *s,
+                    byte_t *midi_in)
+{
+  int ic = midi_in[0];
+  int inote = midi_in[1];
+  int value = midi_in[2];
+  /* Values need -1 to be actual 0-based indices */
+  if (value > NPARTS) value = 0; /* Zero if illegal. */
+  s->midimap.chn[ic].note_channel_map[inote] = value;
+}
+
+
 
 static
 int
@@ -228,6 +242,7 @@ intercept_mapper_msg(synti2_synth *s,
   case MISSS_SYSEX_MM_VOICES:
     return 1;
   case MISSS_SYSEX_MM_MAPSINGLE:
+    intercept_mapsingle(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_MAPALL:
     return 1;
@@ -274,6 +289,13 @@ synti2_map_note_off(synti2_synth *s,
       misss_out += msgsizes[ii];
     }
     return ii;
+  } else if (s->midimap.chn[ic].mode == MM_MODE_MAPPED){
+    /* Look-up from the channel map. */
+    voice = s->midimap.chn[ic].note_channel_map[note];
+    if (voice==0) return 0;
+    voice--; /* adjust index to base 0*/
+    msgsizes[0] = synti2_misss_note(misss_out, voice, note, 0);
+    return 1;
   }
   return 0;
 }
@@ -300,7 +322,14 @@ synti2_map_note_on(synti2_synth *s,
     }
     s->midistate.chn[ic].prev_note = midi_note;
     return ii;
+  } else if (s->midimap.chn[ic].mode == MM_MODE_MAPPED){
+    /* Look-up from the channel map. */
+    voice = s->midimap.chn[ic].note_channel_map[midi_note];
+    if (voice==0) return 0;
+    msgsizes[0] = synti2_misss_note(misss_out, voice-1, midi_note, midi_vel);
+    return 1;
   }
+
   return 0;
 }
   

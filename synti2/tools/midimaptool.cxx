@@ -157,7 +157,9 @@ synti2::MidiMap::getModSource(int midichn, int imod){
 
 void
 synti2::MidiMap::setModMin(int midichn, int imod, float val){
-  mmap.chn[midichn].mod_min[imod] = val;}
+  val = synti2::decode_f(synti2::encode_f(val));
+  mmap.chn[midichn].mod_min[imod] = val;
+}
 
 float
 synti2::MidiMap::getModMin(int midichn, int imod){
@@ -165,6 +167,7 @@ synti2::MidiMap::getModMin(int midichn, int imod){
 
 void
 synti2::MidiMap::setModMax(int midichn, int imod, float val){
+  val = synti2::decode_f(synti2::encode_f(val));
   mmap.chn[midichn].mod_max[imod] = val;}
 
 float
@@ -181,6 +184,8 @@ synti2::MidiMap::sysexMod(int midichn, int imod)
   res.push_back(midichn);
   res.push_back(imod);
   res.push_back(getModSource(midichn,imod));
+  push_to_sysex_f(getModMin(midichn,imod));
+  push_to_sysex_f(getModMax(midichn,imod));
   synti2_sysex_footer(res);
   return res;
 }

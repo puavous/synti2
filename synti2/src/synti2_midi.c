@@ -227,15 +227,15 @@ intercept_mapper_msg(synti2_synth *s,
     return 1;
   case MISSS_SYSEX_MM_VOICES:
     return 1;
-  case MISSS_SYSEX_MM_MAP:
+  case MISSS_SYSEX_MM_MAPSINGLE:
+    return 1;
+  case MISSS_SYSEX_MM_MAPALL:
     return 1;
   case MISSS_SYSEX_MM_BEND:
     return 1;
-  case MISSS_SYSEX_MM_MODSRC:
+  case MISSS_SYSEX_MM_PRESSURE:
     return 1;
-  case MISSS_SYSEX_MM_MODMIN:
-    return 1;
-  case MISSS_SYSEX_MM_MODMAX:
+  case MISSS_SYSEX_MM_MODDATA:
     return 1;
   case MISSS_SYSEX_MM_RAMPLEN:
     return 1;

@@ -16,6 +16,20 @@ sysexOneByte(int type, int midichn, int thebyte){
   return res;
 }
 
+static
+std::vector<unsigned char> 
+sysexTwoBytes(int type, int midichn, int firstbyte, int secondbyte){
+  std::vector<unsigned char> res;
+  synti2_sysex_header(res);
+  res.push_back(type);
+  res.push_back(midichn);
+  res.push_back(firstbyte);
+  res.push_back(secondbyte);
+  synti2_sysex_footer(res);
+  return res;
+}
+
+
 void
 synti2::MidiMap::setMode(int midichn, int val){
   mmap.chn[midichn].mode = val;}
@@ -118,8 +132,32 @@ synti2::MidiMap::sysexVoices(int midichn){
   return res;
 }
 
-/* FIXME: Channel map here */
+void 
+synti2::MidiMap::setKeyMap(int midichn, int key, int val){
+  mmap.chn[midichn].note_channel_map[key] = val;}
 
+int 
+synti2::MidiMap::getKeyMap(int midichn, int key){
+  return mmap.chn[midichn].note_channel_map[key];}
+
+std::vector<unsigned char> 
+synti2::MidiMap::sysexKeyMapSingleNote(int midichn, int key){
+  return sysexTwoBytes(MISSS_SYSEX_MM_MAPSINGLE,midichn,key,
+                       getKeyMap(midichn,key));
+}
+
+std::vector<unsigned char> 
+synti2::MidiMap::sysexKeyMapAll(int midichn){
+  std::vector<unsigned char> res;
+  synti2_sysex_header(res);
+  res.push_back(MISSS_SYSEX_MM_MAPALL);
+  res.push_back(midichn);
+  for (int i=0;i<128;i++){
+    res.push_back(getKeyMap(midichn,i));
+  }
+  synti2_sysex_footer(res);
+  return res;
+}
 
 void
 synti2::MidiMap::setBendDest(int midichn, int val){

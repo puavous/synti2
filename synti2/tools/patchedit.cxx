@@ -108,14 +108,6 @@ jack_port_t *outmidi_port;
 unsigned long sr;
 const char * client_name = "synti2editor";
 
-/* A small buffer for building one message... FIXME: local to the build func?*/
-unsigned char sysex_build_buf[] = {0xF0, 0x00, 0x00, 0x00,
-                                   0x00, 0x00,
-                                   0x00, 0x00,
-                                   0x00, 0x00, 0x00, 0x00,
-                                   0xf7,
-                                   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                                   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 static void signal_handler(int sig)
 {
@@ -123,12 +115,6 @@ static void signal_handler(int sig)
   std::cerr << "stop" << std::endl;
   exit(0);
 }
-
-
-/** FIXME: The midi mapper sysexes are different.. */
-/*int synti2_mapper_sysex(s2ed_msg_t *sm, jack_midi_data_t * buf){
-}
-*/
 
 
 /** send data to synth, if there is new stuff from the GUI. */
@@ -162,9 +148,10 @@ process(jack_nframes_t nframes, void *arg)
     jack_ringbuffer_peek (global_rb, (char*)&sz, sizeof(size_t));
     if (jack_ringbuffer_read_space (global_rb) < sz) break;
 
-    /* Our maximum message size so far... FIXME: will change soon.*/
-    if (jack_midi_max_event_size(midi_out_buffer) < 11) break;
-    /* FIXME: This should be an error with an explosion anyway.. */
+    /* If there is no space to forward the event, we'll have to
+     * wait. Leave the message untouched in the ringbuffer front.
+     */
+    if (jack_midi_max_event_size(midi_out_buffer) < sz) break;
 
     /* Read size and contents. */
     jack_ringbuffer_read (global_rb, (char*)&sz, sizeof(size_t));
@@ -182,15 +169,14 @@ process(jack_nframes_t nframes, void *arg)
        real-time. There is a crashing bug (git branch send_all_hang0
        for trying to sort it out): sending few patches at once works
        but with more patches at once the receiving synth crashes. It
-       is currently fixed by this kludge that limits the sending more
-       than a hard-coded number of events further from the ringbuffer
-       on each process() call. The real reason of the crash is not
-       known to me as of yet. Should make some tests to see if the
-       data is transmitted completely at all or if the problem lies
-       deeper in the processing. Anyway it seems to be a synth problem
-       that must be considered a limitation as of now. The evil thing
-       is that I don't really know why there needs to be this
-       limitation.. */
+       is currently fixed by this kludge that only allows a hard-coded
+       number of events further from the ringbuffer on each process()
+       call. The real reason of the crash is not known to me as of
+       yet. Should make some tests to see if the data is transmitted
+       completely at all or if the problem lies deeper in the
+       processing. Anyway it seems to be a synth problem that must be
+       considered a limitation as of now. The evil thing is that I
+       don't really know why there needs to be this limitation.. */
     nsent ++;
     if (nsent > MAX_EVENTS_IN_SLICE) break;
   }
@@ -239,7 +225,8 @@ void init_jack_or_die(){
     std::cerr << "Could not allocate ringbuffer. " << std::endl;
     exit(2);
   }
-  printf("Ringbuffer created with write space %d.\n",jack_ringbuffer_write_space (global_rb));
+  printf("Ringbuffer created with write space %d.\n",
+         jack_ringbuffer_write_space (global_rb));
   
 
   /* Activate client. */
@@ -297,6 +284,7 @@ void send_to_jack_process(const std::vector<unsigned char> &bytes){
   nwrit = jack_ringbuffer_write (global_rb, sysex_buf, len);
 }
 
+/** FIXME: Need a sender for the complete mapping data, too. */
 
 /** Sends one complete patch to the synth over jack MIDI. */
 void send_patch_to_jack_port(synti2::PatchBank *pbank, int patnum){
@@ -471,22 +459,22 @@ void cb_mapper_mode(Fl_Widget* w, void* p){
 
 void cb_mapper_fixvelo(Fl_Widget* w, void* p){
   int chn = (long)p;
-  int velo = ((Fl_Choice*)w)->value();
+  int velo = ((Fl_Value_Input*)w)->value();
   midimap->setFixedVelo(chn, velo);
   send_to_jack_process(midimap->sysexFixedVelo(chn));
 }
 
 void cb_mapper_bend(Fl_Widget* w, void* p){
   int chn = (long)p;
-  int bdest = ((Fl_Choice*)w)->value();
+  int bdest = ((Fl_Value_Input*)w)->value();
   midimap->setBendDest(chn, bdest);
   send_to_jack_process(midimap->sysexBendDest(chn));
 }
 
 void cb_mapper_pressure(Fl_Widget* w, void* p){
   int chn = (long)p;
-  int presdest = ((Fl_Choice*)w)->value();
-  midimap->setBendDest(chn, presdest);
+  int presdest = ((Fl_Value_Input*)w)->value();
+  midimap->setPressureDest(chn, presdest);
   send_to_jack_process(midimap->sysexPressureDest(chn));
 }
 
@@ -533,10 +521,13 @@ void cb_mapper_modmax(Fl_Widget* w, void* p){
   send_to_jack_process(midimap->sysexMod(chn,imod));
 }
 
-
-
-
-
+void cb_mapper_keysingle(Fl_Widget* w, void* p){
+  int chn = ((long)p)>>16;
+  int inote = ((long)p) & 0x7f;
+  int newvoi = ((Fl_Value_Input*)w)->value();
+  midimap->setKeyMap(chn,inote,newvoi);
+  send_to_jack_process(midimap->sysexKeyMapSingleNote(chn,inote));
+}
 
 
 
@@ -675,29 +666,23 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
 
   w=30;
 
-  /*
-  Fl_Value_Input *vi = new Fl_Value_Input(px+400,py,w,h,"Mod1");
-  vi = new Fl_Value_Input(px+480,py,w,h,"Mod2");
-  vi = new Fl_Value_Input(px+560,py,w,h,"Mod3");
-  vi = new Fl_Value_Input(px+640,py,w,h,"Mod4");
-  */
-  vl = new Fl_Input(px+400,py,w,h,"Fix Velo");
-  vl->bounds(0,127); vl->precision(0); vl->argument(ic);
-  vl->callback(cb_mapper_fixvelo);
+  Fl_Value_Input *vi;
+  vi = new Fl_Value_Input(px+340,py,w,h,"Fix Velo");
+  vi->bounds(0,127); vi->precision(0); vi->argument(ic);
+  vi->callback(cb_mapper_fixvelo);
 
   Fl_Check_Button *pb;
-  pb = new Fl_Check_Button(px+500,py,w,h,"Sust (NA)");
+  pb = new Fl_Check_Button(px+400,py,w,h,"Hold");
 
-  vl = new Fl_Value_Input(px+600,py,w*2,h,"Bend->");
-  vl->bounds(0,NCONTROLLERS); vl->precision(0); vl-argument(ic);
-  vl->callback(cb_mapper_bend);
+  vi = new Fl_Value_Input(px+580,py,w*2,h,"Bend->");
+  vi->bounds(0,NCONTROLLERS); vi->precision(0); vi->argument(ic);
+  vi->callback(cb_mapper_bend);
 
-  vl = new Fl_Value_Input(px+680,py,w*2,h,"Pres->");
-  vl->bounds(0,NCONTROLLERS); vl->precision(0); vl-argument(ic);
-  vl->callback(cb_mapper_pressure);
+  vi = new Fl_Value_Input(px+720,py,w*2,h,"Pres->");
+  vi->bounds(0,NCONTROLLERS); vi->precision(0); vi->argument(ic);
+  vi->callback(cb_mapper_pressure);
 
-
-  pb = new Fl_Check_Button(px+740,py,w,h,"Rcv noff");
+  pb = new Fl_Check_Button(px+780,py,w,h,"Rcv noff");
   pb->argument(ic);
   pb->callback(cb_mapper_noff);
 
@@ -705,7 +690,6 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   ipx+=31;
 
   /* Controllers 1-4 */
-  Fl_Value_Input *vi;
   const char *contlab[] = {"C1","C2","C3","C4"};
   px=2,py=24,sp=1,w=15;
   for (int i=0;i<4;i++){
@@ -745,6 +729,9 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
 
     Fl_Value_Input *vi = new Fl_Value_Input(ipx+px+col*(w+sp),ipy+py+row*(h+sp),w,h);
     vi->color(notecol[note]);
+    vi->argument((ic<<16)+i);
+    vi->range(0,NPARTS); vi->precision(0);
+    vi->callback(cb_mapper_keysingle);
   }
   keys->end();
   chn->end();

@@ -39,7 +39,10 @@ namespace synti2{
     std::string getVoicesString(int midichn);
     std::vector<unsigned char> sysexVoices(int midichn);
 
-    /* FIXME: Channel map here. */
+    void setKeyMap(int midichn, int key, int val);
+    int getKeyMap(int midichn, int key);
+    std::vector<unsigned char> sysexKeyMapSingleNote(int midichn, int key);
+    std::vector<unsigned char> sysexKeyMapAll(int midichn);
 
     void setBendDest(int midichn, int val);
     int getBendDest(int midichn);

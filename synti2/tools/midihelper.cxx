@@ -1,6 +1,25 @@
 #include "midihelper.hpp"
 
-/* The 7 bits by 4 slots split*/
+/* A hack (?) to have localized code that is useable as a static
+   function inside the core synth. Maybe there is a better way for
+   this... need to think.. later.*/
+#include "synti2_fdec.c"
+#include "synti2_fenc.c"
+
+/** Decode a "floating point" parameter from off-line storage. */
+float synti2::decode_f(unsigned int encoded_fval){
+  return synti2_decode_f(encoded_fval);
+}
+
+/** Encode a "floating point" parameter into 7 bit parts
+    ("varlength"). */
+unsigned int synti2::encode_f(float val){
+  return synti2_encode_f(val);
+}
+
+/* 28 bit integer, split into 4 slots of 7 bits. Used in internal
+ * compose-mode sysexes.
+ */
 void
 encode_split7b4(unsigned int value, unsigned char * dest){
   dest[0] = (value >> 21) & 0x7f;
@@ -8,6 +27,22 @@ encode_split7b4(unsigned int value, unsigned char * dest){
   dest[2] = (value >> 7) & 0x7f;
   dest[3] = (value >> 0) & 0x7f;
 }
+
+void
+push_to_sysex_int7b4(std::vector<unsigned char> &v, int intval){
+    unsigned char buf[4];
+    encode_split7b4(intval, buf);
+    for(int i=0;i<4;i++){
+      v.push_back(buf[i]);
+    }
+}
+
+void
+push_to_sysex_f(std::vector<unsigned char> &v, float fval){
+    int intval = synti2::encode_f(fval);
+    push_to_sysex_int7b4(v, intval);
+}
+
 
 /* For simplicity, use the varlength of SMF.*/
 int

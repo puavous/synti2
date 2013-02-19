@@ -9,13 +9,6 @@
 #include "synti2_misss.h"
 
 
-/* A hack (?) to have localized code that is useable as a static
-   function inside the core synth. Maybe there is a better way for
-   this... need to think.. later.*/
-#include "synti2_fdec.c"
-#include "synti2_fenc.c"
-
-
 /* helper functions */
 static
 bool line_is_whitespace(std::string &str){
@@ -42,18 +35,6 @@ std::string line_chop(std::string &str){
 /* Actual methods */
 
 /* Class methods */
-
-/** Decode a "floating point" parameter from off-line storage. */
-float synti2::decode_f(unsigned int encoded_fval){
-  return synti2_decode_f(encoded_fval);
-}
-
-/** Encode a "floating point" parameter into 7 bit parts
-    ("varlength"). */
-unsigned int synti2::encode_f(float val){
-  return synti2_encode_f(val);
-}
-
 
 /* Instance methods. */
 
@@ -264,12 +245,7 @@ synti2::Patch::pushValToSysex(std::string type, int idx, std::vector<unsigned ch
     intval = value;
     v.push_back(intval & 0x0f);
   } else if (type == "F") {
-    intval = synti2::encode_f(value);
-    unsigned char buf[4];
-    encode_split7b4(intval, buf);
-    for(int i=0;i<4;i++){
-      v.push_back(buf[i]);
-    }
+    push_to_sysex_f(v, value);
   } else {
     /* An error. Should shout to someone somehow..*/
   }

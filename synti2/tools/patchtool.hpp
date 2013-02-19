@@ -9,11 +9,6 @@
 
 namespace synti2{
 
-  /* Functions - maybe belonging to some class? */
-
-  float decode_f(unsigned int encoded_fval);
-  unsigned int encode_f(float val);
-
   /* Classes for: Patch, PatchBank, ParamDescr, ParamValue */
 
   /** Description for a single parameter; used for GUI. Parameter

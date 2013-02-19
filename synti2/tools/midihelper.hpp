@@ -2,6 +2,20 @@
 #define MIDIHELPER_H_INCLUDED
 
 #include <vector>
+
+/* Functions - maybe belonging to some class? */
+
+namespace synti2{
+  float decode_f(unsigned int encoded_fval);
+  unsigned int encode_f(float val);
+}
+
+void
+push_to_sysex_int7b4(std::vector<unsigned char> &v, int intval);
+
+void
+push_to_sysex_f(std::vector<unsigned char> &v, float fval);
+
 /** 
  * A common helper function - Encodes an integer value into a MIDI
  * varlength bytestream; returns number of bytes in the result.

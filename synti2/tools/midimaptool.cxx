@@ -147,6 +147,59 @@ synti2::MidiMap::sysexPressureDest(int midichn){
   return sysexOneByte(MISSS_SYSEX_MM_PRESSURE,midichn,getPressureDest(midichn));}
 
 
+void
+synti2::MidiMap::setModSource(int midichn, int imod, int val){
+  mmap.chn[midichn].mod_src[imod] = val;}
 
-/* FIXME: Mod sources, mins and maxes here. */
+int
+synti2::MidiMap::getModSource(int midichn, int imod){
+  return mmap.chn[midichn].mod_src[imod];}
 
+void
+synti2::MidiMap::setModMin(int midichn, int imod, float val){
+  mmap.chn[midichn].mod_min[imod] = val;}
+
+float
+synti2::MidiMap::getModMin(int midichn, int imod){
+  return mmap.chn[midichn].mod_min[imod];}
+
+void
+synti2::MidiMap::setModMax(int midichn, int imod, float val){
+  mmap.chn[midichn].mod_max[imod] = val;}
+
+float
+synti2::MidiMap::getModMax(int midichn, int imod){
+  return mmap.chn[midichn].mod_max[imod];}
+
+/* Sends all the parameters of one mod in a package: */
+std::vector<unsigned char>
+synti2::MidiMap::sysexMod(int midichn, int imod)
+{
+  std::vector<unsigned char> res;
+  synti2_sysex_header(res);
+  res.push_back(MISSS_SYSEX_MM_MODDATA);
+  res.push_back(midichn);
+  res.push_back(imod);
+  res.push_back(getModSource(midichn,imod));
+  synti2_sysex_footer(res);
+  return res;
+}
+
+
+/* Needed? Useful? */
+
+/*
+void
+synti2::MidiMap::setGlobalInstaRamp(float val)
+{
+  for (int midichn = 0; midichn < 16; midichn++){
+    mmap.chn[midichn].instant_ramp_length = val;
+  }
+}
+*/
+
+/*
+float
+synti2::MidiMap::getInstaRamp(int midichn){
+  return mmap.chn[midichn].instant_ramp_length;}
+*/

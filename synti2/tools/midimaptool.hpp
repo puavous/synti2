@@ -49,17 +49,19 @@ namespace synti2{
     int getPressureDest(int midichn);
     std::vector<unsigned char> sysexPressureDest(int midichn);
 
-    void setModSource(int midichn, int val);
-    int getModSource(int midichn);
-    std::vector<unsigned char> sysexModSource(int midichn);
+    void setModSource(int midichn, int imod, int val);
+    int getModSource(int midichn, int imod);
+    std::vector<unsigned char> sysexModSource(int midichn, int imod);
 
-    void setModMin(int midichn, float val);
-    float getModMin(int midichn);
-    std::vector<unsigned char> sysexModMin(int midichn);
+    void setModMin(int midichn, int imod, float val);
+    float getModMin(int midichn, int imod);
+    std::vector<unsigned char> sysexModMin(int midichn, int imod);
 
-    void setModMax(int midichn, float val);
-    float getModMax(int midichn);
-    std::vector<unsigned char> sysexModMax(int midichn);
+    void setModMax(int midichn, int imod, float val);
+    float getModMax(int midichn, int imod);
+    std::vector<unsigned char> sysexModMax(int midichn, int imod);
+
+    std::vector<unsigned char> sysexMod(int midichn, int imod);
     
   };
   

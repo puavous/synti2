@@ -66,3 +66,4 @@ synti2_sysex_footer(std::vector<unsigned char> &v){
   /* TODO: Could have a checksum here..*/
   v.push_back(0xF7); /*End sysex*/
 }
+

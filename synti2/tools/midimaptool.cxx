@@ -184,8 +184,8 @@ synti2::MidiMap::sysexMod(int midichn, int imod)
   res.push_back(midichn);
   res.push_back(imod);
   res.push_back(getModSource(midichn,imod));
-  push_to_sysex_f(getModMin(midichn,imod));
-  push_to_sysex_f(getModMax(midichn,imod));
+  push_to_sysex_f(res, getModMin(midichn,imod));
+  push_to_sysex_f(res, getModMax(midichn,imod));
   synti2_sysex_footer(res);
   return res;
 }

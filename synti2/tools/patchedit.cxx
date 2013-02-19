@@ -484,6 +484,34 @@ void cb_mapper_voicelist(Fl_Widget* w, void* p){
   send_to_jack_process(midimap->sysexVoices(chn));
 }
 
+void cb_mapper_modsrc(Fl_Widget* w, void* p){
+  int chn = ((long)p)>>16;
+  int imod = ((long)p) & 0x7f;
+  int newsrc = ((Fl_Value_Input*)w)->value();
+  midimap->setModSource(chn,imod,newsrc);
+  send_to_jack_process(midimap->sysexMod(chn,imod));
+}
+
+void cb_mapper_modmin(Fl_Widget* w, void* p){
+  int chn = ((long)p)>>16;
+  int imod = ((long)p) & 0x7f;
+  float val = ((Fl_Value_Input*)w)->value();
+  midimap->setModMin(chn,imod,val);
+  ((Fl_Value_Input*)w)->value(midimap->getModMin(chn,imod));
+  send_to_jack_process(midimap->sysexMod(chn,imod));
+}
+
+void cb_mapper_modmax(Fl_Widget* w, void* p){
+  int chn = ((long)p)>>16;
+  int imod = ((long)p) & 0x7f;
+  float val = ((Fl_Value_Input*)w)->value();
+  midimap->setModMax(chn,imod,val);
+  ((Fl_Value_Input*)w)->value(midimap->getModMax(chn,imod));
+  send_to_jack_process(midimap->sysexMod(chn,imod));
+}
+
+
+
 
 
 
@@ -648,10 +676,20 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   for (int i=0;i<4;i++){
     lbl = new Fl_Box(ipx+px+0*(w+sp),ipy+py,w,h,contlab[i]);
     vi = new Fl_Value_Input(ipx+px+1*(w+sp),ipy+py,w*2,h);
+    vi->bounds(0,127);
+    vi->precision(0);
+    vi->argument((ic<<16)+i);
+    vi->callback(cb_mapper_modsrc);
+
     lbl = new Fl_Box(ipx+px+3*(w+sp),ipy+py,w,h,"->");
     vi = new Fl_Value_Input(ipx+px+4*(w+sp),ipy+py,w*3,h);
+    vi->argument((ic<<16)+i);
+    vi->callback(cb_mapper_modmin);
+
     lbl = new Fl_Box(ipx+px+7*(w+sp),ipy+py,w,h,"--");
     vi = new Fl_Value_Input(ipx+px+8*(w+sp),ipy+py,w*3,h);
+    vi->argument((ic<<16)+i);
+    vi->callback(cb_mapper_modmax);
     px += 12*(w+sp);
   }
   

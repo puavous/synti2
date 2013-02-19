@@ -478,12 +478,10 @@ void cb_mapper_noff(Fl_Widget* w, void* p){
 
 void cb_mapper_voicelist(Fl_Widget* w, void* p){
   int chn = (long)p;
-  std::cerr << "FIXME: Implement voicelist.." << std::endl;
-  /*  
-  std::vector<int> voicelist = parseCommaSepNum((Fl_Input*)w)->value();
-  midimap->setVoices(chn, voicelist);
-  send_to_jack_process(midimap->sysexVoicelist(chn));
-  */
+  std::string value = ((Fl_Input*)w)->value();
+  midimap->setVoices(chn, value);
+  ((Fl_Input*)w)->value(midimap->getVoicesString(chn).c_str());
+  send_to_jack_process(midimap->sysexVoices(chn));
 }
 
 
@@ -613,12 +611,15 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   ch->add("Poly Rotate",0,0,0,0);
   ch->add("Key Map",0,0,0,0);
   ch->add("*Mute*",0,0,0,0);
-  ch->value(0);
+  ch->value(0);  /*hack default..*/
   ch->argument(ic);
   ch->callback(cb_mapper_mode);
 
   Fl_Input *vl = new Fl_Input(ipx+32+50+w,py,w,h,"-> to: ");
   ch->argument(ic);
+  vl->value(clab[ic]); /*hack default..*/
+  vl->argument(ic);
+  vl->when(FL_WHEN_ENTER_KEY|FL_WHEN_RELEASE);
   vl->callback(cb_mapper_voicelist);
 
   w=30;

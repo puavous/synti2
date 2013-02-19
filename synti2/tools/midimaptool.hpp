@@ -11,24 +11,27 @@
 #include <vector>
 
 namespace synti2{
-
-class MidiMap{
-private:
-synti2_midi_map mmap;
-public:
-void write(std::ostream &os){ std::cerr << "FIXME: not implemented"; return; }
-void read(std::ostream &os){ std::cerr << "FIXME: not implemented"; return; }
-
-void setNoff(int midichn, bool val);
-bool getNoff(int midichn);
-std::vector<unsigned char> sysexNoff(int midichn);
-
-void setMode(int midichn, int val);
-int getMode(int midichn);
-std::vector<unsigned char> sysexMode(int midichn);
-
-};
-
+  
+  class MidiMap{
+  private:
+    synti2_midi_map mmap;
+  public:
+    void write(std::ostream &os){ std::cerr << "FIXME: map write not implemented"; return; }
+    void read(std::istream &ins){ std::cerr << "FIXME: map read not implemented"; return; }
+    
+    void setNoff(int midichn, bool val);
+    bool getNoff(int midichn);
+    std::vector<unsigned char> sysexNoff(int midichn);
+    
+    void setMode(int midichn, int val);
+    int getMode(int midichn);
+    std::vector<unsigned char> sysexMode(int midichn);
+    
+    void setVoices(int midichn, const std::string &val);
+    std::string getVoicesString(int midichn);
+    std::vector<unsigned char> sysexVoices(int midichn);
+    
+  };
   
 }
 

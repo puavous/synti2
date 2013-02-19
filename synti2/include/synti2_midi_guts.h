@@ -12,7 +12,7 @@ typedef struct {
   int use_sustain_pedal;      /* TODO: not yet implemented; maybe never?. */
   int receive_note_off;       /* 0=don't use note off; other=receive n-off. */
   int use_const_velocity;     /* 0=free; 1-127 force constant velocity. */
-  int voices[NPARTS];         /* unison duplicates / polyphony (1..#voices)*/
+  int voices[NPARTS+1];       /* unison duplicates / polyphony (1..#voices)*/
   int note_channel_map[128];  /* For drum sounds and/or keyboard splits. */
   int bend_destination;       /* Controller to use for pitch bend. 0=none? */
   int mod_src[NCONTROLLERS];  /* 128 controllers (MIDI) to internal controls. */

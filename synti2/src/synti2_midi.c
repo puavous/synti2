@@ -323,10 +323,10 @@ synti2_map_note_off(synti2_synth *s,
        * be notified as an error situation, and gotten rid of in the
        * sequence(?)..
        */
-      s->midistate.chn[ic].ons[note] = 0;
-      return 1;
+      s->midistate.chn[ic].ons[note] = -1;
+      return 0;
     }
-    s->midistate.chn[ic].ons[note] = 0;
+    s->midistate.chn[ic].ons[note] = -1;
     msgsizes[0] = synti2_misss_note(misss_out, voice-1, note, 0);
     return 1;
   } else if (s->midimap.chn[ic].mode == MM_MODE_MAPPED){

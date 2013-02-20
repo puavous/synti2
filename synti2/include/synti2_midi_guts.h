@@ -38,6 +38,8 @@ typedef struct {
 
 typedef struct {
   int prev_note;  /* Previous note on. */
+  int ons[128]; /* Voices of note-ons (for poly)*/
+  int notes[NPARTS]; /* Notes of voices (for poly)*/
   poly_rotation_state rot;
 } synti2_channel_state;
 

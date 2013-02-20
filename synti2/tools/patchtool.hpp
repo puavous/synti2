@@ -134,6 +134,8 @@ namespace synti2{
     void write(std::ostream &os){for(unsigned i=0;i<size();i++) at(i).write(os);}
     void read(std::istream &is){
       /*FIXME: End-of-file logics. */
+      /* FIXME: I need a more general patch editor,
+         actually. Re-implement all this crap..*/
       for(unsigned i=0;i<size();i++) at(i).read(is);
     }
     void exportStandalone(std::ostream &os);

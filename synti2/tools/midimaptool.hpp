@@ -16,8 +16,8 @@ namespace synti2{
   private:
     synti2_midi_map mmap;
   public:
-    void write(std::ostream &os){ std::cerr << "FIXME: map write not implemented"; return; }
-    void read(std::istream &ins){ std::cerr << "FIXME: map read not implemented"; return; }
+    void write(std::ostream &os);
+    void read(std::istream &ins);
     
     void setMode(int midichn, int val);
     int getMode(int midichn);

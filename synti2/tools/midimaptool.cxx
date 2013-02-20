@@ -31,6 +31,28 @@ sysexTwoBytes(int type, int midichn, int firstbyte, int secondbyte){
 
 
 void
+synti2::MidiMap::write(std::ostream &os)
+{ 
+  std::cerr << "FIXME: map write not implemented" << std::endl; 
+  os << "--- Mapper section begins ---" << std::endl;
+}
+
+    
+void
+synti2::MidiMap::read(std::istream &ifs)
+{ 
+  std::string line;
+  if((!std::getline(ifs, line))
+     || (line!="--- Mapper section begins ---"))
+    {
+      std::cerr << "No map data found in expected location. Skip read." << std::endl; 
+      return;
+    }
+  std::cerr << "FIXME: map read not implemented" << std::endl;
+  return; 
+}
+
+void
 synti2::MidiMap::setMode(int midichn, int val){
   mmap.chn[midichn].mode = val;}
 

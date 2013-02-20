@@ -317,11 +317,11 @@ synti2_map_note_off(synti2_synth *s,
     /* Poly rotate: note off to the corresponding on-channel. */
     voice = s->midistate.chn[ic].ons[note];
     if (note != s->midistate.chn[ic].notes[voice]){
-      /* There has been a new note on on this voice! This note off
-       * must be swallowed. Necessary in live jamming, but basically
-       * this is an overload w.r.t. capacities, and probably it should
-       * be notified as an error situation, and gotten rid of in the
-       * sequence(?)..
+      /* There has been a new, different, note on for this voice! This
+       * out-dated note off must be swallowed. Necessary in live
+       * jamming, but basically this is an overload w.r.t. capacities,
+       * and probably it should be notified as an unwanted/error
+       * situation, and gotten rid of by the composer(?)..
        */
       s->midistate.chn[ic].ons[note] = -1;
       return 0;

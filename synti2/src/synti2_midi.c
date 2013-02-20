@@ -189,7 +189,7 @@ intercept_noff(synti2_synth *s,
   s->midimap.chn[ic].receive_note_off = value;
 }
 
-/* Could be "intercept single byte"! */
+/* Could be "intercept single byte"!*/
 static
 void
 intercept_mode(synti2_synth *s,
@@ -197,7 +197,12 @@ intercept_mode(synti2_synth *s,
 {
   int ic = midi_in[0];
   int value = midi_in[1];
+  int ii;
   s->midimap.chn[ic].mode = value;
+
+  /* FIXME: Should be done in intercept_voices, but think about default settings in that case. */
+  for(ii=0;(ii<NPARTS) && (s->midimap.chn[ic].voices[ii] > 0);){ii++;}
+  s->midimap.chn[ic].nvoices = ii;
 }
 
 static
@@ -212,6 +217,24 @@ intercept_mapsingle(synti2_synth *s,
   if (value > NPARTS) value = 0; /* Zero if illegal. */
   s->midimap.chn[ic].note_channel_map[inote] = value;
 }
+
+static
+void
+intercept_voices(synti2_synth *s,
+                 byte_t *midi_in)
+{
+  int ic = *midi_in++;
+  int ii, voice;
+  s->midimap.chn[ic].nvoices = 0;
+  for(ii=0;ii<NPARTS;ii++){
+    voice = midi_in[ii];
+    if (voice>NPARTS) voice = 0;
+    s->midimap.chn[ic].voices[ii] = voice;
+    if (voice==0) break;
+    else s->midimap.chn[ic].nvoices++;
+  }
+}
+
 
 
 
@@ -240,6 +263,7 @@ intercept_mapper_msg(synti2_synth *s,
   case MISSS_SYSEX_MM_CVEL:
     return 1;
   case MISSS_SYSEX_MM_VOICES:
+    intercept_voices(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_MAPSINGLE:
     intercept_mapsingle(s, midi_in);

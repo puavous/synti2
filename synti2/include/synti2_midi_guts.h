@@ -21,6 +21,8 @@ typedef struct {
   float mod_max[NCONTROLLERS]; /* destination-specific max value. */
   /* Internal: */
   float instant_ramp_length;   /* length of "intantaneous" transition (expose?)*/
+  int nvoices;             /* length of the "voices" string. Computed on mode change. */
+
 /*int cc_destination[128];*/  /* Fast look-up helper table for the 128 MIDI
                                  controllers to internal modulators.(needed?) */
 } synti2_midi_channel_map;
@@ -30,7 +32,13 @@ typedef struct {
 } synti2_midi_map;
 
 typedef struct {
+  int inxt;
+  int rot_on[NPARTS];
+} poly_rotation_state;
+
+typedef struct {
   int prev_note;  /* Previous note on. */
+  poly_rotation_state rot;
 } synti2_channel_state;
 
 typedef struct {

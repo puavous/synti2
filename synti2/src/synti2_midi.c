@@ -351,8 +351,8 @@ synti2_map_note_on(synti2_synth *s,
     /* Polyphony by rotating through the voice list. */
     iv = s->midistate.chn[ic].rot.inxt;
     voice = s->midimap.chn[ic].voices[iv];
-    inxt = (inxt + 1) % s->midimap.chn[ic].nvoices;
-    s->midistate.chn[ic].rot.inxt = inxt;
+    iv = (iv + 1) % s->midimap.chn[ic].nvoices;
+    s->midistate.chn[ic].rot.inxt = iv;
 
     msgsizes[0] = synti2_misss_note(misss_out, voice-1, midi_note, midi_vel);
     return 1;

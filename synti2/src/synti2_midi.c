@@ -333,6 +333,7 @@ synti2_map_note_on(synti2_synth *s,
                     int *msgsizes)
 {
   int ii=0, midi_note, midi_vel, voice;
+  int iv;
   midi_note = *midi_in++;
   midi_vel = *midi_in++;
   
@@ -346,6 +347,15 @@ synti2_map_note_on(synti2_synth *s,
     }
     s->midistate.chn[ic].prev_note = midi_note;
     return ii;
+  } else if (s->midimap.chn[ic].mode == MM_MODE_POLYROT){
+    /* Polyphony by rotating through the voice list. */
+    iv = s->midistate.chn[ic].rot.inxt;
+    voice = s->midimap.chn[ic].voices[iv];
+    inxt = (inxt + 1) % s->midimap.chn[ic].nvoices;
+    s->midistate.chn[ic].rot.inxt = inxt;
+
+    msgsizes[0] = synti2_misss_note(misss_out, voice-1, midi_note, midi_vel);
+    return 1;
   } else if (s->midimap.chn[ic].mode == MM_MODE_MAPPED){
     /* Look-up from the channel map. */
     voice = s->midimap.chn[ic].note_channel_map[midi_note];

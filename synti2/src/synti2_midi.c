@@ -313,6 +313,22 @@ synti2_map_note_off(synti2_synth *s,
       misss_out += msgsizes[ii];
     }
     return ii;
+  } else if (s->midimap.chn[ic].mode == MM_MODE_POLYROT){
+    /* Poly rotate: note off to the corresponding on-channel. */
+    voice = s->midistate.chn[ic].ons[note];
+    if (note != s->midistate.chn[ic].notes[voice]){
+      /* There has been a new note on on this voice! This note off
+       * must be swallowed. Necessary in live jamming, but basically
+       * this is an overload w.r.t. capacities, and probably it should
+       * be notified as an error situation, and gotten rid of in the
+       * sequence(?)..
+       */
+      s->midistate.chn[ic].ons[note] = 0;
+      return 1;
+    }
+    s->midistate.chn[ic].ons[note] = 0;
+    msgsizes[0] = synti2_misss_note(misss_out, voice-1, note, 0);
+    return 1;
   } else if (s->midimap.chn[ic].mode == MM_MODE_MAPPED){
     /* Look-up from the channel map. */
     voice = s->midimap.chn[ic].note_channel_map[note];
@@ -352,8 +368,8 @@ synti2_map_note_on(synti2_synth *s,
     iv = s->midistate.chn[ic].rot.inxt;
     voice = s->midimap.chn[ic].voices[iv];
     /* Remember state, to handle note-offs:*/
-    s->midistate.chn[ic].ons[midi_note] = iv;
-    s->midistate.chn[ic].notes[iv] = midi_note;
+    s->midistate.chn[ic].ons[midi_note] = voice;
+    s->midistate.chn[ic].notes[voice] = midi_note;
     /* Update rotation: */
     iv = (iv + 1) % s->midimap.chn[ic].nvoices;
     s->midistate.chn[ic].rot.inxt = iv;

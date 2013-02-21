@@ -40,6 +40,7 @@ namespace synti2{
     std::vector<unsigned char> sysexVoices(int midichn);
 
     void setKeyMap(int midichn, int key, int val);
+    void setKeyMap(int midichn, std::string sval);
     int getKeyMap(int midichn, int key);
     std::vector<unsigned char> sysexKeyMapSingleNote(int midichn, int key);
     std::vector<unsigned char> sysexKeyMapAll(int midichn);
@@ -65,6 +66,9 @@ namespace synti2{
     std::vector<unsigned char> sysexModMax(int midichn, int imod);
 
     std::vector<unsigned char> sysexMod(int midichn, int imod);
+
+    void setMod(int midichn, int imod, std::string sval);
+
     
   };
   

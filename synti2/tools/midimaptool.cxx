@@ -33,22 +33,95 @@ sysexTwoBytes(int type, int midichn, int firstbyte, int secondbyte){
 void
 synti2::MidiMap::write(std::ostream &os)
 { 
-  std::cerr << "FIXME: map write not implemented" << std::endl; 
+  /* FIXME: Re-implement. Needs to be "forall params{write param}".
+   * The control section must be just another type of patch. Actually
+   * I want a generic synth patch editor, to which I can easily hook
+   * also my Roland, Yamaha, Akai, Alesis, and Dave Smith. And which
+   * supports "song switching" in a live situation. But that's in the
+   * next project... For now, I'll hack onwards.
+   */
   os << "--- Mapper section begins ---" << std::endl;
+  for(int ic=0;ic<16;ic++){
+    os << "#Mapping of Midi channel " << ic << std::endl;
+    os << "Mode " << getMode(ic) << std::endl;
+    os << "Sust " << getSust(ic) << std::endl;
+    os << "Noff " << getNoff(ic) << std::endl;
+    os << "FixedVelo " << getFixedVelo(ic) << std::endl;
+    os << "Voices " << getVoicesString(ic) << std::endl;
+    os << "KeyMap ";
+    for (int ik=0;ik<128;ik++){
+      os << (ik==0?"":",") << getKeyMap(ic,ik);
+    } 
+    os << std::endl;
+    os << "BendDest " << getBendDest(ic) << std::endl;
+    os << "PressureDest " << getPressureDest(ic) << std::endl;
+    for (int imod=0;imod<NCONTROLLERS;imod++){
+      os << "Mod" << (imod+1);
+      os << "," << getModSource(ic,imod);
+      os << "," << getModMin(ic,imod);
+      os << "," << getModMax(ic,imod);
+      os << std::endl;
+    }
+  }
 }
 
-    
+
+static int readMapParInt(std::istream &ifs, const std::string &name, int defa){
+  std::string line;
+  if (!std::getline(ifs, line)){
+    std::cerr<<"Map data ended prematurely." << std::endl;
+    return defa;
+  }
+  if (line.substr(0,name.length()) != name){
+    std::cerr<<"Map data name mismatch." << std::endl;
+    return defa;
+  }
+  std::stringstream ss(line);
+  while ((!ss.eof()) && (ss.peek()<'0') || (ss.peek()>'9')) ss.ignore();
+  int val;
+  ss >> val;
+  return val;
+}
+
+static std::string readMapParStr(std::istream &ifs, const std::string &name, std::string defa){
+  std::string line;
+  if (!std::getline(ifs, line)){
+    std::cerr<<"Map data ended prematurely." << std::endl;
+    return defa;
+  }
+  if (line.substr(0,name.length()) != name){
+    std::cerr<<"Map data name mismatch." << std::endl;
+    return defa;
+  }
+  std::stringstream ss(line);
+  while ((!ss.eof()) && (ss.peek()!=' ')) ss.ignore();
+  ss.ignore();
+  return ss.str();
+}
+
 void
 synti2::MidiMap::read(std::istream &ifs)
 { 
   std::string line;
   if((!std::getline(ifs, line))
-     || (line!="--- Mapper section begins ---"))
-    {
-      std::cerr << "No map data found in expected location. Skip read." << std::endl; 
-      return;
+     || (line!="--- Mapper section begins ---")){
+    std::cerr << "No map data found in expected location. Skip read." << std::endl; 
+    return;
+  }
+  for(int ic=0;ic<16;ic++){
+    readMapParInt(ifs, "#Mapping of", 0);
+    setMode(ic, readMapParInt(ifs, "Mode", 0));
+    setSust(ic, readMapParInt(ifs, "Sust", 0));
+    setNoff(ic,readMapParInt(ifs, "Noff", 0));
+    setFixedVelo(ic, readMapParInt(ifs, "FixedVelo", 0));
+    setVoices(ic, readMapParStr(ifs, "Voices", "1"));
+    setKeyMap(ic, readMapParStr(ifs, "KeyMap", ""));
+    setBendDest(ic, readMapParInt(ifs, "BendDest", 0));
+    setPressureDest(ic, readMapParInt(ifs, "PressureDest", 0));
+    for (int imod=0;imod<NCONTROLLERS; imod++){
+      setMod(ic, imod, readMapParStr(ifs, "Mod", "0,0,0"));
     }
-  std::cerr << "FIXME: map read not implemented" << std::endl;
+  }
   return; 
 }
 
@@ -63,7 +136,6 @@ synti2::MidiMap::getMode(int midichn){
 std::vector<unsigned char>
 synti2::MidiMap::sysexMode(int midichn){
   return sysexOneByte(MISSS_SYSEX_MM_MODE,midichn,getMode(midichn));}
-
 
 void
 synti2::MidiMap::setSust(int midichn, bool val){
@@ -127,6 +199,12 @@ synti2::MidiMap::setVoices(int midichn, const std::string &val){
     mmap.chn[midichn].voices[i] = prev = voi;
   }
 }
+
+void 
+synti2::MidiMap::setKeyMap(int midichn, std::string sval){
+  std::cerr << "FIXME: KeyMap read not implemented. " << std::endl;
+}
+
 
 std::string 
 synti2::MidiMap::getVoicesString(int midichn){
@@ -220,6 +298,18 @@ synti2::MidiMap::setModMin(int midichn, int imod, float val){
   val = synti2::decode_f(synti2::encode_f(val));
   mmap.chn[midichn].mod_min[imod] = val;
 }
+
+void
+synti2::MidiMap::setMod(int midichn, int imod, std::string sval){
+  std::stringstream ss(sval);
+  int val; float fval;
+  ss >> val;  /*mod num */
+  if ((val-1) != imod) return;
+  ss.ignore(); ss >> val; setModSource(midichn, imod, val);
+  ss.ignore(); ss >> fval; setModMin(midichn, imod, fval);
+  ss.ignore(); ss >> fval; setModMax(midichn, imod, fval);
+}
+
 
 float
 synti2::MidiMap::getModMin(int midichn, int imod){

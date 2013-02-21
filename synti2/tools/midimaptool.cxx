@@ -56,7 +56,7 @@ synti2::MidiMap::write(std::ostream &os)
     os << "BendDest " << getBendDest(ic) << std::endl;
     os << "PressureDest " << getPressureDest(ic) << std::endl;
     for (int imod=0;imod<NCONTROLLERS;imod++){
-      os << "Mod" << (imod+1);
+      os << "Mod " << (imod+1);
       os << "," << getModSource(ic,imod);
       os << "," << getModMin(ic,imod);
       os << "," << getModMax(ic,imod);
@@ -96,7 +96,9 @@ static std::string readMapParStr(std::istream &ifs, const std::string &name, std
   std::stringstream ss(line);
   while ((!ss.eof()) && (ss.peek()!=' ')) ss.ignore();
   ss.ignore();
-  return ss.str();
+  std::string res;
+  ss >> res;
+  return res;
 }
 
 void
@@ -119,7 +121,7 @@ synti2::MidiMap::read(std::istream &ifs)
     setBendDest(ic, readMapParInt(ifs, "BendDest", 0));
     setPressureDest(ic, readMapParInt(ifs, "PressureDest", 0));
     for (int imod=0;imod<NCONTROLLERS; imod++){
-      setMod(ic, imod, readMapParStr(ifs, "Mod", "0,0,0"));
+      setMod(ic, imod, readMapParStr(ifs, "Mod", "0,0,0,0"));
     }
   }
   return; 
@@ -202,7 +204,17 @@ synti2::MidiMap::setVoices(int midichn, const std::string &val){
 
 void 
 synti2::MidiMap::setKeyMap(int midichn, std::string sval){
-  std::cerr << "FIXME: KeyMap read not implemented. " << std::endl;
+  std::stringstream ss(sval);
+  int voi;
+  for (int ik=0;ik<128;ik++){
+    while ((!ss.eof()) && (ss.peek()<'0') || (ss.peek()>'9')) ss.ignore();
+    ss >> voi;
+    if (ss.fail()){
+        std::cerr << "unexpected format of key map. bail out." << std::endl;
+        return;
+    }
+    setKeyMap(midichn, ik, voi);
+  }
 }
 
 

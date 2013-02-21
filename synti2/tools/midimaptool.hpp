@@ -66,7 +66,6 @@ namespace synti2{
     std::vector<unsigned char> sysexModMax(int midichn, int imod);
 
     std::vector<unsigned char> sysexMod(int midichn, int imod);
-
     void setMod(int midichn, int imod, std::string sval);
 
     

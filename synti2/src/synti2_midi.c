@@ -25,12 +25,6 @@
 
 #define INSTANT_RAMP_LENGTH 0.005f
 
-/** Map MIDI controller number ccn to a synti2 parameter number. */
-static
-byte_t
-synti2_misss_mapBendDest(synti2_synth *s, int ic){
-  return 3; /* FIXME: Always cont. controller #3*/
-}
 
 /** Map MIDI controller value ccval to a synti2 parameter value. */
 static
@@ -39,45 +33,19 @@ synti2_misss_mapBendValue(int bendval){
   return (bendval - 0x2000)/(float)0x2000;
 }
 
-/** Map MIDI controller number ccn to a synti2 controller number. */
-/* FIXME: Should be based on channel number, too */
-static
-byte_t
-synti2_misss_mapControlDest(byte_t ccn){
-  return 0; /* FIXME: Always the first controller. */
-}
-
 /** Map MIDI controller value ccval to a synti2 parameter value. 
+ *
+ * {0..127}->[a,b]
+ *
+ */
 
-This is a proper place for this old fixme from patchdesign.dat:
-
-# Controller mins and maxes .. NO.... 
-#
-# FIXME: These should be auxiliary (in the same place with channel
-# allocation)
-#
-# CMIN1 Cont1Min -2.0 +2.0   2 21
-# CMIN2 Cont2Min -4.0 +4.0   1 21
-# CMIN3 Cont3Min -8.0 +8.0   1 21
-# CMIN4 Cont4Min -16.0 +16.0 1 21
-#
-# CMAX1 Cont1Max -2.0 +2.0   2 22
-# CMAX2 Cont2Max -4.0 +4.0   1 22
-# CMAX3 Cont3Max -8.0 +8.0   1 22
-# CMAX4 Cont4Max -16.0 +16.0 1 22
-
-
-*/
-
-/** {0..127}->[a,b] */
 static
 float
-synti2_misss_mapControlValue(synti2_synth *s, int dest, byte_t ccval){
+synti2_misss_mapControlValue(synti2_synth *s, int ic, int dest, byte_t ccval){
   float fa, fb, frange;
   if (dest==0) return 0.0f;
-  /*FIXME: Always range [0,1]*/
-  fa = 0.0f;
-  fb = 1.0f;
+  fa = s->midimap.chn[ic].mod_min[dest-1];
+  fb = s->midimap.chn[ic].mod_max[dest-1];
   frange = fb - fa;
   return fa + ((float)ccval / 127.f) * frange;
 }
@@ -102,6 +70,7 @@ synti2_misss_note(
   return 4;
 }
 
+#if 0
 /** Creates a MISSS "F-value" message; returns length of the
  *  message. Output buffer must have enough space. Currently, the
  *  length is 3 + sizeof(float).
@@ -118,6 +87,7 @@ synti2_misss_setf(byte_t *misss_out,
   *(float*)misss_out = fval;
   return 3+sizeof(float); /* A native float floats out. */
 }
+#endif
 
 /** Creates a MISSS "Controller ramp" message; returns length of the 
  * message. Output buffer must have enough space. Currently, the 
@@ -126,17 +96,17 @@ synti2_misss_setf(byte_t *misss_out,
 static
 int
 synti2_misss_ramp(byte_t *misss_out, 
-                  byte_t misss_chn, 
+                  byte_t misss_voice, 
                   byte_t cont_index,
                   float time,
                   float dest_val){
   *misss_out++ = MISSS_MSG_RAMP;
-  *misss_out++ = misss_chn;
+  *misss_out++ = misss_voice;
   *misss_out++ = cont_index;
   *(float*)misss_out = time;
   misss_out += sizeof(float);
   *(float*)misss_out = dest_val;
-  printf("Ramp on %d:%d to %.3f in %.4fs\n",misss_chn,cont_index,dest_val,time);fflush(stdout);
+  /*printf("Ramp on %d:%d to %.3f in %.4fs\n",misss_voice,cont_index,dest_val,time);fflush(stdout);*/
   return 3+2*sizeof(float); /* Two native floats floats out. */
 }
 
@@ -147,11 +117,11 @@ synti2_misss_ramp(byte_t *misss_out,
  */
 static
 int
-synti2_misss_data(byte_t *midi_in, 
+synti2_misss_data(const byte_t *midi_in, 
                   byte_t *misss_out, 
                   int input_size){
   int i;
-  byte_t *p = misss_out;
+  /* byte_t *p = misss_out;  */
   for (i=0; i<input_size; i++){
     *misss_out++ = *midi_in++;
   }
@@ -174,7 +144,7 @@ synti2_misss_data(byte_t *midi_in,
 static
 int
 synti2_sysmsg_to_misss(byte_t midi_status, 
-                       byte_t *midi_in, 
+                       const byte_t *midi_in, 
                        byte_t *misss_out, 
                        int input_size)
 {
@@ -193,7 +163,7 @@ synti2_sysmsg_to_misss(byte_t midi_status,
 static
 void
 intercept_noff(synti2_synth *s,
-               byte_t *midi_in)
+               const byte_t *midi_in)
 {
   int ic = midi_in[0];
   int value = midi_in[1];
@@ -204,7 +174,7 @@ intercept_noff(synti2_synth *s,
 static
 void
 intercept_mode(synti2_synth *s,
-               byte_t *midi_in)
+               const byte_t *midi_in)
 {
   int ic = midi_in[0];
   int value = midi_in[1];
@@ -219,7 +189,7 @@ intercept_mode(synti2_synth *s,
 static
 void
 intercept_map_single(synti2_synth *s,
-                    byte_t *midi_in)
+                    const byte_t *midi_in)
 {
   int ic = midi_in[0];
   int inote = midi_in[1];
@@ -232,7 +202,7 @@ intercept_map_single(synti2_synth *s,
 static
 void
 intercept_map_all(synti2_synth *s,
-                 byte_t *midi_in)
+                  const byte_t *midi_in)
 {
   int ic = *midi_in++;
   int inote,value;
@@ -247,7 +217,7 @@ intercept_map_all(synti2_synth *s,
 static
 void
 intercept_voices(synti2_synth *s,
-                 byte_t *midi_in)
+                 const byte_t *midi_in)
 {
   int ic, ii, voice;
   ic = *midi_in++;
@@ -264,7 +234,7 @@ intercept_voices(synti2_synth *s,
 static
 void
 intercept_bend_dest(synti2_synth *s, 
-                    byte_t *midi_in)
+                    const byte_t *midi_in)
 {
   int ic, dest;
   ic = *midi_in++;
@@ -275,7 +245,7 @@ intercept_bend_dest(synti2_synth *s,
 static
 void
 intercept_pressure_dest(synti2_synth *s, 
-                        byte_t *midi_in)
+                        const byte_t *midi_in)
 {
   int ic, dest;
   ic = *midi_in++;
@@ -286,7 +256,7 @@ intercept_pressure_dest(synti2_synth *s,
 static
 void
 intercept_const_velocity(synti2_synth *s, 
-                         byte_t *midi_in)
+                         const byte_t *midi_in)
 {
   int ic, cvelo;
   ic = *midi_in++;
@@ -294,6 +264,46 @@ intercept_const_velocity(synti2_synth *s,
   s->midimap.chn[ic].use_const_velocity = cvelo;
 }
 
+/* FIXME: Copy-paste from synti2.c*/
+
+/* TODO: This too much of a hack? */
+static
+#include "synti2_fdec.c"
+
+static
+void
+decode7b4(const unsigned char * source, unsigned int * dest){
+  *dest = 
+    ((source[0] & 0x7f) << 21)
+    + ((source[1] & 0x7f) << 14)
+    + ((source[2] & 0x7f) << 7)
+    + ((source[3] & 0x7f) << 0);
+}
+
+static
+float
+float_from_sysex(const byte_t *source){
+  unsigned int intval;
+  decode7b4(source, &intval);
+  return synti2_decode_f(intval);
+}
+
+static
+void
+intercept_mod_params(synti2_synth *s, 
+                     const byte_t *midi_in)
+{
+  int ic, imod, modsource;
+  float fa, fb;
+  ic = *midi_in++;
+  imod = *midi_in++;
+  modsource = *midi_in++;
+  fa = float_from_sysex(midi_in);
+  fb = float_from_sysex(midi_in+4);
+  s->midimap.chn[ic].mod_src[imod] = modsource;
+  s->midimap.chn[ic].mod_min[imod] = fa;
+  s->midimap.chn[ic].mod_max[imod] = fb;
+}
 
 
 
@@ -302,8 +312,7 @@ static
 int
 intercept_mapper_msg(synti2_synth *s,
                      byte_t midi_status, 
-                     byte_t *midi_in, 
-                     int input_size)
+                     const byte_t *midi_in)
 {
   int cmd;
   if (midi_status != 0xf0) return 0;
@@ -313,6 +322,7 @@ intercept_mapper_msg(synti2_synth *s,
   cmd = *midi_in++;
   switch (cmd){
   case MISSS_SYSEX_MM_SUST:
+    /*intercept_sust(s, midi_in);*/
     return 1;
   case MISSS_SYSEX_MM_MODE:
     intercept_mode(s, midi_in);
@@ -339,11 +349,15 @@ intercept_mapper_msg(synti2_synth *s,
     intercept_pressure_dest(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_MODDATA:
+    intercept_mod_params(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_RAMPLEN:
+    /*intercept_ramplen(s, midi_in);*/
     return 1;
+  default:
+    /* Unknown/unimplemented message type. Should be an error, maybe. */
+    return 0;
   }
-  return 0;
 }
 
 
@@ -351,7 +365,7 @@ static
 int
 synti2_map_note_off(synti2_synth *s, 
                     int ic,
-                    byte_t *midi_in,
+                    const byte_t *midi_in,
                     byte_t *misss_out,
                     int *msgsizes)
 {
@@ -408,7 +422,7 @@ static
 int
 synti2_map_note_on(synti2_synth *s, 
                     int ic,
-                    byte_t *midi_in,
+                    const byte_t *midi_in,
                     byte_t *misss_out,
                     int *msgsizes)
 {
@@ -465,7 +479,7 @@ synti2_yield_mod_ramps(synti2_synth *s,
   for(ivoi = 0; ivoi < NPARTS; ivoi++){
     voice = s->midimap.chn[ic].voices[ivoi];
     if (voice == 0) break;
-    msgsizes[ivoi] = synti2_misss_ramp(misss_out, voice, dest-1,
+    msgsizes[ivoi] = synti2_misss_ramp(misss_out, voice-1, dest-1,
                                        INSTANT_RAMP_LENGTH, value);
   }
   return ivoi;
@@ -473,25 +487,37 @@ synti2_yield_mod_ramps(synti2_synth *s,
 
 static
 int
-synti2_map_cc(synti2_synth *s, 
+get_cont_dest(synti2_synth *s,
               int ic,
-              byte_t *midi_in,
-              byte_t *misss_out,
-              int *msgsizes)
+              int midi_ccnum)
 {
-  int dest, midi_ccnum, midi_ccval, ii;
-  float value;
-  midi_ccnum = midi_in[0];
-  midi_ccval = midi_in[1];
+  int dest, ii;
   dest = 0;
   for (ii = 0; ii<NCONTROLLERS; ii++){
-    if (midi_ccnum == s->midimap.chn[ic].mod_src[ii]){
+    /* +1 because the mapper has "user interface" value range*/
+    if ((midi_ccnum+1) == s->midimap.chn[ic].mod_src[ii]){
       dest = ii+1;
       break;
     }
   }
+  return dest;
+}
+
+static
+int
+synti2_map_cc(synti2_synth *s, 
+              int ic,
+              const byte_t *midi_in,
+              byte_t *misss_out,
+              int *msgsizes)
+{
+  int dest, midi_ccnum, midi_ccval;
+  float value;
+  midi_ccnum = midi_in[0];
+  midi_ccval = midi_in[1];
+  dest = get_cont_dest(s,ic,midi_ccnum);
   /* TODO: Could use LSB as well? Won't bother for now.. needs GUI, storage, and all that...*/
-  value = synti2_misss_mapControlValue(s, ii, midi_ccval);
+  value = synti2_misss_mapControlValue(s, ic, dest, midi_ccval);
   return synti2_yield_mod_ramps(s, ic, dest, value, misss_out, msgsizes);
 }
 
@@ -499,7 +525,7 @@ static
 int
 synti2_map_bend(synti2_synth *s, 
                 int ic,
-                byte_t *midi_in,
+                const byte_t *midi_in,
                 byte_t *misss_out,
                 int *msgsizes)
 {
@@ -517,7 +543,7 @@ static
 int
 synti2_map_pressure(synti2_synth *s, 
                     int ic,
-                    byte_t *midi_in,
+                    const byte_t *midi_in,
                     byte_t *misss_out,
                     int *msgsizes)
 {
@@ -526,7 +552,7 @@ synti2_map_pressure(synti2_synth *s,
   /* Pitch wheel is translated into a continuous controller */
   dest = s->midimap.chn[ic].pressure_destination;
   midi_pressure = midi_in[0];
-  value = synti2_misss_mapControlValue(s, dest, midi_pressure);
+  value = synti2_misss_mapControlValue(s, ic, dest, midi_pressure);
   return synti2_yield_mod_ramps(s, ic, dest, value, misss_out, msgsizes);
 }
 
@@ -553,14 +579,7 @@ synti2_midi_to_misss(synti2_synth *s,
                      int *msgsizes,
                      int input_size)
 {
-  byte_t midi_status;
-  byte_t midi_chn;
-  byte_t midi_vel = 0;
-  byte_t midi_note = 0;
-  byte_t midi_ccnum = 0;
-  byte_t midi_ccval = 0;
-  int midi_bendval = 0x2000;
-  int ii, voice;
+  byte_t midi_status, midi_chn;
 
   midi_status = *midi_in++;
   midi_chn = midi_status & 0x0f;
@@ -581,7 +600,7 @@ synti2_midi_to_misss(synti2_synth *s,
   case MIDI_STATUS_PITCH_WHEEL:
     return synti2_map_bend(s, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_SYSTEM:
-    if (intercept_mapper_msg(s, midi_status, midi_in, input_size-1)){
+    if (intercept_mapper_msg(s, midi_status, midi_in)){
       return 0;
     } else {
       msgsizes[0] = synti2_sysmsg_to_misss(midi_status, midi_in, 

@@ -1,15 +1,14 @@
 /** @file synti2_midi.c - Conversion from MIDI messages to MISSS
  * (Midi-like Interface for the Synti Software Synthesizer) messages.
  *
- * The same module can be used with whatever MIDI interface (ALSA,
- *  VST..).
+ * The same module can be used with whatever MIDI interface (JACK,
+ * ALSA, VST..) in real time, or off-line when converting an SMF song
+ * to our own, stripped-down format.
  *
- *
- * FIXME: This could be a place also for synti2 channel allocation?
- * Maybe? But that needs a bigger revamp of the tool-engine-interface
- * responsibility share? Yes. See the module diagram. This is to be
- * controlled via SysEx (for which there will be an editor program,
- * similar to the patch editor).
+ * The conversion is configured using certain SysEx commands that must
+ * be created with a suitable editor program. (TODO: Write out a
+ * proper specification of the SysEx messages that control the midimap
+ * structure).
  *
  */
 
@@ -24,7 +23,6 @@
 #include "stdio.h"
 
 #define INSTANT_RAMP_LENGTH 0.005f
-
 
 /** Map MIDI controller value ccval to a synti2 parameter value. */
 static
@@ -73,7 +71,8 @@ synti2_misss_note(
 #if 0
 /** Creates a MISSS "F-value" message; returns length of the
  *  message. Output buffer must have enough space. Currently, the
- *  length is 3 + sizeof(float).
+ *  length is 3 + sizeof(float). Is this used anywhere anymore,
+ *  actually?
  */
 static
 int
@@ -264,7 +263,7 @@ intercept_const_velocity(synti2_synth *s,
   s->midimap.chn[ic].use_const_velocity = cvelo;
 }
 
-/* FIXME: Copy-paste from synti2.c*/
+/* FIXME: Decode is a copy-paste from synti2.c - should refactor maybe*/
 
 /* TODO: This too much of a hack? */
 static
@@ -304,8 +303,6 @@ intercept_mod_params(synti2_synth *s,
   s->midimap.chn[ic].mod_min[imod] = fa;
   s->midimap.chn[ic].mod_max[imod] = fb;
 }
-
-
 
 
 static

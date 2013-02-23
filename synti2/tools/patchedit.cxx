@@ -92,6 +92,21 @@ std::vector<std::string> flbl;
 Fl_Window* main_win;
 //std::vector<synti2::Patch> patches;
 
+/* Mapper pars. */
+std::vector<Fl_Choice*> widg_cmode(16);
+std::vector<Fl_Input*> widg_cvoices(16);
+std::vector<Fl_Value_Input*> widg_cvelo(16);
+std::vector<Fl_Check_Button*> widg_hold(16);
+std::vector<Fl_Value_Input*> widg_bend(16);
+std::vector<Fl_Value_Input*> widg_pres(16);
+std::vector<Fl_Check_Button*> widg_noff(16);
+std::vector<Fl_Value_Input*> widg_modsrc(16*NCONTROLLERS);
+std::vector<Fl_Value_Input*> widg_modmin(16*NCONTROLLERS);
+std::vector<Fl_Value_Input*> widg_modmax(16*NCONTROLLERS);
+std::vector<Fl_Value_Input*> widg_keysingle(16*128);
+
+
+
 /* Patch data: */
 synti2::PatchBank *pbank = NULL;
 synti2::Patchtool *pt = NULL;
@@ -267,6 +282,24 @@ void widgets_to_reflect_reality(){
     vs << flbl[i] << " = " << val;
     widgets_f[i]->copy_label(vs.str().c_str());
   }
+
+  for(int ic=0;ic<16;ic++){
+    widg_cmode.at(ic)->value(midimap->getMode(ic));
+    widg_cvoices.at(ic)->value(midimap->getVoicesString(ic).c_str());
+    widg_cvelo.at(ic)->value(midimap->getFixedVelo(ic));
+    widg_hold.at(ic)->value(midimap->getSust(ic));
+    widg_bend.at(ic)->value(midimap->getBendDest(ic));
+    widg_pres.at(ic)->value(midimap->getPressureDest(ic));
+    widg_noff.at(ic)->value(midimap->getNoff(ic));
+    for (int imod=0;imod<NCONTROLLERS;imod++){
+      widg_modsrc.at(ic*NCONTROLLERS + imod)->value(midimap->getModSource(ic,imod));
+      widg_modmin.at(ic*NCONTROLLERS + imod)->value(midimap->getModMin(ic,imod));
+      widg_modmax.at(ic*NCONTROLLERS + imod)->value(midimap->getModMax(ic,imod));
+    }
+    for (int ikey=0;ikey<128;ikey++){
+      widg_keysingle.at(ic*128 + ikey)->value(midimap->getKeyMap(ic,ikey));
+    }
+  }
   main_win->redraw();
 }
 
@@ -274,19 +307,16 @@ void widgets_to_reflect_reality(){
 void send_to_jack_process(const std::vector<unsigned char> &bytes){
   char sysex_buf[2000];
   size_t len = bytes.size();
-  /*
+
   for (int i = 0; i<bytes.size(); i++){
     sysex_buf[i] = bytes.at(i);
     printf("0x%02x ", (int) ((unsigned char*)sysex_buf)[i]);
   }
   printf("\n"); fflush(stdout);
-  */
 
   size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&len), sizeof(size_t));
   nwrit = jack_ringbuffer_write (global_rb, sysex_buf, len);
 }
-
-/** FIXME: Need a sender for the complete mapping data, too. */
 
 /** Sends one complete patch to the synth over jack MIDI. */
 void send_patch_to_jack_port(synti2::PatchBank *pbank, int patnum){
@@ -299,15 +329,36 @@ void send_patch_to_jack_port(synti2::PatchBank *pbank, int patnum){
   }
 }
 
+/** Sends all the mapping data to the synth. */
+void send_mappings_to_jack_port(){
+  for(int ic=0;ic<16;ic++){
+    send_to_jack_process(midimap->sysexMode(ic));
+    send_to_jack_process(midimap->sysexSust(ic));
+    send_to_jack_process(midimap->sysexNoff(ic));
+    send_to_jack_process(midimap->sysexFixedVelo(ic));
+    send_to_jack_process(midimap->sysexVoices(ic));
+    send_to_jack_process(midimap->sysexKeyMapAll(ic));
+    send_to_jack_process(midimap->sysexBendDest(ic));
+    send_to_jack_process(midimap->sysexPressureDest(ic));
+    for (int imod=0;imod<NCONTROLLERS;imod++){
+      send_to_jack_process(midimap->sysexMod(ic,imod));
+    }
+  }
+}
+
 /* User interface callback functions. */
 
 /** Sends all patches of the patch bank to the synth over jack MIDI. */
 void cb_send_all(Fl_Widget* w, void* p){
+  std::cerr << "Sending patches." << std::endl;
   for(int ip=0; ip < pbank->size(); ip++){
-    std::cerr << "Sending " << ip << std::endl;
+    //std::cerr << "Sending " << ip << std::endl;
     send_patch_to_jack_port(pbank, ip);
     printf("Ringbuffer write space now %d.\n",jack_ringbuffer_write_space (global_rb));
   }
+  std::cerr << "Sending mappings" << std::endl;
+  send_mappings_to_jack_port();
+  printf("Ringbuffer write space now %d.\n",jack_ringbuffer_write_space (global_rb));
 }
 
 /** Sends the current patch to the synth over jack MIDI. */
@@ -658,13 +709,15 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   ch->value(0);  /*hack default..*/
   ch->argument(ic);
   ch->callback(cb_mapper_mode);
+  widg_cmode[ic] = ch;
 
   Fl_Input *vl = new Fl_Input(ipx+32+50+w,py,w,h,"-> to: ");
-  ch->argument(ic);
+  vl->argument(ic);
   vl->value(clab[ic]); /*hack default..*/
   vl->argument(ic);
   vl->when(FL_WHEN_ENTER_KEY|FL_WHEN_RELEASE);
   vl->callback(cb_mapper_voicelist);
+  widg_cvoices[ic] = vl;
 
   w=30;
 
@@ -672,21 +725,27 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   vi = new Fl_Value_Input(px+340,py,w,h,"Fix Velo");
   vi->bounds(0,127); vi->precision(0); vi->argument(ic);
   vi->callback(cb_mapper_fixvelo);
+  widg_cvelo[ic] = vi;
 
   Fl_Check_Button *pb;
   pb = new Fl_Check_Button(px+400,py,w,h,"Hold");
+  widg_hold[ic] = pb;
 
   vi = new Fl_Value_Input(px+580,py,w*2,h,"Bend->");
   vi->bounds(0,NCONTROLLERS); vi->precision(0); vi->argument(ic);
   vi->callback(cb_mapper_bend);
+  widg_bend[ic] = vi;
+
 
   vi = new Fl_Value_Input(px+720,py,w*2,h,"Pres->");
   vi->bounds(0,NCONTROLLERS); vi->precision(0); vi->argument(ic);
   vi->callback(cb_mapper_pressure);
+  widg_pres[ic] = vi;
 
   pb = new Fl_Check_Button(px+780,py,w,h,"Rcv noff");
   pb->argument(ic);
   pb->callback(cb_mapper_noff);
+  widg_noff[ic] = pb;
 
 
   ipx+=31;
@@ -701,16 +760,20 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
     vi->precision(0);
     vi->argument((ic<<16)+i);
     vi->callback(cb_mapper_modsrc);
+    widg_modsrc[ic*NCONTROLLERS + i] = vi;
 
     lbl = new Fl_Box(ipx+px+3*(w+sp),ipy+py,w,h,"->");
     vi = new Fl_Value_Input(ipx+px+4*(w+sp),ipy+py,w*3,h);
     vi->argument((ic<<16)+i);
     vi->callback(cb_mapper_modmin);
+    widg_modmin[ic*NCONTROLLERS + i] = vi;
 
     lbl = new Fl_Box(ipx+px+7*(w+sp),ipy+py,w,h,"--");
     vi = new Fl_Value_Input(ipx+px+8*(w+sp),ipy+py,w*3,h);
     vi->argument((ic<<16)+i);
     vi->callback(cb_mapper_modmax);
+    widg_modmax[ic*NCONTROLLERS + i] = vi;
+
     px += 12*(w+sp);
   }
   
@@ -735,6 +798,7 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
     vi->argument((ic<<16)+i);
     vi->range(0,NPARTS); vi->precision(0);
     vi->callback(cb_mapper_keysingle);
+    widg_keysingle[ic*128+i] = vi;
   }
   keys->end();
   chn->end();

@@ -220,6 +220,22 @@ intercept_mapsingle(synti2_synth *s,
 
 static
 void
+intercept_mapall(synti2_synth *s,
+                 byte_t *midi_in)
+{
+  int ic = *midi_in++;
+  int inote,value;
+  for(inote=0;inote<128;inote++){
+    value = midi_in[inote];
+    /* Values need -1 to be actual 0-based indices */
+    if (value > NPARTS) value = 0; /* Zero if illegal. */
+    s->midimap.chn[ic].note_channel_map[inote] = value;
+  }
+}
+
+
+static
+void
 intercept_voices(synti2_synth *s,
                  byte_t *midi_in)
 {
@@ -269,6 +285,7 @@ intercept_mapper_msg(synti2_synth *s,
     intercept_mapsingle(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_MAPALL:
+    intercept_mapall(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_BEND:
     return 1;

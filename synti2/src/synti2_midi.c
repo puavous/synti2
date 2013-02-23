@@ -21,12 +21,14 @@
 #include "synti2_params.h"
 #include "midi_spec.h"
 
+#include "stdio.h"
+
 #define INSTANT_RAMP_LENGTH 0.005f
 
 /** Map MIDI controller number ccn to a synti2 parameter number. */
 static
 byte_t
-synti2_misss_mapBendDest(){
+synti2_misss_mapBendDest(synti2_synth *s, int ic){
   return 3; /* FIXME: Always cont. controller #3*/
 }
 
@@ -66,13 +68,21 @@ This is a proper place for this old fixme from patchdesign.dat:
 
 
 */
+
+/** {0..127}->[a,b] */
 static
 float
-synti2_misss_mapControlValue(byte_t ccval){
-  float fmin = 0.0f;
-  float frange = 1.0f; /*FIXME: Always range [0,1]*/
-  return fmin + ((float)ccval / 127.f) * frange;
+synti2_misss_mapControlValue(synti2_synth *s, int dest, byte_t ccval){
+  float fa, fb, frange;
+  if (dest==0) return 0.0f;
+  /*FIXME: Always range [0,1]*/
+  fa = 0.0f;
+  fb = 1.0f;
+  frange = fb - fa;
+  return fa + ((float)ccval / 127.f) * frange;
 }
+
+
 
 /** Creates a MISSS note message; returns length of the
  *  message. Output buffer must have enough space. Currently, the
@@ -121,11 +131,12 @@ synti2_misss_ramp(byte_t *misss_out,
                   float time,
                   float dest_val){
   *misss_out++ = MISSS_MSG_RAMP;
-  *misss_out++ = misss_chn; /* TODO: Channel dispersion logic in caller?*/
+  *misss_out++ = misss_chn;
   *misss_out++ = cont_index;
   *(float*)misss_out = time;
   misss_out += sizeof(float);
   *(float*)misss_out = dest_val;
+  printf("Ramp on %d:%d to %.3f in %.4fs\n",misss_chn,cont_index,dest_val,time);fflush(stdout);
   return 3+2*sizeof(float); /* Two native floats floats out. */
 }
 
@@ -207,7 +218,7 @@ intercept_mode(synti2_synth *s,
 
 static
 void
-intercept_mapsingle(synti2_synth *s,
+intercept_map_single(synti2_synth *s,
                     byte_t *midi_in)
 {
   int ic = midi_in[0];
@@ -220,7 +231,7 @@ intercept_mapsingle(synti2_synth *s,
 
 static
 void
-intercept_mapall(synti2_synth *s,
+intercept_map_all(synti2_synth *s,
                  byte_t *midi_in)
 {
   int ic = *midi_in++;
@@ -233,14 +244,13 @@ intercept_mapall(synti2_synth *s,
   }
 }
 
-
 static
 void
 intercept_voices(synti2_synth *s,
                  byte_t *midi_in)
 {
-  int ic = *midi_in++;
-  int ii, voice;
+  int ic, ii, voice;
+  ic = *midi_in++;
   s->midimap.chn[ic].nvoices = 0;
   for(ii=0;ii<NPARTS;ii++){
     voice = midi_in[ii];
@@ -250,6 +260,40 @@ intercept_voices(synti2_synth *s,
     else s->midimap.chn[ic].nvoices++;
   }
 }
+
+static
+void
+intercept_bend_dest(synti2_synth *s, 
+                    byte_t *midi_in)
+{
+  int ic, dest;
+  ic = *midi_in++;
+  dest = *midi_in++;
+  s->midimap.chn[ic].bend_destination = dest;
+}
+
+static
+void
+intercept_pressure_dest(synti2_synth *s, 
+                        byte_t *midi_in)
+{
+  int ic, dest;
+  ic = *midi_in++;
+  dest = *midi_in++;
+  s->midimap.chn[ic].pressure_destination = dest;
+}
+
+static
+void
+intercept_const_velocity(synti2_synth *s, 
+                         byte_t *midi_in)
+{
+  int ic, cvelo;
+  ic = *midi_in++;
+  cvelo = *midi_in++;
+  s->midimap.chn[ic].use_const_velocity = cvelo;
+}
+
 
 
 
@@ -277,19 +321,22 @@ intercept_mapper_msg(synti2_synth *s,
     intercept_noff(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_CVEL:
+    intercept_const_velocity(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_VOICES:
     intercept_voices(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_MAPSINGLE:
-    intercept_mapsingle(s, midi_in);
+    intercept_map_single(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_MAPALL:
-    intercept_mapall(s, midi_in);
+    intercept_map_all(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_BEND:
+    intercept_bend_dest(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_PRESSURE:
+    intercept_pressure_dest(s, midi_in);
     return 1;
   case MISSS_SYSEX_MM_MODDATA:
     return 1;
@@ -403,6 +450,86 @@ synti2_map_note_on(synti2_synth *s,
 
   return 0;
 }
+
+static
+int
+synti2_yield_mod_ramps(synti2_synth *s, 
+                       int ic,
+                       int dest,
+                       float value,
+                       byte_t *misss_out,
+                       int *msgsizes)
+{
+  int ivoi, voice;
+  if (dest==0) return 0;
+  for(ivoi = 0; ivoi < NPARTS; ivoi++){
+    voice = s->midimap.chn[ic].voices[ivoi];
+    if (voice == 0) break;
+    msgsizes[ivoi] = synti2_misss_ramp(misss_out, voice, dest-1,
+                                       INSTANT_RAMP_LENGTH, value);
+  }
+  return ivoi;
+}
+
+static
+int
+synti2_map_cc(synti2_synth *s, 
+              int ic,
+              byte_t *midi_in,
+              byte_t *misss_out,
+              int *msgsizes)
+{
+  int dest, midi_ccnum, midi_ccval, ii;
+  float value;
+  midi_ccnum = midi_in[0];
+  midi_ccval = midi_in[1];
+  dest = 0;
+  for (ii = 0; ii<NCONTROLLERS; ii++){
+    if (midi_ccnum == s->midimap.chn[ic].mod_src[ii]){
+      dest = ii+1;
+      break;
+    }
+  }
+  /* TODO: Could use LSB as well? Won't bother for now.. needs GUI, storage, and all that...*/
+  value = synti2_misss_mapControlValue(s, ii, midi_ccval);
+  return synti2_yield_mod_ramps(s, ic, dest, value, misss_out, msgsizes);
+}
+
+static
+int
+synti2_map_bend(synti2_synth *s, 
+                int ic,
+                byte_t *midi_in,
+                byte_t *misss_out,
+                int *msgsizes)
+{
+  int dest, midi_bendval;
+  float value;
+  /* Pitch wheel is translated into a continuous controller */
+  dest = s->midimap.chn[ic].bend_destination;
+  midi_bendval = (midi_in[1] << 7) + midi_in[0];
+  value = synti2_misss_mapBendValue(midi_bendval);
+  return synti2_yield_mod_ramps(s, ic, dest, value, misss_out, msgsizes);
+}
+
+
+static
+int
+synti2_map_pressure(synti2_synth *s, 
+                    int ic,
+                    byte_t *midi_in,
+                    byte_t *misss_out,
+                    int *msgsizes)
+{
+  int dest, midi_pressure;
+  float value;
+  /* Pitch wheel is translated into a continuous controller */
+  dest = s->midimap.chn[ic].pressure_destination;
+  midi_pressure = midi_in[0];
+  value = synti2_misss_mapControlValue(s, dest, midi_pressure);
+  return synti2_yield_mod_ramps(s, ic, dest, value, misss_out, msgsizes);
+}
+
   
 /**
  * Converts a MIDI message (complete; no running status) into a set of
@@ -444,35 +571,15 @@ synti2_midi_to_misss(synti2_synth *s,
   case MIDI_STATUS_NOTE_ON:
     return synti2_map_note_on(s, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_KEY_PRESSURE:
-    /* Key pressure becomes channel pressure (no polyphonic pressure). */
-    /* return synti2_misss_control(misss_out, midi_chn, 
-       synti2_misss_mapPressureDest(), synti2_misss_mapPressureValue());*/
-    return 0;
+    return 0; /* Key pressure omitted. TODO: handle somehow? */ 
   case MIDI_STATUS_CONTROL:
-    /* TODO: So far, we do nothing to Channel Mode Messages. */
-    midi_ccnum = *midi_in++;
-    midi_ccval = *midi_in++;
-    msgsizes[0] = synti2_misss_ramp(misss_out, midi_chn, 
-                             synti2_misss_mapControlDest(midi_ccnum), 
-                             INSTANT_RAMP_LENGTH,
-                             synti2_misss_mapControlValue(midi_ccval));
-    return 1;
+    return synti2_map_cc(s, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_PROGRAM:
-    /* Omit program change. Could have some sound bank logic... */
-    return 0;
+    return 0; /* Omit program change. TODO: a sound bank system(?) */
   case MIDI_STATUS_CHANNEL_PRESSURE:
-    /* TODO: Should be mapped to a controller. */
-    /* return synti2_misss_control(misss_out, midi_chn, 
-       synti2_misss_mapPressureDest(), synti2_misss_mapPressureValue());*/
-    return 0;
+    return synti2_map_pressure(s, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_PITCH_WHEEL:
-    /* Pitch wheel is translated into a continuous controller */
-    midi_bendval = (midi_in[1] << 7) + midi_in[0];
-    msgsizes[0] = synti2_misss_ramp(misss_out, midi_chn, 
-                             synti2_misss_mapBendDest(midi_chn), 
-                             INSTANT_RAMP_LENGTH,
-                             synti2_misss_mapBendValue(midi_bendval));
-    return 1;
+    return synti2_map_bend(s, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_SYSTEM:
     if (intercept_mapper_msg(s, midi_status, midi_in, input_size-1)){
       return 0;

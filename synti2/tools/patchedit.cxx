@@ -308,11 +308,13 @@ void send_to_jack_process(const std::vector<unsigned char> &bytes){
   char sysex_buf[2000];
   size_t len = bytes.size();
 
+  /*
   for (int i = 0; i<bytes.size(); i++){
     sysex_buf[i] = bytes.at(i);
     printf("0x%02x ", (int) ((unsigned char*)sysex_buf)[i]);
   }
   printf("\n"); fflush(stdout);
+  */
 
   size_t nwrit = jack_ringbuffer_write (global_rb, (char*)(&len), sizeof(size_t));
   nwrit = jack_ringbuffer_write (global_rb, sysex_buf, len);

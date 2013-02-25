@@ -787,7 +787,7 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   Fl_Scroll *keys = new Fl_Scroll(ipx+px,ipy+py,800,2*h);
   int oct;
   for(int i=0;i<128;i++){
-    Fl_Color notecol[] = {
+    unsigned int notecol[] = {
       0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00,
       0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00};
     

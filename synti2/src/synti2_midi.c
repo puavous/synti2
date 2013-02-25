@@ -12,15 +12,12 @@
  *
  */
 
-#include "synti2.h"
-#include "synti2_guts.h"
 #include "synti2_midi.h"
 #include "synti2_midi_guts.h"
 #include "synti2_misss.h"
-#include "synti2_params.h"
 #include "midi_spec.h"
 
-#include "stdio.h"
+/*#include "stdio.h"*/
 
 #define INSTANT_RAMP_LENGTH 0.005f
 

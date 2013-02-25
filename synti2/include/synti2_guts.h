@@ -21,6 +21,7 @@
 #endif
 
 #ifdef USE_MIDI_INPUT
+#include "synti2_midi.h"
 #include "synti2_midi_guts.h"
 
 #endif

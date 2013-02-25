@@ -4,8 +4,8 @@
 #include "synti2.h"
 #include "synti2_archdep.h"
 
-struct synti2_midi_map;
-struct synti2_midi_state;
+typedef struct synti2_midi_map synti2_midi_map;
+typedef struct synti2_midi_state synti2_midi_state;
 
 int
 synti2_midi_to_misss(synti2_midi_map *map,

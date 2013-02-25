@@ -27,9 +27,9 @@ typedef struct {
                                  controllers to internal modulators.(needed?) */
 } synti2_midi_channel_map;
 
-typedef struct {
+struct synti2_midi_map {
   synti2_midi_channel_map chn[16]; /* There are 16 midi parts/channels. */
-} synti2_midi_map;
+};
 
 typedef struct {
   int inxt;
@@ -43,9 +43,9 @@ typedef struct {
   poly_rotation_state rot;
 } synti2_channel_state;
 
-typedef struct {
+struct synti2_midi_state {
   synti2_channel_state chn[16];
-} synti2_midi_state;
+};
 
 
 

@@ -51,9 +51,10 @@ cube_thing:
 
 example1:
 	make tinyexe GFX=example/cube_thing_gfx.c \
-		SND=example/example1.s2bank \
-		SMF=example/example1.mid \
-		NONOS='-DNO_SYSEX_RECEIVE -DNO_PITCH_BEND -DNO_CC -DNO_STEREO -DNO_VELOCITY'
+		SND=example/i13_musa_entry.s2bank \
+		SMF=example/i13_musa_entry.mid \
+		NONOS='-DNO_SAFETY'
+
 	mv tinyexe $@
 
 
@@ -87,7 +88,7 @@ PATCHEDITDEPS = tools/patchedit.cxx $(PTSOURCES)
 
 
 # C flags common to all files (normal/debug build)
-CFLAGS = -O3 -g -Wall -Wextra -pedantic
+CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
 # The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses

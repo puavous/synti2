@@ -41,7 +41,7 @@ static void render_scene(const synti2_synth *s){
   glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
   glLoadIdentity();
-  glTranslatef(0.f, -30.f ,-160.f); // +100. * sin(time) - .1*s->note[0]);
+  glTranslatef(0.f, -30.f ,-160.f); /* +100. * sin(time) - .1*s->note[0]); */
   /*glTranslatef(data[400]*time,data[600]*time,-150);*/
   
   glRotatef(time*45.f, 0.f, 1.f, 0.f);

@@ -46,7 +46,9 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
   for (i=0;i<nev;i++){
     if (jack_midi_event_get (&ev, midi_in_buffer, i) == ENODATA) break;
 
-    nout = synti2_midi_to_misss(s, ev.buffer, msg, msgsz, ev.size);
+    nout = synti2_midi_to_misss(&(s->midimap), 
+                                &(s->midistate),
+                                ev.buffer, msg, msgsz, ev.size);
     cumout = 0;
     for (iout = 0; iout < nout; iout++){
       synti2_player_event_add(s, 

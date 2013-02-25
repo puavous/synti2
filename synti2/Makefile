@@ -205,7 +205,7 @@ visexe: $(VISEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 		midi2synti2 cbank
 	-mkdir hackpack
 
-	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
+	./midi2synti2 $(filter %.mid, $^) $(filter %.s2bank, $^) > hackpack/songdata.c
 
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/

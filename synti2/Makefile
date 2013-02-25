@@ -171,7 +171,7 @@ testdata.c: example/one_star_j/one_star_j.mid  example/one_star_j/one_star_j.s2b
 tinyexe: $(TINYEXESOURCES) $(S2EXESRC) $(S2EXEHDR) Makefile \
 		midi2synti2 cbank
 	-mkdir hackpack
-	./midi2synti2 $(filter %.mid, $^) > hackpack/songdata.c
+	./midi2synti2 $(filter %.mid, $^) $(filter %.s2bank, $^) > hackpack/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack/patchdata.c
 	cp $(filter %.c, $^) hackpack/
 #	cp $(SHAD) hackpack/

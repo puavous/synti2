@@ -111,11 +111,20 @@ void
 synti2::MidiMap::read(std::istream &ifs)
 { 
   std::string line;
+  while(std::getline(ifs, line)){
+    if (line == "--- Mapper section begins ---") break;
+  }
+  if (line != "--- Mapper section begins ---"){
+    std::cerr << "No map data found in expected location. Skip read." << std::endl; 
+    std::cerr << "Read: " << line << std::endl;
+    return;
+  }
+  /*
   if((!std::getline(ifs, line))
      || (line!="--- Mapper section begins ---")){
     std::cerr << "No map data found in expected location. Skip read." << std::endl; 
     return;
-  }
+    }*/
   for(int ic=0;ic<16;ic++){
     readMapParInt(ifs, "#Mapping of", 0);
     setMode(ic, readMapParInt(ifs, "Mode", 0));
@@ -134,7 +143,7 @@ synti2::MidiMap::read(std::istream &ifs)
 }
 
 std::vector<synti2::MisssEvent> 
-midiToMisss(const MidiEvent &evin)
+synti2::MidiMap::midiToMisss(const MidiEvent &evin)
 {
   unsigned char inbuf[5];
   unsigned char outbuf[NPARTS*(1+3+2*sizeof(float))];
@@ -145,11 +154,13 @@ midiToMisss(const MidiEvent &evin)
   int nmsg;
   nmsg = synti2_midi_to_misss(&mmap, &state,
                               inbuf, outbuf,
-                              &msgsizes,
+                              msgsizes,
                               0 /* FIXME: problem here?*/);
+  unsigned char *outp;
+  outp = outbuf;
   for(int i=0;i<nmsg;i++){
     res.push_back(MisssEvent(outbuf));
-    outbuf += msgsizes[i];
+    outp += msgsizes[i];
   }
 
   return res;

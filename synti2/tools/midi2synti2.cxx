@@ -37,7 +37,8 @@ bool check_file_exists(const char* fname){
 int cmd_line_only(int argc, char **argv){
   if (argc<3) {
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "  " << argv[0] << " SMF_filename s2bank_filename " << std::endl;
+    std::cerr << "  " << argv[0] 
+              << " SMF_filename s2bank_filename " << std::endl;
     return 1;
   }
   if (!check_file_exists(argv[1])) return 1;
@@ -47,13 +48,18 @@ int cmd_line_only(int argc, char **argv){
   MidiSong ms(ifs);
   ifs.close();
 
+  synti2::MidiMap mapper;
+
+  std::ifstream mapperfs(argv[2]);
+  mapper.read(mapperfs);
+  mapperfs.close();
+
+  /* Spec could come from "exe builder GUI"? Could be part of mapper?
+     No?*/
+  std::stringstream spec("hm. Should be all like TimeDecim=24;");
   /* FIXME: This needs to be made into a parameter very soon: */
   /*ms.decimateTime(24);*/
 
-  synti2::MidiMap mapper;
-
-  std::stringstream spec("hm. Should be all like TimeDecim=24;");
-  /* FIXME: Mapper should read the s2bank end..*/
   synti2::MisssSong misss(ms, mapper, spec);
 
   misss.write_as_c(std::cout);
@@ -62,12 +68,5 @@ int cmd_line_only(int argc, char **argv){
 }
 
 int main(int argc, char **argv){
-
-  if (argc > 1){
-    /* Command line arguments are given, so run without user
-     * interface. TODO: Better handling of arguments! This is barely
-     * usable as of now.
-     */
-    return cmd_line_only(argc, argv);
-  }
+  return cmd_line_only(argc, argv);
 }

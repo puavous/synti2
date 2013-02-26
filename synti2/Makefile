@@ -82,7 +82,8 @@ TINYEXESOURCES = $(MAIN) $(GFX) $(SND) $(SMF) $(SHAD)
 
 VISEXESOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
 
-GENPARDEPS = tools/genpar.cxx $(PTSOURCES)
+GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx \
+	tools/midihelper.cxx
 
 PATCHEDITDEPS = tools/patchedit.cxx $(PTSOURCES)
 
@@ -133,12 +134,14 @@ synti2.asm.annotated: $(S2SOURCES) $(S2HEADERS)
 
 midi2synti2: tools/midi2synti2.cxx  \
 		tools/miditool.hpp tools/miditool.cxx \
+		tools/midimaptool.hpp tools/midimaptool.cxx \
                 tools/midihelper.hpp tools/midihelper.cxx \
 		tools/misss.hpp tools/misss.cxx \
 		tools/patchtool.hpp tools/patchtool.cxx \
 		src/synti2_midi.c include/synti2_misss.h \
+		include/synti2_params.h \
 		Makefile
-	g++ -Wextra -o $@ $(filter %.cxx, $+) \
+	g++ -Wextra -o $@ $(filter %.cxx, $+) $(filter %.c, $+) \
 		-Isrc/ -Iinclude \
 		-lfltk `fltk-config --cxxflags` \
 		`pkg-config --cflags --libs jack`

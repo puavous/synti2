@@ -281,8 +281,10 @@ synti2::MisssSong::build_chunks_from_spec(std::istream &spec)
 
 
 void
-synti2::MisssSong::translated_grab_from_midi(MidiSong &midi_song, 
-                                     MidiMap &mapper){
+synti2::MisssSong::translated_grab_from_midi(
+      MidiSong &midi_song, 
+      MidiMap &mapper)
+{
     std::vector<unsigned int> orig_ticks;
     std::vector<MidiEvent> orig_evs;
     std::vector<unsigned int> ticks;

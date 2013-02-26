@@ -8,6 +8,7 @@
 
 #include "synti2_midi_guts.h"
 #include "misssevent.hpp"
+#include "miditool.hpp"
 #include <iostream>
 #include <vector>
 

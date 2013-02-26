@@ -41,7 +41,6 @@ int cmd_line_only(int argc, char **argv){
   if (!check_file_exists(argv[1])) return 1;
   if (!check_file_exists(argv[2])) return 1;
 
-
   std::ifstream ifs(argv[1], std::ios::in|std::ios::binary);
   MidiSong ms(ifs);
   ifs.close();

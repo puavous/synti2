@@ -12,6 +12,8 @@
 
 /* Includes for our own application logic*/
 #include "miditool.hpp"
+#include "midimaptool.hpp"
+#include "misss.hpp"
 
 /* Standard includes required by this unit */
 #include <iostream>
@@ -48,10 +50,11 @@ int cmd_line_only(int argc, char **argv){
   /* FIXME: This needs to be made into a parameter very soon: */
   /*ms.decimateTime(24);*/
 
-  MidiEventTranslator tr;
+  synti2::MidiMap mapper;
 
   std::stringstream spec("hm. Should be all like TimeDecim=24;");
-  MisssSong misss(ms, tr, spec);
+  /* FIXME: Mapper should read the s2bank end..*/
+  synti2::MisssSong misss(ms, mapper, spec);
 
   misss.write_as_c(std::cout);
 

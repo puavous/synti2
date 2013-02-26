@@ -7,23 +7,11 @@
 #define SYNTI2_MIDIMAPTOOL_H
 
 #include "synti2_midi_guts.h"
+#include "misssevent.hpp"
 #include <iostream>
 #include <vector>
 
 namespace synti2{
-  
-  /** FIXME: Put this to its own module, like missstool.{hpp,cxx}
-      and maybe the MisssSong should be there too.
-   */
-  class MisssEvent{
-    /* FIXME: Proper interface and so on.. */
-    int type; /* MisssEvent is either a note or a ramp.. */
-    int voice; /* Always on a voice. */
-    int par1; /* Always one param*/
-    int par2; /* In notes also velocity. */
-    float time; /* In ramps time and target value*/
-    float target; /* In ramps time and target value*/
-  }
 
   class MidiMap{
   private:

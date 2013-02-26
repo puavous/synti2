@@ -1,7 +1,8 @@
 #ifndef MIDITOOL_H_INCLUDED
 #define MIDITOOL_H_INCLUDED
 
-/** Classes for processing MIDI and MISSS sequences and events, either
+/** 
+ * Classes for processing MIDI and MISSS sequences and events, either
  * in real-time or off-line.
  *
  */
@@ -34,6 +35,8 @@ typedef unsigned char evdata_t;
  *  subclassing, but I have no time to think right now..
  */
 class MidiEvent{
+  /* FIXME: Why not just store the bytes, and use the accessors to the
+     bulk??*/
   int type;
   int subtype_or_channel;
   unsigned int par1;   /* parameters are used with channel events.. */
@@ -55,38 +58,20 @@ public:
   bool isNote() const {return ((type == 0x9) || (type == 0x8));}
   bool isCC() const {return (type == 0xb);}
   /* quick hack for tempo setting: */
-  int get3byte() const {return (bulk[0] << 16) + (bulk[1] << 8) + bulk[3];}
+  int get3byte() const {
+    return (bulk[0] << 16) + (bulk[1] << 8) + bulk[3 /*FIXME: error? */];}
   int getNote(){return par1;}
   int getCCnum(){return par1;} /*hmm*/
   int getCCval(){return par2;} /*hmm*/
   int getVelocity(){return par2;}
   int getChannel(){return subtype_or_channel;}
   bool isEndOfTrack(){
-    return ((type == 0xf) && (subtype_or_channel == 0xf) && (par1 == 0x2f));}
+    return ((type == 0xf) && (subtype_or_channel == 0xf) 
+            && (par1 == 0x2f));}
 
-  /** FIXME: Only works for note events, as of now!!! */
-  void fromMidiBuffer(const unsigned char *buf){
-    type = buf[0] >> 4;
-    subtype_or_channel = buf[0] & 0x0f;
-    par1 = buf[1];
-    par2 = buf[2];
-  }
-
-  /** FIXME: Only works for note events, as of now!!! */
-  void toMidiBuffer(unsigned char *buf) const {
-    buf[0] = (type << 4) + subtype_or_channel;
-    buf[1] = par1;
-    buf[2] = par2;
-  }
-
-
-
-  void print(std::ostream &os){
-    os << "type " << std::hex <<  this->type 
-       << " sub " << std::hex << subtype_or_channel 
-       << " par1 " << par1 << " par2 " << par2
-       << " size of bulk " << bulk.size() << std::endl;
-  }
+  void fromMidiBuffer(const unsigned char *buf);
+  void toMidiBuffer(unsigned char *buf) const;
+  void print(std::ostream &os);
 };
 
 
@@ -96,7 +81,8 @@ public:
  *  separated into self-contained events.
  */
 class MidiTrack {
-  /* current tick for create and play.. not nice, but works for now... */
+  /* current tick for create and play.. not nice, but works for
+     now... */
   unsigned int current_tick;  /* for create */
 
   unsigned int current_type;   /* for create */
@@ -169,150 +155,6 @@ public:
   void linearize(std::vector<unsigned int> &ticks,
                  std::vector<MidiEvent> &evs);
   /** Advance song position to next event. Tick may or may not increase. */
-};
-
-
-
-/** The translator eats a standard midi message, and pukes a set of
- * MISSS messages. Doesn't care if it is working in a real-time or
- * off-line job, it just answers when a question is asked.
- */
-class MidiEventTranslator {
-private:
-  synti2_midi_map map;
-  synti2_midi_state state;
-
-  /** default settings; FIXME: to be removed after proper accessors exist. 
-   */
-  void hack_defaults();
-public:
-  /* Should create from patch control data or from sysex.. */
-  MidiEventTranslator();
-};
-
-
-/* A Misss chunk is a container for "distilled" and "pre-ordered" and
-   "packed" "subset" of MIDI-like event data. Specifically, each chunk
-   deals with exactly one channel and exactly one type of messages,
-   and the message type must be one of those that the very simple
-   event merging device of Synti2 sequence loader can handle, i.e.:
-
-   - note on (possibly with constant velocity and/or constant pitch)
-
-   - controller ramp. // Think about subclassing here!
-
-  Purpose of the chunks is just to grab the filtered events, and it
-  doesn't handle channel mapping. That is the responsibility of
-  MidiTranslator.
-
- */
-
-
-class MisssChunk{
-protected:
-  int in_channel;  /* accept channel of this chunk */
-  int out_channel; /* output channel of this chunk */
-  int bytes_per_ev; /* length of one event*/
-  std::vector<unsigned int> tick;  /* times of events as ticks. */
-  std::vector<unsigned int> dataind;  /* corresp. data locations */
-  std::vector<unsigned char> data; /* actual data directly as bytes */
-  virtual void do_write_header_as_c(std::ostream &outs);
-  virtual void do_write_data_as_c(std::ostream &outs) = 0;
-  bool channelMatch(MidiEvent &ev){ return (in_channel == ev.getChannel());}
-public:
-  /* The only way to create a chunk is by giving a text description(?)*/
-  //virtual MisssChunk(std::string desc){bytes_per_ev = 3;}
-  MisssChunk(int in_ch, int out_ch){
-    in_channel = in_ch; 
-    out_channel = out_ch;}
-  virtual bool acceptEvent(unsigned int t, MidiEvent &ev){
-    return false;
-  }
-  int size(){return tick.size();}
-  void write_as_c(std::ostream &outs){
-    if (size() == 0) return; /* zero-length, don't write. */
-    do_write_header_as_c(outs);
-    do_write_data_as_c(outs);
-  }
-};
-
-class MisssNoteChunk : public MisssChunk 
-{
-private:
-  /* parameters */
-  int default_note;
-  int default_velocity;
-  int accept_vel_min;
-  int accept_vel_max;
-protected:
-  void do_write_header_as_c(std::ostream &outs);
-  void do_write_data_as_c(std::ostream &outs);
-public:
-  MisssNoteChunk(int in_c, int out_c, int def_n, int def_v, 
-                 int avmin, int avmax) 
-    : MisssChunk(in_c, out_c)
-  {    default_note = def_n;    default_velocity = def_v;  
-    accept_vel_min = avmin; accept_vel_max = avmax;}
-
-  /** Must be called in increasing time-order. */
-  bool acceptEvent(unsigned int t, MidiEvent &ev);
-};
-
-
-/* FIXME: Attend to this next!!*/
-class MisssRampChunk : public MisssChunk {
-private:
-  /* parameters */
-  int control_input; /* midi controller to listen to. Hmm.. Pitch? Pressure? */
-  int control_target; /* synti2 controller */
-  float range_min;
-  float range_max;
-protected:
-  void do_write_header_as_c(std::ostream &outs);
-  void do_write_data_as_c(std::ostream &outs);
-public:
-  MisssRampChunk(int in_c, int out_c, 
-                 int midi_cc, 
-                 int s2_controller,
-                 float out_range_min,
-                 float out_range_max) 
-    : MisssChunk(in_c, out_c)
-  {
-    control_input = midi_cc;
-    control_target = s2_controller;
-    range_min = out_range_min;
-    range_max = out_range_max;
-  }
-  /** Must be called in increasing time-order. */
-  bool acceptEvent(unsigned int t, MidiEvent &ev);
-
-  // mapping_type
-};
-
-
-/** MisssSong can sniff a MidiSong using a MidiTranslator and save a
- * MISSS (midi-like interface for synti2 software synthesizer) data
- * package as C-language source code, directly compilable into a 4k
- * intro, as the main use case of this programming excercise was.
- */
-class MisssSong {
-private:
-  unsigned int ticks_per_quarter;
-  unsigned int usec_per_quarter;
-
-  std::vector<MisssChunk*> chunks;
-
-  void figure_out_tempo_from_midi(MidiSong &midi_song);
-  void build_chunks_from_spec(std::istream &spec);
-  void translated_grab_from_midi(MidiSong &midi_song, 
-                                 MidiEventTranslator &trans);
-
-public:
-  MisssSong(MidiSong &midi_song, 
-            MidiEventTranslator &trans, 
-            std::istream &spec);
-
-  void write_as_c(std::ostream &outs);
 };
 
 

@@ -14,33 +14,6 @@
 
 #include <limits.h>
 
-/* Formatting tool functions for exporting as C source */
-static
-void fmt_hexbyte(std::ostream &outs, unsigned char b){
-  outs << std::setiosflags(std::ios::right)
-       << std::resetiosflags(std::ios::left)
-       << "0x" << std::setfill('0') << std::setw(2) << std::hex << (int)b;
-}
-
-static
-void fmt_comment(std::ostream &outs, std::string c){
-  outs << "/* " 
-       << std::setfill(' ') 
-       << std::setiosflags(std::ios::left)
-       << std::resetiosflags(std::ios::right)
-       << std::setw(40) << (c+":") << " */ ";
-}
-
-static
-void fmt_varlen(std::ostream &outs, unsigned int val){
-  unsigned char buf[4];
-  int len = encode_varlength(val, buf);
-  for (int i=0; i<len; i++){
-    fmt_hexbyte(outs, buf[i]);
-    if (i<len-1) outs << ", ";
-  }
-  outs << "   /*" << std::dec << val <<  "*/ ";
-}
 
 static
 unsigned int bpm_to_usecpq(unsigned int bpm){
@@ -152,12 +125,41 @@ MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel,
   }
 }
 
+
 MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel, 
                      unsigned int par1, unsigned int par2){
   this->type = type;
   this->subtype_or_channel = subtype_or_channel;
   this->par1 = par1;
   this->par2 = par2;
+}
+
+/** FIXME: Only works for note events, as of now!!! */
+void 
+MidiEvent::fromMidiBuffer(const unsigned char *buf)
+{
+  type = buf[0] >> 4;
+  subtype_or_channel = buf[0] & 0x0f;
+  par1 = buf[1];
+  par2 = buf[2];
+}
+
+/** FIXME: Only works for note events, as of now!!! */
+void 
+MidiEvent::toMidiBuffer(unsigned char *buf) const {
+  buf[0] = (type << 4) + subtype_or_channel;
+  buf[1] = par1;
+  buf[2] = par2;
+}
+
+
+void
+MidiEvent::print(std::ostream &os)
+{
+  os << "type " << std::hex <<  this->type 
+     << " sub " << std::hex << subtype_or_channel 
+     << " par1 " << par1 << " par2 " << par2
+     << " size of bulk " << bulk.size() << std::endl;
 }
 
 
@@ -335,305 +337,4 @@ MidiSong::linearize(std::vector<unsigned int> &ticks,
     /* we have minimum. That must be our next tick. */
     ntick = mint;
   }
-}
-
-
-
-void
-MisssChunk::do_write_header_as_c(std::ostream &outs){
-  outs << std::endl;
-  outs << "/* CHUNK begins ----------------------- */ " << std::endl;
-  fmt_comment(outs, "Number of events"); fmt_varlen(outs, tick.size());
-  outs << ", " << std::endl;
-  fmt_comment(outs, "Channel"); fmt_hexbyte(outs, out_channel);
-  outs << ", " << std::endl;
-}
-
-void MisssNoteChunk::do_write_header_as_c(std::ostream &outs){
-  MisssChunk::do_write_header_as_c(outs);
-  fmt_comment(outs, "Type"); outs << "MISSS_LAYER_NOTES";
-  outs << ", " << std::endl;
-  fmt_comment(outs, "Default note"); fmt_hexbyte(outs, default_note);
-  outs << ", " << std::endl;
-  fmt_comment(outs, "Default velocity"); fmt_hexbyte(outs, default_velocity);
-  outs << ", " << std::endl;
-}
-
-void
-MisssNoteChunk::do_write_data_as_c(std::ostream &outs){
-  unsigned int di = 0;
-  outs << "/* delta and info : */ " << std::endl;
-  unsigned int prev_tick=0;
-  for (unsigned int i=0; i<tick.size(); i++){
-    unsigned int delta = tick[i] - prev_tick; /* assume order */
-    prev_tick = tick[i];
-    fmt_varlen(outs, delta);
-    outs << ", ";
-    if (default_note < 0) {
-      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
-      outs << ", ";
-    }
-    if (default_velocity < 0) {
-      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
-      outs << ", ";
-    }
-    outs << std::endl;
-  }
-  outs << std::endl;
-}
-
-
-bool
-MisssNoteChunk::acceptEvent(unsigned int t, MidiEvent &ev){
-  if (!ev.isNote()) return false;
-  if (!channelMatch(ev)) return false;
-  if (! ((accept_vel_min <= ev.getVelocity()) 
-         && (ev.getVelocity() <= accept_vel_max))) return false;
-
-  tick.push_back(t);
-  dataind.push_back(data.size());
-  if (default_note < 0){
-    data.push_back(ev.getNote());
-  }
-  if (default_velocity < 0){
-    data.push_back(ev.getVelocity());
-  }
-
-  return true;
-}
-
-void MisssRampChunk::do_write_header_as_c(std::ostream &outs){
-  MisssChunk::do_write_header_as_c(outs);
-  fmt_comment(outs, "Type"); outs << "MISSS_LAYER_CONTROLLER_RAMPS";
-  outs << ", " << std::endl;
-  fmt_comment(outs, "Synti2 controller number (zero-based)"); fmt_hexbyte(outs, control_target);
-  outs << ", " << std::endl;
-  fmt_comment(outs, "Unused parameter (dup)"); fmt_hexbyte(outs, control_target);
-  outs << ", " << std::endl;
-}
-
-void
-MisssRampChunk::do_write_data_as_c(std::ostream &outs){
-  //outs << "BROKEN: Not yet implemented: MisssRampChunk::do_write_data_as_c()*/ " << std::endl;
-
-  unsigned int di = 0;
-  outs << "/* delta and info : */ " << std::endl;
-  unsigned int prev_tick=0;
-  for (unsigned int i=0; i<tick.size(); i++){
-    unsigned int delta = tick[i] - prev_tick; /* assume order */
-    prev_tick = tick[i];
-    fmt_varlen(outs, delta);
-    outs << ", ";
-
-    /* no earlier than here starts the differences to notes */
-    size_t len;
-    /* FIXME: this should go into an overloaded function in midihelper.cxx:*/
-    unsigned char buf[8];
-    for(int i=0;(i<8)&&((di+i) < data.size()); i++){
-      buf[i] = data[di+i];
-    }
-
-    unsigned int intval;
-    float fval;
-    len = decode_varlength(buf, &intval);
-    fval = synti2::decode_f(intval);
-    std::cout << "/* time " << fval << "s */";
-    
-    for(unsigned int i=0;i<len;i++){
-      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
-      outs << ", ";
-    }
-    /* and value: */
-    len = decode_varlength(buf+len, &intval);
-    fval = synti2::decode_f(intval);
-    std::cout << "/* value " << fval << " */";
-
-    for(unsigned int i=0;i<len;i++){
-      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
-      outs << ", ";
-    }
-
-    outs << std::endl;
-  }
-  outs << std::endl;
-}
-
-bool
-MisssRampChunk::acceptEvent(unsigned int t, MidiEvent &ev){
-  if (!ev.isCC()) return false;
-  if (!channelMatch(ev)) return false;
-  if (!(control_input == ev.getCCnum())) return false;
-
-  tick.push_back(t);
-  dataind.push_back(data.size());
-
-  /* FIXME: Determine and encode time and tgt value */
-  /* OR should it be done by the writer function?? */
-  /* Doesn't really matter.. I'm re-doing this thing anyway.*/
-  /* ... or am I?*/
-  /* Must think this through at some point, yeah..
-     time is ticks here, but seconds in the encoding, etc...*/
-  /* FIXME: So far, I'll just make an instant change for each midi
-     event*/
-
-  float fval = range_min + (ev.getCCval()/127.f) * (range_max - range_min);
-  float ftime = 0.004f;
-
-  unsigned int inttime = synti2::encode_f(ftime);
-  unsigned int intval = synti2::encode_f(fval);
-
-  unsigned char buf[4];
-  size_t len;
-
-  len = encode_varlength(inttime, buf);
-  for (size_t i=0;i<len;i++){
-    data.push_back(buf[i]);
-  }
-
-  len = encode_varlength(intval, buf);
-  //std::cout << "/*In goes: "; 
-  //std::cout << synti2::decode_f(intval) << " ";
-  for (size_t i=0;i<len;i++){
-    //fmt_hexbyte(std::cout, buf[i]);
-    //std::cout << " ";
-    data.push_back(buf[i]);
-  }
-  //std::cout << "*/" << std::endl;
-
-  return true;
-}
-
-
-
-
-
-MisssSong::MisssSong(MidiSong &midi_song, 
-            MidiEventTranslator &trans, 
-            std::istream &spec)
-{
-  figure_out_tempo_from_midi(midi_song);
-  build_chunks_from_spec(spec);
-  translated_grab_from_midi(midi_song, trans);
-}
-
-void 
-MisssSong::figure_out_tempo_from_midi(MidiSong &midi_song){
-  ticks_per_quarter = midi_song.getTPQ();
-  usec_per_quarter = midi_song.getMSPQ();
-}
-
-void
-MisssSong::build_chunks_from_spec(std::istream &spec)
-{
-  for (int i=0; i<9; i++){
-    /* note ons: */
-    chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
-
-    /* note offs: */
-    //chunks.push_back(new MisssNoteChunk(i, i, -1, 0, 0, 0));
-  }
-
-  chunks.push_back(new MisssNoteChunk(0x9, 0x9, 35, 123, 1, 127));
-  chunks.push_back(new MisssNoteChunk(0xa, 0xa, 39, 123, 1, 127));
-  chunks.push_back(new MisssNoteChunk(0xb, 0xb, 41, 123, 1, 127));
-  chunks.push_back(new MisssNoteChunk(0xc, 0xc, 41, 123, 1, 127));
-
-#if 1
-  for (int i=9; i<16; i++){
-    /* note ons: */
-    chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
-    /* no note offs, as can be seen :) */
-
-  /* Continuous controllers: */
-  /* FIXME: see that this works... */
-  chunks.push_back(new MisssRampChunk(i, i, 0x01, 0x00, 
-                                      0.0f, 1.0f));
-
-
-  }
-#endif
-
-
-  /* FIXME: Implement. */
-  std::cout << "/*FIXME: Cannot build from spec yet.*/ " << std::endl;
-  std::string hmm;
-  std::getline (spec, hmm);
-  std::cerr << hmm;
-}
-
-
-void
-MisssSong::translated_grab_from_midi(MidiSong &midi_song, 
-                                     MidiEventTranslator &trans){
-    std::vector<unsigned int> ticks;
-    std::vector<MidiEvent> orig_evs;
-    std::vector<MidiEvent> evs;
-
-    midi_song.linearize(ticks, orig_evs);
-
-    unsigned int i;
-
-    /* Filter: */
-    for(i=0; i<ticks.size(); i++){
-      //MidiEvent ev = orig_evs[i];
-
-      // FIXME: This from MidiMap when it is implemented:
-      //evs.push_back(trans.transformOffline(orig_evs[i]));
-      
-      /*std::cout << "  ";
-      orig_evs[i].print(std::cout);
-      std::cout << "->";
-      evs[i].print(std::cout);*/
-    }
-
-    /* Collect: */
-    for(i=0; i<ticks.size(); i++){
-      miditick_t t = ticks[i];
-      MidiEvent ev = evs[i];
-      
-      for(unsigned int c=0; c<chunks.size(); c++){
-        if (chunks[c]->acceptEvent(t, ev)) break;
-      }
-    }
-  }
-
-
-void
-MisssSong::write_as_c(std::ostream &outs){
-  outs << "/*Song data generated by MisssSong */" << std::endl;
-  outs << "#include \"synti2_misss.h\"" << std::endl;
-
-  /*FIXME: Must name it differently soon, when it's not a hack anymore!*/
-  outs << "unsigned char hacksong_data[] = {" << std::endl;
-
-  outs << "/* *********** song header *********** */ " << std::endl;
-  fmt_comment(outs, "Ticks per quarter");
-  fmt_varlen(outs, ticks_per_quarter);
-  outs << ", " << std::endl;
-  fmt_comment(outs, "Microseconds per tick"); 
-  fmt_varlen(outs, usec_per_quarter);
-  outs << ", " << std::endl;
-
-  outs << "/* *********** chunks *********** */ " << std::endl;
-
-  for (unsigned int i=0; i<chunks.size(); i++){
-    chunks.at(i)->write_as_c(outs);
-  }
-
-  outs << "/* *********** end *********** */ " << std::endl;
-  outs << "/* End of data marker: */ 0x00};" << std::endl;
-}
-
-
-
-
-
-
-MidiEventTranslator::MidiEventTranslator(){
-  /* FIXME: Zero everything. Maybe make a constructor that can read
-   * a file. Actually just use MidiMap!!
-
-    This may be unnecessary.
-
-   */
 }

@@ -131,10 +131,13 @@ synti2.asm.annotated: $(S2SOURCES) $(S2HEADERS)
 	$(CC) $(HCFLAGS) -Iinclude -S -fverbose-asm -g src/synti2.c
 	as -alhnd synti2.s > $@
 
-midi2synti2: tools/midi2synti2.cxx tools/miditool.cxx \
-		tools/miditool.hpp tools/midihelper.hpp \
+midi2synti2: tools/midi2synti2.cxx  \
+		tools/miditool.hpp tools/miditool.cxx \
+                tools/midihelper.hpp tools/midihelper.cxx \
+		tools/misss.hpp tools/misss.cxx \
 		tools/patchtool.hpp tools/patchtool.cxx \
-		tools/midihelper.cxx Makefile
+		src/synti2_midi.c include/synti2_misss.h \
+		Makefile
 	g++ -Wextra -o $@ $(filter %.cxx, $+) \
 		-Isrc/ -Iinclude \
 		-lfltk `fltk-config --cxxflags` \

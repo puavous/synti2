@@ -30,6 +30,7 @@ sysexTwoBytes(int type, int midichn, int firstbyte, int secondbyte){
   return res;
 }
 
+
 synti2::MidiMap::MidiMap(){
   memset (&mmap, 0, sizeof(mmap));
   memset (&state, 0, sizeof(state));
@@ -135,8 +136,22 @@ synti2::MidiMap::read(std::istream &ifs)
 std::vector<synti2::MisssEvent> 
 midiToMisss(const MidiEvent &evin)
 {
+  unsigned char inbuf[5];
+  unsigned char outbuf[NPARTS*(1+3+2*sizeof(float))];
+  int msgsizes[NPARTS];
+  
   std::vector<synti2::MisssEvent> res;
-  /* FIXME: Implement as a wrapper around the C interface code.. */
+  evin.toMidiBuffer(inbuf);
+  int nmsg;
+  nmsg = synti2_midi_to_misss(&mmap, &state,
+                              inbuf, outbuf,
+                              &msgsizes,
+                              0 /* FIXME: problem here?*/);
+  for(int i=0;i<nmsg;i++){
+    res.push_back(MisssEvent(outbuf));
+    outbuf += msgsizes[i];
+  }
+
   return res;
 }
 

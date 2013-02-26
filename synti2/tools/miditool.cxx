@@ -576,7 +576,9 @@ MisssSong::translated_grab_from_midi(MidiSong &midi_song,
     /* Filter: */
     for(i=0; i<ticks.size(); i++){
       //MidiEvent ev = orig_evs[i];
-      evs.push_back(trans.transformOffline(orig_evs[i]));
+
+      // FIXME: This from MidiMap when it is implemented:
+      //evs.push_back(trans.transformOffline(orig_evs[i]));
       
       /*std::cout << "  ";
       orig_evs[i].print(std::cout);
@@ -624,155 +626,14 @@ MisssSong::write_as_c(std::ostream &outs){
 
 
 
-void 
-MidiEventTranslator::hack_defaults()
-{
-  int hack_drummap[12] = {
-    /*Chan 9  Oct -5 */ 0,0,1,1,1,3,2,3,2,3,4,3,
-  };
 
-  /* For example: 5-poly piano, 2-poly high-string, mono bass, mono lead,
-     drums (bd,sd,oh,ch,to), effects? */
-  reset_state(); /* Start with nothing, and only set some non-zeros */
-  voice_rotate[0]=4; /*Channels 1-4 are 'polyphonic' */
-  //voice_rotate[5]=2; /*Channels 6-7 are 'biphonic' */
-
-  /* Drum channel diversions as in GM for one octave (bd, sd, sd2 ...): */
-  for (int j=0;j<MIDI_NNOTES;j++) {
-    channel_table[9][j] = hack_drummap[j % 12];
-  }
-}
-
-/** Zero everything */
-void 
-MidiEventTranslator::reset_state(){
-  int i,j;
-  for(int i=0; i<MIDI_NCHANNELS; i++){
-    voice_rotate[i]=1;
-    next_rotation[i]=0;
-  }
-  
-  for (i=0;i<MIDI_NCHANNELS;i++){
-    /* No notes "playing" when we begin. */
-    for (j=0;j<MIDI_NNOTES;j++) rotation_of_noteon[i][j] = -1; 
-    for (j=0;j<MIDI_NCHANNELS;j++) note_of_rotation[i][j] = -1;
-    /* No notewise diversions ("keyboard splits") */
-    for (j=0;j<MIDI_NNOTES;j++) channel_table[i][j] = 0;
-  }
-}
 
 
 MidiEventTranslator::MidiEventTranslator(){
   /* FIXME: Zero everything. Maybe make a constructor that can read
-   * a file.
+   * a file. Actually just use MidiMap!!
+
+    This may be unnecessary.
+
    */
-  hack_defaults();
-}
-  
-
-/** Just a dirty hack to rotate channels, if wired to do so.*/
-int
-MidiEventTranslator::rotate_notes(unsigned char *buffer){
-  int cmd, chn, note;
-  int newrot, oldrot, newchn;
-
-  cmd = buffer[0] >> 4;
-  chn = buffer[0] & 0x0f;
-  note = buffer[1];
-
-  if (cmd == 0x09){
-    /* Note on goes to the next channel in rotation. */
-    newrot = next_rotation[chn] % voice_rotate[chn];
-    
-    next_rotation[chn]++; /* tentative for next note-on. */
-    newchn = chn + newrot;  /* divert to the rotated channel */
-
-    /* Keep a record of where note ons have been put. When there is an
-     * overriding note-on, earlier note-on must be erased, so that
-     * note-off can be skipped (the note is "lost"/superseded)
-     */
-    if (note_of_rotation[chn][newrot] >= 0){
-      /* Forget the superseded note-on: */
-      rotation_of_noteon[chn][note_of_rotation[chn][newrot]] = -1;
-    }
-    /* remember the new noteon */
-    note_of_rotation[chn][newrot] = note;
-    rotation_of_noteon[chn][note] = newrot;
-  } else if (cmd == 0x08){
-    /* FIXME: Instanssi speed hack: No note-offs ever:*/
-    //return 0;
-
-    /* Note off goes to the same channel, where the corresponding note
-       on was located earlier. FIXME: should swallow if note on is no
-       more relevant.  */
-    if (rotation_of_noteon[chn][note] < 0) return 0; /* Dismissed already*/
-
-    oldrot = rotation_of_noteon[chn][note];
-    note_of_rotation[chn][oldrot] = -1; /* no more note here. */
-    newchn = chn+oldrot; /* divert note-off to old target. */
-  } else {
-    return 1; /* other messages not handled. */
-  }
-
-  buffer[0] = (cmd<<4) + newchn; /* mogrify event. */
-  return 1;
-
-}
-
-/** Just a dirty hack to spread drums out to different channels. */
-void
-MidiEventTranslator::channel(unsigned char *buffer){
-  int nib1, nib2, note;
-  nib1 = buffer[0] >> 4;
-  nib2 = buffer[0] & 0x0f;
-  note = buffer[1];
-
-  nib2 = nib2 + channel_table[nib2][note];
-
-  buffer[0] = (nib1<<4) + nib2;
-}
-
-/** Just a dirty hack, once more. Note off -> Note on with 0 velocity. */
-void
-MidiEventTranslator::off_to_zero_on(unsigned char *buffer){
-  int nib1, nib2;
-  nib1 = buffer[0] >> 4;
-  nib2 = buffer[0] & 0x0f;
-
-  if (nib1 == 0x08) {
-    nib1 = 0x09;
-    buffer[2] = 0; /* Velocity */
-  }
-  buffer[0] = (nib1<<4) + nib2;
-}
-
-
-
-int MidiEventTranslator::rotate_notes(jack_midi_event_t *ev)
-{  return rotate_notes(ev->buffer);  }
-
-void MidiEventTranslator::channel(jack_midi_event_t *ev)
-{  channel(ev->buffer);  }
-
-
-/** Hmm... this is basically a MIDI-to-MIDI filter.. */
-MidiEvent
-MidiEventTranslator::transformOffline(const MidiEvent &evin){
-  /* Only mogrify notes, as of now... */
-  /* FIXME: Most desperately I need CCs and pitch bends. 
-   * So implement that next. But CCs don't need mogrifying...
-   */
-  if (!evin.isNote()){ return evin; } 
-
-  unsigned char buf[4];
-  evin.toMidiBuffer(buf);
-
-  rotate_notes(buf);
-  channel(buf);
-  off_to_zero_on(buf);
-
-  MidiEvent res = evin;
-  res.fromMidiBuffer(buf);
-
-  return res;
 }

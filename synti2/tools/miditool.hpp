@@ -10,6 +10,10 @@
 
 #include "midihelper.hpp"
 
+/* We're gonna use the same mapper here as in the synth.. */
+#include "../include/synti2_midi.h"
+#include "../include/synti2_midi_guts.h"
+
 #define MIDI_NCHANNELS 16
 #define MIDI_NNOTES 128
 
@@ -27,7 +31,7 @@ typedef unsigned char evdata_t;
 /** MIDI Event - something that is supposed to happen. Event does not
  *  know its location in time, but only its effect. One class models
  *  all the different kinds of events. This may not be as flexible as
- *  subclassing, but I have no time to think right now..f
+ *  subclassing, but I have no time to think right now..
  */
 class MidiEvent{
   int type;
@@ -169,37 +173,21 @@ public:
 
 
 
-/** The translator eats a standard midi message, and pukes an altered
- *  message based on loaded configuration and current state. (TODO: as
- *  midi or as missss?). Doesn't care if it is working in a real-time
- *  or off-line job, it just answers when a question is asked.
+/** The translator eats a standard midi message, and pukes a set of
+ * MISSS messages. Doesn't care if it is working in a real-time or
+ * off-line job, it just answers when a question is asked.
  */
 class MidiEventTranslator {
 private:
-  int voice_rotate[MIDI_NCHANNELS];
-  int next_rotation[MIDI_NCHANNELS];
-  int rotation_of_noteon[MIDI_NCHANNELS][MIDI_NNOTES];
-  int note_of_rotation[MIDI_NCHANNELS][MIDI_NCHANNELS];
-  int channel_table[MIDI_NCHANNELS][MIDI_NNOTES];
+  synti2_midi_map map;
+  synti2_midi_state state;
 
   /** default settings; FIXME: to be removed after proper accessors exist. 
    */
   void hack_defaults();
-  /** Reset everything.. FIXME: This should mean a bit different thing.. */
-  void reset_state();
 public:
+  /* Should create from patch control data or from sysex.. */
   MidiEventTranslator();
-
-  /* we do it on a raw buffer.. */
-  int rotate_notes(unsigned char *buffer);
-  void channel(unsigned char *buffer);
-  void off_to_zero_on(unsigned char *buffer);
-
-
-  int rotate_notes(jack_midi_event_t *ev);
-  void channel(jack_midi_event_t *ev);
-
-  MidiEvent transformOffline(const MidiEvent &evin);
 };
 
 

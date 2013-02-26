@@ -12,12 +12,32 @@
 
 namespace synti2{
   
+  /** FIXME: Put this to its own module, like missstool.{hpp,cxx}
+      and maybe the MisssSong should be there too.
+   */
+  class MisssEvent{
+    /* FIXME: Proper interface and so on.. */
+    int type; /* MisssEvent is either a note or a ramp.. */
+    int voice; /* Always on a voice. */
+    int par1; /* Always one param*/
+    int par2; /* In notes also velocity. */
+    float time; /* In ramps time and target value*/
+    float target; /* In ramps time and target value*/
+  }
+
   class MidiMap{
   private:
+    /* We wrap the whole thingy here: */
+    /* FIXME: instantiation.*/
     synti2_midi_map mmap;
+    synti2_midi_state state;
   public:
+    MidiMap();
     void write(std::ostream &os);
     void read(std::istream &ins);
+
+    /** Wrapper for midi->misss conversion */
+    std::vector<MisssEvent> midiToMisss(const MidiEvent &evin);
     
     void setMode(int midichn, int val);
     int getMode(int midichn);

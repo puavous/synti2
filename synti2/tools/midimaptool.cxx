@@ -3,6 +3,7 @@
 #include "synti2_misss.h"
 
 #include <sstream>
+#include <cstring>
 
 static
 std::vector<unsigned char> 
@@ -29,6 +30,10 @@ sysexTwoBytes(int type, int midichn, int firstbyte, int secondbyte){
   return res;
 }
 
+synti2::MidiMap::MidiMap(){
+  memset (&mmap, 0, sizeof(mmap));
+  memset (&state, 0, sizeof(state));
+}
 
 void
 synti2::MidiMap::write(std::ostream &os)
@@ -126,6 +131,15 @@ synti2::MidiMap::read(std::istream &ifs)
   }
   return; 
 }
+
+std::vector<synti2::MisssEvent> 
+midiToMisss(const MidiEvent &evin)
+{
+  std::vector<synti2::MisssEvent> res;
+  /* FIXME: Implement as a wrapper around the C interface code.. */
+  return res;
+}
+
 
 void
 synti2::MidiMap::setMode(int midichn, int val){

@@ -282,7 +282,7 @@ synti2::Patch::exportBytes(std::vector<unsigned char> &bvec){
   for (int i=0; i<getNPars("F"); i++){
     unsigned int intval = synti2::encode_f(getValue("F", i));
     size_t len = encode_varlength(intval, buf);
-    for (int i=0;i<len;i++){
+    for (size_t i=0;i<len;i++){
       bvec.push_back(buf[i]);
     }
   }

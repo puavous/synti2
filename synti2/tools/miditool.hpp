@@ -62,7 +62,7 @@ public:
 
   /* quick hack for tempo setting: */
   int get3byte() const {
-    return (bulk[0] << 16) + (bulk[1] << 8) + bulk[3 /*FIXME: error? */];}
+    return (bulk[0] << 16) + (bulk[1] << 8) + bulk[2 /*FIXME: error? */];}
   int getNote(){return par1;}
   int getCCnum(){return par1;} /*hmm*/
   int getCCval(){return par2;} /*hmm*/

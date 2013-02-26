@@ -1,6 +1,8 @@
 #ifndef MISSS_EVENT_H_INCLUDED
 #define MISSS_EVENT_H_INCLUDED
 
+#include "synti2_misss.h"
+
 namespace synti2{
 
   /** Misss event is the message type used internally by Synti2. There
@@ -21,6 +23,15 @@ namespace synti2{
     float target; /* In ramps time and target value*/
   public:
     MisssEvent(const unsigned char *misssbuf);
+    bool isNote() {return type == MISSS_MSG_NOTE;}
+    bool isRamp() {return type == MISSS_MSG_RAMP;}
+    int getVoice() {return voice;}
+    int getNote() {return par1;}
+    int getVelocity() {return par2;}
+
+    int getMod() {return par1;}
+    float getTime() {return time;}
+    float getTarget() {return target;}
     //print(std::ostream os);
   };
 }

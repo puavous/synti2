@@ -156,11 +156,11 @@ synti2::MidiMap::midiToMisss(const MidiEvent &evin)
                               inbuf, outbuf,
                               msgsizes,
                               0 /* FIXME: problem here?*/);
-  unsigned char *outp;
-  outp = outbuf;
+  unsigned char *read;
+  read = outbuf;
   for(int i=0;i<nmsg;i++){
-    res.push_back(MisssEvent(outbuf));
-    outp += msgsizes[i];
+    res.push_back(MisssEvent(read));
+    read += msgsizes[i];
   }
 
   return res;

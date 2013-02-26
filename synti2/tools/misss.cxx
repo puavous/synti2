@@ -5,6 +5,7 @@
 
 #include "synti2_misss.h"
 #include "misss.hpp"
+#include "midihelper.hpp"
 
 /* Formatting tool functions for exporting as C source */
 static
@@ -21,6 +22,20 @@ void fmt_comment(std::ostream &outs, std::string c){
        << std::setiosflags(std::ios::left)
        << std::resetiosflags(std::ios::right)
        << std::setw(40) << (c+":") << " */ ";
+}
+
+static
+void fmt_commented_fval(std::ostream &outs, 
+                        std::string comm, float fval){
+    unsigned int intval;
+    unsigned char buf[8];
+    intval = synti2::encode_f(fval);
+    int len = encode_varlength(intval, buf);
+    outs << "/* " << comm << " " << fval << "s */";
+    for(int ib=0;ib<len;ib++){
+      fmt_hexbyte(outs, buf[ib]);
+      outs << ", ";
+    }
 }
 
 static
@@ -46,8 +61,13 @@ synti2::MisssEvent::MisssEvent(const unsigned char *misssbuf){
     target = *((float*)misssbuf);
     misssbuf += sizeof(float);
   }
+  /*
+  std::cout << "MISSS-" << type << " on voice " << voice 
+            << " par1=" << par1;
+  if (type==MISSS_MSG_NOTE) std::cout << " vel= " << par2 << std::endl;
+  else std::cout << "time=" << time << " tgt=" << target<< std::endl;
+  */
 }
-
 
 void
 synti2::MisssChunk::do_write_header_as_c(std::ostream &outs){
@@ -55,7 +75,7 @@ synti2::MisssChunk::do_write_header_as_c(std::ostream &outs){
   outs << "/* CHUNK begins ----------------------- */ " << std::endl;
   fmt_comment(outs, "Number of events"); fmt_varlen(outs, tick.size());
   outs << ", " << std::endl;
-  fmt_comment(outs, "Channel"); fmt_hexbyte(outs, out_channel);
+  fmt_comment(outs, "Voice"); fmt_hexbyte(outs, voice);
   outs << ", " << std::endl;
 }
 
@@ -65,9 +85,9 @@ synti2::MisssNoteChunk::do_write_header_as_c(std::ostream &outs)
   MisssChunk::do_write_header_as_c(outs);
   fmt_comment(outs, "Type"); outs << "MISSS_LAYER_NOTES";
   outs << ", " << std::endl;
-  fmt_comment(outs, "Default note"); fmt_hexbyte(outs, default_note);
+  fmt_comment(outs, "Default note"); fmt_hexbyte(outs, computeDefaultNote());
   outs << ", " << std::endl;
-  fmt_comment(outs, "Default velocity"); fmt_hexbyte(outs, default_velocity);
+  fmt_comment(outs, "Default velocity"); fmt_hexbyte(outs, computeDefaultVelocity());
   outs << ", " << std::endl;
 }
 
@@ -77,17 +97,19 @@ synti2::MisssNoteChunk::do_write_data_as_c(std::ostream &outs)
   unsigned int di = 0;
   outs << "/* delta and info : */ " << std::endl;
   unsigned int prev_tick=0;
+  int defnote = computeDefaultNote();
+  int defvel = computeDefaultVelocity();
   for (unsigned int i=0; i<tick.size(); i++){
     unsigned int delta = tick[i] - prev_tick; /* assume order */
     prev_tick = tick[i];
     fmt_varlen(outs, delta);
     outs << ", ";
-    if (default_note < 0) {
-      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
+    if (defnote < 0) {
+      fmt_hexbyte(outs, evt[i].getNote());
       outs << ", ";
     }
-    if (default_velocity < 0) {
-      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
+    if (defvel < 0) {
+      fmt_hexbyte(outs, evt[i].getVelocity());
       outs << ", ";
     }
     outs << std::endl;
@@ -96,23 +118,39 @@ synti2::MisssNoteChunk::do_write_data_as_c(std::ostream &outs)
 }
 
 
+int
+synti2::MisssNoteChunk::computeDefaultNote()
+{
+  if (size()==0) return -1;
+  int def = evt[0].getNote();
+  for (int i=0;i<size();i++){
+    if (evt[i].getNote() != def) return -1;
+  }
+  return def;
+}
+
+int
+synti2::MisssNoteChunk::computeDefaultVelocity()
+{
+  if (size()==0) return -1;
+  int def = evt[0].getVelocity();
+  for (int i=0;i<size();i++){
+    if (evt[i].getVelocity() != def) return -1;
+  }
+  return def;
+}
+
+
 bool
-synti2::MisssNoteChunk::acceptEvent(unsigned int t, MidiEvent &ev)
+synti2::MisssNoteChunk::acceptEvent(unsigned int t, MisssEvent &ev)
 {
   if (!ev.isNote()) return false;
-  if (!channelMatch(ev)) return false;
+  if (!voiceMatch(ev)) return false;
   if (! ((accept_vel_min <= ev.getVelocity()) 
          && (ev.getVelocity() <= accept_vel_max))) return false;
 
   tick.push_back(t);
-  dataind.push_back(data.size());
-  if (default_note < 0){
-    data.push_back(ev.getNote());
-  }
-  if (default_velocity < 0){
-    data.push_back(ev.getVelocity());
-  }
-
+  evt.push_back(ev);
   return true;
 }
 
@@ -122,17 +160,15 @@ synti2::MisssRampChunk::do_write_header_as_c(std::ostream &outs)
   MisssChunk::do_write_header_as_c(outs);
   fmt_comment(outs, "Type"); outs << "MISSS_LAYER_CONTROLLER_RAMPS";
   outs << ", " << std::endl;
-  fmt_comment(outs, "Synti2 controller number (zero-based)"); fmt_hexbyte(outs, control_target);
+  fmt_comment(outs, "Synti2 controller number (zero-based)"); fmt_hexbyte(outs, getModNumber());
   outs << ", " << std::endl;
-  fmt_comment(outs, "Unused parameter (dup)"); fmt_hexbyte(outs, control_target);
+  fmt_comment(outs, "Unused parameter (dup)"); fmt_hexbyte(outs, getModNumber());
   outs << ", " << std::endl;
 }
 
 void
 synti2::MisssRampChunk::do_write_data_as_c(std::ostream &outs)
 {
-  //outs << "BROKEN: Not yet implemented: MisssRampChunk::do_write_data_as_c()*/ " << std::endl;
-
   unsigned int di = 0;
   outs << "/* delta and info : */ " << std::endl;
   unsigned int prev_tick=0;
@@ -142,33 +178,10 @@ synti2::MisssRampChunk::do_write_data_as_c(std::ostream &outs)
     fmt_varlen(outs, delta);
     outs << ", ";
 
-    /* no earlier than here starts the differences to notes */
-    size_t len;
-    /* FIXME: this should go into an overloaded function in midihelper.cxx:*/
-    unsigned char buf[8];
-    for(int i=0;(i<8)&&((di+i) < data.size()); i++){
-      buf[i] = data[di+i];
-    }
-
-    unsigned int intval;
-    float fval;
-    len = decode_varlength(buf, &intval);
-    fval = synti2::decode_f(intval);
-    std::cout << "/* time " << fval << "s */";
-    
-    for(unsigned int i=0;i<len;i++){
-      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
-      outs << ", ";
-    }
-    /* and value: */
-    len = decode_varlength(buf+len, &intval);
-    fval = synti2::decode_f(intval);
-    std::cout << "/* value " << fval << " */";
-
-    for(unsigned int i=0;i<len;i++){
-      fmt_hexbyte(outs, data[di++]); /* omg. hacks start appearing. */
-      outs << ", ";
-    }
+    /* no earlier than here starts the differences to notes. Could
+       localize. */
+    fmt_commented_fval(outs, "time", evt[i].getTime());
+    fmt_commented_fval(outs, "value", evt[i].getTarget());
 
     outs << std::endl;
   }
@@ -176,52 +189,21 @@ synti2::MisssRampChunk::do_write_data_as_c(std::ostream &outs)
 }
 
 bool
-synti2::MisssRampChunk::acceptEvent(unsigned int t, MidiEvent &ev)
+synti2::MisssRampChunk::acceptEvent(unsigned int t, MisssEvent &ev)
 {
-  if (!ev.isCC()) return false;
-  if (!channelMatch(ev)) return false;
-  if (!(control_input == ev.getCCnum())) return false;
+  if (!ev.isRamp()) return false;
+  if (!voiceMatch(ev)) return false;
+  if (!(mod == ev.getMod())) return false;
 
   tick.push_back(t);
-  dataind.push_back(data.size());
-
-  /* FIXME: Determine and encode time and tgt value */
-  /* OR should it be done by the writer function?? */
-  /* Doesn't really matter.. I'm re-doing this thing anyway.*/
-  /* ... or am I?*/
-  /* Must think this through at some point, yeah..
-     time is ticks here, but seconds in the encoding, etc...*/
-  /* FIXME: So far, I'll just make an instant change for each midi
-     event*/
-
-  float fval = range_min + (ev.getCCval()/127.f) * (range_max - range_min);
-  float ftime = 0.004f;
-
-  unsigned int inttime = synti2::encode_f(ftime);
-  unsigned int intval = synti2::encode_f(fval);
-
-  unsigned char buf[4];
-  size_t len;
-
-  len = encode_varlength(inttime, buf);
-  for (size_t i=0;i<len;i++){
-    data.push_back(buf[i]);
-  }
-
-  len = encode_varlength(intval, buf);
-  //std::cout << "/*In goes: "; 
-  //std::cout << synti2::decode_f(intval) << " ";
-  for (size_t i=0;i<len;i++){
-    //fmt_hexbyte(std::cout, buf[i]);
-    //std::cout << " ";
-    data.push_back(buf[i]);
-  }
-  //std::cout << "*/" << std::endl;
-
+  evt.push_back(ev);
   return true;
+/* 
+  FIXME: So far, these go unchanged all the way.  .. must re-engineer
+     this soon, somehow.  Must think this through at some point,
+     yeah..  time is ticks here, but seconds in the encoding, etc...
+*/
 }
-
-
 
 
 
@@ -243,40 +225,25 @@ synti2::MisssSong::figure_out_tempo_from_midi(MidiSong &midi_song){
 void
 synti2::MisssSong::build_chunks_from_spec(std::istream &spec)
 {
-  for (int i=0; i<9; i++){
+  for (int i=0; i<NPARTS; i++){
     /* note ons: */
-    chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
-
+    chunks.push_back(new MisssNoteChunk(i, 1, 127));
     /* note offs: */
-    //chunks.push_back(new MisssNoteChunk(i, i, -1, 0, 0, 0));
+    chunks.push_back(new MisssNoteChunk(i, 0, 0));
+    /* modulators: */
+    for (int im=0;im<NCONTROLLERS; im++){
+      chunks.push_back(new MisssRampChunk(i, im));
+    }
   }
 
-  chunks.push_back(new MisssNoteChunk(0x9, 0x9, 35, 123, 1, 127));
-  chunks.push_back(new MisssNoteChunk(0xa, 0xa, 39, 123, 1, 127));
-  chunks.push_back(new MisssNoteChunk(0xb, 0xb, 41, 123, 1, 127));
-  chunks.push_back(new MisssNoteChunk(0xc, 0xc, 41, 123, 1, 127));
-
-#if 1
-  for (int i=9; i<16; i++){
-    /* note ons: */
-    chunks.push_back(new MisssNoteChunk(i, i, -1, 123, 1, 127));
-    /* no note offs, as can be seen :) */
-
-  /* Continuous controllers: */
-  /* FIXME: see that this works... */
-  chunks.push_back(new MisssRampChunk(i, i, 0x01, 0x00, 
-                                      0.0f, 1.0f));
-
-
-  }
-#endif
-
-
-  /* FIXME: Implement. */
-  std::cout << "/*FIXME: Cannot build from spec yet.*/ " << std::endl;
+  /* FIXME: Implement. -> What? */
+  std::cout << "/*FIXME: Cannot build from spec yet.*/ " 
+            << std::endl;
+  std::cout << "/* (I wonder what I mean by that, anyway..) */ " 
+            << std::endl;
   std::string hmm;
   std::getline (spec, hmm);
-  std::cerr << hmm;
+  std::cerr << hmm << std::endl;
 }
 
 
@@ -287,40 +254,29 @@ synti2::MisssSong::translated_grab_from_midi(
 {
     std::vector<unsigned int> orig_ticks;
     std::vector<MidiEvent> orig_evs;
-    std::vector<unsigned int> ticks;
-    std::vector<MisssEvent> evs;
-
     midi_song.linearize(orig_ticks, orig_evs);
 
-    unsigned int i, ie;
-
-    /* Filter: */
-    for(i=0; i<orig_ticks.size(); i++){
+    /* Filter and collect: */
+    for(size_t i=0; i<orig_ticks.size(); i++){
       int t = orig_ticks[i];
       MidiEvent ev = orig_evs[i];
-
-      // FIXME: This from MidiMap when it is implemented:
+      if (!(ev.isNote() || ev.isCC() || ev.isBend())) continue;
+      //ev.print(std::cout);
+      //std::cout << "Tick " << t << " " << chunks.size() << " ... ";
       std::vector<MisssEvent> mev = mapper.midiToMisss(ev);
-      for(ie=0;ie<mev.size();ie++){
-        ticks.push_back(t);
-        evs.push_back(mev[i]);
+      //std::cout << "Translated to " << mev.size() << " MISSS events" << std::endl;
+      for(size_t ie=0;ie<mev.size();ie++){
+        for(unsigned int c=0; c<chunks.size(); c++){
+          if (chunks[c]->acceptEvent(t, mev[ie])) {
+            //std::cout << "Accept on chunk " << c << std::endl;
+            break;
+          }
+        }
       }
-      
-      /*std::cout << "  ";
-        orig_evs[i].print(std::cout);
-        std::cout << "->";
-        evs[i].print(std::cout);*/
     }
 
-    /* Collect: */
-    for(i=0; i<ticks.size(); i++){
-      miditick_t t = ticks[i];
-      MisssEvent ev = evs[i];
-      
-      for(unsigned int c=0; c<chunks.size(); c++){
-        if (chunks[c]->acceptEvent(t, ev)) break;
-      }
-    }
+    /* FIXME: Implement: Post-process chunks (decimate, optimize,
+       etc.) */
   }
 
 
@@ -343,7 +299,7 @@ synti2::MisssSong::write_as_c(std::ostream &outs){
   outs << "/* *********** chunks *********** */ " << std::endl;
 
   for (unsigned int i=0; i<chunks.size(); i++){
-    chunks.at(i)->write_as_c(outs);
+    chunks[i]->write_as_c(outs);
   }
 
   outs << "/* *********** end *********** */ " << std::endl;

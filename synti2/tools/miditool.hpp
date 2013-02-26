@@ -57,6 +57,9 @@ public:
   }
   bool isNote() const {return ((type == 0x9) || (type == 0x8));}
   bool isCC() const {return (type == 0xb);}
+  bool isPressure() const {return (type == 0xd);}
+  bool isBend() const {return (type == 0xe);}
+
   /* quick hack for tempo setting: */
   int get3byte() const {
     return (bulk[0] << 16) + (bulk[1] << 8) + bulk[3 /*FIXME: error? */];}

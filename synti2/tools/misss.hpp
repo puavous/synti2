@@ -8,32 +8,27 @@
 
 namespace synti2{
 
-  /** A Misss chunk is a container for "distilled" and "pre-ordered" and
-      "packed" "subset" of Misss events. MIDI-like event
-      data. Specifically, each chunk deals with exactly one channel and
-      exactly one type of messages.
-      
-      Purpose of the chunks is just to grab the filtered events, and it
-      doesn't handle channel mapping. That is the responsibility of
-      MidiMap.
-  */
+  /** 
+   * A Misss chunk is a container for "distilled" and "pre-ordered"
+   * and "packed" "subset" of Misss events. MIDI-like event
+   * data. Specifically, each chunk deals with exactly one channel and
+   * exactly one type of messages.
+   * 
+   * Purpose of the chunks is just to grab the events after they have
+   * been filtered, and it doesn't handle channel mapping. That is the
+   * sovereign responsibility of MidiMap.
+   */
   class MisssChunk{
   protected:
-    int in_channel;  /* accept channel of this chunk */
-    int out_channel; /* output channel of this chunk */
-    int bytes_per_ev; /* length of one event*/
+    int voice;  /* accept/output voice of this chunk */
     std::vector<unsigned int> tick;  /* times of events as ticks. */
-    std::vector<unsigned int> dataind;  /* corresp. data locations */
-    std::vector<unsigned char> data; /* actual data directly as bytes */
+    std::vector<MisssEvent> evt;     /* corresp. events */
+
     virtual void do_write_header_as_c(std::ostream &outs);
     virtual void do_write_data_as_c(std::ostream &outs) = 0;
-    bool channelMatch(MidiEvent &ev){ return (in_channel == ev.getChannel());}
+    bool voiceMatch(MisssEvent &ev){return (voice == ev.getVoice());}
   public:
-    /* The only way to create a chunk is by giving a text description(?)*/
-    //virtual MisssChunk(std::string desc){bytes_per_ev = 3;}
-    MisssChunk(int in_ch, int out_ch){
-      in_channel = in_ch; 
-      out_channel = out_ch;}
+    MisssChunk(int ivoice){ voice = ivoice;}
     virtual bool acceptEvent(unsigned int t, MisssEvent &ev){
       return false;
     }
@@ -49,53 +44,37 @@ namespace synti2{
   {
   private:
     /* parameters */
-    int default_note;
-    int default_velocity;
     int accept_vel_min;
     int accept_vel_max;
   protected:
     void do_write_header_as_c(std::ostream &outs);
     void do_write_data_as_c(std::ostream &outs);
   public:
-    MisssNoteChunk(int in_c, int out_c, int def_n, int def_v, 
-                   int avmin, int avmax) 
-      : MisssChunk(in_c, out_c)
-    {    default_note = def_n;    default_velocity = def_v;  
-      accept_vel_min = avmin; accept_vel_max = avmax;}
+    MisssNoteChunk(int ivoice, int avmin, int avmax) 
+      : MisssChunk(ivoice)
+    {accept_vel_min = avmin; accept_vel_max = avmax;}
+    int computeDefaultNote();
+    int computeDefaultVelocity();
     
     /** Must be called in increasing time-order. */
-    bool acceptEvent(unsigned int t, MidiEvent &ev);
+    bool acceptEvent(unsigned int t, MisssEvent &ev);
   };
   
   
-  /* FIXME: Attend to this next!!*/
   class MisssRampChunk : public MisssChunk {
   private:
     /* parameters */
-    int control_input; /* midi controller to listen to. Hmm.. Pitch? Pressure? */
-    int control_target; /* synti2 controller */
-    float range_min;
-    float range_max;
+    int mod; /* synti2 modulator to listen to. */
   protected:
     void do_write_header_as_c(std::ostream &outs);
     void do_write_data_as_c(std::ostream &outs);
   public:
-    MisssRampChunk(int in_c, int out_c, 
-                   int midi_cc, 
-                   int s2_controller,
-                   float out_range_min,
-                   float out_range_max) 
-      : MisssChunk(in_c, out_c)
-    {
-      control_input = midi_cc;
-      control_target = s2_controller;
-      range_min = out_range_min;
-      range_max = out_range_max;
-    }
+    MisssRampChunk(int ivoice, int imod) 
+      : MisssChunk(ivoice)
+    { mod = imod; }
     /** Must be called in increasing time-order. */
-    bool acceptEvent(unsigned int t, MidiEvent &ev);
-    
-    // mapping_type
+    bool acceptEvent(unsigned int t, MisssEvent &ev);
+    int getModNumber(){return mod;}
   };
   
   
@@ -120,6 +99,7 @@ namespace synti2{
     MisssSong(MidiSong &midi_song, 
               MidiMap &mapper, 
               std::istream &spec);
+    ~MisssSong(){for(size_t i=0;i<chunks.size();i++) delete chunks[i];}
     
     void write_as_c(std::ostream &outs);
   };

@@ -25,8 +25,11 @@ S2EXESRC = src/synti2.c
 S2SOURCES = $(S2EXESRC) src/synti2_jack.c src/synti2_midi.c
 
 PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp \
-		tools/midihelper.cxx tools/midihelper.hpp \
-		tools/midimaptool.cxx tools/midimaptool.hpp
+		tools/midihelper.cxx tools/midihelper.hpp 
+
+#		tools/midimaptool.cxx tools/midimaptool.hpp \
+		tools/misss.cxx tools/misss.hpp tools/misssevent.hpp \
+#		tools/miditool.cxx
 
 # Ahaa.. you can have a make inside a make... 
 

@@ -31,7 +31,8 @@ namespace synti2{
     MisssChunk(int ivoice){voice = ivoice;}
     virtual bool acceptEvent(unsigned int t, MisssEvent &ev){
       return false;}
-    virtual void optimize(std::vector<MisssChunk*> &extra){};
+    virtual void optimize(std::vector<MisssChunk*> &extra, 
+                          double ticklen){};
     int size(){return tick.size();}
     void write_as_c(std::ostream &outs){
       if (size() == 0) return; /* zero-length, don't write. */
@@ -72,6 +73,8 @@ namespace synti2{
     MisssRampChunk(int ivoice, int imod) 
       : MisssChunk(ivoice)
     { mod = imod; }
+    virtual void optimize(std::vector<MisssChunk*> &extra, 
+                          double ticklen);
     /** Must be called in increasing time-order. */
     bool acceptEvent(unsigned int t, MisssEvent &ev);
     int getModNumber(){return mod;}

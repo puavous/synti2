@@ -188,6 +188,86 @@ synti2::MisssRampChunk::do_write_data_as_c(std::ostream &outs)
   outs << std::endl;
 }
 
+void 
+synti2::MisssRampChunk::optimize(std::vector<MisssChunk*> &extra, double ticklen)
+{
+  /* Idea: Ramp ends will be: extreme values where they occur, and
+     heuristic "ends of continuous tweaks" elsewhere. Other events
+     will be skipped. Naturally also the first touch must be there as
+     an instantaneous transition.
+  */
+  if (size()==0) return;
+
+  double time_gap_setting = 0.333; /* One third of a second,
+                                      hattuvakio; should be param.*/
+
+  /* Build a new copies, assign at end.*/
+  std::vector<unsigned int> restick; 
+  std::vector<MisssEvent> resevt; 
+
+  restick.push_back(tick[0]);
+  resevt.push_back(evt[0]);
+
+  int voice = evt[0].getVoice();
+  int mod = evt[0].getMod();
+  unsigned int tick_start = 0;
+  float val_start = 0.0;
+
+  bool building = false;
+  for(size_t i=1;i<tick.size();i++){
+    /* Start building a new ramp, if previous is finished: */
+    if (!building){
+      building = true;
+      tick_start = tick[i];
+      val_start = evt[i].getTarget();
+      continue;
+    }
+
+    /* Ok, we're building the next ramp now. */
+    bool extreme = false;
+    bool rowlast = false;
+    if (i==tick.size()-1){
+      extreme == true; /* Last of the whole chunk */
+      rowlast == true; /* Last of the whole chunk */
+    } else {
+      float cval = evt[i].getTarget();
+      float pval = evt[i-1].getTarget();
+      float nval = evt[i+1].getTarget();
+      if (((cval - pval) * (cval-nval)) > 0){
+        extreme = true; /* Change of sign */
+      }
+      if (((tick[i+1] - tick[i]) * ticklen) > time_gap_setting){
+        rowlast = true; /* Last in a "row". */
+      }
+    }
+
+    double timetot = (tick[i] - tick_start) * ticklen;
+    if (extreme && (!rowlast)) {
+      /* Ramp up to here, but begin a new one straight away. */
+      MisssEvent ev(MISSS_MSG_RAMP, 
+                    voice, mod, timetot, evt[i].getTarget());
+      restick.push_back(tick_start);
+      resevt.push_back(ev);
+      /* New one starts here: */
+      tick_start = tick[i];
+      building = true;
+    }
+    if (rowlast) {
+      /* Ramp up to here, and stop building. */
+      MisssEvent ev(MISSS_MSG_RAMP, 
+                    voice, mod, timetot, evt[i].getTarget());
+      restick.push_back(tick_start);
+      resevt.push_back(ev);
+      /* Stop accumulation until further notice: */
+      building = false;
+    }
+    /* otherwise, we'll just keep on eating new events.. .*/
+  }
+
+  this->tick = restick;
+  this->evt = resevt;
+}
+
 bool
 synti2::MisssRampChunk::acceptEvent(unsigned int t, MisssEvent &ev)
 {
@@ -277,9 +357,11 @@ synti2::MisssSong::translated_grab_from_midi(
 
     /* FIXME: Implement: Post-process chunks (decimate, optimize,
        etc.) */
+    double ticklen = (double)usec_per_quarter / ticks_per_quarter 
+      / 1000000.0;
     int norig = chunks.size();
     for(size_t i = 0; i<norig; i++){
-      chunks[i]->optimize(chunks); /* chunks may grow. ugly, yeah.*/
+      chunks[i]->optimize(chunks, ticklen); /* chunks may grow. ugly, yeah.*/
     }
   }
 

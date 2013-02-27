@@ -62,7 +62,7 @@ int cmd_line_only(int argc, char **argv){
    length and tempo!! Seems to affect even the core somehow. Back to
    debugging, then...
    */
-  ms.decimateTime(24);
+  ms.decimateTime(8);
 
   synti2::MisssSong misss(ms, mapper, spec);
 

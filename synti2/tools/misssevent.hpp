@@ -23,6 +23,11 @@ namespace synti2{
     float target; /* In ramps time and target value*/
   public:
     MisssEvent(const unsigned char *misssbuf);
+    MisssEvent(int itype, int ivoic, 
+               int imod, float itime, float itarget){
+      type = itype; voice = ivoic; par1 = imod; time = itime;
+      target = itarget; /* No huhhuh. */
+    };
     bool isNote() {return type == MISSS_MSG_NOTE;}
     bool isRamp() {return type == MISSS_MSG_RAMP;}
     int getVoice() {return voice;}

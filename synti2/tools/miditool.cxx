@@ -149,7 +149,7 @@ void
 MidiEvent::toMidiBuffer(unsigned char *buf) const {
   buf[0] = (type << 4) + subtype_or_channel;
   buf[1] = par1;
-  if (isNote() || isBend()){
+  if (isNote() || isCC() || isBend()){
     buf[2] = par2;
   }
 }

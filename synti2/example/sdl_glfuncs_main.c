@@ -145,27 +145,12 @@ gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
   for(i=0; i<NUMFUNCTIONS;i++)
     {
       myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
-#if 0
+
       printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
       if( !myglfunc[i] )
         return(0);
-#endif
+
     }
-
-  pid = oglCreateProgram();
-
-  vsh = oglCreateShader(GL_VERTEX_SHADER);
-  fsh = oglCreateShader(GL_FRAGMENT_SHADER);
-
-  oglShaderSource(vsh,1,&vs,0);
-  oglShaderSource(fsh,1,&fs,0);
-
-  oglCompileShader(vsh);
-  oglCompileShader(fsh);
-
-  oglAttachShader(pid,vsh);
-  oglAttachShader(pid,fsh);
-  oglLinkProgram(pid);
 
 
   /* It costs 23-35 bytes (compressed) to politely query the display
@@ -209,12 +194,35 @@ gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
 #endif
 
 
+  /* Ok.. These need to be done after SDL is initialized: */
+  pid = oglCreateProgram();
+  vsh = oglCreateShader(GL_VERTEX_SHADER);
+  fsh = oglCreateShader(GL_FRAGMENT_SHADER);
+  oglShaderSource(vsh,1,&vs,0);
+  oglShaderSource(fsh,1,&fs,0);
+  oglCompileShader(vsh);
+  oglCompileShader(fsh);
+  oglAttachShader(pid,vsh);
+  oglAttachShader(pid,fsh);
+  oglLinkProgram(pid);
+
+
   /* Start audio after inits are done.. */
   SDL_PauseAudio(0);
 
   do
   {
-    render_using_synti2(&my_synth);
+    //    render_using_synti2(&my_synth);
+
+    //  glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
+
+      oglUseProgram(pid);
+      glRotatef(0.3f,1,1,1);
+      glRects(-1,-1,1,1);
+      SDL_GL_SwapBuffers();
+      
+
+
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);
 

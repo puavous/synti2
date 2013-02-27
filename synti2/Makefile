@@ -56,7 +56,10 @@ example1:
 	make tinyexe GFX=example/cube_thing_gfx.c \
 		SND=example/i13_musa_entry.s2bank \
 		SMF=example/i13_musa_entry.mid \
+		MAIN=example/sdl_glfuncs_main.c \
 		NONOS='-DNO_SAFETY'
+
+#		NONOS='-DNO_SAFETY -DNO_LOOPING_ENVELOPES -DNO_EXTRA_WAVETABLES -DNO_STEREO -DNO_LEGATO -DNO_PITCH_SCALING -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_RESO_ENVELOPE'
 
 	mv tinyexe $@
 

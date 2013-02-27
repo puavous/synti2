@@ -42,6 +42,7 @@ synti2_misss_mapControlValue(synti2_midi_map *map, int ic, int dest, byte_t ccva
   fa = map->chn[ic].mod_min[dest-1];
   fb = map->chn[ic].mod_max[dest-1];
   frange = fb - fa;
+  /*printf("ccval=%d fa=%f fb=%f\n",(int)ccval, fa,fb);fflush(stdout);*/
   return fa + ((float)ccval / 127.f) * frange;
 }
 
@@ -495,7 +496,6 @@ get_cont_dest(synti2_midi_map *map,
     /* +1 because the mapper has "user interface" value range*/
     if ((midi_ccnum) == map->chn[ic].mod_src[ii]){
       dest = ii+1;
-      /*printf("to %d \n",dest); fflush(stdout);*/
       break;
     }
   }

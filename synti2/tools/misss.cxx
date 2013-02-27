@@ -61,9 +61,9 @@ synti2::MisssEvent::MisssEvent(const unsigned char *misssbuf){
     target = *((float*)misssbuf);
     misssbuf += sizeof(float);
   }
-  /*
-  std::cout << "MISSS-" << type << " on voice " << voice 
-            << " par1=" << par1;
+
+  /*std::cout << "MISSS-" << type << " on voice " << voice 
+    << " par1=" << par1;
   if (type==MISSS_MSG_NOTE) std::cout << " vel= " << par2 << std::endl;
   else std::cout << "time=" << time << " tgt=" << target<< std::endl;
   */

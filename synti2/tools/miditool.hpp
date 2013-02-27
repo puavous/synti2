@@ -10,6 +10,7 @@
 #include "jack/midiport.h"
 
 #include "midihelper.hpp"
+#include <cmath>
 
 /* We're gonna use the same mapper here as in the synth.. */
 #include "../include/synti2_midi.h"
@@ -114,9 +115,10 @@ public:
   MidiTrack(std::istream &ins);
   ~MidiTrack(){for(unsigned int i=0; i<vec_evs.size(); i++){delete vec_evs[i];}}
 
-  void divideTimesBy(int divisor){
+  void tpqChange(int from, int to){
+    double mul = (double)to / from;
     for(unsigned int i=0; i<vec_tks.size(); i++){
-      vec_tks[i] = vec_tks[i] / divisor;
+      vec_tks[i] = std::floor((mul * vec_tks[i])+.5);
     }
   }
 

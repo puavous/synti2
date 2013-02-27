@@ -292,7 +292,7 @@ synti2::MisssSong::write_as_c(std::ostream &outs){
   fmt_comment(outs, "Ticks per quarter");
   fmt_varlen(outs, ticks_per_quarter);
   outs << ", " << std::endl;
-  fmt_comment(outs, "Microseconds per tick"); 
+  fmt_comment(outs, "Microseconds per quarter"); 
   fmt_varlen(outs, usec_per_quarter);
   outs << ", " << std::endl;
 

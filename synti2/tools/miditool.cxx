@@ -222,7 +222,7 @@ MidiTrack::readFrom(std::istream &ins){
     MidiEvent* nev = createNormalizedEvent(ins); /* need side effect */
     addEvent(cur_tick, nev); /* Need a factory? */
 
-    //std::cout << "tick " << cur_tick << " ";
+    //std::cout << "/*SMF tick " << cur_tick << " ( delta " << delta << ")*/" << std::endl;
     //nev->print(std::cout);
     //std::cout << "nxt " << ins.tellg() << " last " << last << std::endl;
     if (nev->isEndOfTrack()) break;
@@ -301,7 +301,7 @@ MidiSong::getMSPQ(){
 void
 MidiSong::decimateTime(unsigned int new_tpb){
   for (unsigned int i=0; i<tracks.size(); i++){
-    tracks[i]->divideTimesBy(getTPQ()/new_tpb);
+    tracks[i]->tpqChange(getTPQ(),new_tpb);
   }
   ticks_per_beat = new_tpb;
 }

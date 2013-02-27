@@ -130,28 +130,17 @@ v.y=p.g*3.0*t*v.y+v.y;\
 gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
 }";
 
-  /* init external gl commands
-
-     Note to self... there was a crash with 64-bit libraries, but
-     things worked well with 32-bit lib. And I was puzzled for a
-     long time, and so were others who tried to help..
-     But, silly me, I'm coding C now... functions return an integer 
-     (32 bits) by default, and I was lacking the signature which is
-     found in "GL/glx.h". Then it was implicitly converted to an address
-     (64 bits), so *no wonder* it crashed. So, the note to sel would be:
-     add the "warnings as errors" compiler option as the first thing, when
-     starting a project in C...
-   */
-  for(i=0; i<NUMFUNCTIONS;i++)
-    {
-      myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
-
-      printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
-      if( !myglfunc[i] )
-        return(0);
-
-    }
-
+ for(i=0; i<NUMFUNCTIONS;i++)
+   {
+     myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
+     
+#ifndef ULTRASMALL
+     printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
+     if( !myglfunc[i] )
+       return(0);
+#endif
+     
+   }
 
   /* It costs 23-35 bytes (compressed) to politely query the display
    * mode. But it is definitely worth the ease! Oooh, but it won't
@@ -214,25 +203,20 @@ gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
   {
     //    render_using_synti2(&my_synth);
 
-    //  glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
-
       oglUseProgram(pid);
       glRotatef(0.3f,1,1,1);
       glRects(-1,-1,1,1);
       SDL_GL_SwapBuffers();
-      
 
 
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);
 
-  /* Hmm... What happens if I don't close these? Will the world collapse!?*/
 #ifndef ULTRASMALL
-  SDL_CloseAudio();  /* Hmm.. Does SDL_Quit() do what this does? */
+  SDL_CloseAudio();  /* This evil? Call to SDL_Quit() sufficient? */
 #endif
 
   SDL_Quit();  /* This must happen. Otherwise problems with exit! */
-
 }
 
 

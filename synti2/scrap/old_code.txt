@@ -45,6 +45,18 @@ Letting go of some things:
 
 
 
+  /* init external gl commands
+
+     Note to self... there was a crash with 64-bit libraries, but
+     things worked well with 32-bit lib. And I was puzzled for a
+     long time, and so were others who tried to help..
+     But, silly me, I'm coding C now... functions return an integer 
+     (32 bits) by default, and I was lacking the signature which is
+     found in "GL/glx.h". Then it was implicitly converted to an address
+     (64 bits), so *no wonder* it crashed. So, the note to sel would be:
+     add the "warnings as errors" compiler option as the first thing, when
+     starting a project in C...
+   */
 
 
       /* NOTE: There will be a value jump here [in the envelope code],

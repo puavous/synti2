@@ -105,7 +105,7 @@ struct synti2_player {
   /* Playable events. The first will be at evpool[0]! */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
 
-#ifndef ULTRASMALL
+#ifndef NO_SAFETY
   unsigned int last_error_frame; /* Errors can be monitored by tools. */
   unsigned int last_error_type;  /* Error position. */
   unsigned int last_error_info;  /* Some key information about the error. */

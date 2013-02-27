@@ -180,6 +180,38 @@ testdata.c: example/one_star_j/one_star_j.mid  example/one_star_j/one_star_j.s2b
 	./cbank $(filter %.s2bank, $^) testdata.c
 	./midi2synti2 $(filter %.mid, $^) >> testdata.c
 
+tiny2:  $(TINYEXESOURCES) $(S2EXESRC) $(S2EXEHDR) Makefile \
+		midi2synti2 cbank tests/test.shad
+	-rm -f hackpack2
+	-mkdir hackpack2
+	./midi2synti2 $(filter %.mid, $^) $(filter %.s2bank, $^) > hackpack2/songdata.c
+	./cbank $(filter %.s2bank, $^) hackpack2/patchdata.c
+	cp $(filter %.c, $^) hackpack2/
+	sed 's/^ *//g; s/  */ /g; s/ *\/\/.*$$/\\/g' < tests/test.shad > hackpack2/shaders.c
+
+	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
+		-o hackpack2/$@.unstripped.payload \
+		-Iinclude \
+	        -Ihackpack2 \
+		-DULTRASMALL -nostdlib  -nostartfiles -lc \
+		$(filter %.c, $(TINYEXESOURCES)) \
+		$(filter %.c, $(S2EXESRC)) \
+		$(ARCHLIBS)
+
+	cp hackpack2/$@.unstripped.payload hackpack2/$@.payload 
+
+	$(ARCHSTRIP) $(ARCHSTRIPOPT) hackpack2/$@.payload
+	$(SSTRIP) hackpack2/$@.payload
+
+	7za a -tgzip -mx=9 tmp.gz hackpack2/$@.payload
+	cat tests/selfextr.stub tmp.gz > $@
+	rm tmp.gz
+
+	chmod ugo+x $@
+
+	@echo End result:
+	@ls -lat $@
+
 # This is a template for an easy 4k-builder 
 tinyexe: $(TINYEXESOURCES) $(S2EXESRC) $(S2EXEHDR) Makefile \
 		midi2synti2 cbank

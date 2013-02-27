@@ -17,7 +17,7 @@
 #include "synti2_misss.h"
 #include "midi_spec.h"
 
-/*#include "stdio.h"*/
+#include "stdio.h"
 
 #define INSTANT_RAMP_LENGTH 0.005f
 
@@ -490,9 +490,12 @@ get_cont_dest(synti2_midi_map *map,
   int dest, ii;
   dest = 0;
   for (ii = 0; ii<NCONTROLLERS; ii++){
+    if (map->chn[ic].mod_src[ii] == 0) continue; /* omit Bank. */
+    /* First actual possible CC is #1 ("mod wheel") */
     /* +1 because the mapper has "user interface" value range*/
-    if ((midi_ccnum+1) == map->chn[ic].mod_src[ii]){
+    if ((midi_ccnum) == map->chn[ic].mod_src[ii]){
       dest = ii+1;
+      /*printf("to %d \n",dest); fflush(stdout);*/
       break;
     }
   }

@@ -88,7 +88,8 @@ VISEXESOURCES = tests/javtest.c $(GFX) $(SND) $(SMF)
 GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx \
 	tools/midihelper.cxx
 
-PATCHEDITDEPS = tools/patchedit.cxx $(PTSOURCES)
+PATCHEDITDEPS = tools/patchedit.cxx tools/midimaptool.cxx \
+		tools/misss.cxx tools/miditool.cxx src/synti2_midi.c $(PTSOURCES)
 
 
 # C flags common to all files (normal/debug build)
@@ -150,7 +151,7 @@ midi2synti2: tools/midi2synti2.cxx  \
 		`pkg-config --cflags --libs jack`
 
 patchedit: $(PATCHEDITDEPS) Makefile
-	g++ -o $@ $(filter %.cxx %.hpp , $^) -lfltk \
+	g++ -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
 		-Isrc -Iinclude \
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`

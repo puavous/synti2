@@ -277,6 +277,10 @@ synti2::MisssSong::translated_grab_from_midi(
 
     /* FIXME: Implement: Post-process chunks (decimate, optimize,
        etc.) */
+    int norig = chunks.size();
+    for(size_t i = 0; i<norig; i++){
+      chunks[i]->optimize(chunks); /* chunks may grow. ugly, yeah.*/
+    }
   }
 
 

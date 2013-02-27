@@ -28,10 +28,10 @@ namespace synti2{
     virtual void do_write_data_as_c(std::ostream &outs) = 0;
     bool voiceMatch(MisssEvent &ev){return (voice == ev.getVoice());}
   public:
-    MisssChunk(int ivoice){ voice = ivoice;}
+    MisssChunk(int ivoice){voice = ivoice;}
     virtual bool acceptEvent(unsigned int t, MisssEvent &ev){
-      return false;
-    }
+      return false;}
+    virtual void optimize(std::vector<MisssChunk*> &extra){};
     int size(){return tick.size();}
     void write_as_c(std::ostream &outs){
       if (size() == 0) return; /* zero-length, don't write. */

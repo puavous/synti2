@@ -187,7 +187,8 @@ tiny2:  $(TINYEXESOURCES) $(S2EXESRC) $(S2EXEHDR) Makefile \
 	./midi2synti2 $(filter %.mid, $^) $(filter %.s2bank, $^) > hackpack2/songdata.c
 	./cbank $(filter %.s2bank, $^) hackpack2/patchdata.c
 	cp $(filter %.c, $^) hackpack2/
-	sed 's/^ *//g; s/  */ /g; s/ *\/\/.*$$/\\/g' < tests/test.shad > hackpack2/shaders.c
+	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
+		< tests/test.shad > hackpack2/shaders.c
 
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o hackpack2/$@.unstripped.payload \

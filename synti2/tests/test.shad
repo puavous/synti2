@@ -4,20 +4,20 @@
 const GLchar *vs="\
   varying vec4 p;\
   void main(){\
-    p=sin(gl_ModelViewMatrix[1]*9.0);\
+    p=sin(gl_ModelViewMatrix[1]);\
     gl_Position=gl_Vertex;\
   }";
 
 const GLchar *fs= "\
   varying vec4 p;\
   void main(){\
-    float r,t,j;      // comment\
-    vec4 v=gl_FragCoord/400.0-1.0;\
-    r=v.x*p.r;\
-    for(int    j=0;j<7;j++){\
-      t=v.x+p.r*p.g;\
-      v.x=t*t-v.y*v.y+r;\
-      v.y=p.g*3.0*t*v.y+v.y;\
+    float r, t, j;      // comment\
+    vec4 v = gl_FragCoord / 400.0-1.0;\
+    r = v.x * p.r;\
+    for(int    j = 0; j < 7; j++){\
+      t =   v.x + p.r * p.g;\
+      v.x = t * t-v.y * v.y+r;\
+      v.y = p.g * 3.0*t * v.y + v.y;\
     }\
-    gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
+    gl_FragColor = vec4(mix(p, vec4(t), max(t,v.x)));\
   }";

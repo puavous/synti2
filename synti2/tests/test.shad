@@ -26,3 +26,10 @@ const GLchar *fs= "\
     }\
     gl_FragColor = vec4(mix(p, vec4(t), max(t,v.x)));\
   }";
+
+static
+void render_w_shaders(const synti2_synth *s){
+    oglUseProgram(pid);
+    glRotatef(0.3f,1,1,1);
+    glRects(-1,-1,1,1);
+}

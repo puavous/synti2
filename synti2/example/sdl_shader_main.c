@@ -206,8 +206,8 @@ static void init_or_die(){
   oglLinkProgram(pid);
   
 #ifndef ULTRASMALL
-  printShaderInfoLog(vsh);  
-  printShaderInfoLog(fsh);  
+  printShaderInfoLog(vsh);
+  printShaderInfoLog(fsh);
   printProgramInfoLog(pid);
 #endif
   
@@ -224,12 +224,8 @@ static void main2(){
   SDL_PauseAudio(0); /* Start audio after inits are done.. */
   
   do {
-    
-    oglUseProgram(pid);
-    glRotatef(0.3f,1,1,1);
-    glRects(-1,-1,1,1);
+    render_w_shaders(&global_synth);
     SDL_GL_SwapBuffers();
-    
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);
   

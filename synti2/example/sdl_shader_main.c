@@ -78,8 +78,8 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
   /* Call the synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
   synti2_render(&my_synth, 
-		audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
-
+                audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
+  
   frame += len/4;
   for(i=0;i<len/2;i+=2){
 #ifdef NO_STEREO
@@ -93,26 +93,64 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
 }
 
 
+/* For Shader debugging, when ULTRASMALL is not used. */
+static void printShaderInfoLog(GLuint obj)
+{
+  int infologLength = 0;
+  int charsWritten  = 0;
+  char *infoLog;
+  
+  glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+  
+  if (infologLength > 0)
+    {
+      infoLog = (char *)malloc(infologLength);
+      glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
+      printf("%s\n",infoLog);
+      free(infoLog);
+    }
+}
+
+/* For Shader debugging, when ULTRASMALL is not used. */
+static void printProgramInfoLog(GLuint obj)
+{
+  int infologLength = 0;
+  int charsWritten  = 0;
+  char *infoLog;
+  
+  glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+  
+  if (infologLength > 0)
+    {
+      infoLog = (char *)malloc(infologLength);
+      glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
+      printf("%s\n",infoLog);
+      free(infoLog);
+    }
+}
+
+
+
 static void init_or_die(){
   SDL_AudioSpec aud;
   const SDL_VideoInfo * vid;
   int i;
-
+  
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
-
- for(i=0; i<NUMFUNCTIONS;i++)
-   {
-     myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
-     
+  
+  for(i=0; i<NUMFUNCTIONS;i++)
+    {
+      myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
+      
 #ifndef ULTRASMALL
-     printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
-     if( !myglfunc[i] ){
-       exit(1);
-     }
+      printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
+      if( !myglfunc[i] ){
+        exit(1);
+      }
 #endif
-   }
-
+    }
+  
   /* It costs 23-35 bytes (compressed) to politely query the display
    * mode. But it is definitely worth the ease! Oooh, but it won't
    * work with a dual monitor setup! (tries to make fullscreen and
@@ -120,21 +158,21 @@ static void init_or_die(){
    * this... or just compile two versions, One for fullscreen and one
    * for windowed mode.
    */
-
+  
 #ifndef NO_FULLSCREEN
   vid = SDL_GetVideoInfo();  /* get desktop mode */
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
-		   SDL_OPENGL|SDL_FULLSCREEN);
+                   SDL_OPENGL|SDL_FULLSCREEN);
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
   SDL_SetVideoMode(800,600,32,SDL_OPENGL);
 #endif
-
+  
 #ifndef ULTRASMALL
   SDL_WM_SetCaption("Soft synth SDL interface",0);
   SDL_ShowCursor(SDL_DISABLE);
 #endif
-
+  
   /* They say that OpenAudio needs to be called after video init. */
   aud.freq     = MY_SAMPLERATE;
   aud.format   = AUDIO_S16SYS;
@@ -143,7 +181,7 @@ static void init_or_die(){
   aud.callback = sound_callback;
   /*aud.userdata = NULL;*/
   /* My data is global, so userdata reference is not used */
-
+  
   /* NULL 2nd param makes SDL automatically convert btw formats. Nice! */
 #ifndef ULTRASMALL
   if (SDL_OpenAudio(&aud, NULL) < 0) {
@@ -153,8 +191,8 @@ static void init_or_die(){
 #else
   SDL_OpenAudio(&aud, NULL);  /* Would return <0 upon failure.*/
 #endif
-
-
+  
+  
   /* Ok.. These need to be done after SDL is initialized: */
   pid = oglCreateProgram();
   vsh = oglCreateShader(GL_VERTEX_SHADER);
@@ -166,68 +204,42 @@ static void init_or_die(){
   oglAttachShader(pid,vsh);
   oglAttachShader(pid,fsh);
   oglLinkProgram(pid);
-
-  /* FIXME: Should have debugging possibility unless ULTRASMALL! */
-
+  
+#ifndef ULTRASMALL
+  printShaderInfoLog(vsh);  
+  printShaderInfoLog(fsh);  
+  printProgramInfoLog(pid);
+#endif
+  
 }
 
 /** Try to wrap it... */
 static void main2(){
   SDL_Event event;
-
-  float tnow;
-
+  
   synti2_init(&my_synth, MY_SAMPLERATE, patch_sysex, hacksong_data);
-
+  
   init_or_die();
-
-  /* Start audio after inits are done.. */
-  SDL_PauseAudio(0);
-
-  do
-  {
-      
-  /*
-      oglUseProgram(pid);
-      //      glRotatef(0.3f,1,1,1);
-      glRects(-1,-1,1,1);
-  */  
-      oglUseProgram(pid);
-      glRotatef(0.3f,1,1,1);
-      glRects(-1,-1,1,1);
-      oglUseProgram(0);
-      render_using_synti2(&my_synth);
-
-      //SDL_GL_SwapBuffers();
-
+  
+  SDL_PauseAudio(0); /* Start audio after inits are done.. */
+  
+  do {
+    
+    oglUseProgram(pid);
+    glRotatef(0.3f,1,1,1);
+    glRects(-1,-1,1,1);
+    SDL_GL_SwapBuffers();
+    
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);
-
+  
 #ifndef ULTRASMALL
   SDL_CloseAudio();  /* This evil? Call to SDL_Quit() sufficient? */
 #endif
-
+  
   SDL_Quit();  /* This must happen. Otherwise problems with exit! */
 }
 
-
-/*
-Hmm... what are they doing in __libc_start_main that is absolutely 
-necessary... At the moment, my guess is that zeroing the 4 bits in
-rsp is the most crucial thing. But the bp reset could also be nice.
-
-=> 0x0000000000400de0 <+0>:	xor    %ebp,%ebp
-   0x0000000000400de2 <+2>:	mov    %rdx,%r9
-   0x0000000000400de5 <+5>:	pop    %rsi
-   0x0000000000400de6 <+6>:	mov    %rsp,%rdx
-   0x0000000000400de9 <+9>:	and    $0xfffffffffffffff0,%rsp
-   0x0000000000400ded <+13>:	push   %rax
-   0x0000000000400dee <+14>:	push   %rsp
-   0x0000000000400def <+15>:	mov    $0x401c50,%r8
-   0x0000000000400df6 <+22>:	mov    $0x401bc0,%rcx
-   0x0000000000400dfd <+29>:	mov    $0x4015c1,%rdi
-   0x0000000000400e04 <+36>:	callq  0x400c50 <__libc_start_main@plt>
- */
 
 #ifdef ULTRASMALL
 void
@@ -239,21 +251,20 @@ _start()
   asm (                                         \
        "xor %rbp,%rbp\n"                        \
        "and $0xfffffffffffffff0,%rsp"           \
-       );
+                                                );
 #endif
-
+  
   main2();
-
+  
   /* Inline assembler for exiting without need of stdlib */
   asm (                                         \
        "movl $1,%eax\n"                         \
        "xor %ebx,%ebx\n"                        \
-       "int $128\n"                             \
+       "int $128\n"                                 \
                                                 );
 }
 #else
-  int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
   main2();
   return 0;
 }

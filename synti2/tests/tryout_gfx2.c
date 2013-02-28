@@ -38,8 +38,7 @@ static void render_scene(const synti2_synth *s){
                s->voi[1].eprog[1].f, 
                s->voi[2].eprog[1].f, 0.0f);
 
-  //glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
-  glClear(GL_DEPTH_BUFFER_BIT);
+  glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
   glLoadIdentity();
   glTranslatef(0.f, -30.f ,-160.f); /* +100. * sin(time) - .1*s->note[0]); */

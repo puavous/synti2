@@ -1,6 +1,26 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+/*
+Hmm... what are they doing in __libc_start_main that is absolutely 
+necessary... At the moment, my guess is that zeroing the 4 bits in
+rsp is the most crucial thing. But the bp reset could also be nice.
+
+=> 0x0000000000400de0 <+0>:	xor    %ebp,%ebp
+   0x0000000000400de2 <+2>:	mov    %rdx,%r9
+   0x0000000000400de5 <+5>:	pop    %rsi
+   0x0000000000400de6 <+6>:	mov    %rsp,%rdx
+   0x0000000000400de9 <+9>:	and    $0xfffffffffffffff0,%rsp
+   0x0000000000400ded <+13>:	push   %rax
+   0x0000000000400dee <+14>:	push   %rsp
+   0x0000000000400def <+15>:	mov    $0x401c50,%r8
+   0x0000000000400df6 <+22>:	mov    $0x401bc0,%rcx
+   0x0000000000400dfd <+29>:	mov    $0x4015c1,%rdi
+   0x0000000000400e04 <+36>:	callq  0x400c50 <__libc_start_main@plt>
+ */
+
+
+
 About to be done.. 
 
 # FIXME: It would be perfect if the whole patch design could be partly

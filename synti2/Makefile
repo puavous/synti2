@@ -165,7 +165,6 @@ genpar: $(GENPARDEPS)
 cbank: tools/cbank.cxx $(PTSOURCES) Makefile
 	g++ -Isrc/ -Iinclude/ -o $@ -Wextra $(filter %.cxx, $^)
 
-
 # While still designing the patch system, we generate this for ease:
 include/synti2_params.h: src/patchdesign.dat genpar
 	./genpar $< $@
@@ -176,42 +175,58 @@ benchmark: tests/benchmark.c src/synti2.c include/synti2.h testdata.c Makefile
 	$(CC) $(CFLAGS) -I./ -I./include -o $@ \
 		$(filter %.c , $^) -lm
 
-testdata.c: example/one_star_j/one_star_j.mid  example/one_star_j/one_star_j.s2bank
-	./cbank $(filter %.s2bank, $^) testdata.c
-	./midi2synti2 $(filter %.mid, $^) >> testdata.c
 
-tiny2:  $(TINYEXESOURCES) $(S2EXESRC) $(S2EXEHDR) Makefile \
-		midi2synti2 cbank tests/test.shad
-	-rm -f hackpack2
+
+# These files are needed for every stand-alone 4k compilation:
+TINYFILES = src/synti2.c \
+	     src/synti2_fdec.c \
+	     example/sdl_shader_main.c \
+	     include/synti2.h \
+	     include/synti2_guts.h \
+	     include/synti2_params.h \
+	     include/synti2_misss.h \
+	     include/synti2_archdep.h \
+	     tests/tinymaker.makefile \
+	     tests/selfextr.stub \
+
+# These are additionally needed for compose-time with jack engine:
+JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
+
+
+# Instanssi 13 4k entry:
+# Specifics needed are song, sounds, and gfx:
+I13FILES = example/i13_4k/i13_musa_entry.mid \
+	   example/i13_4k/i13_musa_entry.s2bank \
+	   example/i13_4k/render.c \
+	   example/i13_4k/shaders.c
+
+i13tiny:
+	make tiny2 \
+	    CUSTOMFILES="$(I13FILES)" \
+	    NONOS="-DNO_FILTER_CUT_ENVELOPE"
+	mv hackpack2/vis2 ./jacksynti2
+
+# For compose mode:
+#vis2: $(TINYFILES) $(CUSTOMFILES)
+#	-rm -r hackpack2
+#	-mkdir hackpack2
+
+
+# For 4k stand-alone mode:
+tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
+	-rm -r hackpack2
 	-mkdir hackpack2
-	./midi2synti2 $(filter %.mid, $^) $(filter %.s2bank, $^) > hackpack2/songdata.c
-	./cbank $(filter %.s2bank, $^) hackpack2/patchdata.c
-	cp $(filter %.c, $^) hackpack2/
+	./midi2synti2 $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
+	./cbank $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdata.c
+	cp $(filter %.c %.h, $^) hackpack2/
+	cp include/synti2_cap_default.h hackpack2/
+	cp tests/tinymaker.makefile hackpack2/Makefile
+	cp tests/selfextr.stub hackpack2/
 	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
-		< tests/test.shad > hackpack2/shaders.c
+		< $(filter %shaders.c, $^) > hackpack2/shaders.c
 
-	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
-		-o hackpack2/$@.unstripped.payload \
-		-Iinclude \
-	        -Ihackpack2 \
-		-DULTRASMALL -nostdlib  -nostartfiles -lc \
-		$(filter %.c, $(TINYEXESOURCES)) \
-		$(filter %.c, $(S2EXESRC)) \
-		$(ARCHLIBS)
+	cd hackpack2; make
 
-	cp hackpack2/$@.unstripped.payload hackpack2/$@.payload 
-
-	$(ARCHSTRIP) $(ARCHSTRIPOPT) hackpack2/$@.payload
-	$(SSTRIP) hackpack2/$@.payload
-
-	7za a -tgzip -mx=9 tmp.gz hackpack2/$@.payload
-	cat tests/selfextr.stub tmp.gz > $@
-	rm tmp.gz
-
-	chmod ugo+x $@
-
-	@echo End result:
-	@ls -lat $@
 
 # This is a template for an easy 4k-builder 
 tinyexe: $(TINYEXESOURCES) $(S2EXESRC) $(S2EXEHDR) Makefile \

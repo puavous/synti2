@@ -42,6 +42,14 @@ static char *strs[] = {
 	"glUseProgram",
 };
 
+/* The shaders */
+#include "shaders.c"
+
+/* These datas are created by the tool programs: */
+/* I'm dirty enough to just include them: */
+#include "patchdata.c"
+#include "songdata.c"
+
 typedef void *func_t(void);
 
 func_t *myglfunc[NUMFUNCTIONS];
@@ -50,19 +58,15 @@ func_t *myglfunc[NUMFUNCTIONS];
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
 float audiobuf[AUDIOBUFSIZE];
 
-synti2_synth my_synth;
+synti2_synth global_synth;
 
 static long frame = 0;
 
 /* gl shader stuff... global. Hmm. cost of putting into a struct? */
 GLuint vsh,fsh,pid;
 
-
-/* These datas are created by the tool programs: */
-/* I'm dirty enough to just include them: */
-#include "patchdata.c"
-#include "songdata.c"
-#include "shaders.c"
+/* The rendering functions: */
+#include "render.c"
 
 /**
  * Process sound with our own synthesis, then convert to SDL format.
@@ -70,14 +74,16 @@ GLuint vsh,fsh,pid;
  * (If I understood the doc, it says that SDL does any necessary
  * conversion internally)
  */
-static void sound_callback(void *udata, Uint8 *stream, int len)
+static 
+void 
+sound_callback(void *udata, Uint8 *stream, int len)
 {
   int i;
   float vol = 32767.0f; /* Synti2 waveshaper squashes output to [-1,1] */
   
   /* Call the synth engine and convert samples to native type (SDL) */
   /* Lengths are now hacked - will have stereo output from synti2.*/
-  synti2_render(&my_synth, 
+  synti2_render(&global_synth, 
                 audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
   
   frame += len/4;
@@ -217,7 +223,7 @@ static void init_or_die(){
 static void main2(){
   SDL_Event event;
   
-  synti2_init(&my_synth, MY_SAMPLERATE, patch_sysex, hacksong_data);
+  synti2_init(&global_synth, MY_SAMPLERATE, patch_sysex, hacksong_data);
   
   init_or_die();
   
@@ -243,7 +249,7 @@ __attribute__ ((externally_visible))
 _start()
 {
 #ifndef NO_I64
-  /* AMD64 requires stack alignment */
+  /* x64-64 requires stack alignment */
   asm (                                         \
        "xor %rbp,%rbp\n"                        \
        "and $0xfffffffffffffff0,%rsp"           \

@@ -34,15 +34,14 @@ static void kuutio(){
   glPopMatrix();
 }
 
-static void himpale(int par1, float par2){
+static void himpale(int par1, float par2, float par3){
   int i;
   glPushMatrix();
   for(i=0;i<par1;i++){
-    glRotatef(360.f/par1, 0.f, 0.f, 1.f);
-    glPushMatrix();
-    glTranslatef(par2, 0.f, 0.f);
+    glTranslatef(.0f, 0.f, 2.0f);
+    glRotatef(par2, 1.f, 0.f, 0.f);
     kuutio();
-    glPopMatrix();
+    par2 -= par3;
   }
   glPopMatrix();
 }
@@ -67,14 +66,18 @@ static void render_scene(const synti2_synth *s){
 
   //glTranslatef(0.f, 0.f , -20.f);
 
-  glRotatef(time*(1.f+s->voi[4].note), 1.f, s->voi[4].note % 3, 0.f);
+  //glRotatef(time*(1.f+s->voi[4].note), 1.f, s->voi[4].note % 3, 0.f);
+  glRotatef(time*9.f, 1.f, 0.5f, 0.f);
 
-  a = s->voi[4].note % 13;
-  n = 10 + (a);
-  for(i = 0; i<n; i++){
-    himpale(6, 10.f+cf);
-    glTranslatef(0.f, 0.f, 3.f-cf);
-    glRotatef(360.f/n, 1.f, 0.f, 0.f);
+  //a = s->voi[4].note % 13;
+  for (a=0;a<4;a++){
+    n = 20;
+    for(i = 0; i<n; i++){
+      himpale(20, sin(time), sin(time*i));
+      
+      glRotatef(360.f/n, 0.f, 1.f, 0.f);
+    }
+    glTranslatef(0.f, 8.f, 0.f);
   }
 }
 

@@ -1,6 +1,14 @@
 Old contemplations of formats and stuff..
 -----------------------------------------
 
+Notes to self.. Modern computer graphics books(?):
+
+  Graphics Shaders: Theory and Practice, Second Edition
+
+Nice sites about graphics stuff:
+
+  http://www.kickjs.org/tool/shader_editor/shader_editor.html?null
+
 /*
 Hmm... what are they doing in __libc_start_main that is absolutely 
 necessary... At the moment, my guess is that zeroing the 4 bits in

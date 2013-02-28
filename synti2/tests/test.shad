@@ -1,5 +1,10 @@
-  /* The shader here are stolen from somewhere and then re-stolen by
-     me; they are here just as an example/placeholder*/
+/* The shaders here are stolen from somewhere and then re-stolen by
+ * me; they are here just as an example/placeholder
+ */
+
+/* Hmm.. Note to self and others.. a nice tool for learning: 
+ * http://www.kickjs.org/example/shader_editor/shader_editor.html
+ */
 
 const GLchar *vs="\
   varying vec4 p;\
@@ -16,7 +21,7 @@ const GLchar *fs= "\
     r = v.x * p.r;\
     for(int    j = 0; j < 7; j++){\
       t =   v.x + p.r * p.g;\
-      v.x = t * t-v.y * v.y+r;\
+      v.x = t * t-v.y * v.y + r;\
       v.y = p.g * 3.0*t * v.y + v.y;\
     }\
     gl_FragColor = vec4(mix(p, vec4(t), max(t,v.x)));\

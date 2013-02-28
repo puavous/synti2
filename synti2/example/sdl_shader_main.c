@@ -54,6 +54,10 @@ synti2_synth my_synth;
 
 static long frame = 0;
 
+/* gl shader stuff... global. Hmm. cost of putting into a struct? */
+GLuint vsh,fsh,pid;
+
+
 /* These datas are created by the tool programs: */
 /* I'm dirty enough to just include them: */
 #include "patchdata.c"
@@ -89,22 +93,10 @@ static void sound_callback(void *udata, Uint8 *stream, int len)
 }
 
 
-/** Try to wrap it... */
-static void main2(){
-  SDL_Event event;
+static void init_or_die(){
   SDL_AudioSpec aud;
-
   const SDL_VideoInfo * vid;
-  float tnow;
-
-  // gl shader stuff...
-  GLuint vsh,fsh,pid;
-
   int i;
-
-  /* Checks of possible failures?*/
-  //st = synti2_create(MY_SAMPLERATE, patch_sysex, hacksong_data);
-  synti2_init(&my_synth, MY_SAMPLERATE, patch_sysex, hacksong_data);
 
   /* Do some SDL init stuff.. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
@@ -115,10 +107,10 @@ static void main2(){
      
 #ifndef ULTRASMALL
      printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
-     if( !myglfunc[i] )
-       return(0);
+     if( !myglfunc[i] ){
+       exit(1);
+     }
 #endif
-     
    }
 
   /* It costs 23-35 bytes (compressed) to politely query the display
@@ -134,6 +126,7 @@ static void main2(){
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
 		   SDL_OPENGL|SDL_FULLSCREEN);
 #else
+  /* Make video mode changeable from compilation? ifdef H800 ..*/
   SDL_SetVideoMode(800,600,32,SDL_OPENGL);
 #endif
 
@@ -174,19 +167,38 @@ static void main2(){
   oglAttachShader(pid,fsh);
   oglLinkProgram(pid);
 
+  /* FIXME: Should have debugging possibility unless ULTRASMALL! */
+
+}
+
+/** Try to wrap it... */
+static void main2(){
+  SDL_Event event;
+
+  float tnow;
+
+  synti2_init(&my_synth, MY_SAMPLERATE, patch_sysex, hacksong_data);
+
+  init_or_die();
 
   /* Start audio after inits are done.. */
   SDL_PauseAudio(0);
 
   do
   {
-    //    render_using_synti2(&my_synth);
-
+      
+  /*
+      oglUseProgram(pid);
+      //      glRotatef(0.3f,1,1,1);
+      glRects(-1,-1,1,1);
+  */  
       oglUseProgram(pid);
       glRotatef(0.3f,1,1,1);
       glRects(-1,-1,1,1);
-      SDL_GL_SwapBuffers();
+      oglUseProgram(0);
+      render_using_synti2(&my_synth);
 
+      //SDL_GL_SwapBuffers();
 
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);

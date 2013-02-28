@@ -9,9 +9,16 @@
 
 static void sivu(){
       glBegin(GL_QUADS);
+      glNormal3f(  0.f,   0.f,   1.f);
       glVertex3i(  1,   1,   1);
+
+      glNormal3f(  0.f,   0.f,   1.f);
       glVertex3i( -1,   1,   1);
+
+      glNormal3f(  0.f,   0.f,   1.f);
       glVertex3i( -1,  -1,   1);
+
+      glNormal3f(  0.f,   0.f,   1.f);
       glVertex3i(  1,  -1,   1);
       glEnd();
 }
@@ -57,6 +64,9 @@ static void render_scene(const synti2_synth *s){
 
   cf = s->voi[9].eprog[1].f;
   glClearColor (cf, cf, cf, 0.0);
+
+  glEnable(GL_NORMALIZE);
+  glEnable(GL_RESCALE_NORMAL);
 
   glEnable(GL_DEPTH_TEST);
   glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);

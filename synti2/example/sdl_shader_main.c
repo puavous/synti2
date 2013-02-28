@@ -149,7 +149,7 @@ static void init_or_die(){
     {
       myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
       
-#ifndef ULTRASMALL
+#ifdef NEED_DEBUG
       printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
       if( !myglfunc[i] ){
         exit(1);
@@ -211,7 +211,7 @@ static void init_or_die(){
   oglAttachShader(pid,fsh);
   oglLinkProgram(pid);
   
-#ifndef ULTRASMALL
+#ifdef NEED_DEBUG
   printShaderInfoLog(vsh);
   printShaderInfoLog(fsh);
   printProgramInfoLog(pid);

@@ -195,8 +195,8 @@ JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
 
 # Instanssi 13 4k entry:
 # Specifics needed are song, sounds, and gfx:
-I13FILES = example/i13_4k/i13_musa_entry.mid \
-	   example/i13_4k/i13_musa_entry.s2bank \
+I13FILES = example/i13_4k/i13_4k.mid \
+	   example/i13_4k/i13_4k.s2bank \
 	   example/i13_4k/render.c \
 	   example/i13_4k/shaders.c
 

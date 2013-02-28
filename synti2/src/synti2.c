@@ -180,7 +180,7 @@ synti2_player_event_add(synti2_synth *s,
   }
   ev_new = s->seq.freeloc++;
   
-#ifndef ULTRASMALL
+#ifndef NO_SAFETY
   /* Compose-mode checks for storage size. */
   if (ev_new > (s->seq.evpool+SYNTI2_MAX_SONGEVENTS)){
     ev_new = --(s->seq.freeloc);
@@ -267,7 +267,7 @@ synti2_player_merge_chunk(synti2_synth *s,
       synti2_player_event_add(s, frame, msg);
     }
 #endif
-#ifndef ULTRASMALL
+#ifndef NO_SAFETY
     else {
       s->seq.last_error_frame = frame;
       s->seq.last_error_type = SYNTI2_ERROR_UNKNOWN_LAYER;
@@ -542,7 +542,7 @@ synti2_do_receiveSysexData(synti2_synth *s, const byte_t * data){
     decode7b4(data, &encoded_fval);
     s->voi[ipat].patch.fpar[ir] = synti2_decode_f(encoded_fval);
   } 
-#ifndef ULTRASMALL
+#ifndef NO_SAFETY
   else {
     s->last_error_frame = s->framecount;
     s->last_error_type = SYNTI2_ERROR_UNKNOWN_OPCODE;
@@ -599,7 +599,7 @@ synti2_handleInput(synti2_synth *s,
       synti2_do_receiveSysexData(s, msgbuf+1);
 #endif
     
-#ifndef ULTRASMALL
+#ifndef NO_SAFETY
     } else {
       s->last_error_frame = s->framecount;
       s->last_error_type = SYNTI2_ERROR_UNKNOWN_MESSAGE;

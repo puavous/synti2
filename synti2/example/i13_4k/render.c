@@ -47,56 +47,31 @@ static void render_scene(const synti2_synth *s){
 
   float time = (float)(s->framecount) / s->sr;
 
-  //   GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-  //GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-  GLfloat mat_ambient[4];
-  GLfloat mat_specular[4];
-  GLfloat mat_shininess[] = { 50.0f };
-  GLfloat light_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+  /*   GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+       GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+  */
 
   float cf;
   int a,n;
 
-  for(i=0;i<4;i++){
-    mat_specular[i] = 1.f - s->voi[2].eprog[3].f;
-  }
-   
-   //   GLfloat mat_diffuse[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 
-   cf = s->voi[1].eprog[1].f;
-   glClearColor (cf, cf, cf, 0.0);
+  cf = s->voi[1].eprog[1].f;
+  glClearColor (cf, cf, cf, 0.0);
 
-   //   glShadeModel (GL_SMOOTH);  // Default?
+  glEnable(GL_DEPTH_TEST);
 
-   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_specular);
-   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-   glEnable(GL_LIGHTING);
-   glEnable(GL_LIGHT0);
-   glEnable(GL_DEPTH_TEST);
-
-   glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
+  glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
   glLoadIdentity();
-  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-  glTranslatef(0.f, 0.f , -20.f); // +100. * sin(time) - .1*s->note[0]);
-  /*glTranslatef(data[400]*time,data[600]*time,-150);*/
+  //glTranslatef(0.f, 0.f , -20.f);
 
-  // glScalef(mat_specular[0], mat_specular[0],mat_specular[0]);
-
-
-  //glRotatef(time*45.f, 0.f, 1.f, 0.f);
   glRotatef(time*(1.f+s->voi[4].note), 1.f, s->voi[4].note % 3, 0.f);
 
   a = s->voi[4].note % 13;
   n = 10 + (a);
   for(i = 0; i<n; i++){
-    //    glPushMatrix();
     himpale(6, 10.f+cf);
-    //    glPopMatrix();
     glTranslatef(0.f, 0.f, 3.f-cf);
     glRotatef(360.f/n, 1.f, 0.f, 0.f);
   }
@@ -109,11 +84,13 @@ void render_w_shaders(const synti2_synth *s){
   glFrustum(-1.33,1.33,-1,1,1.5,400);
 
   glMatrixMode(GL_MODELVIEW);
-  glEnable(GL_DEPTH_TEST);
+  /*  glEnable(GL_DEPTH_TEST);*/
 
   oglUseProgram(pid);
+
   render_scene(s);
-  //SDL_GL_SwapBuffers();
+
+  /*SDL_GL_SwapBuffers();*/
 }
 /*
 static

@@ -38,7 +38,7 @@ TINYSOURCES = sdl_shader_main.c synti2.c
 TINYHEADERS = synti2_archdep.h  synti2_cap_default.h  synti2_guts.h  synti2.h  synti2_misss.h  synti2_params.h
 TINYHACKS = shaders.c render.c patchdata.c songdata.c 
 
-all: tiny2 vis2
+all: vis2 tiny2
 
 tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
@@ -62,10 +62,11 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	@echo End result:
 	@ls -lt $@
 
-
+#The "no-nos" are used here, too, now(!):
 vis2: $(JACKSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(CFLAGS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o $@  -DJACK_MIDI -DNO_FULLSCREEN \
+		$(NONOS) \
 		-I../include \
 		$(filter %.c, $(JACKSOURCES)) \
 		`pkg-config --cflags --libs jack` \

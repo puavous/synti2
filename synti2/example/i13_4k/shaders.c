@@ -4,9 +4,11 @@
 
 const GLchar *vs="\
   void main(){\
-    gl_Position = ftransform();\
+    //gl_Position = ftransform();\
     // That is essentially the same as \
     // gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex; \
+    // .. And we can do translations and stuff in here:\
+    gl_Position = gl_ProjectionMatrix * (gl_ModelViewMatrix * gl_Vertex - vec4(0.0,0.0,20.0,0.0)); \
   }";
 
 const GLchar *fs= "\

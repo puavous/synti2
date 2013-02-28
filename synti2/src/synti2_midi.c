@@ -427,6 +427,11 @@ synti2_map_note_on(synti2_midi_map *map,
   int iv;
   midi_note = *midi_in++;
   midi_vel = *midi_in++;
+
+  /* Override velocity, if they want us to: */
+  if (map->chn[ic].use_const_velocity > 0){
+    midi_vel = map->chn[ic].use_const_velocity;
+  }
   
   if (map->chn[ic].mode == MM_MODE_DUP){
     /* Create unison duplicates on the listed voices: */

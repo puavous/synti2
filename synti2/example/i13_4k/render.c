@@ -54,19 +54,11 @@ static void render_scene(const synti2_synth *s){
 
   float time = (float)(s->framecount) / s->sr;
 
-  /*   GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-       GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-  */
-
   float cf;
   int a,n;
 
-
   cf = s->voi[9].eprog[1].f;
   glClearColor (cf, cf, cf, 0.0);
-
-  glEnable(GL_NORMALIZE);
-  glEnable(GL_RESCALE_NORMAL);
 
   glEnable(GL_DEPTH_TEST);
   glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);

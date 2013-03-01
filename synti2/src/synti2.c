@@ -765,7 +765,9 @@ synti2_updateFrequencies(const synti2_synth *s,
 #ifndef NO_DETUNE
     /* Optional detune */
     notemod += pat->fpar[SYNTI2_F_DT1 + iosc];    /* "coarse" */
+#ifndef NO_FINE_DETUNE
     notemod += pat->fpar[SYNTI2_F_DT1F + iosc];   /* "fine"   */
+#endif
 #endif
     
 #ifndef NO_PITCH_BEND

@@ -22,25 +22,7 @@
 #define MY_SAMPLERATE 48000
 #define AUDIOBUFSIZE  4096
 
-#define NUMFUNCTIONS 7    //number of functions in *strs function array
-
-#define oglCreateProgram	            ((PFNGLCREATEPROGRAMPROC)myglfunc[0])
-#define oglCreateShader		            ((PFNGLCREATESHADERPROC)myglfunc[1])
-#define oglShaderSource                 ((PFNGLSHADERSOURCEPROC)myglfunc[2])
-#define oglCompileShader                ((PFNGLCOMPILESHADERPROC)myglfunc[3])
-#define oglAttachShader                 ((PFNGLATTACHSHADERPROC)myglfunc[4])
-#define oglLinkProgram                  ((PFNGLLINKPROGRAMPROC)myglfunc[5])
-#define oglUseProgram                   ((PFNGLUSEPROGRAMPROC)myglfunc[6])
-
-static char *strs[] = {
-	"glCreateProgram",
-	"glCreateShader",
-	"glShaderSource",
-	"glCompileShader",
-	"glAttachShader",
-	"glLinkProgram",
-	"glUseProgram",
-};
+#include "glfuncs.c"
 
 /* The shaders */
 #include "shaders.c"
@@ -60,7 +42,11 @@ float audiobuf[AUDIOBUFSIZE];
 
 synti2_synth global_synth;
 
-static long frame = 0;
+//static long frame = 0;
+
+/* Default values for screen size: */
+//static int window_h = 600;
+static float ar;
 
 /* gl shader stuff... global. Hmm. cost of putting into a struct? */
 GLuint vsh,fsh,pid;
@@ -86,7 +72,7 @@ sound_callback(void *udata, Uint8 *stream, int len)
   synti2_render(&global_synth, 
                 audiobuf, len/4); /* 4 = 2 bytes times 2 channels. */
   
-  frame += len/4;
+  //  frame += len/4;
   for(i=0;i<len/2;i+=2){
 #ifdef NO_STEREO
     ((Sint16*)stream)[i+1] 
@@ -169,9 +155,13 @@ static void init_or_die(){
   vid = SDL_GetVideoInfo();  /* get desktop mode */
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
                    SDL_OPENGL|SDL_FULLSCREEN);
+  //window_h=vid->current_h;
+ 
+  ar = (float)vid->current_w/vid->current_h;
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
-  SDL_SetVideoMode(800,600,32,SDL_OPENGL);
+  ar = 4.f/3.f;
+  SDL_SetVideoMode(ar*window_h,window_h,32,SDL_OPENGL);
 #endif
   
 #ifndef ULTRASMALL
@@ -230,7 +220,17 @@ static void main2(){
   SDL_PauseAudio(0); /* Start audio after inits are done.. */
   
   do {
+    oglMatrixMode(GL_PROJECTION);
+    oglLoadIdentity();
+    //    oglFrustum(-1.33f,1.33f,-1.f,1.f,1.5f,400.f);
+    /* The exe would be smaller, were screen size hard-coded.. 
+     .. but I try to be nice.. */
+    oglFrustum(-ar,ar,-1.f,1.f,1.f,400.f);
+    oglMatrixMode(GL_MODELVIEW);
+    oglLoadIdentity();
+
     render_w_shaders(&global_synth);
+
     SDL_GL_SwapBuffers();
     SDL_PollEvent(&event);
   } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);

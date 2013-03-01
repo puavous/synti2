@@ -198,12 +198,13 @@ JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
 I13FILES = example/i13_4k/i13_4k.mid \
 	   example/i13_4k/i13_4k.s2bank \
 	   example/i13_4k/render.c \
-	   example/i13_4k/shaders.c
+	   example/i13_4k/shaders.c \
+	   example/glfuncs.c
 
 i13tiny:
 	make tiny2 \
 	    CUSTOMFILES="$(I13FILES)" \
-	    NONOS="-DNO_SAFETY -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO"
+	    NONOS="-DNO_SAFETY -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_VELOCITY -DNO_CC -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO"
 	mv hackpack2/vis2 ./jacksynti2
 
 # For compose mode:

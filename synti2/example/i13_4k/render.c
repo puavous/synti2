@@ -97,11 +97,16 @@ static void render_scene(const synti2_synth *s){
 
 /** Render something that varies with time and "audio snapshot". */
 static
-void render_w_shaders(const synti2_synth *s){
-  /*  glEnable(GL_DEPTH_TEST);*/
+void render_w_shaders(const synti2_synth *s, float ar){
 
+  oglMatrixMode(GL_PROJECTION);
+  oglLoadIdentity();
+  /* The exe would be smaller, were screen size hard-coded.. 
+     .. but I try to be nice.. */
+  oglFrustum(-ar,ar,-1.f,1.f,4.f,400.f);
+  oglMatrixMode(GL_MODELVIEW);
+  oglLoadIdentity();
   oglUseProgram(pid);
-  render_scene(s);
 
-  /*SDL_GL_SwapBuffers();*/
+  render_scene(s);
 }

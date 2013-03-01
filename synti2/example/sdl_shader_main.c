@@ -32,8 +32,8 @@
 #include "patchdata.c"
 #include "songdata.c"
 
-typedef void *func_t(void);
 
+typedef void *func_t(void);
 func_t *myglfunc[NUMFUNCTIONS];
 
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
@@ -163,7 +163,7 @@ static void init_or_die(){
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
   ar = 4.f/3.f;
-  SDL_SetVideoMode(ar*window_h,window_h,32,SDL_OPENGL);
+  SDL_SetVideoMode(ar*600,600,32,SDL_OPENGL);
 #endif
   
 #ifndef ULTRASMALL
@@ -222,16 +222,7 @@ static void main2(){
   SDL_PauseAudio(0); /* Start audio after inits are done.. */
   
   do {
-    oglMatrixMode(GL_PROJECTION);
-    oglLoadIdentity();
-    //    oglFrustum(-1.33f,1.33f,-1.f,1.f,1.5f,400.f);
-    /* The exe would be smaller, were screen size hard-coded.. 
-     .. but I try to be nice.. */
-    oglFrustum(-ar,ar,-1.f,1.f,4.f,400.f);
-    oglMatrixMode(GL_MODELVIEW);
-    oglLoadIdentity();
-
-    render_w_shaders(&global_synth);
+    render_w_shaders(&global_synth,ar);
 
     SDL_GL_SwapBuffers();
     SDL_PollEvent(&event);

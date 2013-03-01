@@ -66,6 +66,7 @@ synti2_synth global_synth;
 
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
+float ar;  /* screen aspect ratio */
 
 static void signal_handler(int sig)
 {
@@ -230,15 +231,14 @@ static void init_or_die(){
   vid = SDL_GetVideoInfo();  /* get desktop mode */
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
                    SDL_OPENGL|SDL_FULLSCREEN);
+  //window_h=vid->current_h;
+ 
+  ar = (float)vid->current_w/vid->current_h;
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
-  SDL_SetVideoMode(800,600,32,SDL_OPENGL);
+  ar = 4.f/3.f;
+  SDL_SetVideoMode(ar*600,600,32,SDL_OPENGL);
 #endif
-  
-#ifndef ULTRASMALL
-  SDL_WM_SetCaption("Soft synth SDL interface",0);
-  SDL_ShowCursor(SDL_DISABLE);
-#endif  
   
   /* Ok.. These need to be done after SDL is initialized: */
   pid = oglCreateProgram();
@@ -269,16 +269,8 @@ static void main2(){
   SDL_PauseAudio(0); /* Start audio after inits are done.. */
   
   do {
-    oglMatrixMode(GL_PROJECTION);
-    oglLoadIdentity();
-    oglFrustum(-1.33f,1.33f,-1.f,1.f,1.5f,400.f);
-    /* The exe would be smaller, were screen size hard-coded.. 
-     .. but I try to be nice.. */
-    //oglFrustum(-,ar,-1.f,1.f,4.f,400.f);
-    oglMatrixMode(GL_MODELVIEW);
-    oglLoadIdentity();
 
-    render_w_shaders(&global_synth);
+    render_w_shaders(&global_synth, ar);
 
     SDL_GL_SwapBuffers();
     SDL_PollEvent(&event);

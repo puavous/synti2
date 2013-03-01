@@ -8,19 +8,19 @@ const GLchar *vs="\
   varying vec4 po; // A test of my own.. for education                  \
   void main(){                                                          \
     po = gl_Vertex;                                                     \
-    vec4 t;                                                             \
+    vec4 t=vec4(0.0,0.0,0.0,0.0);                                       \
     float k=1.0; // 'Kick'                                              \
     if (po.z < -9.0){                                                   \
-      t=vec4(sin(s[0]),cos(s[0]), 10.0, 0.0);                           \
+      t=vec4(sin(s[0]),cos(s[0]), 0.0, 0.0);                            \
     } else if (po.z < -8.0){                                            \
-      t=vec4(sin(3.0*s[0]),cos(5.0*s[0]), 10.0, 0.0);                   \
+      t=vec4(sin(3.0*s[0]),cos(5.0*s[0]), 0.0, 0.0);                    \
     } else if (po.z < -7.0) {                                           \
-      t=vec4(sin(5.0*s[0]),cos(s[0]+3.0), 10.0, 0.0);                   \
+      t=vec4(sin(5.0*s[0]),cos(s[0]+3.0), 0.0, 0.0);                    \
     } else {                                                            \
-      t=vec4(0.0,0.0,10.0,0.0);                                         \
-      k=k+s[9];                                                         \
+      k=k+sqrt(s[1]);                                                   \
       po.z=1.0+(po.z*(1.0-cos(s[0])));                                  \
     }                                                                   \
+    t.z=15.0;\
     gl_Position = gl_ProjectionMatrix * ((gl_ModelViewMatrix * k * po-t)); \
     gl_FrontColor = vec4(1.0,po.x,po.y,1.0);                            \
     // Here's my normal, if I need it after all:                        \

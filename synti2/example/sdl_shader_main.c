@@ -20,7 +20,7 @@
 #include "synti2_guts.h"
 
 #define MY_SAMPLERATE 48000
-#define AUDIOBUFSIZE  4096
+#define AUDIOBUFSIZE  8192
 
 #include "glfuncs.c"
 
@@ -45,7 +45,9 @@ synti2_synth global_synth;
 //static long frame = 0;
 
 /* Default values for screen size: */
-//static int window_h = 600;
+#ifdef NO_FULLSCREEN
+static int window_h = 600;
+#endif
 static float ar;
 
 /* gl shader stuff... global. Hmm. cost of putting into a struct? */

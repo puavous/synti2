@@ -265,9 +265,20 @@ static void main2(){
   SDL_PauseAudio(0); /* Start audio after inits are done.. */
   
   do {
+    oglMatrixMode(GL_PROJECTION);
+    oglLoadIdentity();
+    oglFrustum(-1.33f,1.33f,-1.f,1.f,1.5f,400.f);
+    /* The exe would be smaller, were screen size hard-coded.. 
+     .. but I try to be nice.. */
+    //oglFrustum(-,ar,-1.f,1.f,4.f,400.f);
+    oglMatrixMode(GL_MODELVIEW);
+    oglLoadIdentity();
+
     render_w_shaders(&global_synth);
+
     SDL_GL_SwapBuffers();
     SDL_PollEvent(&event);
+
     usleep(1000000/50); /*50 Hz refresh enough for testing..*/
   } while (event.type != SDL_QUIT);
   

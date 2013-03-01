@@ -18,7 +18,7 @@ const GLchar *vs="\
       t=vec4(sin(5.0*s[0]),cos(s[0]+3.0), 10.0, 0.0);                   \
     } else {                                                            \
       t=vec4(0.0,0.0,10.0,0.0);                                         \
-      k=k+s[9];                                                         \
+      po.z=po.z+s[9];                                                         \
     }                                                                   \
     gl_Position = gl_ProjectionMatrix * ((gl_ModelViewMatrix * k * po-t)); \
     gl_FrontColor = vec4(1.0,po.x,po.y,1.0);                            \

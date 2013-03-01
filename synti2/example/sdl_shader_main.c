@@ -42,15 +42,13 @@ float audiobuf[AUDIOBUFSIZE];
 
 synti2_synth global_synth;
 
-//static long frame = 0;
-
 /* Default values for screen size: */
 #ifdef NO_FULLSCREEN
 static int window_h = 600;
 #endif
 static float ar;
 
-/* gl shader stuff... global. Hmm. cost of putting into a struct? */
+/* gl shader stuff... global. Hmm. cost/gain of putting into a struct? */
 GLuint vsh,fsh,pid;
 
 /* The rendering functions: */
@@ -175,7 +173,7 @@ static void init_or_die(){
   aud.freq     = MY_SAMPLERATE;
   aud.format   = AUDIO_S16SYS;
   aud.channels = 2;
-  aud.samples  = AUDIOBUFSIZE/aud.channels;  /* "samples" means frames */
+  aud.samples  = AUDIOBUFSIZE/2;  /* "samples" means frames */
   aud.callback = sound_callback;
   /*aud.userdata = NULL;*/
   /* My data is global, so userdata reference is not used */

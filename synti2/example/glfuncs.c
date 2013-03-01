@@ -27,6 +27,8 @@ typedef void (*CLEAR_F_T)(GLbitfield mask);
 typedef void (*VERTEX3I_F_T)(GLint x, GLint y, GLint z);
 typedef void (*TRANSLATEF_F_T)(GLfloat tx, GLfloat ty, GLfloat tz);
 typedef void (*BLENDFUNC_F_T)( GLenum sfactor, GLenum dfactor);
+typedef GLint (*GETUNIFORMLOC_F_T)( GLuint program, const GLchar *name);
+typedef void (*UNIFORM1FV_F_T)( GLint location, GLsizei count, const GLfloat *value);
 
 #define oglRotatef      ((ROTATE_F_T)myglfunc[10])
 #define	oglPushMatrix   (myglfunc[11])
@@ -37,8 +39,10 @@ typedef void (*BLENDFUNC_F_T)( GLenum sfactor, GLenum dfactor);
 #define oglClear        ((CLEAR_F_T)myglfunc[16])
 #define oglVertex3i     ((VERTEX3I_F_T)myglfunc[17])
 #define oglBlendFunc    ((BLENDFUNC_F_T)myglfunc[18])
+#define oglGetUniformLocation ((GETUNIFORMLOC_F_T)myglfunc[19])
+#define oglUniform1fv ((UNIFORM1FV_F_T)myglfunc[20])
 //#define oglTranslatef   ((TRANSLATEF_F_T)myglfunc[18])
-#define NUMFUNCTIONS 19    //number of functions in *strs function array
+#define NUMFUNCTIONS 21    //number of functions in *strs function array
 
 static char *strs[] = {
 	"glCreateProgram",
@@ -62,5 +66,8 @@ static char *strs[] = {
   "glClear",
   "glVertex3i",
   "glBlendFunc",
+  "glGetUniformLocation",
+  "glUniform1fv",
   //  "glTranslatef",
 };
+

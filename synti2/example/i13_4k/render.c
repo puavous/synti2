@@ -9,15 +9,6 @@
 
 static void sivu(int a, int z){
       oglBegin(GL_QUADS);
-  /*
-  glUniform1f(unipar, 200.0f);
-  unipar = glGetUniformLocation(pid, "tt");
-  printf("%d  ",unipar);fflush(stdout);
-  glUniform1f(unipar, 200.0f);
-  unipar = glGetUniformLocation(pid, "uu");
-  printf("%d\n",unipar);fflush(stdout);
-  glUniform4f(unipar, 200.0f,200.0f,200.0f,200.0f);
-*/
 
       /*glNormal3f(  0.f,   0.f,   1.f);*/
       oglVertex3i(  a,   a,   z);
@@ -65,8 +56,8 @@ static void render_scene(const synti2_synth *s){
   //cf = 1.0f+s->voi[9].eprog[1].f;
   //glClearColor (1.0f, 1.0f, 1.0f, 0.0);
 
-  unipar = glGetUniformLocation(pid, "s");
-  glUniform1fv(unipar, 16, state);
+  unipar = oglGetUniformLocation(pid, "s");
+  oglUniform1fv(unipar, 16, state);
   //printf("%d  ",unipar);fflush(stdout);
 
 
@@ -87,12 +78,6 @@ static void render_scene(const synti2_synth *s){
   kuutio(2);
   kuutio(1);
   kuutio(0);
-  /*
-  sivu(3,0);
-  sivu(3,1);
-  sivu(3,2);
-  sivu(3,3);
-  */
 }
 
 /** Render something that varies with time and "audio snapshot". */

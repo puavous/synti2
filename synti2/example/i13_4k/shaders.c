@@ -34,7 +34,7 @@ const GLchar *fs= "\
   varying vec4 po; // Vertex coordinates\
   void main(){\
     float d = sqrt((po.x*po.x+po.y*po.y));\
-    float h = sin(40.0*d-2.0*s[0]);\
+    float h = sin(10.0*d-2.0*s[0]);\
     //if (h<0.2) discard;\
     vec4 c = gl_Color;\
     c.r = sin(s[0]+po.z);\

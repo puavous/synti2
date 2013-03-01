@@ -86,7 +86,11 @@ process (jack_nframes_t nframes, void *arg)
 
   for (i=0;i<nframes;i++){
     bufferL[i] = global_buffer[2*i];
+#ifdef NO_STEREO
+    bufferR[i] = bufferL[i];
+#else
     bufferR[i] = global_buffer[2*i+1];
+#endif
   }
   return 0;
 }

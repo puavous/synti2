@@ -18,12 +18,12 @@ const GLchar *vs="\
 
 
 const GLchar *fs= "\
+  uniform float s[16]; // State parameters from app.\
   varying vec3 n; // normal for lights\
   varying vec4 po; // Vertex coordinates\
-  uniform float s[16]; // State parameters from app.\
   void main(){\
     float d=sqrt((po.x*po.x+po.y*po.y));\
-    float h=1.4+sin(30.0+d*sin(s[0])*sin(s[0])*20.0);\
+    float h=1.4+sin(30.0+d*sin(s[0])*sin(s[0])*30.0);\
     if (h<0.5) discard;\
     vec4 c = gl_Color;\
     c.a = h;\

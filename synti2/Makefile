@@ -284,6 +284,7 @@ visexe: $(VISEXESOURCES) $(S2SOURCES) $(S2HEADERS) Makefile \
 mostlyclean:
 	-rm `find . -name "*~"` *.o
 	-rm -r hackpack
+	-rm -r hackpack2
 
 clean: mostlyclean
 	-rm *.payload tinyexe visexe withoutseq \

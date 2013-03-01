@@ -69,7 +69,7 @@ static void render_scene(const synti2_synth *s){
   glUniform1fv(unipar, 16, state);
   //printf("%d  ",unipar);fflush(stdout);
 
-  /*oglEnable(GL_DEPTH_TEST);*/
+  oglEnable(GL_DEPTH_TEST);
 
   oglEnable (GL_BLEND); 
   //oglBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

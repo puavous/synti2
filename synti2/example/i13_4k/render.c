@@ -33,14 +33,14 @@ static void sivu(int a, int z){
       oglEnd();
 }
 
-static void kuutio(){
+static void kuutio(int a){
   oglPushMatrix();
-  sivu(1,1);
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,1);
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,1);
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,1);
-  oglRotatef(90.f, 0.f, 1.f, 0.f); sivu(1,1);
-  oglRotatef(180.f, 0.f, 1.f, 0.f); sivu(1,1);
+  sivu(1,a);
+  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
+  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
+  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
+  oglRotatef(90.f, 0.f, 1.f, 0.f); sivu(1,a);
+  oglRotatef(180.f, 0.f, 1.f, 0.f); sivu(1,a);
   oglPopMatrix();
 }
 
@@ -82,7 +82,11 @@ static void render_scene(const synti2_synth *s){
   oglRotatef (time*20.f, sin(time), 0.2f, 0.f);
 
   oglEnable(GL_DEPTH_TEST);
-  kuutio();
+  kuutio(4);
+  kuutio(3);
+  kuutio(2);
+  kuutio(1);
+  kuutio(0);
   /*
   sivu(3,0);
   sivu(3,1);

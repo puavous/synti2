@@ -18,7 +18,8 @@ const GLchar *vs="\
       t=vec4(sin(5.0*s[0]),cos(s[0]+3.0), 10.0, 0.0);                   \
     } else {                                                            \
       t=vec4(0.0,0.0,10.0,0.0);                                         \
-      po.z=po.z+s[9];                                                         \
+      k=k+s[9];                                                         \
+      po.z=1.0+(po.z*(1.0-cos(s[0])));                                  \
     }                                                                   \
     gl_Position = gl_ProjectionMatrix * ((gl_ModelViewMatrix * k * po-t)); \
     gl_FrontColor = vec4(1.0,po.x,po.y,1.0);                            \
@@ -40,6 +41,7 @@ const GLchar *fs= "\
     c.g = po.x-sin(po.y+s[0]);\
     c.a = sqrt(h);\
     if (po.z >= 0.0) c.a = c.a / 2.0;\
+    if (po.z < 0.0) c = c * .25;\
     //vec3 ld = normalize(vec3(0.0,0.0,0.5));\
     //float li = dot(ld, normalize(n));\
     //c.g = li;\

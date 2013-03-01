@@ -26,6 +26,7 @@ typedef void (*ENABLE_F_T)(GLenum cap);
 typedef void (*CLEAR_F_T)(GLbitfield mask);
 typedef void (*VERTEX3I_F_T)(GLint x, GLint y, GLint z);
 typedef void (*TRANSLATEF_F_T)(GLfloat tx, GLfloat ty, GLfloat tz);
+typedef void (*BLENDFUNC_F_T)( GLenum sfactor, GLenum dfactor);
 
 #define oglRotatef      ((ROTATE_F_T)myglfunc[10])
 #define	oglPushMatrix   (myglfunc[11])
@@ -35,8 +36,9 @@ typedef void (*TRANSLATEF_F_T)(GLfloat tx, GLfloat ty, GLfloat tz);
 #define oglEnable       ((ENABLE_F_T)myglfunc[15])
 #define oglClear        ((CLEAR_F_T)myglfunc[16])
 #define oglVertex3i     ((VERTEX3I_F_T)myglfunc[17])
+#define oglBlendFunc    ((BLENDFUNC_F_T)myglfunc[18])
 //#define oglTranslatef   ((TRANSLATEF_F_T)myglfunc[18])
-#define NUMFUNCTIONS 18    //number of functions in *strs function array
+#define NUMFUNCTIONS 19    //number of functions in *strs function array
 
 static char *strs[] = {
 	"glCreateProgram",
@@ -59,5 +61,6 @@ static char *strs[] = {
   "glEnable",
   "glClear",
   "glVertex3i",
+  "glBlendFunc",
   //  "glTranslatef",
 };

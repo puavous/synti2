@@ -200,7 +200,7 @@ static void init_or_die(){
   oglAttachShader(pid,vsh);
   oglAttachShader(pid,fsh);
   oglLinkProgram(pid);
-  
+
 #ifdef NEED_DEBUG
   printShaderInfoLog(vsh);
   printShaderInfoLog(fsh);
@@ -225,7 +225,7 @@ static void main2(){
     //    oglFrustum(-1.33f,1.33f,-1.f,1.f,1.5f,400.f);
     /* The exe would be smaller, were screen size hard-coded.. 
      .. but I try to be nice.. */
-    oglFrustum(-ar,ar,-1.f,1.f,1.f,400.f);
+    oglFrustum(-ar,ar,-1.f,1.f,4.f,400.f);
     oglMatrixMode(GL_MODELVIEW);
     oglLoadIdentity();
 

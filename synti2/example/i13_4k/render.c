@@ -7,7 +7,7 @@
  * thing compiled in small space.
  */
 
-static void sivu(){
+static void sivu(int a, int z){
       oglBegin(GL_QUADS);
   /*
   glUniform1f(unipar, 200.0f);
@@ -20,27 +20,27 @@ static void sivu(){
 */
 
       /*glNormal3f(  0.f,   0.f,   1.f);*/
-      oglVertex3i(  1,   1,   1);
+      oglVertex3i(  a,   a,   z);
 
       /*glNormal3f(  0.f,   0.f,   1.f);*/
-      oglVertex3i( -1,   1,   1);
+      oglVertex3i( -a,   a,   z);
 
       /*glNormal3f(  0.f,   0.f,   1.f);*/
-      oglVertex3i( -1,  -1,   1);
+      oglVertex3i( -a,  -a,   z);
 
       /*glNormal3f(  0.f,   0.f,   1.f);*/
-      oglVertex3i(  1,  -1,   1);
+      oglVertex3i(  a,  -a,   z);
       oglEnd();
 }
 
 static void kuutio(){
   oglPushMatrix();
-  sivu();
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu();
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu();
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu();
-  oglRotatef(90.f, 0.f, 1.f, 0.f); sivu();
-  oglRotatef(180.f, 0.f, 1.f, 0.f); sivu();
+  sivu(1,1);
+  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,1);
+  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,1);
+  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,1);
+  oglRotatef(90.f, 0.f, 1.f, 0.f); sivu(1,1);
+  oglRotatef(180.f, 0.f, 1.f, 0.f); sivu(1,1);
   oglPopMatrix();
 }
 
@@ -69,19 +69,26 @@ static void render_scene(const synti2_synth *s){
   glUniform1fv(unipar, 16, state);
   //printf("%d  ",unipar);fflush(stdout);
 
-  oglEnable(GL_DEPTH_TEST);
 
+  //glDisable(GL_DEPTH_TEST);
   oglEnable (GL_BLEND); 
-  //oglBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   oglBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
-  //oglTranslatef (0.f, 0.f, -20.f);
-  //glScalef(cf,cf,cf);
-  oglRotatef (time*20.f, 1.f, 0.2f, 0.f);
 
+  sivu(10,-10);
+  sivu(10,-9);
+  sivu(10,-8);
+  oglRotatef (time*20.f, sin(time), 0.2f, 0.f);
+
+  oglEnable(GL_DEPTH_TEST);
   kuutio();
+  /*
+  sivu(3,0);
+  sivu(3,1);
+  sivu(3,2);
+  sivu(3,3);
+  */
 }
 
 /** Render something that varies with time and "audio snapshot". */

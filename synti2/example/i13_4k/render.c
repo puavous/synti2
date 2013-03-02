@@ -44,13 +44,13 @@ static void render_scene(const synti2_synth *s){
   float cf;
 
   GLint unipar;
-  GLfloat state[16];
+  GLfloat state[9];
 
   time =  (float)(s->framecount) / s->sr;
 
   state[0] = time;
 
-  for(i=1;i<16;i++){
+  for(i=1;i<9;i++){
     state[i] = s->voi[i].eprog[1].f;
   }
   //cf = 1.0f+s->voi[9].eprog[1].f;
@@ -68,16 +68,20 @@ static void render_scene(const synti2_synth *s){
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
   sivu(10,-10);
-  sivu(10,-9);
-  sivu(10,-8);
+  /*
+    sivu(10,-9);
+    sivu(10,-8);
+  */
   oglRotatef (time*20.f, sin(time), 0.2f, 0.f);
 
   oglEnable(GL_DEPTH_TEST);
-  kuutio(4);
-  kuutio(3);
-  kuutio(2);
-  kuutio(1);
-  kuutio(0);
+  for(;i>=0;i--){
+    kuutio(i);
+  }
+  /*kuutio(3);
+    kuutio(2);
+    kuutio(1);
+    kuutio(0);*/
 }
 
 /** Render something that varies with time and "audio snapshot". */

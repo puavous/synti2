@@ -3,7 +3,6 @@
 # really need is a robust and neat way to generate a stand-alone
 # source package... No time to think about this right now, though.
 
-
 # The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
@@ -38,7 +37,6 @@ TINYSOURCES = sdl_shader_main.c synti2.c
 TINYHEADERS = synti2_archdep.h  synti2_cap.h  synti2_guts.h  synti2.h  synti2_misss.h  synti2_params.h
 TINYHACKS = shaders.c render.c patchdata.c songdata.c glfuncs.c
 
-all: vis2 tiny2
 
 tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
@@ -74,3 +72,5 @@ vis2: $(JACKSOURCES) $(TINYHEADERS) $(TINYHACKS)
 
 	@echo End result:
 	@ls -lt $@
+
+all: vis2 tiny2

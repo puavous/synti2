@@ -11,8 +11,7 @@ const GLchar *vs="\
     float k = 1.0; // 'Kick'                                              \
     if (v.z >= 0.0){                                                     \
       k+=s[1];                                                          \
-      //v.z=1.0+(v.z*(1.0-cos(s[0])));                                    \
-      v.z = 1.0 + v.z*(1.0-cos(s[0]));                                          \
+      v.z += 1.0 - v.z*cos(s[0]);                                      \
     }                                                                   \
     gl_Position = gl_ProjectionMatrix * (gl_ModelViewMatrix*k*v - t);   \
     //gl_FrontColor = vec4(1.0,v.x,v.y,1.0);                            \
@@ -30,10 +29,10 @@ const GLchar *fs= "\
     //float h = sin(10.0*d-2.0*s[0]);                      \
                                                            \
     float h = sin(10.0*(d-s[0]));                          \
-    //float h = sin(2.0*s[0]);                             \
                                                                      \
-    vec4 c = vec4(sin(s[0]+v.z),v.x,v.y,1.0-h);                      \
-    c.g -= sin(v.y+s[0]);                                            \
+    vec4 c = vec4(sin(v.z+s[0]),v.x-sin(v.y+s[0]),v.y,1.0-h);                      \
+    //vec4 c = vec4(sin(s[0]+v.z),v.x,v.y,1.0-h);                      \
+    //c.g -= sin(v.y+s[0]);                                            \
     if (v.z >= 0.0) c.a /= 2.0; else c /=4.0;                        \
     gl_FragColor = c;                                                \
   }";

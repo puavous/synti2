@@ -12,7 +12,7 @@ const GLchar *vs="\
     if (v.z >= 0.0){                                                     \
       k+=s[1];                                                          \
       //v.z += 1.0 - v.z*cos(s[0]);                                      \
-      v.z += 1.0 - v.z*cos(0.1+s[20]);                                      \
+      v.z += 1.0 - v.z*cos(0.1+s[19]);                                      \
     }                                                                   \
     gl_Position = gl_ProjectionMatrix * (gl_ModelViewMatrix*k*v - t);   \
   }";

@@ -59,11 +59,11 @@ static void render_scene(const synti2_synth *s){
   }
   /* The four modulators of voice 1: */
   for(j=0;j<4;j++){
-    state[16+j] = s->voi[i].contr[1].f;
+    state[16+j] = s->voi[0].contr[j].f;
   }
   /* The four modulators of voice 2: */
   for(j=0;j<4;j++){
-    state[20+j] = s->voi[i].contr[1].f;
+    state[20+j] = s->voi[1].contr[j].f;
   }
 
 
@@ -88,10 +88,10 @@ static void render_scene(const synti2_synth *s){
     sivu(10,-8);
   */
   /* Listen to synth: */
-  oglRotatef (synthtime*state[16+0], 
-              state[16+1], 
-              state[16+2], 
-              state[16+3]);
+  oglRotatef (2*3.1415926535f *synthtime*state[16+0], 
+              sin(state[16+1]), 
+              cos(state[16+1]), 
+              cos(state[16+2]));
 
   oglEnable(GL_DEPTH_TEST);
   for(;i>=0;i--){

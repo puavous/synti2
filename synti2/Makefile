@@ -223,7 +223,7 @@ tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
 #	cp include/synti2_cap_default
 	cp tests/tinymaker.makefile hackpack2/Makefile
 	cp tests/selfextr.stub hackpack2/
-	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
+	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
 		< $(filter %shaders.c, $^) > hackpack2/shaders.c
 	./cbank $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdata.c hackpack2/patchdes.dat 
 	./genpar hackpack2/patchdes.dat  hackpack2/synti2_params.h

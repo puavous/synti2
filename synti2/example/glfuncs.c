@@ -31,8 +31,8 @@ typedef GLint (*GETUNIFORMLOC_F_T)( GLuint program, const GLchar *name);
 typedef void (*UNIFORM1FV_F_T)( GLint location, GLsizei count, const GLfloat *value);
 
 #define oglRotatef      ((ROTATE_F_T)myglfunc[10])
-#define	oglPushMatrix   (myglfunc[11])
-#define	oglPopMatrix    (myglfunc[12])
+//#define	oglPushMatrix   (myglfunc[11])
+//#define	oglPopMatrix    (myglfunc[12])
 #define	oglEnd          (myglfunc[13])
 #define oglBegin        ((BEGIN_F_T)myglfunc[14])
 #define oglEnable       ((ENABLE_F_T)myglfunc[15])
@@ -58,8 +58,8 @@ static char *strs[] = {
 	"glFrustum",
 
 	"glRotatef",
-	"glPushMatrix",
-	"glPopMatrix",
+	"glRotatef",
+	"glRotatef",
 	"glEnd",
   "glBegin",
   "glEnable",

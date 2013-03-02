@@ -25,14 +25,14 @@ static void sivu(int a, int z){
 }
 
 static void kuutio(int a){
-  oglPushMatrix();
+  //oglPushMatrix();
   sivu(1,a);
   oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
   oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
   oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
   oglRotatef(90.f, 0.f, 1.f, 0.f); sivu(1,a);
   oglRotatef(180.f, 0.f, 1.f, 0.f); sivu(1,a);
-  oglPopMatrix();
+  //oglPopMatrix();
 }
 
 

@@ -28,8 +28,12 @@ ARCHLIBS = `sdl-config --libs` -lGL -lm
 # Looks as if it is best to strip first with strip and then sstrip..
 ARCHSTRIP = strip
 ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
-		-R .note.gnu.build-id -R .gnu.hash \
+		-R .note.gnu.build-id \
 		-R .eh_frame_hdr -R .eh_frame 
+
+#ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
+#		-R .note.gnu.build-id -R .gnu.hash \
+#		-R .eh_frame_hdr -R .eh_frame 
 SSTRIP = sstrip
 
 # These are required for the compilation:

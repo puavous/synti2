@@ -158,8 +158,14 @@ static void init_or_die(){
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
                    SDL_OPENGL|SDL_FULLSCREEN);
   //window_h=vid->current_h;
- 
   ar = (float)vid->current_w/vid->current_h;
+#if 0
+  // Hacked this for today's show:
+  SDL_SetVideoMode(1280, 720, 32,
+                   SDL_OPENGL|SDL_FULLSCREEN);
+  ar = 1280.0/720; 
+#endif
+
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
   ar = 4.f/3.f;

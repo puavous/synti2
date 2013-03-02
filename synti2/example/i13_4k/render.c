@@ -67,7 +67,7 @@ static void render_scene(const synti2_synth *s){
 
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
-  sivu(i,-10);
+  sivu(i,-i);
   /*
   sivu(i,-9);
 

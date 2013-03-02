@@ -201,18 +201,19 @@ I13FILES = example/i13_4k/i13_4k.mid \
 	   example/i13_4k/shaders.c \
 	   example/glfuncs.c
 
-# Instanssi 13 demo entry, "pikademo":
+# Instanssi 13 summamutikka entry, "sm":
 # Specifics needed are song, sounds, and gfx:
-PDEMFILES = example/pikademo/pikademo.mid \
-	   example/pikademo/pikademo.s2bank \
-	   example/pikademo/render.c \
-	   example/pikademo/shaders.c \
-	   example/pikademo/glfuncs.c
+SMFILES = example/i13_sm/pikademo.mid \
+	   example/i13_sm/pikademo.s2bank \
+	   example/i13_sm/render.c \
+	   example/i13_sm/shaders.c \
+	   example/i13_sm/glfuncs.c
 
 
-pdtiny:
-	make tiny2 CUSTOMFILES="$(PDEMFILES)"
+summamutikka:
+	make tiny2 CUSTOMFILES="$(SMFILES)"
 	mv hackpack2/vis2 ./jacksynti2
+	mv hackpack2/tiny2 ./sm.run
 
 i13tiny:
 	make tiny2 \

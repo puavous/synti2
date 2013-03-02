@@ -7,7 +7,8 @@
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -mfpmath=387 -funsafe-math-optimizations -Wall -Wextra -pedantic \
+HCFLAGS = -Os -mfpmath=387 -funsafe-math-optimizations -fwhole-program \
+	-Wall -Wextra -pedantic \
 	$(NONOS)
 
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic

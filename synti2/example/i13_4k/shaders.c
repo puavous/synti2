@@ -28,6 +28,8 @@ const GLchar *fs= "\
     float h = sin(10.0*(d-s[0]));                                      \
     vec4 c = vec4(sin(v.z),v.x-sin(v.y+s[0]),v.y,1.0-h);               \
     if (v.z >= 0.0) c.a /= 2.0; else c.a /=4.0;                        \
-    c += s[4];\
+    c += s[4] + (v.z>0.0?0.0:3.0)*s[5];\
+    c *= (smoothstep(0,4,s[0])-smoothstep(70,74,s[0]));\
     gl_FragColor = c;                                                  \
   }";
+

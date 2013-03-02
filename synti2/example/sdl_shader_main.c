@@ -32,6 +32,7 @@
 #include "patchdata.c"
 #include "songdata.c"
 
+#include "synti2.c"
 
 typedef void *func_t(void);
 func_t *myglfunc[NUMFUNCTIONS];

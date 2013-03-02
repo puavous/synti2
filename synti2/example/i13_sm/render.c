@@ -45,21 +45,33 @@ static void render_scene(const synti2_synth *s){
   float cf;
 
   GLint unipar;
-  GLfloat state[9];
+  GLfloat state[24];
 
   float synthtime;
   synthtime =  (float)(s->framecount) / s->sr;
 
   state[0] = synthtime;
 
-  for(i=1;i<9;i++){
+  /* Quick proof-of-concept trial: */
+  /* 1st envelopes of voices 2-16: */
+  for(i=1;i<16;i++){
     state[i] = s->voi[i].eprog[1].f;
   }
+  /* The four modulators of voice 1: */
+  for(j=0;j<4;j++){
+    state[16+j] = s->voi[i].contr[1].f;
+  }
+  /* The four modulators of voice 2: */
+  for(j=0;j<4;j++){
+    state[20+j] = s->voi[i].contr[1].f;
+  }
+
+
   //cf = 1.0f+s->voi[9].eprog[1].f;
   //glClearColor (1.0f, 1.0f, 1.0f, 0.0);
 
   unipar = oglGetUniformLocation(pid, "s");
-  oglUniform1fv(unipar, 9, state);
+  oglUniform1fv(unipar, 24, state);
   //printf("%d  ",unipar);fflush(stdout);
 
 
@@ -75,7 +87,11 @@ static void render_scene(const synti2_synth *s){
 
     sivu(10,-8);
   */
-  oglRotatef (synthtime*20.f, sin(synthtime), 0.2f, 0.f);
+  /* Listen to synth: */
+  oglRotatef (synthtime*state[16+0], 
+              state[16+1], 
+              state[16+2], 
+              state[16+3]);
 
   oglEnable(GL_DEPTH_TEST);
   for(;i>=0;i--){

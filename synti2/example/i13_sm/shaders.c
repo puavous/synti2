@@ -3,7 +3,7 @@
  */
 //#define NEED_DEBUG
 const GLchar *vs="\
-  uniform float s[9]; // State parameters from app.                     \
+  uniform float s[24]; // State parameters from app.                     \
   varying vec4 v; // Vertex coordinates                                 \
   void main(){                                                          \
     v = gl_Vertex;                                                      \
@@ -11,14 +11,15 @@ const GLchar *vs="\
     float k = 1.0; // 'Kick'                                              \
     if (v.z >= 0.0){                                                     \
       k+=s[1];                                                          \
-      v.z += 1.0 - v.z*cos(s[0]);                                      \
+      //v.z += 1.0 - v.z*cos(s[0]);                                      \
+      v.z += 1.0 - v.z*cos(0.1+s[20]);                                      \
     }                                                                   \
     gl_Position = gl_ProjectionMatrix * (gl_ModelViewMatrix*k*v - t);   \
   }";
 
 
 const GLchar *fs= "\
-  uniform float s[9]; // State parameters from app.                    \
+  uniform float s[24]; // State parameters from app.                    \
   //varying vec3 n; // normal for lights                               \
   varying vec4 v; // Vertex coordinates                                \
   void main(){                                                         \

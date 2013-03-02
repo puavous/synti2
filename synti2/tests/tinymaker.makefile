@@ -35,7 +35,7 @@ SSTRIP = sstrip
 # These are required for the compilation:
 JACKSOURCES = jack_shader_main.c synti2.c synti2_jack.c synti2_midi.c
 TINYSOURCES = sdl_shader_main.c synti2.c
-TINYHEADERS = synti2_archdep.h  synti2_cap_default.h  synti2_guts.h  synti2.h  synti2_misss.h  synti2_params.h
+TINYHEADERS = synti2_archdep.h  synti2_cap.h  synti2_guts.h  synti2.h  synti2_misss.h  synti2_params.h
 TINYHACKS = shaders.c render.c patchdata.c songdata.c glfuncs.c
 
 all: vis2 tiny2

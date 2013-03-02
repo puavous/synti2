@@ -8,16 +8,17 @@
 #include "patchtool.hpp"
 
 int main(int argc, char **argv){
-  if (argc<3){
+  if (argc<4){
     std::cout << "This program converts a synti2 sound bank to a C code, "
               << "usable in a stand-alone synth build." 
               << std::endl << std::endl;
     std::cout << "Usage: " << std::endl;
-    std::cout << argv[0] << " infile outfile" << std::endl;
+    std::cout << argv[0] << " infile outfile patchdesign" << std::endl;
     return 1;
   }
 
-  synti2::Patchtool *pt = new synti2::Patchtool("src/patchdesign.dat");
+  //synti2::Patchtool *pt = new synti2::Patchtool("src/patchdesign.dat");
+  synti2::Patchtool *pt = new synti2::Patchtool(argv[3]);
   synti2::PatchBank *pbank = pt->makePatchBank(16);
 
   std::ifstream istr(argv[1]);

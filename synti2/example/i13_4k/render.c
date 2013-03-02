@@ -47,6 +47,7 @@ static void render_scene(const synti2_synth *s){
   GLint unipar;
   GLfloat state[9];
 
+  float synthtime;
   synthtime =  (float)(s->framecount) / s->sr;
 
   state[0] = synthtime;

@@ -41,7 +41,7 @@ func_t *myglfunc[NUMFUNCTIONS];
 float audiobuf[AUDIOBUFSIZE];
 
 synti2_synth global_synth;
-float synthtime;
+//float synthtime;
 
 /* Default values for screen size: */
 #ifdef NO_FULLSCREEN

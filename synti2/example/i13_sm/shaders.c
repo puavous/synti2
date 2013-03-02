@@ -10,7 +10,8 @@ const GLchar *vs="\
     vec4 t = vec4(0,0,15,0);                                              \
     float k = 1.0; // 'Kick'                                              \
     if (v.z >= 0.0){                                                     \
-      k+=s[1];                                                          \
+      //k+=s[1];                                                          \
+      k+=s[9];                                                          \
       //v.z += 1.0 - v.z*cos(s[0]);                                      \
       v.z += 1.0 - v.z*cos(0.1+s[19]);                                      \
     }                                                                   \

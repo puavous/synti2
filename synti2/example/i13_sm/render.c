@@ -88,10 +88,24 @@ static void render_scene(const synti2_synth *s){
     sivu(10,-8);
   */
   /* Listen to synth: */
-  oglRotatef (2*3.1415926535f *synthtime*state[16+0], 
+  static float rot_now = 0.0f;
+  static float time_prev = 0.0f;
+  rot_now += (synthtime-time_prev)*state[16]*360.f;
+  time_prev = synthtime;
+
+  oglRotatef (rot_now,
+              0.0f,
+              sin(2*3.141592654*state[16+1]), 
+              cos(2*3.141592654*state[16+1])
+              );
+  //printf("mod1 %.3f->%.3f \n", state[16],synthtime*(90.f*state[16]));
+
+#if 0
+  oglRotatef (synthtime*20.f, /* state[16+0] */
               sin(state[16+1]), 
               cos(state[16+1]), 
               cos(state[16+2]));
+#endif
 
   oglEnable(GL_DEPTH_TEST);
   for(;i>=0;i--){

@@ -237,7 +237,7 @@ static void init_or_die(){
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
   ar = 4.f/3.f;
-  SDL_SetVideoMode(ar*600,600,32,SDL_OPENGL);
+  SDL_SetVideoMode(ar*400,400,32,SDL_OPENGL);
 #endif
   
   /* Ok.. These need to be done after SDL is initialized: */
@@ -275,7 +275,7 @@ static void main2(){
     SDL_GL_SwapBuffers();
     SDL_PollEvent(&event);
 
-    usleep(1000000/50); /*50 Hz refresh enough for testing..*/
+    //    usleep(1000000/50); /*50 Hz refresh enough for testing..*/
   } while (event.type != SDL_QUIT);
   
   jack_client_close(client);

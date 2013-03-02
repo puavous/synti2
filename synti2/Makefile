@@ -201,6 +201,19 @@ I13FILES = example/i13_4k/i13_4k.mid \
 	   example/i13_4k/shaders.c \
 	   example/glfuncs.c
 
+# Instanssi 13 demo entry, "pikademo":
+# Specifics needed are song, sounds, and gfx:
+PDEMFILES = example/pikademo/pikademo.mid \
+	   example/pikademo/pikademo.s2bank \
+	   example/pikademo/render.c \
+	   example/pikademo/shaders.c \
+	   example/pikademo/glfuncs.c
+
+
+pdtiny:
+	make tiny2 CUSTOMFILES="$(PDEMFILES)"
+	mv hackpack2/vis2 ./jacksynti2
+
 i13tiny:
 	make tiny2 \
 	    CUSTOMFILES="$(I13FILES)" \

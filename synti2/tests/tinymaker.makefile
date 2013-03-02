@@ -44,7 +44,7 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o $@.unstripped.payload \
 		-Iinclude \
-		-DULTRASMALL -nostdlib  -nostartfiles -lc \
+		-DULTRASMALL -DNO_SAFETY -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYSOURCES)) \
 		$(ARCHLIBS)
 

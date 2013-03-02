@@ -36,19 +36,20 @@ static void kuutio(int a){
 }
 
 
+
+
 /** Paint it. */
 static void render_scene(const synti2_synth *s){
   int i, j;
 
-  float time;
   float cf;
 
   GLint unipar;
   GLfloat state[9];
 
-  time =  (float)(s->framecount) / s->sr;
+  synthtime =  (float)(s->framecount) / s->sr;
 
-  state[0] = time;
+  state[0] = synthtime;
 
   for(i=1;i<9;i++){
     state[i] = s->voi[i].eprog[1].f;
@@ -73,7 +74,7 @@ static void render_scene(const synti2_synth *s){
 
     sivu(10,-8);
   */
-  oglRotatef (time*20.f, sin(time), 0.2f, 0.f);
+  oglRotatef (synthtime*20.f, sin(synthtime), 0.2f, 0.f);
 
   oglEnable(GL_DEPTH_TEST);
   for(;i>=0;i--){

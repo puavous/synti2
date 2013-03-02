@@ -63,6 +63,7 @@ unsigned long sr;
 char * client_name = "jacksynti2";
 
 synti2_synth global_synth;
+float synthtime;
 
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 

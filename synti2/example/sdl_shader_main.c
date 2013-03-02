@@ -41,6 +41,7 @@ func_t *myglfunc[NUMFUNCTIONS];
 float audiobuf[AUDIOBUFSIZE];
 
 synti2_synth global_synth;
+float synthtime;
 
 /* Default values for screen size: */
 #ifdef NO_FULLSCREEN
@@ -187,8 +188,9 @@ static void init_or_die(){
 #else
   SDL_OpenAudio(&aud, NULL);  /* Would return <0 upon failure.*/
 #endif
-  
-  
+
+  synti2_init(&global_synth, MY_SAMPLERATE, patch_sysex, hacksong_data);
+    
   /* Ok.. These need to be done after SDL is initialized: */
   pid = oglCreateProgram();
   vsh = oglCreateShader(GL_VERTEX_SHADER);
@@ -212,9 +214,7 @@ static void init_or_die(){
 /** Try to wrap it... */
 static void main2(){
   SDL_Event event;
-  
-  synti2_init(&global_synth, MY_SAMPLERATE, patch_sysex, hacksong_data);
-  
+    
   init_or_die();
   
   SDL_PauseAudio(0); /* Start audio after inits are done.. */
@@ -222,9 +222,11 @@ static void main2(){
   do {
     render_w_shaders(&global_synth,ar);
 
+    //time = (float)(global_synth.framecount) / global_synth.sr;
+
     SDL_GL_SwapBuffers();
     SDL_PollEvent(&event);
-  } while (event.type!=SDL_KEYDOWN); // && tnow <70.0);
+  } while ((event.type!=SDL_KEYDOWN)); // && (synthtime <78.0f));
   
 #ifndef ULTRASMALL
   SDL_CloseAudio();  /* This evil? Call to SDL_Quit() sufficient? */

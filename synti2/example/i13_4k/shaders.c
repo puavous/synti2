@@ -52,12 +52,15 @@ const GLchar *fs= "\
     float h = sin(10.0*(d-s[0]));                 \
     //float h = sin(2.0*s[0]);                       \
                                                     \
-    vec4 c = vec4(1.0,v.x,v.y,1.0-h);                 \
-    c.r = sin(s[0]+v.z);                            \
-    c.g = v.x-sin(v.y+s[0]);                        \
-    //c.a = 1.0-h; //sqrt(h);                           \
+    //vec4 c = vec4(1.0,v.x,v.y,1.0-h);                 \
+    vec4 c = vec4(sin(s[0]+v.z),v.x,v.y,1.0-h);                     \
+    c.g -= sin(v.y+s[0]);                                            \
+    //c.r = sin(s[0]+v.z);                            \
+    //c.g = v.x-sin(v.y+s[0]);                        \
 \
-    if (v.z >= 0.0) c.a /= 2.0; else c /=4.0;                       \
+    //c += s[2];\
+\
+    if (v.z >= 0.0) c.a /= 2.0; else c /=4.0;         \
 //    if (v.z < 0.0) c *= .25;                        \
     //vec3 ld = normalize(vec3(0.0,0.0,0.5));       \
     //float li = dot(ld, normalize(n));             \

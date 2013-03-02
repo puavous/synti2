@@ -57,7 +57,7 @@ static void render_scene(const synti2_synth *s){
   //glClearColor (1.0f, 1.0f, 1.0f, 0.0);
 
   unipar = oglGetUniformLocation(pid, "s");
-  oglUniform1fv(unipar, 16, state);
+  oglUniform1fv(unipar, 9, state);
   //printf("%d  ",unipar);fflush(stdout);
 
 
@@ -67,9 +67,10 @@ static void render_scene(const synti2_synth *s){
 
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
-  sivu(10,-10);
+  sivu(i,-10);
   /*
-    sivu(10,-9);
+  sivu(i,-9);
+
     sivu(10,-8);
   */
   oglRotatef (time*20.f, sin(time), 0.2f, 0.f);

@@ -56,7 +56,7 @@ nodefaultmake:
 	@echo "No default target is specified as of now."
 
 # Tools of all sorts have been popping about ... cutting stock now
-# tools: midi2synti2 patchedit genpar cbank
+# tools: patchedit 
 
 # Just for looking at the machine code being produced by gcc
 #synti2.asm.annotated: $(S2SOURCES) $(S2HEADERS)
@@ -69,7 +69,7 @@ patchedit: $(PATCHEDITDEPS) Makefile
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`
 
-cltool: $(CLTOOLDEPS)
+cltool: $(CLTOOLDEPS) Makefile
 	g++ -Itools -Isrc -Iinclude -Wall -Wextra -o $@  $(filter %.cxx %.c, $^)
 
 
@@ -115,11 +115,6 @@ i13tiny:
 	    NONOS="-DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO"
 	mv hackpack2/vis2 ./jacksynti2
 
-# For compose mode:
-#vis2: $(TINYFILES) $(CUSTOMFILES)
-#	-rm -r hackpack2
-#	-mkdir hackpack2
-
 
 # For 4k stand-alone mode:
 tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
@@ -156,8 +151,8 @@ mostlyclean:
 
 clean: mostlyclean
 	-rm *.payload tinyexe visexe withoutseq \
-		benchmark testdata.c test.misss \
-		midi2synti2 patchedit genpar cbank \
+		benchmark testdata.c \
+	        patchedit cltool \
 		one_star_j jacksynti2 cube_thing example1
 
 veryveryclean: clean

@@ -22,13 +22,13 @@ fundamental goal setting.
   directly in assembly language. But I must soon get to the end of
   this project, and leave assembly implementation, among other new
   interests, for some future endeavour. Any inner loop in assembly
-  would immediately break this aspect of synti2, and couple it with a
-  specific processor model. The actual portability, of course, remains
-  to be proved by trying out different compilers and platforms. I'm
-  sure there is a bunch of stuff to learn in that process. As to
-  versions of C, I believe it will be my next goal to learn what new
-  things C99 offers and use them to the full extent in a later
-  project. But I'll take up one standard at a time.
+  would immediately break the portability of synti2, and couple it
+  with a specific processor model. The actual portability, of course,
+  remains to be proven by trying out different compilers and
+  platforms. I'm sure there is a bunch of new stuff to learn during
+  that process, too. As to versions of C, I believe it will be my next
+  goal to learn what new things C99 offers and use them to the full
+  extent in a later project. But I'll take up one standard at a time.
 
 - Synti2 does not have a "proper" reverberation effect. It was one of
   my goals to learn how digital reverb effect algorithms work, and
@@ -38,7 +38,7 @@ fundamental goal setting.
   finish with this one.
 
 - Synti2 is a "fully-featured" synthesizer, even if it costs in
-  executable file size. A main goal was to create a musically useable
+  executable file size. A main goal was to create a musically usable
   software synthesizer "plug-in" - just to know how such things are
   made in principle. This clearly conflicts with the other, equally
   important target, which was to make the synthesis engine very
@@ -78,11 +78,10 @@ code and scrap papers to find more of these)::
  * storage for 4k and, at the same time, unlimited flexibility for
  * sound design, when size limitations need not to be considered.
 
- * TODO: Velocity interacts is not connected nicely to the amp
-   envelopes. There is a pop when velocity changes, because it affects
-   the output volume instead of the envelope target value, which it
-   should! Remember to deal with this in future projects!
-
+ * TODO: Velocity is not connected nicely to the amp envelopes. There
+   is a pop when velocity changes, because it affects the output
+   volume instead of the envelope target value, which it should!
+   Remember to deal with this in future projects!
 
  * TODO: (Before future projects with re-designed synths) Evaluate if
  * this everything-is-a-counter thing was a good idea.

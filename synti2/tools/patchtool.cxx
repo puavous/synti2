@@ -94,6 +94,11 @@ synti2::Patchtool::Patchtool(std::string fname){
   patch_description = new PatchDescr(ifs);
 }
 
+synti2::Patchtool::Patchtool(std::istream &ist){
+  patch_description = new PatchDescr(ist);
+}
+
+
 void
 synti2::PatchDescr::headerFileForC(std::ostream &os){
   std::map<std::string, std::vector<ParamDescr> >::iterator it;

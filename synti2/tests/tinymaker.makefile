@@ -3,12 +3,12 @@
 # really need is a robust and neat way to generate a stand-alone
 # source package... No time to think about this right now, though.
 
-
 # The HCFLAGS (as in "hardcore") are for making a very small executable.
 # I used to get a crash in PulseAudio due to misaligned stack (pa uses
 # vector registers and those instructions require 16 byte alignment). 
 # I hope my current init replacement will be enough...
-HCFLAGS = -Os -Wall -Wextra -pedantic \
+HCFLAGS = -Os -mfpmath=387 -funsafe-math-optimizations -fwhole-program \
+	-Wall -Wextra -pedantic \
 	$(NONOS)
 
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
@@ -28,22 +28,21 @@ ARCHLIBS = `sdl-config --libs` -lGL -lm
 # Looks as if it is best to strip first with strip and then sstrip..
 ARCHSTRIP = strip
 ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
-		-R .note.gnu.build-id -R .gnu.hash \
+		-R .note.gnu.build-id \
 		-R .eh_frame_hdr -R .eh_frame 
+
 SSTRIP = sstrip
 
 # These are required for the compilation:
 JACKSOURCES = jack_shader_main.c synti2.c synti2_jack.c synti2_midi.c
 TINYSOURCES = sdl_shader_main.c synti2.c
-TINYHEADERS = synti2_archdep.h  synti2_cap_default.h  synti2_guts.h  synti2.h  synti2_misss.h  synti2_params.h
+TINYHEADERS = synti2_archdep.h  synti2_cap.h  synti2_guts.h  synti2.h  synti2_misss.h  synti2_params.h
 TINYHACKS = shaders.c render.c patchdata.c songdata.c glfuncs.c
 
-all: vis2 tiny2
 
 tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o $@.unstripped.payload \
-		-Iinclude \
 		-DULTRASMALL -DNO_SAFETY -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYSOURCES)) \
 		$(ARCHLIBS)
@@ -53,7 +52,9 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
 	$(SSTRIP) $@.payload
 
-	7za a -tgzip -mx=9 tmp.gz $@.payload
+#	7za a -tgzip -mx=9 tmp.gz $@.payload
+	~/files/hacking/zopfli/zopfli --i1000 $@.payload
+	mv $@.payload.gz tmp.gz
 	cat selfextr.stub tmp.gz > $@
 	rm tmp.gz
 
@@ -74,3 +75,5 @@ vis2: $(JACKSOURCES) $(TINYHEADERS) $(TINYHACKS)
 
 	@echo End result:
 	@ls -lt $@
+
+all: vis2 tiny2

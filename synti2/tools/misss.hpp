@@ -29,6 +29,8 @@ namespace synti2{
     bool voiceMatch(MisssEvent &ev){return (voice == ev.getVoice());}
   public:
     MisssChunk(int ivoice){voice = ivoice;}
+    virtual ~MisssChunk(){};
+
     virtual bool acceptEvent(unsigned int t, MisssEvent &ev){
       return false;}
     virtual void optimize(std::vector<MisssChunk*> &extra, 
@@ -102,7 +104,9 @@ namespace synti2{
     MisssSong(MidiSong &midi_song, 
               MidiMap &mapper, 
               std::istream &spec);
-    ~MisssSong(){for(size_t i=0;i<chunks.size();i++) delete chunks[i];}
+    ~MisssSong(){
+      for(size_t i=0;i<chunks.size();i++) 
+        delete chunks[i];}
     
     void write_as_c(std::ostream &outs);
   };

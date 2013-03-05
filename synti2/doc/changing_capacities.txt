@@ -1,0 +1,19 @@
+Changing the capacities (and, resultingly, code size)
+=====================================================
+
+Workflow diagram::
+
+  ----
+
+    patchedit
+    (might be a proper place to generate capspec.dat)
+    --->
+    capspec.dat ---> synti2config ---> patchdesign.dat   ---> patchedit's view of parameters
+                                       synti2_caps.h          build of executable synth
+                                       synti2_params.h
+
+                    [captool.cxx?]
+                                       Can vary between
+                                       synth engine builds!
+
+

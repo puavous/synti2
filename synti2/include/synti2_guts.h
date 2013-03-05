@@ -12,7 +12,7 @@
 #include "synti2_cap_default.h"
 #include "synti2_params.h"
 #else
-#include "synti2_cap_default.h"
+#include "synti2_cap.h"
 #include "synti2_params.h"
 /* FIXME: TBD: 
 #include "synti2_cap_custom.h"

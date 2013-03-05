@@ -25,39 +25,41 @@ static void sivu(int a, int z){
 }
 
 static void kuutio(int a){
-  oglPushMatrix();
+  //oglPushMatrix();
   sivu(1,a);
   oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
   oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
   oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
   oglRotatef(90.f, 0.f, 1.f, 0.f); sivu(1,a);
   oglRotatef(180.f, 0.f, 1.f, 0.f); sivu(1,a);
-  oglPopMatrix();
+  //oglPopMatrix();
 }
+
+
 
 
 /** Paint it. */
 static void render_scene(const synti2_synth *s){
   int i, j;
 
-  float time;
   float cf;
 
   GLint unipar;
-  GLfloat state[16];
+  GLfloat state[9];
 
-  time =  (float)(s->framecount) / s->sr;
+  float synthtime;
+  synthtime =  (float)(s->framecount) / s->sr;
 
-  state[0] = time;
+  state[0] = synthtime;
 
-  for(i=1;i<16;i++){
+  for(i=1;i<9;i++){
     state[i] = s->voi[i].eprog[1].f;
   }
   //cf = 1.0f+s->voi[9].eprog[1].f;
   //glClearColor (1.0f, 1.0f, 1.0f, 0.0);
 
   unipar = oglGetUniformLocation(pid, "s");
-  oglUniform1fv(unipar, 16, state);
+  oglUniform1fv(unipar, 9, state);
   //printf("%d  ",unipar);fflush(stdout);
 
 
@@ -67,17 +69,22 @@ static void render_scene(const synti2_synth *s){
 
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
-  sivu(10,-10);
-  sivu(10,-9);
-  sivu(10,-8);
-  oglRotatef (time*20.f, sin(time), 0.2f, 0.f);
+  sivu(i+i,-i);
+  /*
+  sivu(i,-9);
+
+    sivu(10,-8);
+  */
+  oglRotatef (synthtime*20.f, sin(synthtime), 0.2f, 0.f);
 
   oglEnable(GL_DEPTH_TEST);
-  kuutio(4);
-  kuutio(3);
-  kuutio(2);
-  kuutio(1);
-  kuutio(0);
+  for(;i>=0;i--){
+    kuutio(i);
+  }
+  /*kuutio(3);
+    kuutio(2);
+    kuutio(1);
+    kuutio(0);*/
 }
 
 /** Render something that varies with time and "audio snapshot". */

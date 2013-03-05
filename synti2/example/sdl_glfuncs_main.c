@@ -151,9 +151,12 @@ gl_FragColor=vec4(mix(p,vec4(t),max(t,v.x)));\
    */
 
 #ifndef NO_FULLSCREEN
-  vid = SDL_GetVideoInfo();  /* get desktop mode */
-  SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
-		   SDL_OPENGL|SDL_FULLSCREEN);
+ // hack my ride:
+ SDL_SetVideoMode(1280, 720, 32,
+                  SDL_OPENGL|SDL_FULLSCREEN);
+ //  vid = SDL_GetVideoInfo();  /* get desktop mode */
+ //  SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
+ //		   SDL_OPENGL|SDL_FULLSCREEN);
 #else
   SDL_SetVideoMode(800,600,32,SDL_OPENGL);
 #endif

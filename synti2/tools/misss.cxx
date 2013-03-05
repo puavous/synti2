@@ -94,7 +94,6 @@ synti2::MisssNoteChunk::do_write_header_as_c(std::ostream &outs)
 void
 synti2::MisssNoteChunk::do_write_data_as_c(std::ostream &outs)
 {
-  unsigned int di = 0;
   outs << "/* delta and info : */ " << std::endl;
   unsigned int prev_tick=0;
   int defnote = computeDefaultNote();
@@ -169,7 +168,6 @@ synti2::MisssRampChunk::do_write_header_as_c(std::ostream &outs)
 void
 synti2::MisssRampChunk::do_write_data_as_c(std::ostream &outs)
 {
-  unsigned int di = 0;
   outs << "/* delta and info : */ " << std::endl;
   unsigned int prev_tick=0;
   for (unsigned int i=0; i<tick.size(); i++){
@@ -211,7 +209,6 @@ synti2::MisssRampChunk::optimize(std::vector<MisssChunk*> &extra, double ticklen
   int voice = evt[0].getVoice();
   int mod = evt[0].getMod();
   unsigned int tick_start = 0;
-  float val_start = 0.0;
 
   bool building = false;
   for(size_t i=1;i<tick.size();i++){
@@ -219,16 +216,16 @@ synti2::MisssRampChunk::optimize(std::vector<MisssChunk*> &extra, double ticklen
     if (!building){
       building = true;
       tick_start = tick[i];
-      val_start = evt[i].getTarget();
+      //val_start = evt[i].getTarget();
       continue;
     }
 
     /* Ok, we're building the next ramp now. */
     bool extreme = false;
     bool rowlast = false;
-    if (i==tick.size()-1){
-      extreme == true; /* Last of the whole chunk */
-      rowlast == true; /* Last of the whole chunk */
+    if (i == tick.size() - 1){
+      extreme = true; /* Last of the whole chunk */
+      rowlast = true; /* Last of the whole chunk */
     } else {
       float cval = evt[i].getTarget();
       float pval = evt[i-1].getTarget();
@@ -359,7 +356,7 @@ synti2::MisssSong::translated_grab_from_midi(
        etc.) */
     double ticklen = (double)usec_per_quarter / ticks_per_quarter 
       / 1000000.0;
-    int norig = chunks.size();
+    size_t norig = chunks.size();
     for(size_t i = 0; i<norig; i++){
       chunks[i]->optimize(chunks, ticklen); /* chunks may grow. ugly, yeah.*/
     }

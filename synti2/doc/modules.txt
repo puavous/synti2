@@ -10,12 +10,12 @@ Diagram in ASCII::
                                 standard MIDI            native C data types
                                       ||                       |
                                       ||                       |                   
-   -Auxiliary programs               ======>  Midi filter     ======>  Synth engine
+   -Auxiliary programs               ======>  Midi mapper   ======>  Synth engine
    (patch editor,                    MIDI     synti2_midi.c   MISSS        synti2.c
-    GUI for midi filtering,          only                     (my internal
+    GUI for midi mapping,            only                     (my internal
     sequencer, e.g., Rosegarden)      ||                       format)
                                       ||                       |
-                                      ||      Filter is        |  Engine only listens
+                                      ||      Mapper is        |  Engine only listens
    -Hardware, e.g., keyboard          ||      controlled       |  to the internal
                                       ||      via SysEx.       |  format.
                                       ||      Only MIDI        |
@@ -31,5 +31,5 @@ Diagram in ASCII::
                         ||           ============================> (player functions
                         ||            ||     Synti2 sequence   |    in synti2.c)
                         ||            ||     file              |
-                        ||            ||     Space-limited     |
+                        || Unlimited  ||     Space-limited     |  Space-limited
                         ||            ||                       |

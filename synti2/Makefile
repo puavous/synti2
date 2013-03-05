@@ -94,7 +94,7 @@ TINYFILES = src/synti2.c \
 	     include/synti2_misss.h \
 	     include/synti2_archdep.h \
 	     tests/tinymaker.makefile \
-	     tests/selfextr.stub \
+	     example/selfextr.stub \
 
 # These are additionally needed for compose-time with jack engine:
 JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
@@ -123,7 +123,7 @@ tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
 	cp $(filter %.c %.h %.dat, $^) hackpack2/
 #	cp include/synti2_cap_default
 	cp tests/tinymaker.makefile hackpack2/Makefile
-	cp tests/selfextr.stub hackpack2/
+	cp example/selfextr.stub hackpack2/
 	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
 		< $(filter %shaders.c, $^) > hackpack2/shaders.c
 	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c

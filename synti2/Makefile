@@ -108,18 +108,21 @@ SMFILES = example/i13_sm/pikademo.mid \
 	   example/i13_sm/pikademo.s2bank \
 	   example/i13_sm/render.c \
 	   example/i13_sm/shaders.c \
-	   example/i13_sm/glfuncs.c
+	   example/i13_sm/glfuncs.c \
+	   example/i13_sm/synti2_cap.h \
+	   example/i13_sm/patchdes.dat
 
 
 summamutikka:
 	make tiny2 CUSTOMFILES="$(SMFILES)"
+	cd hackpack2; make vis2
 	mv hackpack2/vis2 ./jacksynti2
-	mv hackpack2/tiny2 ./sm.run
 
 i13tiny:
 	make tiny2 \
 	    CUSTOMFILES="$(I13FILES)" \
 	    NONOS="-DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO"
+	cd hackpack2; make all
 	mv hackpack2/vis2 ./jacksynti2
 
 
@@ -137,7 +140,6 @@ tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
 	./cltool parheader hackpack2/patchdes.dat > hackpack2/synti2_params.h
 	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
 
-	cd hackpack2; make
 
 
 #withoutseq:

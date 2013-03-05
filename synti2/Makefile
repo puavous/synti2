@@ -91,7 +91,6 @@ TINYFILES = src/synti2.c \
 	     example/sdl_shader_main.c \
 	     include/synti2.h \
 	     include/synti2_guts.h \
-	     include/synti2_params.h \
 	     include/synti2_misss.h \
 	     include/synti2_archdep.h \
 	     tests/tinymaker.makefile \
@@ -132,9 +131,9 @@ tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
 	cp tests/selfextr.stub hackpack2/
 	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
 		< $(filter %shaders.c, $^) > hackpack2/shaders.c
-	./cbank $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdata.c hackpack2/patchdes.dat 
-	./genpar hackpack2/patchdes.dat  hackpack2/synti2_params.h
-	./midi2synti2 $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
+	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
+	./cltool parheader hackpack2/patchdes.dat > hackpack2/synti2_params.h
+	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
 
 	cd hackpack2; make
 

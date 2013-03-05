@@ -79,6 +79,12 @@ usage(std::ostream &os){
      << std::endl;
 }
 
+void
+die(std::string msg){
+  std::cerr << msg << std::endl;
+  exit(1);
+}
+
 int main(int argc, char **argv){
   if (argc < 2){
     usage(std::cerr);
@@ -86,20 +92,35 @@ int main(int argc, char **argv){
   }
 
   if (strcmp(argv[1],"patchdesign") == 0) {
-    std::cerr << "FIXME: To be implemented: patchdesign "
-              << std::endl;
+    std::cerr << "FIXME: To be properly implemented: patchdesign "
+              << std::endl;    
   } else if (strcmp(argv[1],"capheader") == 0){
     std::cerr << "FIXME: To be implemented: capheader "
               << std::endl;
   } else if (strcmp(argv[1],"parheader") == 0){
-    std::cerr << "FIXME: To be implemented: parheader " 
+    std::cerr << "FIXME: To be implemented properly: parheader " 
               << std::endl;
+    if (argc < 2) die("Too few arguments");
+    std::ifstream pdes(argv[2]);
+    generateParamHeader(pdes, std::cout);
+
   } else if (strcmp(argv[1],"patchdata") == 0){
-    std::cerr << "FIXME: To be implemented: patchdata " 
+    std::cerr << "FIXME: To be properly implemented: patchdata " 
               << std::endl;
+    if (argc < 3) die("Too few arguments");
+
+    std::ifstream s2bank(argv[2]);
+    std::ifstream pdes(argv[3]);
+    generatePatchBank(s2bank, pdes, std::cout, 16);
+
   } else if (strcmp(argv[1],"songdata") == 0){
     std::cerr << "FIXME: To be implemented: songdata " 
               << std::endl;
+    if (argc < 3) die("Too few arguments");
+    //std::ifstream smf(argv[2]);
+    //std::ifstream s2bank(argv[3]);
+    generateMisssSong(argv[2], argv[3], std::cout, 4);
+
   } else {
     std::cerr << "Unknown command: " << argv[1] << std::endl;
     usage(std::cerr);

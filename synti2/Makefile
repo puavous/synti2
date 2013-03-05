@@ -1,4 +1,4 @@
-.PHONY: nodefaultmake mostlyclean clean veryveryclean
+.PHONY: nodefaultmake tools mostlyclean clean veryveryclean
 
 
 CLTOOLDEPS = tools/cltool.cxx \
@@ -21,12 +21,6 @@ PATCHEDITDEPS = tools/patchedit.cxx \
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
-# The HCFLAGS (as in "hardcore") are for making a very small executable.
-# I used to get a crash in PulseAudio due to misaligned stack (pa uses
-# vector registers and those instructions require 16 byte alignment). 
-# I hope my current init replacement will be enough...
-HCFLAGS = -Os -Wall -Wextra -pedantic \
-	$(NONOS)
 
 # With these, the dependency of libm could be lifted (just a few bytes gained):
 #  -mfpmath=387 -funsafe-math-optimizations
@@ -55,8 +49,7 @@ SSTRIP = sstrip
 nodefaultmake:
 	@echo "No default target is specified as of now."
 
-# Tools of all sorts have been popping about ... cutting stock now
-# tools: patchedit 
+tools: patchedit cltool
 
 # Just for looking at the machine code being produced by gcc
 #synti2.asm.annotated: $(S2SOURCES) $(S2HEADERS)
@@ -121,8 +114,8 @@ tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
 	-rm -r hackpack2
 	-mkdir hackpack2
 	cp $(filter %.c %.h %.dat, $^) hackpack2/
-#	cp include/synti2_cap_default
-	cp tests/tinymaker.makefile hackpack2/Makefile
+	echo 'NONOS=' $(NONOS) '' > hackpack2/Makefile
+	cat tests/tinymaker.makefile >> hackpack2/Makefile
 	cp example/selfextr.stub hackpack2/
 	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
 		< $(filter %shaders.c, $^) > hackpack2/shaders.c

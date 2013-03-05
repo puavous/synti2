@@ -31,9 +31,6 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 		-R .note.gnu.build-id \
 		-R .eh_frame_hdr -R .eh_frame 
 
-#ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
-#		-R .note.gnu.build-id -R .gnu.hash \
-#		-R .eh_frame_hdr -R .eh_frame 
 SSTRIP = sstrip
 
 # These are required for the compilation:
@@ -46,7 +43,6 @@ TINYHACKS = shaders.c render.c patchdata.c songdata.c glfuncs.c
 tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o $@.unstripped.payload \
-		-Iinclude \
 		-DULTRASMALL -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYSOURCES)) \
 		$(ARCHLIBS)

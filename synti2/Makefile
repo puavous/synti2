@@ -1,32 +1,21 @@
 .PHONY: nodefaultmake mostlyclean clean veryveryclean
 
-# A "demo" contains: main (which can be always the same!?), graphics,
-# patches (in original format), midi song (in sfm0/1 format)
-# (These can be overridden from the command line:)
-#MAIN ?= example/sdl_main.c
-MAIN ?= example/sdl_main.c
-GFX ?= tests/tryout_gfx2.c
-SMF ?= example/example1.mid
-SND ?= example/example1.s2bank
-SHAD ?= 
-NONOS ?= 
-BUTDOS ?= 
 
-PTSOURCES = tools/patchtool.cxx tools/patchtool.hpp \
-		tools/midihelper.cxx tools/midihelper.hpp 
+CLTOOLDEPS = tools/cltool.cxx \
+	tools/patchtool.cxx tools/patchtool.hpp \
+	tools/miditool.cxx tools/miditool.hpp \
+	tools/midimaptool.cxx tools/midimaptool.hpp \
+	tools/misss.cxx tools/misss.hpp \
+	tools/midihelper.cxx tools/midihelper.hpp \
+	src/synti2_midi.c
 
-
-#withoutseq:
-#	make tinyexe MAIN=tests/withoutseq.c SND=patches/miniFMset.s2bank SMF=example/minimal.mid GFX='' \
-#		NONOS='-DNO_NOTHING -DBUT_USE_OUTPUT_SQUASH -DDO_RESET_PHASE -DEXTREME_NO_SEQUENCER'
-#	mv tinyexe withoutseq
-
-
-GENPARDEPS = tools/genpar.cxx tools/patchtool.cxx \
-	tools/midihelper.cxx
-
-PATCHEDITDEPS = tools/patchedit.cxx tools/midimaptool.cxx \
-		tools/misss.cxx tools/miditool.cxx src/synti2_midi.c $(PTSOURCES)
+PATCHEDITDEPS = tools/patchedit.cxx \
+                tools/patchtool.cxx tools/patchtool.hpp \
+		tools/miditool.cxx tools/miditool.hpp \
+		tools/midimaptool.cxx tools/midimaptool.hpp \
+		tools/misss.cxx tools/misss.hpp \
+		tools/midihelper.cxx tools/midihelper.hpp \
+                src/synti2_midi.c
 
 
 # C flags common to all files (normal/debug build)
@@ -57,15 +46,16 @@ ARCHLIBS = `sdl-config --libs` -lGL -lm
 # Looks as if it is best to strip first with strip and then sstrip..
 ARCHSTRIP = strip
 ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
-		-R .note.gnu.build-id -R .gnu.hash \
+		-R .note.gnu.build-id \
 		-R .eh_frame_hdr -R .eh_frame 
 SSTRIP = sstrip
 
+# This must not be taken away: .gnu.hash
 
 nodefaultmake:
 	@echo "No default target is specified as of now."
 
-# Tools of all sorts have been popping about ... Need to cut stock now.
+# Tools of all sorts have been popping about ... cutting stock now
 # tools: midi2synti2 patchedit genpar cbank
 
 # Just for looking at the machine code being produced by gcc
@@ -73,41 +63,25 @@ nodefaultmake:
 #	$(CC) $(HCFLAGS) -Iinclude -S -fverbose-asm -g src/synti2.c
 #	as -alhnd synti2.s > $@
 
-midi2synti2: tools/midi2synti2.cxx  \
-		tools/miditool.hpp tools/miditool.cxx \
-		tools/midimaptool.hpp tools/midimaptool.cxx \
-                tools/midihelper.hpp tools/midihelper.cxx \
-		tools/misss.hpp tools/misss.cxx \
-		tools/patchtool.hpp tools/patchtool.cxx \
-		src/synti2_midi.c include/synti2_misss.h \
-		include/synti2_params.h \
-		Makefile
-	g++ -Wextra -o $@ $(filter %.cxx, $+) $(filter %.c, $+) \
-		-Isrc/ -Iinclude \
-		-lfltk `fltk-config --cxxflags` \
-		`pkg-config --cflags --libs jack`
-
 patchedit: $(PATCHEDITDEPS) Makefile
 	g++ -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
 		-Isrc -Iinclude \
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`
 
-genpar: $(GENPARDEPS)
-	g++ -Isrc -Iinclude -Itools/ -o $@ $(filter %.cxx , $^)
+cltool: $(CLTOOLDEPS)
+	g++ -Itools -Isrc -Iinclude -Wall -Wextra -o $@  $(filter %.cxx %.c, $^)
 
-cbank: tools/cbank.cxx $(PTSOURCES) Makefile
-	g++ -Isrc/ -Iinclude/ -o $@ -Wextra $(filter %.cxx, $^)
 
 # While still designing the patch system, we generate this for ease:
-include/synti2_params.h: src/patchdesign.dat genpar
-	./genpar $< $@
-
+#include/synti2_params.h: src/patchdesign.dat cltool
+#	./cltool $< $@
+# Will be different altogether..
 
 # Experiments with dry runs, benchmarking, and SDL
-benchmark: tests/benchmark.c src/synti2.c include/synti2.h testdata.c Makefile
-	$(CC) $(CFLAGS) -I./ -I./include -o $@ \
-		$(filter %.c , $^) -lm
+#benchmark: tests/benchmark.c src/synti2.c include/synti2.h testdata.c Makefile
+#	$(CC) $(CFLAGS) -I./ -I./include -o $@ \
+#		$(filter %.c , $^) -lm
 
 
 
@@ -125,7 +99,6 @@ TINYFILES = src/synti2.c \
 
 # These are additionally needed for compose-time with jack engine:
 JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
-
 
 # Instanssi 13 4k entry:
 # Specifics needed are song, sounds, and gfx:
@@ -165,6 +138,11 @@ tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
 
 	cd hackpack2; make
 
+
+#withoutseq:
+#	make tinyexe MAIN=tests/withoutseq.c SND=patches/miniFMset.s2bank SMF=example/minimal.mid GFX='' \
+#		NONOS='-DNO_NOTHING -DBUT_USE_OUTPUT_SQUASH -DDO_RESET_PHASE -DEXTREME_NO_SEQUENCER'
+#	mv tinyexe withoutseq
 
 
 

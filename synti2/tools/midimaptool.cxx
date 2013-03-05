@@ -83,7 +83,7 @@ static int readMapParInt(std::istream &ifs, const std::string &name, int defa){
     return defa;
   }
   std::stringstream ss(line);
-  while ((!ss.eof()) && (ss.peek()<'0') || (ss.peek()>'9')) ss.ignore();
+  while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
   int val;
   ss >> val;
   return val;
@@ -231,7 +231,7 @@ synti2::MidiMap::setVoices(int midichn, const std::string &val){
   std::stringstream ss(val);
   int voi, prev = 0;
   for (int i=0;i<NPARTS;i++){
-    while ((!ss.eof()) && (ss.peek()<'0') || (ss.peek()>'9')) ss.ignore();
+    while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
     ss >> voi;
     if (ss.fail() || voi == 0){
       mmap.chn[midichn].voices[i] = 0;
@@ -242,12 +242,20 @@ synti2::MidiMap::setVoices(int midichn, const std::string &val){
   }
 }
 
+#if 0
+/* TODO: */
+static void ignore_until_digit(std::istream ss){
+  while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
+}
+#endif
+
 void 
 synti2::MidiMap::setKeyMap(int midichn, std::string sval){
   std::stringstream ss(sval);
   int voi;
   for (int ik=0;ik<128;ik++){
-    while ((!ss.eof()) && (ss.peek()<'0') || (ss.peek()>'9')) ss.ignore();
+    //ignore_until_digit(ss);
+    while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
     ss >> voi;
     if (ss.fail()){
         std::cerr << "unexpected format of key map. bail out." << std::endl;

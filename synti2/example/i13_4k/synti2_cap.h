@@ -24,7 +24,7 @@
  * later project..
  */
 
-/* Audio delay storage. Less delays means less computation, faster
+/* Audio delay storage. Fewer delays means less computation, faster
  * synth.
  */
 #define NDELAYS 4

@@ -120,9 +120,9 @@ namespace synti2{
     void write(std::ostream &os);
     void setName(std::string newname){name = newname;}
     std::string getName(){return name;}
-    void setValueByName(std::string type, std::string name, float value){};
+    //void setValueByName(std::string type, std::string name, float value){};
     void setValue(std::string type, int idx, float value);
-    float getValueByName(std::string type, std::string name){return 1.23;}
+    //float getValueByName(std::string type, std::string name){return 1.23;}
     float getValue(std::string type, int idx){return (values[type])[idx];}
     void pushValToSysex(std::string type, int idx, std::vector<unsigned char> &v);
     int getNPars(std::string type){return values[type].size();}
@@ -163,6 +163,7 @@ namespace synti2{
 
   public:
     Patchtool(std::string fname);
+    Patchtool(std::istream &ist);
     ~Patchtool(){delete patch_description;}
 
     /* delegated... TODO: Need these at all? */

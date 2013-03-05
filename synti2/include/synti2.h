@@ -2,8 +2,6 @@
 #ifndef SYNTI2_INCLUDED
 #define SYNTI2_INCLUDED
 
-#include "synti2_params.h"
-
 /* Some conditional compile logic to make things (maybe) easier. */
 #ifdef JACK_MIDI
 #define USE_MIDI_INPUT

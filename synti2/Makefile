@@ -92,6 +92,10 @@ TINYFILES = src/synti2.c \
 # These are additionally needed for compose-time with jack engine:
 JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
 
+# These are additionally needed for off-line rendering:
+DUMPFILES =  example/file_writer_main.c
+
+
 # Instanssi 13 4k entry:
 # Specifics needed are song, sounds, and gfx:
 I13FILES = example/i13_4k/i13_4k.mid \
@@ -127,7 +131,7 @@ i13tiny:
 
 
 # For 4k stand-alone mode:
-tiny2: $(TINYFILES) $(JACKFILES) $(CUSTOMFILES)
+tiny2: $(TINYFILES) $(JACKFILES) $(DUMPFILES) $(CUSTOMFILES)
 	-rm -r hackpack2
 	-mkdir hackpack2
 	cp $(filter %.c %.h %.dat, $^) hackpack2/

@@ -9,7 +9,7 @@
 
 /* The following will be custom configurable for the 4k target: */
 #ifndef ULTRASMALL
-#include "synti2_cap_default.h"
+#include "synti2_cap.h"
 #include "synti2_params.h"
 #else
 #include "synti2_cap.h"

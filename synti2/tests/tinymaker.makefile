@@ -35,6 +35,7 @@ SSTRIP = sstrip
 
 # These are required for the compilation:
 JACKSOURCES = jack_shader_main.c synti2.c synti2_jack.c synti2_midi.c
+WRITERSOURCES = file_writer_main.c synti2.c 
 TINYSOURCES = sdl_shader_main.c synti2.c
 TINYHEADERS = synti2_archdep.h  synti2_cap.h  synti2_guts.h  synti2.h  synti2_misss.h  synti2_params.h
 TINYHACKS = shaders.c render.c patchdata.c songdata.c glfuncs.c
@@ -75,5 +76,19 @@ vis2: $(JACKSOURCES) $(TINYHEADERS) $(TINYHACKS)
 
 	@echo End result:
 	@ls -lt $@
+
+#The "no-nos" are used here, too, now(!):
+writ2: $(WRITERSOURCES) $(TINYHEADERS) $(TINYHACKS)
+	$(CC) $(CFLAGS) $(ARCHFLAGS) $(ADDFLAGS) \
+		-o $@ -DNO_DEFAULT_CAPS \
+		$(NONOS) \
+		$(filter %.c, $(WRITERSOURCES)) \
+		`pkg-config --cflags --libs jack` \
+		`sdl-config --cflags --libs` -lm -lGL -lGLU \
+		-lsndfile
+
+	@echo End result:
+	@ls -lt $@
+
 
 all: vis2 tiny2

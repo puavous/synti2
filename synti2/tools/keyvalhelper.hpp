@@ -14,6 +14,7 @@ public:
   void readFromStream(std::istream &ist);
   void writeToStream(std::ostream &ost) const;
   int asInt(const std::string &key) const;
+  std::string asString(const std::string &key) const;
 
   //friend std::ostream& operator<<(std::ostream& os, const KeyValueStorage& kvs);
 };

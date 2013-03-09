@@ -8,7 +8,8 @@
 #include <iostream>
 namespace synti2 {
   class Features {
-    Features(std::string){};
+  public:
+    Features(std::string s){std::cerr << "can't do " << s << std::endl;}
     bool hasFeature(std::string){
       std::cerr << "FIXME: implement" << std::endl; return true;}
     void readFromStream(std::istream &ist){};

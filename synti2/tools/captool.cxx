@@ -1,6 +1,7 @@
 /** Synth capacities and configuration. */
 #include "captool.hpp"
 #include "keyvalhelper.hpp"
+#include "featuretool.hpp"
 #include <iostream>
 #include <sstream>
 
@@ -87,5 +88,5 @@ synti2::Capacities::writeCapH(std::ostream &ost) const {
 
 void
 synti2::Capacities::writeParamH(std::ostream &ost) const {
-
+  Features f(kval.asString("features"));
 }

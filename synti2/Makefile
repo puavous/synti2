@@ -8,7 +8,7 @@ CLTOOLDEPS = tools/cltool.cxx \
 	tools/misss.cxx tools/misss.hpp \
 	tools/midihelper.cxx tools/midihelper.hpp \
 	tools/captool.cxx tools/captool.hpp \
-	tools/featurehelper.cxx tools/featurehelper.hpp \
+	tools/featuretool.cxx tools/featuretool.hpp \
 	tools/keyvalhelper.cxx tools/keyvalhelper.hpp \
 	src/synti2_midi.c
 

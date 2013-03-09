@@ -69,6 +69,11 @@ int KeyValueStorage::asInt(const std::string &key) const{
   return stoi(m.at(key));
 }
 
+std::string
+KeyValueStorage::asString(const std::string &key) const{
+  return m.at(key);
+}
+
 
 std::ostream& operator<< (std::ostream& os, 
                           const KeyValueStorage& kvs)

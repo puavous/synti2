@@ -18,8 +18,8 @@ namespace synti2{
   public:
     Capacities(std::istream &ist);
     void writeCapH(std::ostream &ost) const;
+    void writeParamH(std::ostream &ost) const;
     void write(std::ostream &ost) const;
-
   };
 }
 

@@ -46,7 +46,7 @@ generateCapHeader(std::istream &s2bank, std::ostream &ou){
 static
 void
 generatePatchDesign(std::istream &s2bank, std::ostream &ou){
-  std::stringstream hack("num_voices 11\n");
+  std::stringstream hack("num_voices 11\n num_envs 5 \n num_ops 3\n");
   //synti2::Capacities cap(s2bank);
   synti2::Capacities cap(hack);
   cap.writePatchDesign(ou);

@@ -61,7 +61,8 @@
         + This core may need some changes. In particular, it would be
           wonderful if the number of envelope knees and of oscillators
           could be free. Their processing logic would have to be
-          redesigned a bit.
+          redesigned a bit. Especially the oscillator cascade should
+          be reversed: 4->3->2->1->out instead of 1->2->3->4->out!
 
   This note now contains the essential parts of many former
   wishes.. So it'll be the next task to resolve.

@@ -191,13 +191,91 @@ synti2::Capacities::writePatchDesign(std::ostream &ost) const {
   ip++;
 
   if (ip%2==1) {
-  ost << "xxx" 
-      << " UNUSED0"
-      << " 0 " << 1
-      << " 0 18" << endl;
-  ip++;
+    ost << "xxx" 
+        << " UNUSED0"
+        << " 0 " << 1
+        << " 0 18" << endl;
+    ip++;
   }
 
+
   ost << "[F]" << endl;
+  ost << "NULLTGT NOT_Editable 0 0 0 1" << endl;
+  ost << "MIXLEV  MixLev       0.0 1.0 2 19" << endl;
+  ost << "MIXPAN  MixPan      -1.0 1.0 2 19" << endl;
+
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    ost << "LV" << iop+1
+        << " Op" << iop+1 << "Lev "
+        << "-8.0 8.0 " << " 2 15" << endl;
+  }
+  ost << "LV" << "N"
+      << " NoiseLev "
+      << "-8.0 8.0 " << " 2 15" << endl;
+  ost << "LV" << "D"
+      << " DlyInLev "
+      << "-8.0 8.0 " << " 2 15" << endl;
+
+  /* FIXME: Really need to separate the GUI preference part .. */
+  for(int ie=0;ie<kval.asInt("num_envs");++ie){
+    for(int ik=0;ik<kval.asInt("num_knees");++ik){
+      ost << "ENV" << ie+1 << "K" << ik+1 << "T"
+          << " En" << ie+1 << ":" << ik+1 << "T"
+          << " 0 " << 2.00 << " 0 " << 6+ie<< endl;
+    }
+  }
+
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    ost << "DT" << iop+1
+        << " Op" << iop+1 << "Crs "
+        << "-48.0 48.0 " << " 1 12" << endl;
+  }
+
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    ost << "DT" << iop+1 << "F"
+        << " Op" << iop+1 << "Fine "
+        << "-.5 .5 " << " 3 13" << endl;
+  }
+
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    ost << "PBAM" << iop+1 
+        << " Op" << iop+1 << "BendAmt "
+        << "0.0 24.0" << " 1 18" << endl;
+  }
+
+  ost << "PBVAL NOT_Editable -1.0 1.0 2 18" << endl;
+  ost << "FFREQ Cutoff 0.0 128.0 1 17" << endl;
+  ost << "FRESO Resonance 0.0 1.0 2 17" << endl;
+
+  for(int id=0;id<kval.asInt("num_delays");++id){
+    ost << "DINLV" << id+1 
+        << " Dly" << id+1 << "InLev "
+        << "-1.0 1.0" << " 2 16" << endl;
+  }
+
+  for(int id=0;id<kval.asInt("num_delays");++id){
+    ost << "DLEN" << id+1 
+        << " Dly" << id+1 << "Length "
+        << "0 2000" << " 1 17" << endl;
+  }
+
+  for(int id=0;id<kval.asInt("num_delays");++id){
+    ost << "DLEV" << id+1 
+        << " Dly" << id+1 << "OutLev "
+        << "0 1.0" << " 1 18" << endl;
+  }
+
+  ost << "LEGLEN LegatoLen 0.0 1.0 2 17" << endl;
+  ost << "PSCALE PitchScale -1.0 2.0 2 18" << endl;
+
+  /* FIXME: This needs a re-vamp: */
+  for(int im=0;im<kval.asInt("num_mods");++im){
+    ost << "CDST" << im+1 
+        << " Mod" << im+1 << "Dest "
+        << "0 127" << " 0 20" << endl;
+  }
+
+
+
 }
 

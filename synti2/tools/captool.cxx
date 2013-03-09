@@ -96,13 +96,108 @@ void
 synti2::Capacities::writePatchDesign(std::ostream &ost) const {
   Features f(kval.asString("features"));
   int ip = 0;
+  /* FIXME: Should separate the gui part!! */
   ost << "[I3]" << endl;
-  for(int ih=0;ih<kval.asInt("num_ops");++ih){
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
     /* FIXME: Actually unnecessary, if !hasFeature("waves") */
-    ost << "HARM" << ih << " Op" << ih << "Wav 0 7 0 5" << endl;
+    ost << "HARM" << iop+1 
+        << " Op" << iop+1 << "Wav "
+        << " 0 7 0 5" << endl;
     ip++;
   }
-//if f.hasFeature
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    ost << "EAMP" << iop+1
+        << " Op" << iop+1 << "AmpEnv "
+        << " 0 " << kval.asInt("num_envs") << " 0 0" << endl;
+    ip++;
+  }
+  /* FIXME: Actually unnecessary, if !hasFeature("noise") */
+  ost << "EAMP" << "N" 
+      << " NoiseAmpEnv "
+      << " 0 6 0 4" << endl;
+  ip++;
+
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    /* FIXME: Actually unnecessary, if !hasFeature("pitchenv") */
+    ost << "EPIT" << iop+1 
+        << " Op" << iop+1 << "PitchEnv "
+        << " 0 " << kval.asInt("num_envs") << " 0 1" << endl;
+    ip++;
+  }
+  /* FIXME: Actually unnecessary, if !hasFeature("panenv") */
+  ost << "EPAN"
+      << " PanEnv "
+      << " 0 " << kval.asInt("num_envs") << " 0 2" << endl;
+  ip++;
+  /* FIXME: And so on... should suppress unnecessary params. */
+
+  ost << "EFILC"
+      << " FiltCutEnv "
+      << " 0 " << kval.asInt("num_envs") << " 0 3" << endl;
+  ip++;
+
+  ost << "EFILR"
+      << " FiltResEnv "
+      << " 0 " << kval.asInt("num_envs") << " 0 3" << endl;
+  ip++;
+
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    ost << "VS" << iop+1 
+        << " Op" << iop+1 << "VelSens "
+        << " 0 " << " 1 " << " 2 14" << endl;
+    ip++;
+  }
+
+  ost << "VS" << "N"
+      << " Noise" << "VelSens "
+      << " 0 " << " 1 " << " 2 4" << endl;
+  ip++;
+
+  ost << "VS" << "C"
+      << " FiltCut" << "VelSens "
+      << " 0 " << " 1 " << " 2 3" << endl;
+  ip++;
+
+  for(int ie=0;ie<kval.asInt("num_envs");++ie){
+    ost << "ELOOP" << ie+1 
+        << " En" << ie+1 << "LoopLen "
+        << " 0 " << kval.asInt("num_knees")-2 << " 0 2" << endl;
+    ip++;
+  }
+
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    ost << "FMTO" << iop+1 
+        << " FModTo" << iop+1 
+        << " 0 " << iop << " 0 3" << endl;
+    ip++;
+  }
+
+  for(int iop=0;iop<kval.asInt("num_ops");++iop){
+    ost << "ADDTO" << iop+1 
+        << " MixTo" << iop+1 
+        << " 0 " << iop << " 0 4" << endl;
+    ip++;
+  }
+
+  ost << "FILT" 
+      << " FilterLowBndHiNtch"
+      << " 0 " << " 3 " << " 0 16" << endl;
+  ip++;
+
+  ost << "FFOLL" 
+      << " FilterFollowOp"
+      << " 0 " << kval.asInt("num_ops")-1
+      << " 0 16" << endl;
+  ip++;
+
+  if (ip%2==1) {
+  ost << "xxx" 
+      << " UNUSED0"
+      << " 0 " << 1
+      << " 0 18" << endl;
+  ip++;
+  }
+
   ost << "[F]" << endl;
 }
 

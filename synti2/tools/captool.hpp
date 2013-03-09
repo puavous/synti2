@@ -1,6 +1,8 @@
 /** Synth capacities and configuration. */
-#ifndef SYNTI2_CAPTOOL_H
-#define SYNTI2_CAPTOOL_H
+#ifndef SYNTI2_CAPTOOL_HPP
+#define SYNTI2_CAPTOOL_HPP
+
+#include <iostream>
 
 namespace synti2{
 
@@ -8,9 +10,12 @@ namespace synti2{
    *   and generating patchdesign.dat and synti2_cap.h based on the
    *   selections made in the definitions.
    */
-  class captool {
+  class Capacities {
     /* FIXME: To be done. */
-  }
+  public:
+    Capacities(std::istream &ist);
+    void writeCapH(std::ostream &ost);
+  };
 }
 
 #endif

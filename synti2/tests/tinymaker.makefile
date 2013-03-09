@@ -11,6 +11,10 @@ HCFLAGS = -Os -mfpmath=387 -funsafe-math-optimizations -fwhole-program \
 	-Wall -Wextra -pedantic \
 	$(NONOS)
 
+# With these, the dependency of libm could be lifted (just a few bytes gained, though):
+#  -mfpmath=387 -funsafe-math-optimizations
+
+
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
 ## For normal 64-bit build:
@@ -31,6 +35,11 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 		-R .note.gnu.build-id \
 		-R .eh_frame_hdr -R .eh_frame 
 
+# I'm taking away all I can so that the executable still works...
+# This must not be taken away: .gnu.hash (Seems to work on the build
+# system, but not others.. need to study the elf business a bit. See
+# how --hash-style= option affects this)
+
 SSTRIP = sstrip
 
 # These are required for the compilation:
@@ -39,6 +48,11 @@ WRITERSOURCES = file_writer_main.c synti2.c
 TINYSOURCES = sdl_shader_main.c synti2.c
 TINYHEADERS = synti2_archdep.h  synti2_cap.h  synti2_guts.h  synti2.h  synti2_misss.h  synti2_params.h
 TINYHACKS = shaders.c render.c patchdata.c songdata.c glfuncs.c
+
+# Just for looking at the machine code being produced by gcc
+#synti2.asm.annotated: $(S2SOURCES) $(S2HEADERS)
+#	$(CC) $(HCFLAGS) -Iinclude -S -fverbose-asm -g src/synti2.c
+#	as -alhnd synti2.s > $@
 
 
 tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)

@@ -86,3 +86,7 @@ code and scrap papers to find more of these)::
  * TODO: (Before future projects with re-designed synths) Evaluate if
  * this everything-is-a-counter thing was a good idea.
 
+
+/* TODO: Think about the whole envelope madness... use LFOs instead of
+ * looping envelopes?
+ */

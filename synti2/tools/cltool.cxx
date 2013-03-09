@@ -10,6 +10,7 @@
 #include<fstream>
 
 /* Includes for our own application logic*/
+#include "captool.hpp"
 #include "patchtool.hpp"
 #include "miditool.hpp"
 #include "midimaptool.hpp"
@@ -28,6 +29,16 @@ bool check_file_exists(const char* fname){
     std::cerr << "File not found: " << fname << std::endl;
     return false;
   } else return true;
+}
+
+/** Input: s2bank with "Capacity definitions". Output: C header file
+ *  for synth capacity configuration.
+ */
+static
+void
+generateCapHeader(std::istream &s2bank, std::ostream &ou){
+  synti2::Capacities cap(s2bank);
+  cap.writeCapH(ou);
 }
 
 /** "Patchdesign" as input; C header file as output. */
@@ -95,8 +106,12 @@ int main(int argc, char **argv){
     std::cerr << "FIXME: To be properly implemented: patchdesign "
               << std::endl;    
   } else if (strcmp(argv[1],"capheader") == 0){
-    std::cerr << "FIXME: To be implemented: capheader "
+    std::cerr << "FIXME: To be properly implemented: capheader "
               << std::endl;
+    if (argc < 2) die("Too few arguments");
+    std::ifstream s2bank(argv[2]);
+    generateCapHeader(s2bank, std::cout);
+
   } else if (strcmp(argv[1],"parheader") == 0){
     std::cerr << "FIXME: To be implemented properly: parheader " 
               << std::endl;

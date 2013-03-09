@@ -7,6 +7,7 @@ CLTOOLDEPS = tools/cltool.cxx \
 	tools/midimaptool.cxx tools/midimaptool.hpp \
 	tools/misss.cxx tools/misss.hpp \
 	tools/midihelper.cxx tools/midihelper.hpp \
+	tools/captool.cxx tools/captool.hpp \
 	src/synti2_midi.c
 
 PATCHEDITDEPS = tools/patchedit.cxx \
@@ -22,39 +23,10 @@ PATCHEDITDEPS = tools/patchedit.cxx \
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
 
-# With these, the dependency of libm could be lifted (just a few bytes gained):
-#  -mfpmath=387 -funsafe-math-optimizations
-
-## For normal 64-bit build:
-ARCHFLAGS = `sdl-config --cflags`
-ARCHLIBS = `sdl-config --libs` -lGL -lm
-
-# For linking against 32-bit libraries (approx. 5% smaller packed exe):
-# On my Fedora 16, as of now, the 32 bit SDL fails to init audio
-# (according to the error message, there is no available device). This
-# worked fine on Fedora 14, so I sort of think this is an issue in the
-# current version of SDL.i686)
-#ARCHFLAGS = -m32 -DNO_I64 `sdl-config --cflags` 
-#ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
-
-# Looks as if it is best to strip first with strip and then sstrip..
-ARCHSTRIP = strip
-ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
-		-R .note.gnu.build-id \
-		-R .eh_frame_hdr -R .eh_frame 
-SSTRIP = sstrip
-
-# This must not be taken away: .gnu.hash
-
 nodefaultmake:
 	@echo "No default target is specified as of now."
 
 tools: patchedit cltool
-
-# Just for looking at the machine code being produced by gcc
-#synti2.asm.annotated: $(S2SOURCES) $(S2HEADERS)
-#	$(CC) $(HCFLAGS) -Iinclude -S -fverbose-asm -g src/synti2.c
-#	as -alhnd synti2.s > $@
 
 patchedit: $(PATCHEDITDEPS) Makefile
 	g++ -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
@@ -145,14 +117,10 @@ tiny2: $(TINYFILES) $(JACKFILES) $(DUMPFILES) $(CUSTOMFILES)
 	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
 
 
-
 #withoutseq:
 #	make tinyexe MAIN=tests/withoutseq.c SND=patches/miniFMset.s2bank SMF=example/minimal.mid GFX='' \
 #		NONOS='-DNO_NOTHING -DBUT_USE_OUTPUT_SQUASH -DDO_RESET_PHASE -DEXTREME_NO_SEQUENCER'
 #	mv tinyexe withoutseq
-
-
-
 
 
 # Clean-up targets:

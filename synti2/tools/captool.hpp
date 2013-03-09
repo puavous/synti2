@@ -1,6 +1,6 @@
+/** Synth capacities and configuration. */
 #ifndef SYNTI2_CAPTOOL_HPP
 #define SYNTI2_CAPTOOL_HPP
-/** Synth capacities and configuration. */
 
 #include <iostream>
 #include "keyvalhelper.hpp"

@@ -1,6 +1,6 @@
+/** yet another crappy ini-file kinda thingy */
 #ifndef KEYVALHELPER_HPP
 #define KEYVALHELPER_HPP
-/** yet another crappy ini-file kinda thingy */
 
 #include <iostream>
 #include <map>

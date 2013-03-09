@@ -90,3 +90,11 @@ void
 synti2::Capacities::writeParamH(std::ostream &ost) const {
   Features f(kval.asString("features"));
 }
+
+void
+synti2::Capacities::writePatchDesign(std::ostream &ost) const {
+  Features f(kval.asString("features"));
+  ost << "[I3]" << endl;
+  ost << "[F]" << endl;
+}
+

@@ -19,6 +19,7 @@ namespace synti2{
     Capacities(std::istream &ist);
     void writeCapH(std::ostream &ost) const;
     void writeParamH(std::ostream &ost) const;
+    void writePatchDesign(std::ostream &ost) const;
     void write(std::ostream &ost) const;
   };
 }

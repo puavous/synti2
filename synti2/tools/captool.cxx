@@ -52,6 +52,7 @@ const std::string cap_defaults =
 synti2::Capacities::Capacities(std::istream &ist) {
   std::stringstream ss(cap_defaults);
   kval.readFromStream(ss);
+  kval.readFromStream(ist);
 }
 
 void
@@ -94,7 +95,14 @@ synti2::Capacities::writeParamH(std::ostream &ost) const {
 void
 synti2::Capacities::writePatchDesign(std::ostream &ost) const {
   Features f(kval.asString("features"));
+  int ip = 0;
   ost << "[I3]" << endl;
+  for(int ih=0;ih<kval.asInt("num_ops");++ih){
+    /* FIXME: Actually unnecessary, if !hasFeature("waves") */
+    ost << "HARM" << ih << " Op" << ih << "Wav 0 7 0 5" << endl;
+    ip++;
+  }
+//if f.hasFeature
   ost << "[F]" << endl;
 }
 

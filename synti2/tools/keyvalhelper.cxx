@@ -24,9 +24,9 @@ std::string line_chop(std::string &str){
 
 static
 std::string line_trim(std::string &str){
-  unsigned long beg = str.find_first_not_of(" \t\n\r");
-  unsigned long end = str.find_last_not_of(" \t\n\r", beg);
-  return str.substr(beg,end+1);
+  size_t beg = str.find_first_not_of(" \t\f\v\n\r");
+  size_t end = str.find_last_not_of(" \t\f\v\n\r");
+  return str.substr(beg,end-beg+1);
 }
 
 static

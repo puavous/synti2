@@ -37,11 +37,21 @@ bool check_file_exists(const char* fname){
 static
 void
 generateCapHeader(std::istream &s2bank, std::ostream &ou){
-  std::stringstream hack("num_voices 16\n");
+  std::stringstream hack("num_voices  16    \n");
   //synti2::Capacities cap(s2bank);
   synti2::Capacities cap(hack);
   cap.writeCapH(ou);
 }
+
+static
+void
+generatePatchDesign(std::istream &s2bank, std::ostream &ou){
+  std::stringstream hack("num_voices 11\n");
+  //synti2::Capacities cap(s2bank);
+  synti2::Capacities cap(hack);
+  cap.writePatchDesign(ou);
+}
+
 
 /** "Patchdesign" as input; C header file as output. */
 void
@@ -106,7 +116,10 @@ int main(int argc, char **argv){
 
   if (strcmp(argv[1],"patchdesign") == 0) {
     std::cerr << "FIXME: To be properly implemented: patchdesign "
-              << std::endl;    
+              << std::endl;
+    if (argc < 2) die("Too few arguments");
+    std::ifstream s2bank(argv[2]);
+    generatePatchDesign(s2bank, std::cout);
   } else if (strcmp(argv[1],"capheader") == 0){
     std::cerr << "FIXME: To be properly implemented: capheader "
               << std::endl;

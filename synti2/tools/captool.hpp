@@ -1,8 +1,9 @@
-/** Synth capacities and configuration. */
 #ifndef SYNTI2_CAPTOOL_HPP
 #define SYNTI2_CAPTOOL_HPP
+/** Synth capacities and configuration. */
 
 #include <iostream>
+#include "keyvalhelper.hpp"
 
 namespace synti2{
 
@@ -12,9 +13,13 @@ namespace synti2{
    */
   class Capacities {
     /* FIXME: To be done. */
+  protected:
+    KeyValueStorage kval;
   public:
     Capacities(std::istream &ist);
-    void writeCapH(std::ostream &ost);
+    void writeCapH(std::ostream &ost) const;
+    void write(std::ostream &ost) const;
+
   };
 }
 

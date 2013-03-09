@@ -37,7 +37,9 @@ bool check_file_exists(const char* fname){
 static
 void
 generateCapHeader(std::istream &s2bank, std::ostream &ou){
-  synti2::Capacities cap(s2bank);
+  std::stringstream hack("num_voices 16\n");
+  //synti2::Capacities cap(s2bank);
+  synti2::Capacities cap(hack);
   cap.writeCapH(ou);
 }
 

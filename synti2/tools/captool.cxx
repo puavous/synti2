@@ -1,6 +1,8 @@
 /** Synth capacities and configuration. */
 #include "captool.hpp"
+#include "keyvalhelper.hpp"
 #include <iostream>
+#include <sstream>
 
 using std::endl;
 
@@ -17,12 +19,12 @@ const std::string documentation =
   " * and neither should it be necessary. See cltool.cxx for\n"
   " * more details. Some documentation is given below, though.\n"
   " * \n"
-  " * This file defines the 'capaities', or limits, of s specific \n"
+  " * This file defines the 'capacities', or limits, of a specific \n"
   " * build of the Synti2 software synthesizer. The idea is that\n"
   " * more restricted custom values can be used in compiling the \n"
   " * final 4k target than those that are used while composing the \n"
   " * music and designing patches. The final 4k executable should\n"
-  " * have only the minimum features necessary for its musical score.\n"
+  " * have only the minimum features that its musical score requires.\n"
   " *\n */\n\n"
   " /* Variables defined here (FIXME: refactor names!!) are:\n"
   "  * NPARTS - multitimbrality; number of max simultaneous sounds;\n"
@@ -38,33 +40,46 @@ const std::string documentation =
   "  */\n\n";
 
 const std::string defaults =
-  "#define NPARTS 16\n"
-  "#define NENVPERVOICE 6\n"
-  "#define NOSCILLATORS 4\n"
-  "#define NCONTROLLERS 4\n"
-  "\n"
-  "#define TRIGGERSTAGE 6\n"
-  "#define RELEASESTAGE 2\n"
-  "#define LOOPSTAGE 1\n"
-  "\n"
-  "#define NENVKNEES 5\n"
-  "#define SYNTI2_NENVD (NENVKNEES*2)\n"
-  "#define NDELAYS 8\n"
-  "#define DELAYSAMPLES 0x10000\n"
-  "#define SYNTI2_MAX_SONGBYTES 30000\n"
-  "#define SYNTI2_MAX_SONGEVENTS 15000\n"
-  "\n";
+  "num_voices 16  \n"
+  "num_envs 6\n"
+  "num_ops 4\n"
+  "num_mods 4\n"
+  "num_knees 5\n"
+  "num_delays 8\n";
 
-synti2::Capacities::Capacities(std::istream &ist){
-  /* FIXME: Implement. */
-  return;
+synti2::Capacities::Capacities(std::istream &ist) {
+  std::stringstream ss(defaults);
+  kval.readFromStream(ss);
 }
 
 void
-synti2::Capacities::writeCapH(std::ostream &ost){
+synti2::Capacities::write(std::ostream &ost) const{
+  ost << kval;
+}
+
+void
+synti2::Capacities::writeCapH(std::ostream &ost) const {
   ost << prologue;
   ost << documentation;
-  ost << defaults;
-  ost << "/* FIXME: not yet implemented.*/" << endl;
+  ost << "#define NPARTS " << kval.asInt("num_voices") << endl;
+  ost << "#define NENVPERVOICE " << kval.asInt("num_envs") << endl;
+
+  ost << "#define NOSCILLATORS " << kval.asInt("num_ops") << endl;
+  ost << "#define NCONTROLLERS " << kval.asInt("num_mods") << endl;
+  ost << "#define NENVKNEES " << kval.asInt("num_knees") << endl;
+  ost << "#define NDELAYS " << kval.asInt("num_delays") << endl;
+
+  /* Derived values.. */
+  ost << "#define TRIGGERSTAGE "  << "(NENVKNEES)" << endl;
+  ost << "#define SYNTI2_NENVD (NENVKNEES*2)" << endl;
+
+  /* Some constants cannot change because of implementation. */
+  ost << "#define RELEASESTAGE " << "2" << endl;
+  ost << "#define LOOPSTAGE " << "1" << endl;
+
+  /* Some remain hard-coded until necessary to modify.*/
+  ost << "#define DELAYSAMPLES 0x10000" << endl;
+  ost << "#define SYNTI2_MAX_SONGBYTES 30000" << endl;
+  ost << "#define SYNTI2_MAX_SONGEVENTS 15000" << endl;
   ost << epilogue;
 }

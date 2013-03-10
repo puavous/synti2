@@ -76,8 +76,6 @@ I13FILES = example/i13_4k/i13_4k.mid \
 	   example/i13_4k/i13_4k.s2bank \
 	   example/i13_4k/render.c \
 	   example/i13_4k/shaders.c \
-	   example/i13_4k/synti2_cap.h \
-	   example/i13_4k/patchdes.dat \
 	   example/glfuncs.c
 
 # Instanssi 13 summamutikka entry, "sm":
@@ -114,8 +112,10 @@ tiny2: $(TINYFILES) $(JACKFILES) $(DUMPFILES) $(CUSTOMFILES)
 	cp example/selfextr.stub hackpack2/
 	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
 		< $(filter %shaders.c, $^) > hackpack2/shaders.c
-	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
+	./cltool capheader $(filter %.s2bank, $(CUSTOMFILES)) > hackpack2/synti2_cap.h
+	./cltool patchdesign $(filter %.s2bank, $(CUSTOMFILES)) > hackpack2/patchdes.dat
 	./cltool parheader hackpack2/patchdes.dat > hackpack2/synti2_params.h
+	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
 	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
 
 

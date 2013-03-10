@@ -136,6 +136,10 @@ namespace synti2{
       /*FIXME: End-of-file logics. */
       /* FIXME: I need a more general patch editor,
          actually. Re-implement all this crap..*/
+      std::string line;
+      while(std::getline(is,line)){
+        if (line=="--- Patchdata begins") break;
+      }
       for(unsigned i=0;i<size();i++) at(i).read(is);
     }
     void exportStandalone(std::ostream &os);

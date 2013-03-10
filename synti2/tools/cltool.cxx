@@ -37,18 +37,14 @@ bool check_file_exists(const char* fname){
 static
 void
 generateCapHeader(std::istream &s2bank, std::ostream &ou){
-  std::stringstream hack("num_voices  16    \n");
-  //synti2::Capacities cap(s2bank);
-  synti2::Capacities cap(hack);
+  synti2::Capacities cap(s2bank);
   cap.writeCapH(ou);
 }
 
 static
 void
 generatePatchDesign(std::istream &s2bank, std::ostream &ou){
-  std::stringstream hack("num_voices 11\n num_envs 5 \n num_ops 3\n");
-  //synti2::Capacities cap(s2bank);
-  synti2::Capacities cap(hack);
+  synti2::Capacities cap(s2bank);
   cap.writePatchDesign(ou);
 }
 

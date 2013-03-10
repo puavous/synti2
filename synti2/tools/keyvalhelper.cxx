@@ -43,9 +43,10 @@ void KeyValueStorage::readFromStream(std::istream &ist){
   while(std::getline(ist, line)){
     if (line_is_whitespace(line)) continue;
     if (line[0]=='#') continue;
-    if (line.substr(0,3) == "---") break;
+    if (line[0]=='-') break;
     k = line_chop(line);
     v = line_trim(line);
+    std::cerr << "key " << k << " value " << v << std::endl;
     m[k] = v;
   }
 }

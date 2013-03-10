@@ -689,7 +689,7 @@ synti2_updateEnvelopeStages(synti2_synth *s,
     if (v->estage[ie] == 0) continue; /* skip untriggered. */
     
     /* reverse order in the stages, so a bit awkward indexing. */
-    ipastend = SYNTI2_F_ENVS + ie * SYNTI2_NENVD;
+    ipastend = SYNTI2_F_ENV1K1T + ie * SYNTI2_NENVD;
     
 #ifndef NO_SAFETY
     iter_watch = 0;

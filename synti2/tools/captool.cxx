@@ -73,7 +73,7 @@ synti2::Capacities::writeCapH(std::ostream &ost) const {
   ost << "#define NDELAYS " << kval.asInt("num_delays") << endl;
 
   /* Derived values.. */
-  ost << "#define TRIGGERSTAGE "  << "(NENVKNEES)" << endl;
+  ost << "#define TRIGGERSTAGE "  << "(NENVKNEES+1)" << endl;
   ost << "#define SYNTI2_NENVD (NENVKNEES*2)" << endl;
 
   /* Some constants cannot change because of implementation. */
@@ -200,6 +200,7 @@ synti2::Capacities::writePatchDesign(std::ostream &ost) const {
 
 
   ost << "[F]" << endl;
+
   ost << "NULLTGT NOT_Editable 0 0 0 1" << endl;
   ost << "MIXLEV  MixLev       0.0 1.0 2 19" << endl;
   ost << "MIXPAN  MixPan      -1.0 1.0 2 19" << endl;
@@ -222,6 +223,10 @@ synti2::Capacities::writePatchDesign(std::ostream &ost) const {
       ost << "ENV" << ie+1 << "K" << ik+1 << "T"
           << " En" << ie+1 << ":" << ik+1 << "T"
           << " 0 " << 2.00 << " 0 " << 6+ie<< endl;
+      ost << "ENV" << ie+1 << "K" << ik+1 << "L"
+          << " En" << ie+1 << ":" << ik+1 << "L"
+          << " 0 " << 2.00 << " 0 " << 6+ie<< endl;
+
     }
   }
 

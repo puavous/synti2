@@ -779,7 +779,7 @@ synti2_updateFrequencies(const synti2_synth *s,
      * parameters, so I think my pitch bend system is now final like
      * this.
      */
-    notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM+iosc];
+    notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM1+iosc];
 #endif
     
     /* Interpolate between two notes (deltas) in a look-up table: */
@@ -996,8 +996,8 @@ synti2_render(synti2_synth *s,
         
 #ifndef NO_FILTER_CUT_ENVELOPE
         /* Optionally _multiply_ cutoff frequency by an envelope. */
-        if (pat->ipar3[SYNTI2_I3_EFILT]>0){
-          fenv *= eprog[pat->ipar3[SYNTI2_I3_EFILT]].f;
+        if (pat->ipar3[SYNTI2_I3_EFILC]>0){
+          fenv *= eprog[pat->ipar3[SYNTI2_I3_EFILC]].f;
         }
 #endif
         

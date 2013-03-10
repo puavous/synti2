@@ -268,14 +268,12 @@ synti2::Capacities::writePatchDesign(std::ostream &ost) const {
   ost << "LEGLEN LegatoLen 0.0 1.0 2 17" << endl;
   ost << "PSCALE PitchScale -1.0 2.0 2 18" << endl;
 
-  /* FIXME: This needs a re-vamp: */
+  /* FIXME: This needs a re-vamp.. but everything does..: */
   for(int im=0;im<kval.asInt("num_mods");++im){
     ost << "CDST" << im+1 
         << " Mod" << im+1 << "Dest "
         << "0 127" << " 0 20" << endl;
   }
-
-
 
 }
 

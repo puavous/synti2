@@ -20,7 +20,6 @@ PATCHEDITDEPS = tools/patchedit.cxx \
 		tools/midihelper.cxx tools/midihelper.hpp \
                 src/synti2_midi.c
 
-
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
@@ -67,7 +66,7 @@ TINYFILES = src/synti2.c \
 JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
 
 # These are additionally needed for off-line rendering:
-DUMPFILES =  example/file_writer_main.c
+DUMPERFILES =  example/file_writer_main.c
 
 
 # Instanssi 13 4k entry:
@@ -84,10 +83,7 @@ SMFILES = example/i13_sm/pikademo.mid \
 	   example/i13_sm/pikademo.s2bank \
 	   example/i13_sm/render.c \
 	   example/i13_sm/shaders.c \
-	   example/i13_sm/glfuncs.c \
-	   example/i13_sm/synti2_cap.h \
-	   example/i13_sm/patchdes.dat
-
+	   example/i13_sm/glfuncs.c 
 
 summamutikka:
 	make tiny2 CUSTOMFILES="$(SMFILES)"
@@ -103,7 +99,7 @@ i13tiny:
 
 
 # For 4k stand-alone mode:
-tiny2: $(TINYFILES) $(JACKFILES) $(DUMPFILES) $(CUSTOMFILES)
+tiny2: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	-rm -r hackpack2
 	-mkdir hackpack2
 	cp $(filter %.c %.h %.dat, $^) hackpack2/

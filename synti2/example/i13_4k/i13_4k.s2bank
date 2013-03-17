@@ -6,7 +6,8 @@ num_knees 5
 num_delays 4
 # FIXME: Specification for the feature string:
 # Something like "all" "all-except:..." "only:..."
-features all-except:mods,noff,waves,looping,pscale,legato,pfine,pbend,velocity,fresenv,fnotch,fcutenv,fpfollow,stereo
+features all-except:troubleshooting,sysex,mods,noff,waves,looping,pscale,legato,pfine,pbend,velocity,fresenv,fnotch,fcutenv,fpfollow,stereo
+#features all-except:mods,noff,waves,looping,pscale,legato,pfine,pbend,velocity,fresenv,fnotch,fcutenv,fpfollow,stereo
 --- capacity definition ends
 --- Patchdata begins
 SDtryFilt

@@ -18,7 +18,10 @@ namespace synti2{
   public:
     Capacities(std::istream &ist);
     void writeCapH(std::ostream &ost) const;
-    void writeParamH(std::ostream &ost) const;
+    // This could be nice here.. but this whole thing is shouting for
+    // redesign so badly, that I won't bother with any small 
+    // improvements anymore...
+    //void writeParamH(std::ostream &ost) const;
     void writePatchDesign(std::ostream &ost) const;
     void write(std::ostream &ost) const;
   };

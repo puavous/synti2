@@ -113,27 +113,27 @@ int main(int argc, char **argv){
   if (strcmp(argv[1],"patchdesign") == 0) {
     std::cerr << "FIXME: To be properly implemented: patchdesign "
               << std::endl;
-    if (argc < 2) die("Too few arguments");
+    if (argc < 3) die("Too few arguments");
     std::ifstream s2bank(argv[2]);
     generatePatchDesign(s2bank, std::cout);
   } else if (strcmp(argv[1],"capheader") == 0){
     std::cerr << "FIXME: To be properly implemented: capheader "
               << std::endl;
-    if (argc < 2) die("Too few arguments");
+    if (argc < 3) die("Too few arguments");
     std::ifstream s2bank(argv[2]);
     generateCapHeader(s2bank, std::cout);
 
   } else if (strcmp(argv[1],"parheader") == 0){
     std::cerr << "FIXME: To be implemented properly: parheader " 
               << std::endl;
-    if (argc < 2) die("Too few arguments");
+    if (argc < 3) die("Too few arguments");
     std::ifstream pdes(argv[2]);
     generateParamHeader(pdes, std::cout);
 
   } else if (strcmp(argv[1],"patchdata") == 0){
     std::cerr << "FIXME: To be properly implemented: patchdata " 
               << std::endl;
-    if (argc < 3) die("Too few arguments");
+    if (argc < 4) die("Too few arguments");
 
     std::ifstream s2bank(argv[2]);
     std::ifstream pdes(argv[3]);
@@ -142,7 +142,7 @@ int main(int argc, char **argv){
   } else if (strcmp(argv[1],"songdata") == 0){
     std::cerr << "FIXME: To be implemented: songdata " 
               << std::endl;
-    if (argc < 3) die("Too few arguments");
+    if (argc < 4) die("Too few arguments");
     //std::ifstream smf(argv[2]);
     //std::ifstream s2bank(argv[3]);
     generateMisssSong(argv[2], argv[3], std::cout, 4);

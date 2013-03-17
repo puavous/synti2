@@ -84,13 +84,19 @@ synti2::Capacities::writeCapH(std::ostream &ost) const {
   ost << "#define DELAYSAMPLES 0x10000" << endl;
   ost << "#define SYNTI2_MAX_SONGBYTES 30000" << endl;
   ost << "#define SYNTI2_MAX_SONGEVENTS 15000" << endl;
+  ost << endl;
+
+  Features f(kval.asString("features"));
+  f.writeAsDefinesForC(ost);
+
   ost << cap_epilogue;
 }
 
-void
+/*void
 synti2::Capacities::writeParamH(std::ostream &ost) const {
   Features f(kval.asString("features"));
 }
+*/
 
 void
 synti2::Capacities::writePatchDesign(std::ostream &ost) const {

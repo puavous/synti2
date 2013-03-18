@@ -54,8 +54,9 @@
  * implementation with multimedia vector instructions(?). Or maybe
  * not? Look at the compiler output...
  *
- * TODO: Think. Signed integers would overflow just as nicely. Could
- * it be useful to model things in -1..1 range instead of 0..1 ?
+ * TODO: Think. Signed integers would overflow just as nicely (oops.. 
+ * check the standard again.. I hear it could be undefined behavior). 
+ * Could it be useful to model things in -1..1 range instead of 0..1 ?
  *
  * TODO: Maybe separate functions for oscillators and envelopes could
  * still be used if they would compress nicely...

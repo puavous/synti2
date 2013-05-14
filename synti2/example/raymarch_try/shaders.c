@@ -22,7 +22,7 @@ const GLchar *fs= "\
                                                                         \
 float distanceEstimator(vec3 p){                                        \
     //vec3 c = vec3(sin(s[0]*0.1)*12.0,0.0,0.0);                        \
-    vec3 c = vec3(sin(s[0]*0.1)*3.0,0.0,0.0);                          \
+    vec3 c = vec3(sin(s[0]*0.1)*3.0,0.0,0.0);                           \
     float r = 6.0+sin(s[0])+s[1];                                       \
     return length(p-c) -r;                                              \
 }                                                                       \
@@ -44,14 +44,28 @@ float deRep( vec3 p, vec3 c )                                           \
     return distanceEstimator(q);                                        \
 }                                                                       \
                                                                         \
-float f(vec3 p)                                                         \
+// FIXME: Rotation matrices...                                          \
+vec3 rotY(vec3 p, float th){                                            \
+  return vec3(sin(th)*p.x-cos(th)*p.z,p.y,cos(th)*p.x+sin(th)*p.z);     \
+}                                                                       \
+                                                                        \
+float g(vec3 p)                                                         \
 {                                                                       \
-		float distance = distanceEstimator(p);                              \
+		//float distance = distanceEstimator(p);                            \
     //float distance = deRep(p,vec3(10.0,10.0,10.0));                   \
     //float distance = sdHexPrism(p,vec2(3.0,4.0));                     \
-    float distance = udRoundBox(p,vec3(3.0,2.0,4.0),0.5);             \
+    float distance = udRoundBox(p,vec3(3.0,3.0,0.2),0.5);               \
     return distance;                                                    \
 }                                                                       \
+                                                                        \
+float rotaTestY(vec3 p, float th){                                      \
+  return g(rotY(p,th));                                                 \
+}                                                                       \
+                                                                        \
+float f(vec3 p){                                                        \
+  return rotaTestY(p,s[0]);                                             \
+}                                                                       \
+                                                                        \
                                                                         \
 vec4 march(vec3 from, vec3 direction) {                                 \
 	float totalDistance = 0.0;                                            \
@@ -79,13 +93,17 @@ vec3 normalEstimation(vec3 p){                                          \
 ) );}                                                                   \
                                                                         \
                                                                         \
-vec4 doLight(vec3 p, vec3 n, vec3 dirL)                                 \
+// Phong model                                                          \
+vec4 doLight(vec3 p, vec3 n, vec3 lpos,                                 \
+             vec3 lightC, vec3 amb, vec3 dfs, vec3 spec)                \
 {                                                                       \
-  float r = dot(n,dirL);                                                \
-  vec4 c = vec4(r, 0.0, 0.0, 1.0);                                      \
-  return c;                                                             \
-  //gl_FragColor = c;                                                   \
-  //return vec4(1.0,0.0,0.0,1.0);                                       \
+  vec3 ldir = normalize(lpos - p);                                      \
+  // Ambient component:                                                 \
+  vec3 c = amb;                                                         \
+  // Diffuse component:                                                 \
+  c += lightC * dfs * max(dot(n,ldir),0.0);                             \
+//  vec4 c = vec4(r, 0.0, 0.0, 1.0);                                    \
+  return vec4 (c,1.0); // no alpha blending in use...                   \
 }                                                                       \
   void main(){                                                          \
     vec3 vto = vec3(v.x,v.y,1.0);                                       \
@@ -96,9 +114,14 @@ vec4 doLight(vec3 p, vec3 n, vec3 dirL)                                 \
     vec3 n = normalEstimation(p);                                       \
     // Lighting computation.                                            \
     if (r>0.0){                                                         \
-      vec3 dirLight = normalize(vec3(1.0,1.0,-1.0));                    \
-      gl_FragColor = doLight(p,n,dirLight);                             \
-      } else {                                                            \
+      vec3 lightPos = vec3(10.0,10.0,-10.0);                               \
+      vec3 lightC = vec3(1.0,1.0,1.0);                                  \
+      vec3 ambient = vec3(0.0,0.0,1.0);                                 \
+      vec3 diffuse = vec3(1.0,0.0,0.0);                                 \
+      vec3 specular = vec3(0.0,1.0,0.0);                                \
+                                                                        \
+      gl_FragColor = doLight(p,n,lightPos,lightC,ambient,diffuse,specular); \
+      } else {                                                          \
       gl_FragColor = vec4(0.0,0.0,0.0,0.0);                             \
     }                                                                   \
   }";

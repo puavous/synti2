@@ -49,7 +49,7 @@ float f(vec3 p)                                                         \
 		float distance = distanceEstimator(p);                              \
     //float distance = deRep(p,vec3(10.0,10.0,10.0));                   \
     //float distance = sdHexPrism(p,vec2(3.0,4.0));                     \
-    //float distance = udRoundBox(p,vec3(3.0,2.0,4.0),0.5);             \
+    float distance = udRoundBox(p,vec3(3.0,2.0,4.0),0.5);             \
     return distance;                                                    \
 }                                                                       \
                                                                         \

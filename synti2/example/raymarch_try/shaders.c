@@ -101,7 +101,11 @@ vec4 doLight(vec3 p, vec3 n, vec3 lpos,                                 \
   // Ambient component:                                                 \
   vec3 c = amb;                                                         \
   // Diffuse component:                                                 \
-  c += lightC * dfs * max(dot(n,ldir),0.0);                             \
+  float ldist = length(lpos-p);                                         \
+  float attn = 1.0 / (0.25*ldist + 0.06*ldist + 0.003*ldist*ldist);     \
+  c += attn * lightC * dfs * max(dot(n,ldir),0.0);                      \
+  // Specular component:                                                \
+  //c += 
 //  vec4 c = vec4(r, 0.0, 0.0, 1.0);                                    \
   return vec4 (c,1.0); // no alpha blending in use...                   \
 }                                                                       \
@@ -114,7 +118,7 @@ vec4 doLight(vec3 p, vec3 n, vec3 lpos,                                 \
     vec3 n = normalEstimation(p);                                       \
     // Lighting computation.                                            \
     if (r>0.0){                                                         \
-      vec3 lightPos = vec3(10.0,10.0,-10.0);                               \
+      vec3 lightPos = vec3(3.0,3.0,-3.0);                               \
       vec3 lightC = vec3(1.0,1.0,1.0);                                  \
       vec3 ambient = vec3(0.0,0.0,1.0);                                 \
       vec3 diffuse = vec3(1.0,0.0,0.0);                                 \

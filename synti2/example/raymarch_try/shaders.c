@@ -41,10 +41,10 @@ float deRep( vec3 p, vec3 c )                                           \
                                                                         \
 float f(vec3 p)                                                         \
 {                                                                       \
-		//float distance = distanceEstimator(p);                            \
+		float distance = distanceEstimator(p);                            \
     //float distance = deRep(p,vec3(10.0,10.0,10.0));                   \
     //float distance = sdHexPrism(p,vec2(3.0,4.0));                     \
-    float distance = udRoundBox(p,vec3(3.0,2.0,4.0),0.5);               \
+    //float distance = udRoundBox(p,vec3(3.0,2.0,4.0),0.5);               \
     return distance;                                                    \
 }                                                                       \
                                                                         \
@@ -81,11 +81,17 @@ vec3 normalEstimation(vec3 p){                                         \
     vec3 p = pr.xyz;                                                    \
     float r = pr.w;                                                     \
     vec3 n = normalEstimation(p);                                       \
-    float d = length(vec2(v));                                          \
-    vec4 c = vec4(r, r, r, 1.0);                                        \
-//    if (v.z >= 0.0) c.a /= 2.0; else c.a /=4.0;                       \
+    // Lighting computation.                                            \
+    if (r>0.0){                                                         \
+      vec3 lightDir = normalize(vec3(1.0,1.0,-1.0));                     \
+      r = dot(n,lightDir);                                              \
+      vec4 c = vec4(r, r, r, 1.0);                                      \
+      gl_FragColor = c;                                                 \
+    } else {                                                            \
+      gl_FragColor = vec4(0.0,0.0,0.0,0.0);                             \
+    }                                                                   \
+  }";//    if (v.z >= 0.0) c.a /= 2.0; else c.a /=4.0;                       \
 //    c += s[4] + (v.z>0.0?0.0:3.0)*s[5];                               \
 //    c *= (smoothstep(0,4,s[0])-smoothstep(70,74,s[0]));               \
-    gl_FragColor = c;                                                   \
-  }";
+
 

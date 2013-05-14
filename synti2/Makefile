@@ -77,6 +77,14 @@ I13FILES = example/i13_4k/i13_4k.mid \
 	   example/i13_4k/shaders.c \
 	   example/glfuncs.c
 
+# Tietokonegrafiikan perusteet 13 course example:
+TGP13FILES = example/raymarch_try/i13_4k.mid \
+	   example/raymarch_try/i13_4k.s2bank \
+	   example/raymarch_try/render.c \
+	   example/raymarch_try/shaders.c \
+	   example/raymarch_try/glfuncs.c
+
+
 # Instanssi 13 summamutikka entry, "sm":
 # Specifics needed are song, sounds, and gfx:
 SMFILES = example/i13_sm/pikademo.mid \
@@ -88,6 +96,13 @@ SMFILES = example/i13_sm/pikademo.mid \
 summamutikka:
 	make tiny2 CUSTOMFILES="$(SMFILES)"
 	cd hackpack2; make vis2
+	mv hackpack2/vis2 ./jacksynti2
+
+tgptiny:
+	make tiny2 \
+	    CUSTOMFILES="$(TGP13FILES)" \
+	    NONOS="-DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO -DNO_SYSEX_RECEIVE"
+	cd hackpack2; make all
 	mv hackpack2/vis2 ./jacksynti2
 
 i13tiny:

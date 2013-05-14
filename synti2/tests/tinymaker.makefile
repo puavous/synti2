@@ -67,8 +67,8 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
 	$(SSTRIP) $@.payload
 
-#	7za a -tgzip -mx=9 tmp.gz $@.payload
-	~/files/hacking/zopfli/zopfli --i1000 $@.payload
+	7za a -tgzip -mx=9 $@.payload.gz $@.payload
+#	~/files/hacking/zopfli/zopfli --i1000 $@.payload
 	mv $@.payload.gz tmp.gz
 	cat selfextr.stub tmp.gz > $@
 	rm tmp.gz

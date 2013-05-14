@@ -1,5 +1,10 @@
-/* So far just a placeholder. I admit, this is the first example from
- * http://www.lighthouse3d.com/tutorials/glsl-tutorial/hello-world-in-glsl/
+/* Some simple ray marching experiments...
+ * 
+ * Yep. This is mostly copy-paste from Iñigo Quilez's work. Thanx,
+ * dude, even if I don't know you (yet) ;).
+ *
+ * But mind our students: I couldn't have done this without the basic
+ * math and methodology which was taught on our course this spring!
  */
 #define NEED_DEBUG
 const GLchar *vs="\
@@ -41,15 +46,14 @@ float deRep( vec3 p, vec3 c )                                           \
                                                                         \
 float f(vec3 p)                                                         \
 {                                                                       \
-		float distance = distanceEstimator(p);                            \
+		float distance = distanceEstimator(p);                              \
     //float distance = deRep(p,vec3(10.0,10.0,10.0));                   \
     //float distance = sdHexPrism(p,vec2(3.0,4.0));                     \
-    //float distance = udRoundBox(p,vec3(3.0,2.0,4.0),0.5);               \
+    //float distance = udRoundBox(p,vec3(3.0,2.0,4.0),0.5);             \
     return distance;                                                    \
 }                                                                       \
                                                                         \
-                                                                        \
-vec4 trace(vec3 from, vec3 direction) {                                 \
+vec4 march(vec3 from, vec3 direction) {                                 \
 	float totalDistance = 0.0;                                            \
   float MinimumDistance = 0.01;                                         \
   int MaxRaySteps = 10;                                                 \
@@ -61,12 +65,12 @@ vec4 trace(vec3 from, vec3 direction) {                                 \
 		totalDistance += distance;                                          \
 		if (distance < MinimumDistance) break;                              \
 	}                                                                     \
-  vec4 res; res.xyz = p;                                                     \
+  vec4 res; res.xyz = p;                                                \
   res.w = 1.0-float(steps)/float(MaxRaySteps);                          \
 	return res;                                                           \
 }                                                                       \
                                                                         \
-vec3 normalEstimation(vec3 p){                                         \
+vec3 normalEstimation(vec3 p){                                          \
   float epsilon = 0.01;                                                 \
   return normalize( vec3(                                               \
       f(p + vec3(epsilon,0,0) ) - f(p - vec3(epsilon,0,0))              \
@@ -74,24 +78,27 @@ vec3 normalEstimation(vec3 p){                                         \
     , f(p + vec3(0,0,epsilon) ) - f(p - vec3(0,0,epsilon))              \
 ) );}                                                                   \
                                                                         \
+                                                                        \
+vec4 doLight(vec3 p, vec3 n, vec3 dirL)                                 \
+{                                                                       \
+  float r = dot(n,dirL);                                                \
+  vec4 c = vec4(r, 0.0, 0.0, 1.0);                                      \
+  return c;                                                             \
+  //gl_FragColor = c;                                                   \
+  //return vec4(1.0,0.0,0.0,1.0);                                       \
+}                                                                       \
   void main(){                                                          \
     vec3 vto = vec3(v.x,v.y,1.0);                                       \
     vec3 vdir = normalize(vto);                                         \
-    vec4 pr = trace(vec3(0.0,0.0,-10.0),vdir);                          \
+    vec4 pr = march(vec3(0.0,0.0,-10.0),vdir);                          \
     vec3 p = pr.xyz;                                                    \
     float r = pr.w;                                                     \
     vec3 n = normalEstimation(p);                                       \
     // Lighting computation.                                            \
     if (r>0.0){                                                         \
-      vec3 lightDir = normalize(vec3(1.0,1.0,-1.0));                     \
-      r = dot(n,lightDir);                                              \
-      vec4 c = vec4(r, r, r, 1.0);                                      \
-      gl_FragColor = c;                                                 \
-    } else {                                                            \
+      vec3 dirLight = normalize(vec3(1.0,1.0,-1.0));                    \
+      gl_FragColor = doLight(p,n,dirLight);                             \
+      } else {                                                            \
       gl_FragColor = vec4(0.0,0.0,0.0,0.0);                             \
     }                                                                   \
-  }";//    if (v.z >= 0.0) c.a /= 2.0; else c.a /=4.0;                       \
-//    c += s[4] + (v.z>0.0?0.0:3.0)*s[5];                               \
-//    c *= (smoothstep(0,4,s[0])-smoothstep(70,74,s[0]));               \
-
-
+  }";

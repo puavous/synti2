@@ -45,7 +45,7 @@ float deRep( vec3 p, vec3 c )                                           \
     return udRoundBox(q,vec3(3.0,3.0,0.2),0.5);                         \
 }                                                                       \
                                                                         \
-// FIXME: Rotation matrices...                                          \
+// FIXME: Should do proper rotation matrices...                         \
 vec3 rotY(vec3 p, float th){                                            \
   return vec3(sin(th)*p.x-cos(th)*p.z,                                  \
               p.y,                                                      \
@@ -99,12 +99,14 @@ vec3 normalEstimation(vec3 p){                                          \
                                                                         \
                                                                         \
 // Phong model                                                          \
-vec4 doLight(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                      \
-             vec3 lightC, vec3 amb, vec3 dfs, vec3 spec)                \
+vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
+                  vec3 lightC, vec3 amb, vec3 dfs, vec3 spec)           \
 {                                                                       \
   vec3 ldir = normalize(lpos - p);                                      \
+                                                                        \
   // Ambient component:                                                 \
   vec3 c = amb;                                                         \
+                                                                        \
   // Diffuse and specular component:                                    \
   float ldist = length(lpos-p);                                         \
   float attn = 1.0 / (0.25*ldist + 0.06*ldist + 0.003*ldist*ldist);     \
@@ -118,9 +120,10 @@ vec4 doLight(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                      \
                                                                         \
   void main(){                                                          \
     vec3 cameraPosition = vec3(0.0,0.0,-10.0);                          \
-    vec3 lightPosition = vec3(10.0*sin(s[0]),20.0*sin(3.0*s[0]),10.0*cos(s[0])); \
+    vec3 lightPosition = vec3(10.0*sin(s[0]),20.0*cos(s[0]),10.0*cos(s[0]*0.1)); \
     vec3 vto = vec3(v.x,v.y,2.0);                                       \
     vec3 vdir = normalize(vto);                                         \
+                                                                        \
     vec4 pr = march(cameraPosition,vdir);                               \
     vec3 p = pr.xyz;                                                    \
     float r = pr.w;                                                     \
@@ -128,15 +131,15 @@ vec4 doLight(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                      \
     // Lighting computation.                                            \
     if (r>0.0){                                                         \
       vec3 lightC = vec3(1.0,1.0,1.0);                                  \
-      vec3 ambient = vec3(0.2,0.0,0.7);                                 \
+      vec3 ambient = vec3(0.1,0.0,0.2);                                 \
       vec3 diffuse = vec3(0.7,0.2,0.1);                                 \
       vec3 specular = vec3(1.0,1.0,0.0);                                \
                                                                         \
-      vec4 color = doLight(cameraPosition, p, n,                        \
+      vec4 color = doLightPhong(cameraPosition, p, n,                   \
                              lightPosition,                             \
                              lightC,ambient,diffuse,specular);          \
                                                                         \
-      //color *= 20.0 / min(20.0 - length(cameraPosition-p),0.0);       \
+      //color.rgb *= 20.0 / (21.0-max(distance(cameraPosition,p),20.0));  \
       gl_FragColor = color;                                             \
     } else {                                                            \
       gl_FragColor = vec4(0.0,0.0,0.0,0.0);                             \

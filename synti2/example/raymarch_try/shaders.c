@@ -3,10 +3,10 @@
  * Yep. This is mostly copy-paste from Iñigo Quilez's work. Thanx,
  * dude, even if I don't know you (yet) ;).
  *
- * But mind our students: I couldn't have done this without the basic
- * math and methodology which was taught on our course this spring!
+ * But a note to our students: I couldn't have done this without the
+ * basic vector math and stuff taught on this course.
  */
-#define NEED_DEBUG
+//#define NEED_DEBUG
 const GLchar *vs="\
   uniform float s[9]; // State parameters from app.                     \
   varying vec4 v; // Vertex coordinates                                 \
@@ -43,6 +43,7 @@ float deRep( vec3 p, vec3 c )                                           \
     vec3 q = mod(p,c) - 0.5*c;                                          \
     //return distanceEstimator(q);                                        \
     return udRoundBox(q,vec3(3.0,3.0,0.2),0.5);                         \
+    //return sdHexPrism(q,vec2(3.0,0.2));                                 \
 }                                                                       \
                                                                         \
 // FIXME: Should do proper rotation matrices...                         \
@@ -51,6 +52,13 @@ vec3 rotY(vec3 p, float th){                                            \
               p.y,                                                      \
               cos(th)*p.x+sin(th)*p.z);                                 \
 }                                                                       \
+                                                                        \
+vec3 rotZ(vec3 p, float th){                                            \
+  return vec3(sin(th)*p.x-cos(th)*p.y,                                  \
+              cos(th)*p.x+sin(th)*p.y,                                  \
+              p.z);                                                     \
+}                                                                       \
+                                                                        \
                                                                         \
 float g(vec3 p)                                                         \
 {                                                                       \
@@ -63,7 +71,8 @@ float g(vec3 p)                                                         \
 }                                                                       \
                                                                         \
 float rotaTestY(vec3 p, float th){                                      \
-  return g(rotY(p,th));                                                 \
+  return g(rotY(p,th));                                               \
+  //return g(rotY(rotZ(p,s[0]),th)+vec3(0.0,0.0,s[0]*4.0));               \
 }                                                                       \
                                                                         \
 float f(vec3 p){                                                        \
@@ -75,7 +84,7 @@ float f(vec3 p){                                                        \
 vec4 march(vec3 from, vec3 direction) {                                 \
 	float totalDistance = 0.0;                                            \
   float MinimumDistance = 0.001;                                         \
-  int MaxRaySteps = 80;                                                  \
+  int MaxRaySteps = 120;                                                  \
 	int steps;                                                            \
   vec3 p;                                                               \
 	for (steps=0; steps < MaxRaySteps; steps++) {                         \
@@ -120,7 +129,8 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                                                                         \
   void main(){                                                          \
     vec3 cameraPosition = vec3(0.0,0.0,-10.0);                          \
-    vec3 lightPosition = vec3(20.0*sin(s[0]),2.0*cos(s[0]),10.0*cos(s[0]*0.1)); \
+    vec3 lightPosition = vec3(20.0*sin(s[0]),20.0*cos(s[0]),10.0*cos(s[0]*0.1)); \
+    vec3 lightPosition2 = vec3(2.0*sin(s[0]),2.0*cos(s[0]),20.0*cos(s[0]*0.4)); \
     vec3 vto = vec3(v.x,v.y,2.0);                                       \
     vec3 vdir = normalize(vto);                                         \
                                                                         \
@@ -137,6 +147,10 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                                                                         \
       vec4 color = doLightPhong(cameraPosition, p, n,                   \
                              lightPosition,                             \
+                             lightC,ambient,diffuse,specular);          \
+                                                                        \
+      color += doLightPhong(cameraPosition, p, n,                       \
+                             lightPosition2,                             \
                              lightC,ambient,diffuse,specular);          \
                                                                         \
       //color.rgb *= 20.0 / (21.0-max(distance(cameraPosition,p),20.0));  \

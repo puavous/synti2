@@ -59,15 +59,15 @@ static void render_scene(const synti2_synth *s){
   unipar = oglGetUniformLocation(pid, "s");
   oglUniform1fv(unipar, 9, state);
 
-  //glDisable(GL_DEPTH_TEST);
-  oglEnable (GL_BLEND); 
-  oglBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+  glEnable(GL_DEPTH_TEST);
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
-  sivu(3,-20);
-
-  oglEnable(GL_DEPTH_TEST);
+  sivu(3,-30);
+  /*
+  glTranslatef (0.f, 0.f, -15.0f);
+  oglRotatef (synthtime*2.2f, sin(synthtime), 0.2f, 0.f);
+  kuutio(1);
+  */  
 }
 
 /** Render something that varies with time and "audio snapshot". */

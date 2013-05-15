@@ -120,7 +120,7 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                                                                         \
   void main(){                                                          \
     vec3 cameraPosition = vec3(0.0,0.0,-10.0);                          \
-    vec3 lightPosition = vec3(10.0*sin(s[0]),20.0*cos(s[0]),10.0*cos(s[0]*0.1)); \
+    vec3 lightPosition = vec3(20.0*sin(s[0]),2.0*cos(s[0]),10.0*cos(s[0]*0.1)); \
     vec3 vto = vec3(v.x,v.y,2.0);                                       \
     vec3 vdir = normalize(vto);                                         \
                                                                         \

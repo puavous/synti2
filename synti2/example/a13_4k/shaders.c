@@ -11,20 +11,6 @@
  * transfers 9 uniform parameters from the application..
  */
 //#define NEED_DEBUG
-#if 0
-
-const GLchar *vs="\
-  uniform float s[9]; // State parameters from app.                     \
-  varying vec4 a; // Vertex coordinates                                 \
-  void main(){                                                          \
-    a = gl_Vertex;                                                      \
-    gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * a;         \
-  }";
-
-const GLchar *fs= "\
-uniform float s[9];varying vec4 a;vec3 u(vec3 e,float f){f+=1.+s[5];return vec3(sin(f)*e.x-cos(f)*e.z,e.y,cos(f)*e.x+sin(f)*e.z);}float v(vec3 e,vec2 f){vec3 g=abs(e);return max(g.z-f.y,max(g.x+g.y*.57735,g.y*1.1547)-f.x);}float w(vec3 e,vec3 f,float g){vec3 h=abs(e)-f;return min(max(h.x,max(h.y,h.z)),0.)+length(max(h,0.))-g;}float x(vec3 e,vec3 f,float g){vec3 h=u(e,e.y*sin(s[0])*.2);return w(h,f,g);}float y(vec3 e,vec3 f){vec3 g=mod(e,f)-.5*f;return x(g,vec3(3,3,2.2),.5);}float z(vec3 e){float f;f=y(e,vec3(12,12,15));f=min(f,v(e,vec2(4,7)));return f;}float A(vec3 e,float f){return z(u(e,f));}float B(vec3 e){return A(e,s[0]*.2);}const float b=.001;const int c=140;const float d=120.;vec4 C(vec3 e,vec3 f){float g=0.;int h;vec3 i;for(h=0;h<c;h++){i=e+g*f;float j=B(i);g+=j;if(j<b)break;if(g>d)return vec4(i,0);}vec4 j;j.xyz=i;j.w=1.-float(h)/float(c);return j;}vec3 D(vec3 e){float f=.001;return normalize(vec3(B(e+vec3(f,0,0))-B(e-vec3(f,0,0)),B(e+vec3(0,f,0))-B(e-vec3(0,f,0)),B(e+vec3(0,0,f))-B(e-vec3(0,0,f))));}vec4 E(vec3 e,vec3 f,vec3 g,vec3 h,vec3 i,vec3 j,vec3 k,vec3 l){vec3 m,n,q,r,s,t;m=normalize(h-f);n=j;float o,p;o=length(h-f);p=1./(1.+.06*o+.003*o*o);q=normalize(f-e);r=k*max(dot(g,m),0.);s=reflect(m,g);t=l*pow(max(dot(s,q),0.),4.);n+=p*i*(r+t);return vec4(n,1);}void main(){vec3 e,f,g,h,i,k,m;e=vec3(0,0,-10.);f=vec3(20.*sin(s[0]),20.*cos(s[0]),10.*cos(s[0]*.1));g=vec3(2.*sin(s[0]),2.*cos(s[0]),20.*cos(s[0]*.4));h=vec3(a.x,a.y,2);i=normalize(h);vec4 j=C(e,i);k=j.xyz;float l=j.w;m=D(k);if(l>0.){vec3 n,o,p,q;n=vec3(1);o=vec3(.1,0,.2);p=vec3(.2,.1,.05);q=vec3(1,1,0);vec4 r=E(e,k,m,f,n,o,p,q);r+=E(e,k,m,g,n,o,p,q);float s=1.-max(distance(e,k)/120.,0.);gl_FragColor=3.*r*s;}else gl_FragColor=vec4(0);}";
-#endif
-
 #if 1
 
 const GLchar *vs="\
@@ -37,9 +23,8 @@ const GLchar *vs="\
 const GLchar *fs= "\
   uniform float s[9]; // State parameters from app.                     \
                                                                         \
-// FIXME: Should do proper rotation matrices...                         \
+// FIXME: Should do proper rotation matrices?                           \
 vec3 rotY(vec3 p, float th){                                            \
-  th += (1.0+s[5]);                                                     \
   return vec3(sin(th)*p.x-cos(th)*p.z,                                  \
               p.y,                                                      \
               cos(th)*p.x+sin(th)*p.z);                                 \
@@ -51,10 +36,10 @@ vec3 rotZ(vec3 p, float th){                                            \
               p.z);                                                     \
 }                                                                       \
                                                                         \
-float sdHexPrism( vec3 p, vec2 h )                                      \
-{                                                                       \
-    vec3 q = abs(p);                                                    \
-    return max(q.z-h.y,max(q.x+q.y*0.57735,q.y*1.1547)-h.x);            \
+vec3 rotX(vec3 p, float th){                                            \
+  return vec3(p.x,                                                      \
+              sin(th)*p.y-cos(th)*p.z,                                  \
+              cos(th)*p.y+sin(th)*p.z);                                 \
 }                                                                       \
                                                                         \
 float sdRoundBox( vec3 p, vec3 b, float r)                              \
@@ -66,43 +51,31 @@ float sdRoundBox( vec3 p, vec3 b, float r)                              \
                                                                         \
 float warpedRoundBox( vec3 p, vec3 b, float r )                         \
 {                                                                       \
-  vec3 rp = rotY(p,p.y*sin(s[0])*0.2);                                  \
+  vec3 rp = rotY(p,p.y*sin(s[0])*0.4+1.0+s[5]);                         \
+  rp = rotX(rp,rp.z*sin(s[0]+1.0)*.1);                                  \
   return sdRoundBox(rp,b,r);                                            \
 }                                                                       \
                                                                         \
-float deRep( vec3 p, vec3 c )                                           \
+vec3 deRep( vec3 p, vec3 c )                                            \
 {                                                                       \
-    vec3 q = mod(p,c) - 0.5*c;                                          \
-    return warpedRoundBox(q,vec3(3.0,3.0,2.2),0.5);                     \
-    //return sdHexPrism(q,vec2(3.0,0.2));                               \
+    return mod(p,c);                                                    \
 }                                                                       \
-                                                                        \
-                                                                        \
                                                                         \
 float g(vec3 p)                                                         \
 {                                                                       \
-    //p = rotY(rotZ(p,s[0]),s[0]/2.);                                     \
-    float distance;                                                     \
-    distance = deRep(p,vec3(12.0,12.0,15.0));                           \
-    distance = min(distance,sdHexPrism(rotY(rotZ(p,s[0]),s[0]/2.),vec2(4.0,7.0)));               \
-    //distance = sdRoundBox(p,vec3(3.0,3.0,0.2),0.5);                   \
-    return distance;                                                    \
-}                                                                       \
-                                                                        \
-float rotaTestY(vec3 p, float th){                                      \
-  return g(rotY(p,th));                                                 \
-  //return g(rotY(rotZ(p,s[0]),th)+vec3(0.0,0.0,s[0]*4.0));             \
+    vec3 c = vec3(12.,12.,25.);                                         \
+    p.z += 10.*s[0];                                                    \
+    vec3 q = deRep(rotX(p,.1*s[0]),c)- 0.5*c;                           \
+    return warpedRoundBox(q,vec3(3.0,3.0,2.2),0.5);                     \
 }                                                                       \
                                                                         \
 float f(vec3 p){                                                        \
-  // Muutama erilainen pikkukokeilu..                                   \
-  //return rotaTestY(p,s[0]*0.2);                                         \
-  return g(p);                                                        \
+  return g(p);                                                          \
 }                                                                       \
                                                                         \
                                                                         \
-                                                                        \
-const float MinimumDistance = 0.01;                                     \
+const float MinimumDistance = .8; // FIXME: accuracy vs. frame rate    \
+const float epsilon = 0.1;                                              \
 const int MaxRaySteps = 140;                                            \
 const float TooFar = 80.0;                                              \
                                                                         \
@@ -112,7 +85,7 @@ vec4 march(vec3 from, vec3 direction) {                                 \
   vec3 p;                                                               \
 	for (steps=0; steps < MaxRaySteps; steps++) {                         \
 		p = from + totalDistance * direction;                               \
-    float distance = f(p) *0.9;                                         \
+    float distance = f(p)*0.8;                                          \
 		totalDistance += distance;                                          \
 		if (distance < MinimumDistance){                                    \
       break;                                                            \
@@ -131,11 +104,10 @@ vec4 march(vec3 from, vec3 direction) {                                 \
 // differences along the coordinate axes.                               \
                                                                         \
 vec3 normalEstimation(vec3 p){                                          \
-  float epsilon = 0.1;                                                 \
   return normalize( vec3(                                               \
-      f(p + vec3(epsilon,0.,0.) ) - f(p - vec3(epsilon,0.,0.))              \
-    , f(p + vec3(0.,epsilon,0.) ) - f(p - vec3(0.,epsilon,0.))              \
-    , f(p + vec3(0.,0.,epsilon) ) - f(p - vec3(0.,0.,epsilon))              \
+      f(p + vec3(epsilon,0.,0.) ) - f(p - vec3(epsilon,0.,0.))          \
+    , f(p + vec3(0.,epsilon,0.) ) - f(p - vec3(0.,epsilon,0.))          \
+    , f(p + vec3(0.,0.,epsilon) ) - f(p - vec3(0.,0.,epsilon))          \
 ) );}                                                                   \
                                                                         \
                                                                         \
@@ -150,24 +122,25 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                                                                         \
   // Diffuse and specular component:                                    \
   float ldist = length(lpos-p);                                         \
-  float attn = 1.0 / (1.0 + 0.06*ldist + 0.003*ldist*ldist);            \
+  float attn = 1. / (1. + 0.03*ldist + 0.003*ldist*ldist);              \
   vec3 camdir = normalize(p-pcam);                                      \
   vec3 idfs = dfs * max(dot(n,ldir),0.0);                               \
   vec3 refldir = reflect(ldir, n);                                      \
   vec3 ispec = spec * pow(max(dot(refldir,camdir),0.0),4.0);            \
   c += attn * lightC * (idfs + ispec);                                  \
-  return vec4 (c,1.0); // no alpha blending in use...                   \
+  return vec4 (c,1.); // no alpha blending in use...                    \
 }                                                                       \
                                                                         \
   void main(){                                                          \
-    vec3 cameraPosition = vec3(0.0,0.0,-20.0);                          \
-    vec3 lightPosition = vec3(20.0*sin(s[0]),20.0*cos(s[0]*.4),10.0*cos(s[0]*.1)); \
+    vec3 cameraPosition = vec3(0.,0.,-20.);                             \
+    vec3 lightPosition = vec3(sin(s[0]),cos(s[0]*.4),cos(s[0]*.1));     \
+    lightPosition *= 20.;                                               \
                                                                         \
-    // I just shoot 'over there'. TODO: Use screen pixel coordinates.   \
-    // TODO: Proper vector length and direction.                        \
-    vec2 pix = gl_FragCoord.xy / vec2(400.0,300.0) - vec2(1.,1.);       \
-    vec3 vto = vec3(pix.x,pix.y,1.);                                   \
-    vec3 vdir = normalize(vto);                                         \
+    // I just shoot 'over there'.                                       \
+    // TODO: Proper vector length and direction; from resol.            \
+    vec2 pix = gl_FragCoord.xy / vec2(512.0,384.0) - vec2(1.,1.);       \
+    vec3 vdir = vec3(pix.x,pix.y,1.);                                   \
+    //vec3 vdir = normalize(vdir);                                      \
                                                                         \
     vec4 pr = march(cameraPosition,vdir);                               \
     vec3 p = pr.xyz;                                                    \
@@ -175,8 +148,8 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
     vec3 n = normalEstimation(p);                                       \
     // Lighting computation.                                            \
     if (r>0.0){                                                         \
-      vec3 lightC = vec3(1.);                                  \
-      vec3 ambient = vec3(0.1,0.0,1.0);                                 \
+      vec3 lightC = vec3(1.);                                           \
+      vec3 ambient = vec3(0.3,0.0,0.0);                                 \
       vec3 diffuse = vec3(1.0,0.1,0.05);                                \
       vec3 specular = vec3(1.0,1.0,0.0);                                \
                                                                         \
@@ -185,9 +158,9 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                              lightC,ambient,diffuse,specular);          \
                                                                         \
       float darken = 1.0-max((distance(cameraPosition,p)/120.0),0.0);   \
-      gl_FragColor = 3.0*color * darken;                                    \
+      gl_FragColor = 3.0*color * darken;                                \
     } else {                                                            \
-      gl_FragColor = vec4(0.);                             \
+      gl_FragColor = vec4(0.);                                          \
     }                                                                   \
   }";
 

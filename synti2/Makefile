@@ -69,6 +69,14 @@ JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
 DUMPERFILES =  example/file_writer_main.c
 
 
+# Assembly Summer 13 4k entry:
+# Specifics needed are song, sounds, and gfx:
+A13FILES = example/a13_4k/a13_4k.mid \
+	   example/a13_4k/a13_4k.s2bank \
+	   example/a13_4k/render.c \
+	   example/a13_4k/shaders.c \
+	   example/glfuncs.c
+
 # Instanssi 13 4k entry:
 # Specifics needed are song, sounds, and gfx:
 I13FILES = example/i13_4k/i13_4k.mid \
@@ -97,6 +105,14 @@ summamutikka:
 	make tiny2 CUSTOMFILES="$(SMFILES)"
 	cd hackpack2; make vis2
 	mv hackpack2/vis2 ./jacksynti2
+
+a13tiny:
+	make tiny2 \
+	    CUSTOMFILES="$(A13FILES)" \
+	    NONOS="-DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO -DNO_SYSEX_RECEIVE"
+	cd hackpack2; make all
+	mv hackpack2/vis2 ./jacksynti2
+
 
 tgptiny:
 	make tiny2 \

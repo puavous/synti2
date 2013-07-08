@@ -9,32 +9,12 @@
 
 static void sivu(int a, int z){
       oglBegin(GL_QUADS);
-
-      /*glNormal3f(  0.f,   0.f,   1.f);*/
       oglVertex3i(  a,   a,   z);
-
-      /*glNormal3f(  0.f,   0.f,   1.f);*/
       oglVertex3i( -a,   a,   z);
-
-      /*glNormal3f(  0.f,   0.f,   1.f);*/
       oglVertex3i( -a,  -a,   z);
-
-      /*glNormal3f(  0.f,   0.f,   1.f);*/
       oglVertex3i(  a,  -a,   z);
       oglEnd();
 }
-
-static void kuutio(int a){
-  //oglPushMatrix();
-  sivu(1,a);
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
-  oglRotatef(90.f, 1.f, 0.f, 0.f); sivu(1,a);
-  oglRotatef(90.f, 0.f, 1.f, 0.f); sivu(1,a);
-  oglRotatef(180.f, 0.f, 1.f, 0.f); sivu(1,a);
-  //oglPopMatrix();
-}
-
 
 
 
@@ -59,15 +39,11 @@ static void render_scene(const synti2_synth *s){
   unipar = oglGetUniformLocation(pid, "s");
   oglUniform1fv(unipar, 9, state);
 
-  glEnable(GL_DEPTH_TEST);
+  //  glEnable(GL_DEPTH_TEST);
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
-  sivu(3,-30);
-  /*
-  glTranslatef (0.f, 0.f, -15.0f);
-  oglRotatef (synthtime*2.2f, sin(synthtime), 0.2f, 0.f);
-  kuutio(1);
-  */  
+  sivu(10,-2);
+
 }
 
 /** Render something that varies with time and "audio snapshot". */
@@ -78,7 +54,7 @@ void render_w_shaders(const synti2_synth *s, float ar){
   oglLoadIdentity();
   /* The exe would be smaller, were screen size hard-coded.. 
      .. but I try to be nice.. */
-  oglFrustum(-ar,ar,-1.f,1.f,4.f,400.f);
+  oglFrustum(-ar,ar,-1.f,1.f,1.f,4.f);
   oglMatrixMode(GL_MODELVIEW);
   oglLoadIdentity();
   oglUseProgram(pid);

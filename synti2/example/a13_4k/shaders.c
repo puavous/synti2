@@ -10,8 +10,7 @@
  * applicable in any other code that renders a rectangle [-1,1]^2 and
  * transfers 9 uniform parameters from the application..
  */
-//#define NEED_DEBUG
-#if 1
+#define NEED_DEBUG
 
 const GLchar *vs="\
   void main(){                                  \
@@ -19,13 +18,15 @@ const GLchar *vs="\
     gl_Position.xy *= .5;                       \
   }";
 
+#if 0
+
 /* A crude minified version (glslunit.appspot.com/compiler.html) */
 const GLchar *fs= "\
 uniform float s[9];vec3 u(vec3 e,float f){return vec3(sin(f)*e.x-cos(f)*e.z,e.y,cos(f)*e.x+sin(f)*e.z);}vec3 v(vec3 e,float f){return vec3(e.x,sin(f)*e.y-cos(f)*e.z,cos(f)*e.y+sin(f)*e.z);}float w(vec3 e,vec3 f,float g){vec3 h=abs(e)-f;return min(max(h.x,max(h.y,h.z)),0.)+length(max(h,0.))-g;}float x(vec3 e,vec3 f,float g){vec3 h=u(e,e.y*sin(s[0])*.4+1.+s[5]);h=v(h,h.z*sin(s[0]+1.)*.1);return w(h,f,g);}vec3 y(vec3 e,vec3 f){return mod(e,f);}float z(vec3 e){vec3 f,g;f=vec3(12,12,25);e.z+=10.*s[0];g=y(v(e,.1*s[0]),f)-.5*f;return x(g,vec3(3,3,2.2),.5);}float A(vec3 e){return z(e);}const float a=.08;const float b=.1;const int c=140;const float d=80.;vec4 B(vec3 e,vec3 f){float g=0.;int h;vec3 i;for(h=0;h<c;h++){i=e+g*f;float j=A(i)*.8;g+=j;if(j<a)break;if(g>d)return vec4(i,0);}vec4 j;j.xyz=i;j.w=1.-float(h)/float(c);return j;}vec3 C(vec3 e){return normalize(vec3(A(e+vec3(b,0,0))-A(e-vec3(b,0,0)),A(e+vec3(0,b,0))-A(e-vec3(0,b,0)),A(e+vec3(0,0,b))-A(e-vec3(0,0,b))));}vec4 D(vec3 e,vec3 f,vec3 g,vec3 h,vec3 i,vec3 j,vec3 k,vec3 l){vec3 m,n,q,r,s,t;m=normalize(h-f);n=j;float o,p;o=length(h-f);p=1./(1.+.03*o+.003*o*o);q=normalize(f-e);r=k*max(dot(g,m),0.);s=reflect(m,g);t=l*pow(max(dot(s,q),0.),4.);n+=p*i*(r+t);return vec4(n,1);}void main(){vec3 e,f,h,j,l;e=vec3(0,0,-20.);f=vec3(sin(s[0]),cos(s[0]*.4),cos(s[0]*.1));f*=20.;vec2 g=gl_FragCoord.xy/vec2(512,384)-vec2(1);h=vec3(g.x,g.y,1);vec4 i=B(e,h);j=i.xyz;float k=i.w;l=C(j);if(k>0.){vec3 m,n,o,p;m=vec3(1);n=vec3(.3,0,0);o=vec3(1,.1,.05);p=vec3(1,1,0);vec4 q=D(e,j,l,f,m,n,o,p);float r=1.-max(distance(e,j)/120.,0.);gl_FragColor=3.*q*r;}else gl_FragColor=vec4(0);}";
 
 #endif
 
-#if 0
+#if 1
 const GLchar *fs= "\
   uniform float s[9]; // State parameters from app.                     \
                                                                         \
@@ -67,6 +68,13 @@ vec3 deRep( vec3 p, vec3 c )                                            \
     return mod(p,c);                                                    \
 }                                                                       \
                                                                         \
+float heart(vec3 p)                                                     \
+{                                                                       \
+    vec3 c = vec3(7.,7.,7.);                                         \
+    vec3 q = deRep(rotX(p,.1*s[0]),c)- 0.5*c;                           \
+  return length(q) - 2.5;                                               \
+}                                                                       \
+                                                                        \
 float g(vec3 p)                                                         \
 {                                                                       \
     vec3 c = vec3(12.,12.,25.);                                         \
@@ -76,11 +84,11 @@ float g(vec3 p)                                                         \
 }                                                                       \
                                                                         \
 float f(vec3 p){                                                        \
-  return g(p);                                                          \
+  return heart(p);                                                      \
 }                                                                       \
                                                                         \
                                                                         \
-const float MinimumDistance = .8; // FIXME: accuracy vs. frame rate     \
+const float MinimumDistance = .04; // FIXME: accuracy vs. frame rate     \
 const float epsilon = 0.1;                                              \
 const int MaxRaySteps = 140;                                            \
 const float TooFar = 80.0;                                              \
@@ -121,10 +129,12 @@ vec3 normalEstimation(vec3 p){                                          \
 vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                   vec3 lightC, vec3 amb, vec3 dfs, vec3 spec)           \
 {                                                                       \
-  vec3 ldir = normalize(lpos - p);                                      \
-                                                                        \
   // Ambient component:                                                 \
   vec3 c = amb;                                                         \
+                                                                        \
+  // Compute light direction; finished if light is behind the surface:  \
+  vec3 ldir = normalize(lpos - p);                                      \
+  if (ldir.z > 0.) return vec4(c,1.);                                   \
                                                                         \
   // Diffuse and specular component:                                    \
   float ldist = length(lpos-p);                                         \
@@ -139,19 +149,28 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                                                                         \
   void main(){                                                          \
     vec3 cameraPosition = vec3(0.,0.,-20.);                             \
-    vec3 lightPosition = vec3(sin(s[0]),cos(s[0]*.4),cos(s[0]*.1));     \
+    vec3 lightPosition = vec3(sin(s[0]),cos(s[0]*.4),-1.);              \
+//    vec3 lightPosition = cameraPosition;                                \
     lightPosition *= 20.;                                               \
                                                                         \
     // I just shoot 'over there'.                                       \
     // TODO: Proper vector length and direction; from resol.            \
-    vec2 pix = gl_FragCoord.xy / vec2(512.0,384.0) - vec2(1.,1.);       \
+    vec2 pix = gl_FragCoord.xy / vec2(s[1]/2.,s[2]/2.) - vec2(1.,1.);   \
+    pix.x *= s[1]/s[2];                                                 \
     vec3 vdir = vec3(pix.x,pix.y,1.);                                   \
-    //vec3 vdir = normalize(vdir);                                      \
+    vdir = normalize(vdir);                                             \
                                                                         \
     vec4 pr = march(cameraPosition,vdir);                               \
     vec3 p = pr.xyz;                                                    \
     float r = pr.w;                                                     \
     vec3 n = normalEstimation(p);                                       \
+                                                                        \
+    // White dot in the center, for debugging:                          \
+    // FIXME: Don't leave this in final version, pls.                   \
+    if (length(pix) < 0.01){                                            \
+      gl_FragColor = vec4(1.0,1.0,1.0,0.5);                             \
+      return;                                                           \
+    }                                                                   \
     // Lighting computation.                                            \
     if (r>0.0){                                                         \
       vec3 lightC = vec3(1.);                                           \

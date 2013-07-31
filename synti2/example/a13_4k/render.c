@@ -7,6 +7,9 @@
  * thing compiled in small space.
  */
 
+#define NUM_GLOBAL_PARAMS 3
+#define NUM_SYNTH_PARAMS 9
+
 /** Paint it. */
 static void render_scene(const synti2_synth *s){
   int i, j;
@@ -14,19 +17,31 @@ static void render_scene(const synti2_synth *s){
   float cf;
 
   GLint unipar;
-  GLfloat state[9];
+  GLfloat state[NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS];
 
   float synthtime;
   synthtime =  (float)(s->framecount) / s->sr;
 
   state[0] = synthtime;
 
-  for(i=1;i<9;i++){
+#ifndef NO_FULLSCREEN
+  state[1] = vid->current_w; /* global struc now */
+  state[2] = vid->current_h; /* global struc now */
+#else
+  state[1] = window_h*ar; /* globals */
+  state[2] = window_h;    /* globals */
+#endif
+
+
+
+  for(i=NUM_GLOBAL_PARAMS;
+      i<NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS;
+      i++){
     state[i] = s->voi[i].eprog[1].f;
   }
 
   unipar = oglGetUniformLocation(pid, "s");
-  oglUniform1fv(unipar, 9, state);
+  oglUniform1fv(unipar, NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS, state);
 
   //  glEnable(GL_DEPTH_TEST);
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);

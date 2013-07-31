@@ -50,6 +50,9 @@ static int window_h = 600;
 #endif
 static float ar;
 
+/* Needed nowadays for proper coordinate computations: */
+SDL_VideoInfo * vid;
+
 /* gl shader stuff... global. Hmm. cost/gain of putting into a struct? */
 GLuint vsh,fsh,pid;
 
@@ -127,7 +130,6 @@ static void printProgramInfoLog(GLuint obj)
 
 static void init_or_die(){
   SDL_AudioSpec aud;
-  const SDL_VideoInfo * vid;
   int i;
   
   /* Do some SDL init stuff.. */

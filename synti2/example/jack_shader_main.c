@@ -67,7 +67,11 @@ float synthtime;
 
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 
-float ar;  /* screen aspect ratio */
+/* Default values for screen size: */
+#ifdef NO_FULLSCREEN
+static int window_h = 600;
+#endif
+static float ar;
 
 static void signal_handler(int sig)
 {

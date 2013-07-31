@@ -171,7 +171,8 @@ static void init_or_die(){
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
   ar = 4.f/3.f;
-  SDL_SetVideoMode(ar*600,600,32,SDL_OPENGL);
+  window_h = 300;
+  SDL_SetVideoMode(ar*window_h,window_h,32,SDL_OPENGL);
 #endif
   
 #ifndef ULTRASMALL

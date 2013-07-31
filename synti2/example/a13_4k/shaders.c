@@ -49,14 +49,7 @@ vec3 rotX(vec3 p, float th){                                            \
               cos(th)*p.y+sin(th)*p.z);                                 \
 }                                                                       \
                                                                         \
-float sdRoundBox( vec3 p, vec3 b, float r)                              \
-{                                                                       \
-  vec3 d = abs(p) - b;                                                  \
-  return min(max(d.x,max(d.y,d.z)),0.0) +                               \
-         length(max(d,0.0)) - r;                                        \
-}                                                                       \
-                                                                        \
-vec3 warpXYZ(vec3 p, vec2 amount){                                      \
+vec3 warpXYZ(vec3 p, vec3 amount){                                      \
   vec3 rp = p;                                                          \
   rp = rotX(rp,p.x*amount.x);                                           \
   rp = rotY(rp,p.y*amount.y);                                           \
@@ -82,20 +75,24 @@ float heart(vec3 p, vec2 wt)                                            \
   return sdTorus(p, vec2(wt.x,wt.y));                                   \
 }                                                                       \
                                                                         \
-float warpedHeart(p, vec3 b, float r )                                  \
+float warpedHeart(vec3 p, vec2 b)                                       \
 {                                                                       \
-  p = warpXYZ(0.,0.,p.z);                                               \
-  return heart(p, b, r);                                                \
+  p = warpXYZ(p, vec3(0.,.1,sin(s[0])));                                \
+  return heart(p, b);                                                   \
 }                                                                       \
                                                                         \
-
+                                                                        \
 float f(vec3 p){                                                        \
   p = rotY(p,s[0]);                                                     \
-  return warpedHeart(p, vec2(5.,1.));                                         \
+//  return warpedHeart(p, vec2(5.,1.));                                 \
+  float f1 = heart(p, vec2(5.,1.));                                     \
+  p = rotX(p,3.142);                                                    \
+  float f2 = heart(p, vec2(5.,1.));                                     \
+  return min(f1,f2);                                                    \
 }                                                                       \
                                                                         \
                                                                         \
-const float MinimumDistance = .01; // FIXME: accuracy vs. frame rate     \
+const float MinimumDistance = .01; // FIXME: accuracy vs. frame rate    \
 const float epsilon = 0.1;                                              \
 const int MaxRaySteps = 140;                                            \
 const float TooFar = 80.0;                                              \

@@ -844,14 +844,17 @@ Fl_Window *build_main_window(synti2::PatchDescr *pd){
 
 int main(int argc, char **argv) {
   int retval;
+  if (argc < 2) return 1;
+  char *patchdes_fname = argv[1];
 
-  pt = new synti2::Patchtool("src/patchdesign.dat");
+  pt = new synti2::Patchtool(patchdes_fname);
   pbank = pt->makePatchBank(16);
   midimap = new synti2::MidiMap();
  
   init_jack_or_die();
 
   /* Make an edit window for our custom kind of patches. */
+  (pt->exposePatchDescr())->headerFileForC(std::cout);
   Fl_Window *window = build_main_window(pt->exposePatchDescr());
 
   widgets_to_reflect_reality();

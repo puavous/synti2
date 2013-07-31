@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <cstdlib>
+#include <iostream>
 
 namespace synti2{
 
@@ -137,7 +138,7 @@ namespace synti2{
       /* FIXME: I need a more general patch editor,
          actually. Re-implement all this crap..*/
       std::string line;
-      while(std::getline(is,line)){
+      while(!(std::getline(is,line)).eof()){
         if (line=="--- Patchdata begins") break;
       }
       for(unsigned i=0;i<size();i++) at(i).read(is);

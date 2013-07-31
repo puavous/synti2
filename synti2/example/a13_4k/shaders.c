@@ -56,11 +56,12 @@ float sdRoundBox( vec3 p, vec3 b, float r)                              \
          length(max(d,0.0)) - r;                                        \
 }                                                                       \
                                                                         \
-float warpedRoundBox( vec3 p, vec3 b, float r )                         \
-{                                                                       \
-  vec3 rp = rotY(p,p.y*sin(s[0])*0.4+1.0+s[5]);                         \
-  rp = rotX(rp,rp.z*sin(s[0]+1.0)*.1);                                  \
-  return sdRoundBox(rp,b,r);                                            \
+vec3 warpXYZ(vec3 p, vec2 amount){                                      \
+  vec3 rp = p;                                                          \
+  rp = rotX(rp,p.x*amount.x);                                           \
+  rp = rotY(rp,p.y*amount.y);                                           \
+  rp = rotZ(rp,p.z*amount.z);                                           \
+  return rp;                                                            \
 }                                                                       \
                                                                         \
 vec3 deRep( vec3 p, vec3 c )                                            \
@@ -81,9 +82,16 @@ float heart(vec3 p, vec2 wt)                                            \
   return sdTorus(p, vec2(wt.x,wt.y));                                   \
 }                                                                       \
                                                                         \
+float warpedHeart(p, vec3 b, float r )                                  \
+{                                                                       \
+  p = warpXYZ(0.,0.,p.z);                                               \
+  return heart(p, b, r);                                                \
+}                                                                       \
+                                                                        \
+
 float f(vec3 p){                                                        \
   p = rotY(p,s[0]);                                                     \
-  return heart(p, vec2(5.,1.));                                         \
+  return warpedHeart(p, vec2(5.,1.));                                         \
 }                                                                       \
                                                                         \
                                                                         \

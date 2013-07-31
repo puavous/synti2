@@ -15,7 +15,7 @@
 const GLchar *vs="\
   void main(){                                  \
     gl_Position = ftransform();                 \
-    gl_Position.xy *= .5;                       \
+    gl_Position.xy *= .8; // FIXME: hack size for tests \
   }";
 
 #if 0
@@ -68,27 +68,26 @@ vec3 deRep( vec3 p, vec3 c )                                            \
     return mod(p,c);                                                    \
 }                                                                       \
                                                                         \
-float heart(vec3 p)                                                     \
+float sdTorus( vec3 p, vec2 t )                                         \
 {                                                                       \
-    vec3 c = vec3(7.,7.,7.);                                         \
-    vec3 q = deRep(rotX(p,.1*s[0]),c)- 0.5*c;                           \
-  return length(q) - 2.5;                                               \
+  vec2 q = vec2(length(p.xy)-t.x,p.z);                                  \
+  return length(q)-t.y;                                                 \
 }                                                                       \
                                                                         \
-float g(vec3 p)                                                         \
+// A heart-shape                                                        \
+float heart(vec3 p, vec2 wt)                                            \
 {                                                                       \
-    vec3 c = vec3(12.,12.,25.);                                         \
-    p.z += 10.*s[0];                                                    \
-    vec3 q = deRep(rotX(p,.1*s[0]),c)- 0.5*c;                           \
-    return warpedRoundBox(q,vec3(3.0,3.0,2.2),0.5);                     \
+  p.y -= abs(p.x);                                                      \
+  return sdTorus(p, vec2(wt.x,wt.y));                                   \
 }                                                                       \
                                                                         \
 float f(vec3 p){                                                        \
-  return heart(p);                                                      \
+  p = rotY(p,s[0]);                                                     \
+  return heart(p, vec2(5.,1.));                                         \
 }                                                                       \
                                                                         \
                                                                         \
-const float MinimumDistance = .04; // FIXME: accuracy vs. frame rate     \
+const float MinimumDistance = .01; // FIXME: accuracy vs. frame rate     \
 const float epsilon = 0.1;                                              \
 const int MaxRaySteps = 140;                                            \
 const float TooFar = 80.0;                                              \
@@ -149,16 +148,16 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                                                                         \
   void main(){                                                          \
     vec3 cameraPosition = vec3(0.,0.,-20.);                             \
-    vec3 lightPosition = vec3(sin(s[0]),cos(s[0]*.4),-1.);              \
-//    vec3 lightPosition = cameraPosition;                                \
-    lightPosition *= 20.;                                               \
+    vec3 lightPosition = vec3(sin(s[0]),cos(s[0]*.4),-2.);              \
+    lightPosition *= 10.;                                               \
                                                                         \
     // I just shoot 'over there'.                                       \
     // TODO: Proper vector length and direction; from resol.            \
     vec2 pix = gl_FragCoord.xy / vec2(s[1]/2.,s[2]/2.) - vec2(1.,1.);   \
     pix.x *= s[1]/s[2];                                                 \
     vec3 vdir = vec3(pix.x,pix.y,1.);                                   \
-    vdir = normalize(vdir);                                             \
+    // Hmm.. think about how the direction affects the rendering:       \
+    vdir = normalize(vdir) * .5;                                        \
                                                                         \
     vec4 pr = march(cameraPosition,vdir);                               \
     vec3 p = pr.xyz;                                                    \

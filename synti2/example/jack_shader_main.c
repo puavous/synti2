@@ -236,13 +236,13 @@ static void init_or_die(){
   vid = SDL_GetVideoInfo();  /* get desktop mode */
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
                    SDL_OPENGL|SDL_FULLSCREEN);
-  //window_h=vid->current_h;
  
   ar = (float)vid->current_w/vid->current_h;
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
   ar = 4.f/3.f;
-  SDL_SetVideoMode(ar*400,400,32,SDL_OPENGL);
+  window_h=200;
+  SDL_SetVideoMode(ar*window_h,window_h,32,SDL_OPENGL);
 #endif
   
   /* Ok.. These need to be done after SDL is initialized: */

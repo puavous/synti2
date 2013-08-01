@@ -83,19 +83,20 @@ float warpedHeart(vec3 p, vec2 b)                                       \
                                                                         \
                                                                         \
 float f(vec3 p){                                                        \
+  p = rotZ(p,s[0]*.1);                                                  \
+  p = rotX(p,s[0]*.2);                                                  \
   p = rotY(p,s[0]);                                                     \
-  return warpedHeart(p, vec2(5.,1.));                                 \
-  float f1 = heart(p, vec2(5.,1.));                                     \
-  p = rotX(p,3.142);                                                    \
+//  return warpedHeart(p, vec2(5.,1.));                                 \
+  float f1 = heart(p+vec3(2.,0.,0.), vec2(5.,1.));                      \
+  p = rotX(p,2.142+sin(s[0]*.2));                                       \
   float f2 = heart(p, vec2(5.,1.));                                     \
-  return f1;                                                            \
-//  return min(f1,f2);                                                    \
+  return min(f1,f2);                                                    \
 }                                                                       \
                                                                         \
                                                                         \
 const float MinimumDistance = .01; // FIXME: accuracy vs. frame rate    \
 const float epsilon = 0.1;                                              \
-const int MaxRaySteps = 140;                                            \
+const int MaxRaySteps = 180;                                            \
 const float TooFar = 80.0;                                              \
                                                                         \
 vec4 march(vec3 from, vec3 direction) {                                 \
@@ -104,7 +105,7 @@ vec4 march(vec3 from, vec3 direction) {                                 \
   vec3 p;                                                               \
 	for (steps=0; steps < MaxRaySteps; steps++) {                         \
 		p = from + totalDistance * direction;                               \
-    float distance = f(p)*0.8;                                          \
+    float distance = f(p)*.9;                                           \
 		totalDistance += distance;                                          \
 		if (distance < MinimumDistance){                                    \
       break;                                                            \
@@ -112,7 +113,7 @@ vec4 march(vec3 from, vec3 direction) {                                 \
     if (totalDistance > TooFar) return vec4(p,0.0);                     \
 	}                                                                     \
   vec4 res; res.xyz = p;                                                \
-  res.w = 1.0-float(steps)/float(MaxRaySteps);                          \
+  res.w = 1.-float(steps)/float(MaxRaySteps);                          \
 	return res;                                                           \
 }                                                                       \
                                                                         \
@@ -188,9 +189,12 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                              lightC,ambient,diffuse,specular);          \
                                                                         \
       float darken = 1.0-max((distance(cameraPosition,p)/120.0),0.0);   \
-      gl_FragColor = 3.0*color * darken;                                \
+      gl_FragColor = 3.0*color * darken * r;                            \
     } else {                                                            \
-      gl_FragColor = vec4(0.);                                          \
+//      gl_FragColor = vec4(0.);                                        \
+// Could have some action in the background:
+      vec3 bgp = rotZ(vec3(pix,0.),.2*s[0]);                            \
+      gl_FragColor = vec4(sin(s[0])*cos(4.*bgp.x*bgp.y));               \
     }                                                                   \
   }";
 

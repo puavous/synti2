@@ -82,7 +82,7 @@ float warpedHeart(vec3 p, vec2 b)                                       \
 }                                                                       \
                                                                         \
                                                                         \
-float f(vec3 p){                                                        \
+float h(vec3 p){                                                        \
   p = rotZ(p,s[0]*.1);                                                  \
   p = rotX(p,s[0]*.2);                                                  \
   p = rotY(p,s[0]);                                                     \
@@ -91,6 +91,16 @@ float f(vec3 p){                                                        \
   p = rotX(p,2.142+sin(s[0]*.2));                                       \
   float f2 = heart(p, vec2(5.,1.));                                     \
   return min(f1,f2);                                                    \
+}                                                                       \
+                                                                        \
+float g(vec3 p){                                                        \
+  p = deRep(p, vec3(20.,20.,20.));                                      \
+  p -= vec3(s[0],.5,.5);                                                  \
+  return heart(p, vec2(5.,1.));                                         \
+}                                                                       \
+                                                                        \
+float f(vec3 p){                                                        \
+  return h(p);                                                          \
 }                                                                       \
                                                                         \
                                                                         \

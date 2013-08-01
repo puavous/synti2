@@ -84,11 +84,12 @@ float warpedHeart(vec3 p, vec2 b)                                       \
                                                                         \
 float f(vec3 p){                                                        \
   p = rotY(p,s[0]);                                                     \
-//  return warpedHeart(p, vec2(5.,1.));                                 \
+  return warpedHeart(p, vec2(5.,1.));                                 \
   float f1 = heart(p, vec2(5.,1.));                                     \
   p = rotX(p,3.142);                                                    \
   float f2 = heart(p, vec2(5.,1.));                                     \
-  return min(f1,f2);                                                    \
+  return f1;                                                            \
+//  return min(f1,f2);                                                    \
 }                                                                       \
                                                                         \
                                                                         \

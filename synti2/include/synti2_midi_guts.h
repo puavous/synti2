@@ -2,7 +2,8 @@
 #define SYNTI2_MIDI_INTERNAL_STRUCTURES_H
 
 /* The array sizes come from here: */
-#include "synti2_cap_default.h"
+//#include "synti2_cap_default.h"
+#include "synti2_cap.h"
 
 /** This structure is used for controlling the midi translator
  *  module. The sound engine is totally unaware of this.

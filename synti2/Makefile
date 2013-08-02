@@ -109,7 +109,8 @@ summamutikka:
 a13tiny:
 	make tiny2 \
 	    CUSTOMFILES="$(A13FILES)" \
-	    NONOS="-DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO -DNO_SYSEX_RECEIVE"
+	    NONOS="-DNO_STEREO -DNO_FILTER -DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_SYSEX_RECEIVE"
+# -DNO_STEREO
 	cd hackpack2; make all
 	mv hackpack2/vis2 ./jacksynti2
 
@@ -152,6 +153,11 @@ tiny2: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	./cltool parheader hackpack2/patchdes.dat > hackpack2/synti2_params.h
 	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
 	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
+#For the visualization only:
+	cp include/synti2_midi.h hackpack2/
+	cp include/synti2_jack.h hackpack2/
+	cp include/synti2_midi_guts.h hackpack2/
+	cp include/midi_spec.h hackpack2/
 
 # For 4k stand-alone mode, 32bit linux:
 tiny2_32: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)

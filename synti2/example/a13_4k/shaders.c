@@ -22,7 +22,7 @@ const GLchar *vs="\
 /* A crude minified version (glslunit.appspot.com/compiler.html) */
 /* Because of reasons.. :) .. I'll be using this tool for Assembly 13 entry*/
 const GLchar *fs= "\
-uniform float s[9];vec3 u(vec3 e,float f){return vec3(sin(f)*e.x-cos(f)*e.z,e.y,cos(f)*e.x+sin(f)*e.z);}vec3 v(vec3 e,float f){return vec3(sin(f)*e.x-cos(f)*e.y,cos(f)*e.x+sin(f)*e.y,e.z);}vec3 w(vec3 e,float f){return vec3(e.x,sin(f)*e.y-cos(f)*e.z,cos(f)*e.y+sin(f)*e.z);}float x(vec3 e,vec2 f){vec2 g=vec2(length(e.xy)-f.x,e.z);return length(g)-f.y;}float y(vec3 e,vec2 f){e.y-=abs(e.x);return x(e,vec2(f.x,f.y));}float z(vec3 e){e=v(e,s[0]*.1);e=w(e,s[0]*.2);e=u(e,s[0]);float f,g;f=y(e+vec3(2,0,0),vec2(5,1));e=w(e,2.142+sin(s[0]*.2));g=y(e,vec2(5.+s[3]*2.,1));return min(f,g);}float A(vec3 e){return z(e);}const float a=.01;const float b=.1;const int c=180;const float d=80.;vec4 B(vec3 e,vec3 f){float g=0.;int h;vec3 i;for(h=0;h<c;h++){i=e+g*f;float j=A(i)*.9;g+=j;if(j<a)break;if(g>d)return vec4(i,0);}vec4 j;j.xyz=i;j.w=1.-float(h)/float(c);return j;}vec3 C(vec3 e){return normalize(vec3(A(e+vec3(b,0,0))-A(e-vec3(b,0,0)),A(e+vec3(0,b,0))-A(e-vec3(0,b,0)),A(e+vec3(0,0,b))-A(e-vec3(0,0,b))));}vec4 D(vec3 e,vec3 f,vec3 g,vec3 h,vec3 i,vec3 j,vec3 k,vec3 l){vec3 m,n,q,r,s,t;m=j;n=normalize(h-f);if(n.z>0.)return vec4(m,1);float o,p;o=length(h-f);p=1./(1.+.03*o+.003*o*o);q=normalize(f-e);r=k*max(dot(g,n),0.);s=reflect(n,g);t=l*pow(max(dot(s,q),0.),4.);m+=p*i*(r+t);return vec4(m,1);}void main(){vec3 e,f,h,j,l;e=vec3(0,0,-20.);f=vec3(sin(s[0]),cos(s[0]*.4),-2.);f*=10.;vec2 g=gl_FragCoord.xy/vec2(s[1]/2.,s[2]/2.)-vec2(1);g.x*=s[1]/s[2];h=vec3(g.x,g.y,1);h=normalize(h)*.5;vec4 i=B(e,h);j=i.xyz;float k=i.w;l=C(j);if(k>0.){vec3 m,n,o,p;m=vec3(1);n=vec3(.3,0,0);o=vec3(1,.1,.05);p=vec3(1,1,0);vec4 q=D(e,j,l,f,m,n,o,p);float r=1.-max(distance(e,j)/120.,0.);gl_FragColor=3.*q*r*k;}else{vec3 m=v(vec3(g,0),.2*s[0]);gl_FragColor=vec4(sin(s[0])*cos(4.*m.x*m.y)+s[3]);}}";
+uniform float s[9];vec3 u(vec3 e,float f){return vec3(sin(f)*e.x-cos(f)*e.z,e.y,cos(f)*e.x+sin(f)*e.z);}vec3 v(vec3 e,float f){return vec3(sin(f)*e.x-cos(f)*e.y,cos(f)*e.x+sin(f)*e.y,e.z);}float w(vec3 e,vec2 f){vec2 g=vec2(length(e.xy)-f.x,e.z);return length(g)-f.y;}float x(vec3 e,vec2 f){e.y-=abs(e.x);return w(e,vec2(f.x,f.y));}float y(vec3 e){e=u(e,s[0]);float f=x(e,vec2(7.+s[6]*2.,1));return f;}float z(vec3 e){return y(e);}const float a=.01;const float b=.1;const int c=180;const float d=80.;vec4 A(vec3 e,vec3 f){float g=0.;int h;vec3 i;for(h=0;h<c;h++){i=e+g*f;float j=z(i)*.9;g+=j;if(j<a)break;if(g>d)return vec4(i,0);}vec4 j;j.xyz=i;j.w=1.-float(h)/float(c);return j;}vec3 B(vec3 e){return normalize(vec3(z(e+vec3(b,0,0))-z(e-vec3(b,0,0)),z(e+vec3(0,b,0))-z(e-vec3(0,b,0)),z(e+vec3(0,0,b))-z(e-vec3(0,0,b))));}vec4 C(vec3 e,vec3 f,vec3 g,vec3 h,vec3 i,vec3 j,vec3 k,vec3 l){vec3 m,n,q,r,s,t;m=j;n=normalize(h-f);if(n.z>0.)return vec4(m,1);float o,p;o=length(h-f);p=1./(1.+.03*o+.003*o*o);q=normalize(f-e);r=k*max(dot(g,n),0.);s=reflect(n,g);t=l*pow(max(dot(s,q),0.),4.);m+=p*i*(r+t);return vec4(m,1);}void main(){vec3 e,f,h,j,l;e=vec3(0,0,-20.);f=vec3(sin(s[0]),cos(s[0]*.4),-2.);f*=10.;vec2 g=gl_FragCoord.xy/vec2(s[1]/2.,s[2]/2.)-vec2(1);g.x*=s[1]/s[2];h=vec3(g.x,g.y,1);h=normalize(h)*.5;vec4 i=A(e,h);j=i.xyz;float k=i.w;l=B(j);if(k>0.){vec3 m,n,o,p;m=vec3(3);n=vec3(.3,0,0);o=vec3(1,0,0);p=vec3(1,1,0);vec4 q=C(e,j,l,f,m,n,o,p);float r=1.-max(distance(e,j)/120.,0.);gl_FragColor=q*r*k;}else if(s[0]>15.){vec3 m=v(vec3(g,0),.2*s[0]);gl_FragColor=vec4(sin(s[0])*cos(4.*m.x*m.y)+s[3]);}else gl_FragColor=vec4(0);}";
 #endif
 
 #if 0
@@ -35,32 +35,24 @@ vec3 rotY(vec3 p, float th){                                            \
               p.y,                                                      \
               cos(th)*p.x+sin(th)*p.z);                                 \
 }                                                                       \
-                                                                        \
+              								\
 vec3 rotZ(vec3 p, float th){                                            \
   return vec3(sin(th)*p.x-cos(th)*p.y,                                  \
               cos(th)*p.x+sin(th)*p.y,                                  \
               p.z);                                                     \
 }                                                                       \
-                                                                        \
+              								\
 vec3 rotX(vec3 p, float th){                                            \
   return vec3(p.x,                                                      \
               sin(th)*p.y-cos(th)*p.z,                                  \
               cos(th)*p.y+sin(th)*p.z);                                 \
 }                                                                       \
-                                                                        \
-vec3 warpXYZ(vec3 p, vec3 amount){                                      \
-  vec3 rp = p;                                                          \
-  rp = rotX(rp,p.x*amount.x);                                           \
-  rp = rotY(rp,p.y*amount.y);                                           \
-  rp = rotZ(rp,p.z*amount.z);                                           \
-  return rp;                                                            \
-}                                                                       \
-                                                                        \
+              								\
 vec3 deRep( vec3 p, vec3 c )                                            \
 {                                                                       \
     return mod(p,c);                                                    \
 }                                                                       \
-                                                                        \
+              								\
 float sdTorus( vec3 p, vec2 t )                                         \
 {                                                                       \
   vec2 q = vec2(length(p.xy)-t.x,p.z);                                  \
@@ -74,12 +66,19 @@ float heart(vec3 p, vec2 wt)                                            \
   return sdTorus(p, vec2(wt.x,wt.y));                                   \
 }                                                                       \
                                                                         \
-float warpedHeart(vec3 p, vec2 b)                                       \
-{                                                                       \
-  p = warpXYZ(p, vec3(0.,.1,sin(s[0])));                                \
-  return heart(p, b);                                                   \
-}                                                                       \
-                                                                        \
+//vec3 warpXYZ(vec3 p, vec3 amount){					\
+//  vec3 rp = p;							\
+//  rp = rotX(rp,p.x*amount.x);						\
+//  rp = rotY(rp,p.y*amount.y);						\
+//  rp = rotZ(rp,p.z*amount.z);						\
+//  return rp;								\
+//}									\
+//float warpedHeart(vec3 p, vec2 b)					\
+//{									\
+//  p = warpXYZ(p, vec3(0.,.1,sin(s[0])));				\
+//  return heart(p, b);							\
+//}									\
+  									\
                                                                         \
 float h(vec3 p){                                                        \
   p = rotZ(p,s[0]*.1);                                                  \
@@ -88,10 +87,17 @@ float h(vec3 p){                                                        \
 //  return warpedHeart(p, vec2(5.,1.));                                 \
   float f1 = heart(p+vec3(2.,0.,0.), vec2(5.,1.));                      \
   p = rotX(p,2.142+sin(s[0]*.2));                                       \
-  float f2 = heart(p, vec2(5.+s[3]*2.,1.));				\
+  float f2 = heart(p, vec2(5.+s[6]*2.,1.));				\
   return min(f1,f2);                                                    \
 }                                                                       \
                                                                         \
+float f_intro(vec3 p){							\
+  p = rotY(p,s[0]);                                                     \
+//  return warpedHeart(p, vec2(5.,1.));                                 \
+  float f1 = heart(p, vec2(7.+s[6]*2.,1.));				\
+  return f1;								\
+}                                                                       \
+									\
 float g(vec3 p){                                                        \
   p = deRep(p, vec3(20.,20.,20.));                                      \
   p -= vec3(s[0],.5,.5);						\
@@ -99,7 +105,11 @@ float g(vec3 p){                                                        \
 }                                                                       \
                                                                         \
 float f(vec3 p){                                                        \
-  return h(p);                                                          \
+  if (s[0]<30.){							\
+    return f_intro(p);							\
+  }else{								\
+    return h(p);							\
+  }									\
 }                                                                       \
                                                                         \
                                                                         \
@@ -188,9 +198,9 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
 //    }                                                                   \
     // Lighting computation.                                            \
     if (r>0.0){                                                         \
-      vec3 lightC = vec3(1.);                                           \
+      vec3 lightC = vec3(3.);                                           \
       vec3 ambient = vec3(0.3,0.0,0.0);                                 \
-      vec3 diffuse = vec3(1.0,0.1,0.05);                                \
+      vec3 diffuse = vec3(1.0,0.0,0.0);                                \
       vec3 specular = vec3(1.0,1.0,0.0);                                \
                                                                         \
       vec4 color = doLightPhong(cameraPosition, p, n,                   \
@@ -198,12 +208,16 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
                              lightC,ambient,diffuse,specular);          \
                                                                         \
       float darken = 1.0-max((distance(cameraPosition,p)/120.0),0.0);   \
-      gl_FragColor = 3.0*color * darken * r;                            \
+      gl_FragColor = color * darken * r;				\
     } else {                                                            \
 //      gl_FragColor = vec4(0.);                                        \
 // Could have some action in the background:                            \
-      vec3 bgp = rotZ(vec3(pix,0.),.2*s[0]);                            \
-      gl_FragColor = vec4(sin(s[0])*cos(4.*bgp.x*bgp.y)+s[3]);          \
+      if (s[0]>15.){                                                    \
+        vec3 bgp = rotZ(vec3(pix,0.),.2*s[0]);                          \
+        gl_FragColor = vec4(sin(s[0])*cos(4.*bgp.x*bgp.y)+s[3]);        \
+      } else {                                                          \
+        gl_FragColor = vec4(0.);					\
+      }									\
     }                                                                   \
   }";
 

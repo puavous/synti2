@@ -78,15 +78,15 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	@echo End result:
 	@ls -lt $@
 
+#		-I../include \
 #The "no-nos" are used here, too, now(!):
 vis2: $(JACKSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) $(CFLAGS) $(ARCHFLAGS) $(ADDFLAGS) \
-		-o $@  -DJACK_MIDI -DNO_FULLSCREEN \
-		$(NONOS) \
-		-I../include \
+	$(CC) $(CFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
+		-o $@ \
+                -DJACK_MIDI -DNO_FULLSCREEN \
 		$(filter %.c, $(JACKSOURCES)) \
 		`pkg-config --cflags --libs jack` \
-		`sdl-config --cflags --libs` -lm -lGL -lGLU
+		$(ARCHLIBS) -lGLU
 
 	@echo End result:
 	@ls -lt $@

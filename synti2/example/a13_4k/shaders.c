@@ -110,21 +110,21 @@ const int MaxRaySteps = 180;                                            \
 const float TooFar = 80.0;                                              \
                                                                         \
 vec4 march(vec3 from, vec3 direction) {                                 \
-	float totalDistance = 0.0;                                            \
-	int steps;                                                            \
+  float totalDistance = 0.0;						\
+  int steps;								\
   vec3 p;                                                               \
-	for (steps=0; steps < MaxRaySteps; steps++) {                         \
-		p = from + totalDistance * direction;                               \
+  for (steps=0; steps < MaxRaySteps; steps++) {				\
+    p = from + totalDistance * direction;				\
     float distance = f(p)*.9;                                           \
-		totalDistance += distance;                                          \
-		if (distance < MinimumDistance){                                    \
+    totalDistance += distance;						\
+    if (distance < MinimumDistance){					\
       break;                                                            \
     }                                                                   \
     if (totalDistance > TooFar) return vec4(p,0.0);                     \
-	}                                                                     \
+  }									\
   vec4 res; res.xyz = p;                                                \
-  res.w = 1.-float(steps)/float(MaxRaySteps);                          \
-	return res;                                                           \
+  res.w = 1.-float(steps)/float(MaxRaySteps);				\
+  return res;								\
 }                                                                       \
                                                                         \
 // Distance estimation describes a hyperplane (local tangent plane of   \

@@ -44,10 +44,8 @@ float audiobuf[AUDIOBUFSIZE];
 synti2_synth global_synth;
 //float synthtime;
 
-/* Default values for screen size: */
-#ifdef NO_FULLSCREEN
-static int window_h = 600;
-#endif
+/* Global variables for window size (to be passed on to the shader in render.c) */
+static int window_h;
 static float ar;
 
 /* Needed nowadays for proper coordinate computations: */
@@ -156,29 +154,35 @@ static void init_or_die(){
    */
   
 #ifndef NO_FULLSCREEN
+  /* Operations for fullscreen show: */
+#if 1
+  /* Hacked this for today's show: */
+  SDL_SetVideoMode(1280, 720, 32,
+                   SDL_OPENGL|SDL_FULLSCREEN);
+  window_h = 1280;
+  ar = 1280.f/720.f; 
+#else
+  /* "Usual operation, SDL autodetect fullscreen */
   vid = SDL_GetVideoInfo();  /* get desktop mode */
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
                    SDL_OPENGL|SDL_FULLSCREEN);
-  //window_h=vid->current_h;
+  window_h=vid->current_h;
   ar = (float)vid->current_w/vid->current_h;
-#if 0
-  // Hacked this for today's show:
-  SDL_SetVideoMode(1280, 720, 32,
-                   SDL_OPENGL|SDL_FULLSCREEN);
-  ar = 1280.0/720; 
 #endif
 
 #else
+  /* Operations for development mode (not fullscreen) */
   /* FIXME: Make video mode changeable from compilation? ifdef H800 ..*/
-  ar = 16.f/9.f;
-  window_h = 100;
+  ar = 1280.f/720.f; //16.f/9.f;
+  window_h = 90;
   SDL_SetVideoMode(ar*window_h,window_h,32,SDL_OPENGL);
 #endif
-  
+
 #ifndef ULTRASMALL
   SDL_WM_SetCaption("Soft synth SDL interface",0);
-  SDL_ShowCursor(SDL_DISABLE);
 #endif
+  /* For Assembly 2013 they need the cursor hidden always: */
+  SDL_ShowCursor(SDL_DISABLE);
   
   /* They say that OpenAudio needs to be called after video init. */
   aud.freq     = MY_SAMPLERATE;

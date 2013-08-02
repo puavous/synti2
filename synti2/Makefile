@@ -109,9 +109,17 @@ summamutikka:
 a13tiny:
 	make tiny2 \
 	    CUSTOMFILES="$(A13FILES)" \
+	    NONOS="-DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO -DNO_SYSEX_RECEIVE"
+	cd hackpack2; make all
+	mv hackpack2/vis2 ./jacksynti2
+
+a13tiny32:
+	make tiny2_32 \
+	    CUSTOMFILES="$(A13FILES)" \
 	    NONOS="-DNO_FULLSCREEN -DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO -DNO_SYSEX_RECEIVE"
 	cd hackpack2; make all
 	mv hackpack2/vis2 ./jacksynti2
+
 
 
 tgptiny:
@@ -144,6 +152,23 @@ tiny2: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	./cltool parheader hackpack2/patchdes.dat > hackpack2/synti2_params.h
 	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
 	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
+
+# For 4k stand-alone mode, 32bit linux:
+tiny2_32: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
+	-rm -r hackpack2
+	-mkdir hackpack2
+	cp $(filter %.c %.h %.dat, $^) hackpack2/
+	echo 'NONOS=' $(NONOS) '' > hackpack2/Makefile
+	cat tests/tinymaker.makefile32 >> hackpack2/Makefile
+	cp example/selfextr.stub hackpack2/
+	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
+		< $(filter %shaders.c, $^) > hackpack2/shaders.c
+	./cltool capheader $(filter %.s2bank, $(CUSTOMFILES)) > hackpack2/synti2_cap.h
+	./cltool patchdesign $(filter %.s2bank, $(CUSTOMFILES)) > hackpack2/patchdes.dat
+	./cltool parheader hackpack2/patchdes.dat > hackpack2/synti2_params.h
+	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
+	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
+
 
 
 #withoutseq:

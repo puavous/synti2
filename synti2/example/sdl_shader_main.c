@@ -45,11 +45,13 @@ synti2_synth global_synth;
 //float synthtime;
 
 /* Global variables for window size (to be passed on to the shader in render.c) */
-static int window_h;
-static float ar;
-
 /* Needed nowadays for proper coordinate computations: */
+static int window_h = 600;
+static float ar;
+/* For autodetecting reso: */
+SDL_VideoInfo myVideoInfo;
 SDL_VideoInfo * vid;
+
 
 /* gl shader stuff... global. Hmm. cost/gain of putting into a struct? */
 GLuint vsh,fsh,pid;
@@ -155,13 +157,18 @@ static void init_or_die(){
   
 #ifndef NO_FULLSCREEN
   /* Operations for fullscreen show: */
-#if 1
   /* Hacked this for today's show: */
-  SDL_SetVideoMode(1280, 720, 32,
+  //#define SW 1280
+  //#define SH 720
+  vid = &myVideoInfo;
+  vid->current_w = 1280;
+  vid->current_h = 720;
+  SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
                    SDL_OPENGL|SDL_FULLSCREEN);
-  window_h = 1280;
-  ar = 1280.f/720.f; 
-#else
+  window_h = vid->current_h;
+  ar = (float)vid->current_w/vid->current_h;
+
+#if 0
   /* "Usual operation, SDL autodetect fullscreen */
   vid = SDL_GetVideoInfo();  /* get desktop mode */
   SDL_SetVideoMode(vid->current_w, vid->current_h, 32,

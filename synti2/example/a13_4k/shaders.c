@@ -10,12 +10,11 @@
  * applicable in any other code that renders a rectangle [-1,1]^2 and
  * transfers 9 uniform parameters from the application..
  */
-#define NEED_DEBUG
+//#define NEED_DEBUG
 
 const GLchar *vs="\
   void main(){                                  \
     gl_Position = ftransform();                 \
-    gl_Position.xy *= .8; // FIXME: hack size for tests \
   }";
 
 #if 0
@@ -89,7 +88,7 @@ float h(vec3 p){                                                        \
 //  return warpedHeart(p, vec2(5.,1.));                                 \
   float f1 = heart(p+vec3(2.,0.,0.), vec2(5.,1.));                      \
   p = rotX(p,2.142+sin(s[0]*.2));                                       \
-  float f2 = heart(p, vec2(5.,1.));                                     \
+  float f2 = heart(p, vec2(5.+s[3]*2.,1.));				\
   return min(f1,f2);                                                    \
 }                                                                       \
                                                                         \
@@ -204,7 +203,7 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,                 \
 //      gl_FragColor = vec4(0.);                                        \
 // Could have some action in the background:
       vec3 bgp = rotZ(vec3(pix,0.),.2*s[0]);                            \
-      gl_FragColor = vec4(sin(s[0])*cos(4.*bgp.x*bgp.y));               \
+      gl_FragColor = vec4(sin(s[0])*cos(4.*bgp.x*bgp.y)+s[3]);               \
     }                                                                   \
   }";
 

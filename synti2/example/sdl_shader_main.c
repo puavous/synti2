@@ -169,9 +169,9 @@ static void init_or_die(){
 #endif
 
 #else
-  /* Make video mode changeable from compilation? ifdef H800 ..*/
-  ar = 4.f/3.f;
-  window_h = 300;
+  /* FIXME: Make video mode changeable from compilation? ifdef H800 ..*/
+  ar = 16.f/9.f;
+  window_h = 100;
   SDL_SetVideoMode(ar*window_h,window_h,32,SDL_OPENGL);
 #endif
   

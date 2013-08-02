@@ -240,8 +240,10 @@ static void init_or_die(){
   ar = (float)vid->current_w/vid->current_h;
 #else
   /* Make video mode changeable from compilation? ifdef H800 ..*/
-  ar = 4.f/3.f;
-  window_h=200;
+  /* FIXME: Make video mode changeable from compilation? ifdef H800 ..*/
+  /* FIXME: Totally please combine this with sdl_shader_main.c */
+  ar = 16.f/9.f;
+  window_h = 140;
   SDL_SetVideoMode(ar*window_h,window_h,32,SDL_OPENGL);
 #endif
   

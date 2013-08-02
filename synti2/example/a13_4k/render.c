@@ -33,11 +33,11 @@ static void render_scene(const synti2_synth *s){
 #endif
 
 
-
+  // BD = 4
   for(i=NUM_GLOBAL_PARAMS;
       i<NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS;
       i++){
-    state[i] = s->voi[i].eprog[1].f;
+    state[i] = s->voi[i-NUM_GLOBAL_PARAMS].eprog[1].f;  // FIXME: (later.)
   }
 
   unipar = oglGetUniformLocation(pid, "s");

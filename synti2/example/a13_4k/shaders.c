@@ -1,5 +1,12 @@
 /* Some simple ray marching experiments...
- * 
+ *
+ * This by-the-book raymarching engine was originally an example
+ * program for the course "Tietokonegrafiikan perusteet" (Fundamentals
+ * of Computer Graphics) held at the Department of Mathematical
+ * Information Technology, University of Jyväskylä,
+ * Finland. (Tietotekniikan laitos / Jyväskylän yliopisto) during the
+ * Spring period 2013.
+ *
  * Yep. This is mostly copy-paste from Iñigo Quilez's work. Thanx,
  * dude, even if I don't know you (yet) ;).
  *

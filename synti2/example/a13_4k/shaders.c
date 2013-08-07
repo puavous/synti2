@@ -11,31 +11,43 @@
  * dude, even if I don't know you (yet) ;).
  *
  * But a note to our students: I couldn't have done this without the
- * basic vector math and stuff taught on this course.
+ * basic vector math and stuff taught on this our course.
  *
  * I tried these with my soft synth, of course, but these should be
  * applicable in any other code that renders a rectangle [-1,1]^2 and
- * transfers 9 uniform parameters from the application..
+ * transfers 9 uniform parameters from the application.. Later on, I'll
+ * make the synth state accessible in a much more easy way ...
  *
  * s[0] needs to be time since the beginning of the animation
  * s[1] needs to be screen width
  * s[2] needs to be screen height
  * s[3..] are parameters affecting the animation.
  */
-#define NEED_DEBUG
+//#define NEED_DEBUG
 
 const GLchar *vs="\
   void main(){                                  \
     gl_Position = ftransform();                 \
   }";
 
+#if 1
+const GLchar *fs= "\
+uniform float s[9];vec3 u(vec3 e,float f){float g,h;g=sin(f);h=cos(f);return vec3(g*e.x-h*e.z,e.y,h*e.x+g*e.z);}vec3 v(vec3 e,float f){float g,h;g=sin(f);h=cos(f);return vec3(g*e.x-h*e.y,h*e.x+g*e.y,e.z);}vec3 w(vec3 e,float f){float g,h;g=sin(f);h=cos(f);return vec3(e.x,g*e.y-h*e.z,h*e.y+g*e.z);}float x(vec3 e,vec2 f){vec2 g=vec2(length(e.xy)-f.x,e.z);return length(g)-f.y;}float y(vec3 e,vec2 f){e.y-=abs(e.x);return x(e,vec2(f.x,f.y));}float z(vec3 e){e=v(e,s[0]*.1);e=w(e,s[0]*.2);e=u(e,s[0]);float f,g;f=y(e+vec3(4,0,0),vec2(5,1));e=w(e,3.14+sin(s[0]*.2));g=y(e,vec2(5.+s[6]*2.,1));return min(f,g);}float A(vec3 e){e=u(e,s[0]);float f=y(e,vec2(7.+s[6]*2.,1));return f;}float B(vec3 e){if(s[0]<29.6)return A(e);else return z(e);}const float a=.01;const float b=.1;const int c=180;const float d=80.;vec4 C(vec3 e,vec3 f){float g=0.;int h;vec3 i;for(h=0;h<c;h++){i=e+g*f;float j=B(i)*.9;g+=j;if(j<a)break;if(g>d)return vec4(i,0);}vec4 j;j.xyz=i;j.w=1.-float(h)/float(c);return j;}vec3 D(vec3 e){return normalize(vec3(B(e+vec3(b,0,0))-B(e-vec3(b,0,0)),B(e+vec3(0,b,0))-B(e-vec3(0,b,0)),B(e+vec3(0,0,b))-B(e-vec3(0,0,b))));}vec4 E(vec3 e,vec3 f,vec3 g,vec3 h,vec3 i,vec3 j,vec3 k,vec3 l){vec3 m,n,q,r,s,t;m=j;n=normalize(h-f);if(n.z>0.)return vec4(m,1);float o,p;o=length(h-f);p=1./(1.+.03*o+.003*o*o);q=normalize(f-e);r=k*max(dot(g,n),0.);s=reflect(n,g);t=l*pow(max(dot(s,q),0.),4.);m+=p*i*(r+t);return vec4(m,1);}void main(){vec3 e,f,h,j,l;e=vec3(0,0,-20.);f=vec3(-10.);vec2 g=gl_FragCoord.xy/vec2(s[1]/2.,s[2]/2.)-vec2(1);g.x*=s[1]/s[2];h=vec3(g.x,g.y,1);h=normalize(h)*.5;vec4 i=C(e,h);j=i.xyz;float k=i.w;l=D(j);if(k>0.){vec3 m,n,o,p;m=vec3(3);n=vec3(.3,0,0);o=vec3(1,0,0);p=vec3(1,1,0);vec4 q=E(e,j,l,f,m,n,o,p);float r=1.-max(distance(e,j)/120.,0.);gl_FragColor=q*r*k;}else if(s[0]>15.){vec3 m=v(vec3(g,0),.2*s[0]);gl_FragColor=vec4(sin(s[0])*cos(4.*m.x*m.y)+s[3]);}else gl_FragColor=vec4(0);gl_FragColor*=1.-smoothstep(56.,65.,s[0]);}";
+#endif
+
 #if 0
 
-/* A crude minified version (glslunit.appspot.com/compiler.html) */
-/* Because of reasons.. :) .. I'll be using this tool for Assembly 13 entry*/
-/* Due to reasons, for which I need to give some serious feedback to Assembly
- * organizers, unfortunately, I had to hack this manually in the end, so it is
- * functionally different from the unobfuscated one:
+/* A crude minified version (glslunit.appspot.com/compiler.html)
+ * Because of reasons.. :) .. I'll be using this tool for the Assembly
+ * 13 entry. In the future, I need to install a shader minifier
+ * locally!
+ */
+/* Due to reasons, for which I need to give some serious feedback to
+ * Assembly organizers, unfortunately, I had to hack this manually in
+ * the end, so it is functionally different from the unobfuscated one
+ * (This remains here for historical reference; After the competition,
+ * I made the equivalent non-minified shader below that works the same
+ * way as the new minified version.):
  */
 const GLchar *fs= "\
 uniform float s[9];vec3 u(vec3 e,float f){return
@@ -70,27 +82,29 @@ m=v(vec3(g,0),.2*s[0]);gl_FragColor=vec4(sin(s[0])*cos(4.*m.x*m.y)+s[3]);}else
 gl_FragColor=vec4(0);gl_FragColor*=1.-smoothstep(56.,65.,s[0]);}";
 #endif
 
-#if 1
+#if 0
 const GLchar *fs= "\
   uniform float s[9]; // State parameters from app.                     \
                                                                         \
 // FIXME: Should do proper rotation matrices?                           \
+// (my axes can be the wrong way around..                               \
+// I made this 'out from my head')                                      \
 vec3 rotY(vec3 p, float th){                                            \
-  return vec3(sin(th)*p.x-cos(th)*p.z,                                  \
-              p.y,                                                      \
-              cos(th)*p.x+sin(th)*p.z);                                 \
+  float si = sin(th);                                                   \
+  float co = cos(th);                                                   \
+  return vec3(si*p.x - co*p.z, p.y, co*p.x + si * p.z);                 \
 }                                                                       \
                                                                         \
 vec3 rotZ(vec3 p, float th){                                            \
-  return vec3(sin(th)*p.x-cos(th)*p.y,                                  \
-              cos(th)*p.x+sin(th)*p.y,                                  \
-              p.z);                                                     \
+  float si = sin(th);                                                   \
+  float co = cos(th);                                                   \
+  return vec3(si*p.x - co*p.y, co*p.x + si * p.y, p.z);                 \
 }                                                                       \
                                                                         \
 vec3 rotX(vec3 p, float th){                                            \
-  return vec3(p.x,                                                      \
-              sin(th)*p.y-cos(th)*p.z,                                  \
-              cos(th)*p.y+sin(th)*p.z);                                 \
+  float si = sin(th);                                                   \
+  float co = cos(th);                                                   \
+  return vec3(p.x, si*p.y - co*p.z, co*p.y + si * p.z);                 \
 }                                                                       \
                                                                         \
 float sdTorus( vec3 p, vec2 t )                                         \
@@ -99,7 +113,7 @@ float sdTorus( vec3 p, vec2 t )                                         \
   return length(q)-t.y;                                                 \
 }                                                                       \
                                                                         \
-// A heart-shape                                                        \
+// A heart-shape - just a bent torus                                    \
 float heart(vec3 p, vec2 wt)                                            \
 {                                                                       \
   p.y -= abs(p.x);                                                      \
@@ -123,6 +137,10 @@ float f_intro(vec3 p){                                                  \
 }                                                                       \
 	                                                                      \
 float f(vec3 p){                                                        \
+  // My synth almost supports full synchronization of everything in the \
+  // animation, but this production still needs hard-coded time sync.   \
+  // This is very unfortunate, but I'll make it better before my next   \
+  // demoscene entry...                                                 \
   if (s[0]<29.6){                                                       \
     return f_intro(p);                                                  \
   }else{                                                                \

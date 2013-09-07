@@ -12,6 +12,8 @@ CLTOOLDEPS = tools/cltool.cxx \
 	tools/keyvalhelper.cxx tools/keyvalhelper.hpp \
 	src/synti2_midi.c
 
+GUIDEPS = gui/main.cxx
+
 PATCHEDITDEPS = tools/patchedit.cxx \
                 tools/patchtool.cxx tools/patchtool.hpp \
 		tools/miditool.cxx tools/miditool.hpp \
@@ -28,6 +30,12 @@ nodefaultmake:
 	@echo "No default target is specified as of now."
 
 tools: patchedit cltool
+
+synti2gui: $(GUIDEPS) Makefile
+	g++ -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
+		-Isrc -Iinclude -Itools \
+		`fltk-config --cxxflags`  \
+		`pkg-config --cflags --libs jack`
 
 patchedit: $(PATCHEDITDEPS) Makefile
 	g++ -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \

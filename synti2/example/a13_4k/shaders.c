@@ -11,12 +11,12 @@
  * dude, even if I don't know you (yet) ;).
  *
  * But a note to our students: I couldn't have done this without the
- * basic vector math and stuff taught on this our course.
+ * basic vector math and stuff taught to you on our course!
  *
  * I tried these with my soft synth, of course, but these should be
  * applicable in any other code that renders a rectangle [-1,1]^2 and
  * transfers 9 uniform parameters from the application.. Later on, I'll
- * make the synth state accessible in a much more easy way ...
+ * make the synth state accessible in a much easier way ...
  *
  * s[0] needs to be time since the beginning of the animation
  * s[1] needs to be screen width

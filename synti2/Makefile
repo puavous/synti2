@@ -12,7 +12,8 @@ CLTOOLDEPS = tools/cltool.cxx \
 	tools/keyvalhelper.cxx tools/keyvalhelper.hpp \
 	src/synti2_midi.c
 
-GUIDEPS = gui/main.cxx
+GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
+          gui/main.cxx
 
 PATCHEDITDEPS = tools/patchedit.cxx \
                 tools/patchtool.cxx tools/patchtool.hpp \

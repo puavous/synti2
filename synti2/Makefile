@@ -13,6 +13,7 @@ CLTOOLDEPS = tools/cltool.cxx \
 	src/synti2_midi.c
 
 GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
+          gui/PatchesViewFl.hpp gui/PatchesViewFl.cxx \
           gui/main.cxx
 
 PATCHEDITDEPS = tools/patchedit.cxx \

@@ -1,4 +1,5 @@
 #include "MainWindow.hpp"
+#include "PatchesViewFl.hpp"
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Group.H>
@@ -12,7 +13,7 @@ build_main_window(Fl_Window * window) //, synti2::PatchDescr *pd){
 
   Fl_Tabs *tabs = new Fl_Tabs(0,0,1200,740);
 
-  Fl_Group *gr = new Fl_Group(0,22,1200,720, "Patches");
+  Fl_Group *gr = new synti2gui::ViewPatches(0,22,1200,720, "Patches");
   //Fl_Group *patchedit = build_patch_editor(pd);
   gr->end();
 

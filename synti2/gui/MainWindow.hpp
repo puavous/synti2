@@ -4,10 +4,13 @@
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Group.H>
 
+#include "PatchBankHandler.hpp"
+using synti2gui::PatchBankHandler;
+
 namespace synti2gui{
   class MainWindow : public Fl_Window{
   public:
-    MainWindow(int w, int h);
+    MainWindow(int w, int h, PatchBankHandler *pbh);
   };
 }
 

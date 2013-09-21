@@ -14,6 +14,10 @@
 /* Our own GUI windows and widgets */
 #include "MainWindow.hpp"
 
+/* Application logic */
+#include "PatchBankHandler.hpp"
+using synti2gui::PatchBankHandler;
+
 /* jack headers */
 #ifdef MIDI_INTERFACE_IS_JACK
 #include <jack/jack.h>
@@ -210,34 +214,35 @@ void init_jack(const char * client_name){
 int main(int argc, char **argv) {
   int retval;
 
+  if (argc < 2) {return 1;}
+  char *patchdes_fname = argv[1];
+
   init_jack(default_name);
 
   std::cerr << "synti2gui main(): note: Jack init " 
             << (weHaveJack()?"succeeded":"failed") << "." << std::endl;
 
-  Fl_Window *window = new MainWindow(1000,740);
+  /* FIXME: Better implementation of these: */
+  synti2::Patchtool *pt = new synti2::Patchtool(patchdes_fname);
+  synti2::PatchBank *pbank = pt->makePatchBank(14);
+
+  PatchBankHandler h(pbank, NULL, NULL);
+  Fl_Window *window = new MainWindow(1000,740,&h);
 
   window->show(argc, argv);
 
 #if 0
-  pt = new synti2::Patchtool(patchdes_fname);
-  pbank = pt->makePatchBank(16);
   midimap = new synti2::MidiMap();
- 
-  /* Make an edit window for our custom kind of patches. */
-  (pt->exposePatchDescr())->headerFileForC(std::cout);
-
-  Fl_Window *window = build_main_window(pt->exposePatchDescr());
   widgets_to_reflect_reality();
-
-  if (pbank != NULL) free(pbank);
-  if (pt != NULL) free(pt);
 #endif
 
   retval = Fl::run();
 
   if (weHaveJack()) {jack_ringbuffer_free(my_jack.rb);}
   if (weHaveJack()) {jack_client_close(my_jack.client);}
+
+  if (pbank != NULL) free(pbank);
+  if (pt != NULL) free(pt);
   
   return 0;
 }

@@ -14,6 +14,10 @@ CLTOOLDEPS = tools/cltool.cxx \
 
 GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/PatchesViewFl.hpp gui/PatchesViewFl.cxx \
+          gui/PatchBankHandler.hpp gui/PatchBankHandler.cxx \
+          gui/Action.hpp \
+          tools/patchtool.hpp tools/patchtool.cxx \
+          tools/midihelper.hpp tools/midihelper.cxx \
           gui/main.cxx
 
 PATCHEDITDEPS = tools/patchedit.cxx \

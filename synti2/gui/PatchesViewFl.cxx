@@ -1,25 +1,64 @@
 #include "PatchesViewFl.hpp"
+#include "Action.hpp"
 #include <FL/Fl.H>
 #include <FL/Fl_Group.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Counter.H>
+#include <FL/Fl_Input.H>
+
+#include <iostream>
+
+using synti2gui::PatchBankHandler;
+
+/** Changes the current patch, and updates other widgets. */
+void cb_change_patch(Fl_Widget* w, void* p){
+  if (p == NULL) {
+    std::cerr << "PatchBankHandler is NULL. Change omitted." << std::endl;
+    return;
+  }
+  PatchBankHandler *pbh = (PatchBankHandler*)p;
+  double val = ((Fl_Valuator*)w)->value();
+
+  if (val < 0){
+    val = 0;
+  } else if (val > (pbh->getNPatches()-1)){
+    val = pbh->getNPatches()-1;
+  }
+  ((Fl_Valuator*)w)->value(val);
+}
+
+void cb_patch_name(Fl_Widget* w, void* p){
+  if (p == NULL) {
+    std::cerr << "PatchBankModel is NULL. Name unchanged." << std::endl;
+    return;
+  } else {
+    //pbank->at(curr_patch).setName(((Fl_Input*)w)->value());
+  }
+}
+
 
 /** Builds the patch editor widgets. */
-void build_patch_editor(Fl_Group *gr) //synti2::PatchDescr *pd){
+void build_patch_editor(Fl_Group *gr, PatchBankHandler *pbh = NULL)
 {
+  if (pbh==NULL) {
+    std::cerr << "Error: No PatchBankHandler given. Can't build GUI." << std::endl;
+    return;
+  }
   Fl_Scroll *scroll = new Fl_Scroll(0,25,1200,740);
 
+  // FIXME: From a factory who can setup bound updates etc.
   Fl_Counter *patch = new Fl_Counter(50,25,50,25,"Patch");
+
   patch->type(FL_SIMPLE_COUNTER);
   patch->align(FL_ALIGN_LEFT);
-  patch->bounds(0,15);
+  patch->bounds(0,pbh->getNPatches()-1);
   patch->precision(0);
+  patch->callback(cb_change_patch, pbh);
+
+  Fl_Input * widget_patch_name = new Fl_Input(150,25,90,25,"Name");
+  widget_patch_name->callback(cb_patch_name,pbh);
 
 #if 0
-  patch->callback(cb_change_patch);
-
-  widget_patch_name = new Fl_Input(150,25,90,25,"Name");
-  widget_patch_name->callback(cb_patch_name);
 
   int px=280, py=25, w=75, h=25, sp=2;
   int labsz = 16;
@@ -102,6 +141,6 @@ void build_patch_editor(Fl_Group *gr) //synti2::PatchDescr *pd){
 
 
 using namespace synti2gui;
-ViewPatches::ViewPatches(int x, int y, int w, int h, const char * name)  : Fl_Group(x, y, w, h, name){
-  build_patch_editor(this);
+ViewPatches::ViewPatches(int x, int y, int w, int h, const char * name, PatchBankHandler *pbh)  : Fl_Group(x, y, w, h, name){
+  build_patch_editor(this,pbh);
 }

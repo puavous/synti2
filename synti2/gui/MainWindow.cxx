@@ -1,8 +1,10 @@
 #include "MainWindow.hpp"
 #include "PatchesViewFl.hpp"
+#include "MidiMapperViewFl.hpp"
 #include "PatchBankHandler.hpp"
 using synti2gui::PatchBankHandler;
 using synti2gui::ViewPatches;
+using synti2gui::ViewMidiMapper;
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -12,17 +14,16 @@ using synti2gui::ViewPatches;
 void
 build_main_window(Fl_Window * window, PatchBankHandler *pbh)
 {
-  /* Overall Operation Buttons */
+  Fl_Group *gr = NULL;
+
   window->resizable(window);
 
   Fl_Tabs *tabs = new Fl_Tabs(0,0,1200,740);
 
-  Fl_Group *gr = new ViewPatches(0,22,1200,720,"Patches",pbh);
-  //Fl_Group *patchedit = build_patch_editor(pd);
+  gr = new ViewPatches(0,22,1200,720,"Patches",pbh);
   gr->end();
 
-  gr = new Fl_Group(0,22,1200,720, "MIDI mapper");
-  //build_message_mapper(1,23,1198,718);
+  gr = new ViewMidiMapper(0,22,1200,720,"MIDI mapper",pbh);
   gr->end();
 
   gr = new Fl_Group(0,22,1200,720, "Features");

@@ -18,11 +18,9 @@ void cb_change_patch(Fl_Widget* w, void* p){
   }
   PatchBankHandler *pbh = (PatchBankHandler*)p;
   double val = ((Fl_Valuator*)w)->value();
-
-  if (val < 0){
-    val = 0;
-  } else if (val > (pbh->getNPatches()-1)){
-    val = pbh->getNPatches()-1;
+  if (!pbh->setActivePatch(val)){
+    std::cerr << pbh->getLastErrorMessage() << std::endl;
+    val = pbh->getActivePatch();
   }
   ((Fl_Valuator*)w)->value(val);
 }
@@ -46,7 +44,7 @@ void build_patch_editor(Fl_Group *gr, PatchBankHandler *pbh = NULL)
   }
   Fl_Scroll *scroll = new Fl_Scroll(0,25,1200,740);
 
-  // FIXME: From a factory who can setup bound updates etc.
+  // FIXME: From a factory who can setup bound updates etc.(?)
   Fl_Counter *patch = new Fl_Counter(50,25,50,25,"Patch");
 
   patch->type(FL_SIMPLE_COUNTER);

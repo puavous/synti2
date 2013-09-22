@@ -25,7 +25,7 @@ namespace synti2gui {
     PatchBank *patchBank;      /* The bank that is commanded. */
     ViewUpdater *viewUpdater;  /* Abstracts the GUI library. */
     DataSender *dataSender;    /* Abstracts the MIDI library. */
-    size_t currentPatch;
+    size_t activePatch;
     std::string lastErrorMessage;
   private:
     /** */
@@ -37,12 +37,23 @@ namespace synti2gui {
     PatchBankHandler(PatchBank *bank, ViewUpdater *vu, DataSender *ds):
       patchBank(bank),viewUpdater(vu),dataSender(ds) {};
     size_t getNPatches(){return patchBank->size();}
+    size_t getActivePatch(){return activePatch;}
+    bool setActivePatch(int ind){
+      if ((ind < 0) || (ind > getNPatches())) {
+        lastErrorMessage = "Illegal active patch index request.";
+        return false;
+      } else {
+        activePatch = ind;
+        //viewUpdater->rebuildPatchWidgets(); // FIXME: think!
+        return true;
+      }
+    }
     bool setParamValue(std::string key, float v){
       bool can_do = checkParamValue(key, v);
       if (can_do){
         //privSetParam(key,v);
         //privSendParam(key,v);
-        //updateAllConnectedViews();
+        //viewUpdater->updateAllConnectedViews(key,v);
       }
       return can_do;
     };

@@ -134,6 +134,7 @@ void build_patch_editor(Fl_Group *gr, PatchBankHandler *pbh = NULL)
     }
   }
 #endif
+  scroll->end();
 }
 
 

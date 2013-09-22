@@ -1,10 +1,14 @@
 #include "MainWindow.hpp"
 #include "PatchesViewFl.hpp"
 #include "MidiMapperViewFl.hpp"
+#include "FeaturesViewFl.hpp"
+#include "ExeBuilderViewFl.hpp"
 #include "PatchBankHandler.hpp"
 using synti2gui::PatchBankHandler;
 using synti2gui::ViewPatches;
 using synti2gui::ViewMidiMapper;
+using synti2gui::ViewFeatures;
+using synti2gui::ViewExeBuilder;
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -26,10 +30,10 @@ build_main_window(Fl_Window * window, PatchBankHandler *pbh)
   gr = new ViewMidiMapper(0,22,1200,720,"MIDI mapper",pbh);
   gr->end();
 
-  gr = new Fl_Group(0,22,1200,720, "Features");
+  gr = new ViewFeatures(0,22,1200,720,"Features",pbh);
   gr->end();
 
-  gr = new Fl_Group(0,22,1200,720, "Exe Builder");
+  gr = new ViewExeBuilder(0,22,1200,720,"Exe Builder",pbh);
   gr->end();
 
   tabs->end();

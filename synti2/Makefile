@@ -15,6 +15,8 @@ CLTOOLDEPS = tools/cltool.cxx \
 GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/PatchesViewFl.hpp gui/PatchesViewFl.cxx \
           gui/MidiMapperViewFl.hpp gui/MidiMapperViewFl.cxx \
+          gui/FeaturesViewFl.hpp gui/FeaturesViewFl.cxx \
+          gui/ExeBuilderViewFl.hpp gui/ExeBuilderViewFl.cxx \
           gui/PatchBankHandler.hpp gui/PatchBankHandler.cxx \
           gui/Action.hpp \
           tools/patchtool.hpp tools/patchtool.cxx \
@@ -39,7 +41,7 @@ nodefaultmake:
 tools: patchedit cltool
 
 synti2gui: $(GUIDEPS) Makefile
-	g++ -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
+	g++ -Wall -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
 		-Isrc -Iinclude -Itools \
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`

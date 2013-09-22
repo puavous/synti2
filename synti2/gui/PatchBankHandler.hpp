@@ -39,7 +39,7 @@ namespace synti2gui {
     size_t getNPatches(){return patchBank->size();}
     size_t getActivePatch(){return activePatch;}
     bool setActivePatch(int ind){
-      if ((ind < 0) || (ind > getNPatches())) {
+      if ((ind < 0) || ((size_t)ind > getNPatches())) {
         lastErrorMessage = "Illegal active patch index request.";
         return false;
       } else {

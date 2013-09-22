@@ -6,6 +6,7 @@
 #include <FL/Fl_Counter.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Choice.H>
 
 #include <iostream>
 
@@ -27,7 +28,6 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   lbl->align(FL_ALIGN_INSIDE);
   lbl->labelsize(20);
 
-#if 0
   py+=3;
   Fl_Choice *ch = new Fl_Choice(ipx+32,py,w,h,"");
   ch->add("Mono-Dup",0,0,0,0);
@@ -36,6 +36,7 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   ch->add("*Mute*",0,0,0,0);
   ch->value(0);  /*hack default..*/
   ch->argument(ic);
+#if 0
   ch->callback(cb_mapper_mode);
   widg_cmode[ic] = ch;
 
@@ -132,6 +133,7 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
 
 #endif
   chn->end();
+  return chn;
 }
 
 

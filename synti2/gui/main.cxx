@@ -74,9 +74,8 @@ process_with_jack(jack_nframes_t nframes, void *arg)
 {
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
-  jack_midi_data_t *msg;
-
-  jack_midi_data_t *outdata;
+  //jack_midi_data_t *msg;
+  //jack_midi_data_t *outdata;
 
   void *midi_in_buffer = (void*)jack_port_get_buffer (my_jack.inmidi_port, nframes);
   void *midi_out_buffer = (void*)jack_port_get_buffer (my_jack.outmidi_port, nframes);
@@ -212,7 +211,7 @@ void init_jack(const char * client_name){
 
 #ifdef MIDI_INTERFACE_IS_JACK
 int main(int argc, char **argv) {
-  int retval;
+  int retval = 2;
 
   if (argc < 2) {return 1;}
   char *patchdes_fname = argv[1];
@@ -244,7 +243,7 @@ int main(int argc, char **argv) {
   if (pbank != NULL) free(pbank);
   if (pt != NULL) free(pt);
   
-  return 0;
+  return retval;
 }
 #else
 #error "Only Jack Midi is supported as of now."

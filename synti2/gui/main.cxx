@@ -222,8 +222,8 @@ int main(int argc, char **argv) {
             << (weHaveJack()?"succeeded":"failed") << "." << std::endl;
 
   /* FIXME: Better implementation of these: */
-  synti2::Patchtool *pt = new synti2::Patchtool(patchdes_fname);
-  synti2::PatchBank *pbank = pt->makePatchBank(14);
+  //synti2::Patchtool *pt = new synti2::Patchtool(patchdes_fname);
+  synti2base::PatchBank *pbank = new synti2base::PatchBank();
 
   PatchBankHandler h(pbank, NULL, NULL);
   Fl_Window *window = new MainWindow(1000,740,&h);
@@ -241,7 +241,7 @@ int main(int argc, char **argv) {
   if (weHaveJack()) {jack_client_close(my_jack.client);}
 
   if (pbank != NULL) free(pbank);
-  if (pt != NULL) free(pt);
+  //if (pt != NULL) free(pt);
   
   return retval;
 }

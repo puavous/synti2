@@ -19,8 +19,10 @@ GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/ExeBuilderViewFl.hpp gui/ExeBuilderViewFl.cxx \
           gui/PatchBankHandler.hpp gui/PatchBankHandler.cxx \
           gui/Action.hpp \
-          tools/patchtool.hpp tools/patchtool.cxx \
+          gui/PatchBank.hpp gui/PatchBank.cxx \
+          tools/featuretool.hpp tools/featuretool.cxx \
           tools/midihelper.hpp tools/midihelper.cxx \
+          tools/keyvalhelper.cxx tools/keyvalhelper.hpp \
           gui/main.cxx
 
 PATCHEDITDEPS = tools/patchedit.cxx \

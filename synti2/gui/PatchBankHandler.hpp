@@ -1,8 +1,8 @@
 #ifndef SYNTI2_GUI_PATCHBANKHANDLER_FL
 #define SYNTI2_GUI_PATCHBANKHANDLER_FL
 
-#include "patchtool.hpp" // Maybe re-implement?
-using synti2::PatchBank;
+#include "PatchBank.hpp" // Maybe re-implement?
+using synti2base::PatchBank;
 
 namespace synti2gui {
   // FIXME: Move to its own hpp and cxx?
@@ -36,7 +36,7 @@ namespace synti2gui {
   public:
     PatchBankHandler(PatchBank *bank, ViewUpdater *vu, DataSender *ds):
       patchBank(bank),viewUpdater(vu),dataSender(ds) {};
-    size_t getNPatches(){return patchBank->size();}
+    size_t getNPatches(){return patchBank->getNumPatches();}
     size_t getActivePatch(){return activePatch;}
     bool setActivePatch(int ind){
       if ((ind < 0) || ((size_t)ind > getNPatches())) {
@@ -47,6 +47,9 @@ namespace synti2gui {
         //viewUpdater->rebuildPatchWidgets(); // FIXME: think!
         return true;
       }
+    }
+    std::vector<std::string> getFeatureKeys(){
+      return patchBank->getFeatureKeys();
     }
     bool setParamValue(std::string key, float v){
       bool can_do = checkParamValue(key, v);

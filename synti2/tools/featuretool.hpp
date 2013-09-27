@@ -8,7 +8,29 @@
 #include <vector>
 #include <iostream>
 #include "keyvalhelper.hpp"
+using std::string;
 namespace synti2 {
+
+  /** A feature class, if needed at some point..*/
+  class Feature {
+  private:
+    std::string key;
+    std::string cdefine;
+    std::string description;
+    std::vector<std::string> reqkeys;
+  public:
+    Feature(string ikey, string icdefine, string idescr, string irequires):
+      key(ikey),cdefine(icdefine),description(idescr)
+    {
+       // should split/tokenize, if requires many.
+      reqkeys.push_back(irequires);
+    }
+    std::string getHumanReadable(){return description;}
+    std::string getCDefine(){return cdefine;}
+    std::string getKey(){return key;}
+    bool doesRequire(std::string rkey){return false;}//reqkeys.contains(rkey);}
+  };
+
   class Features {
   protected:
     std::map<std::string, bool> feature;
@@ -48,9 +70,19 @@ namespace synti2 {
     }
   public:
     void fromString(const std::string &s);
+    Features(){fromString("all");}
     Features(std::string s){fromString(s);}
     bool hasFeature(std::string name){
       return feature[name];
+    }
+    /** Creates a copy of keys as a vector. (TODO: key iter?) */
+    std::vector<std::string> getFeatureKeys(){
+      std::vector<std::string> res;
+      std::map<std::string,std::string>::const_iterator it;
+      for (it=cdefin.begin(); it!=cdefin.end(); ++it){
+        res.push_back(it->first);
+      }
+      return res;
     }
     //void readFromStream(std::istream &ist){};
     //void writeToStream(std::ostream &ost);

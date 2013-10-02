@@ -11,26 +11,6 @@
 using std::string;
 namespace synti2 {
 
-  /** A feature class, if needed at some point..*/
-  class Feature {
-  private:
-    std::string key;
-    std::string cdefine;
-    std::string description;
-    std::vector<std::string> reqkeys;
-  public:
-    Feature(string ikey, string icdefine, string idescr, string irequires):
-      key(ikey),cdefine(icdefine),description(idescr)
-    {
-       // should split/tokenize, if requires many.
-      reqkeys.push_back(irequires);
-    }
-    std::string getHumanReadable(){return description;}
-    std::string getCDefine(){return cdefine;}
-    std::string getKey(){return key;}
-    bool doesRequire(std::string rkey){return false;}//reqkeys.contains(rkey);}
-  };
-
   class Features {
   protected:
     std::map<std::string, bool> feature;
@@ -84,6 +64,7 @@ namespace synti2 {
       }
       return res;
     }
+
     //void readFromStream(std::istream &ist){};
     //void writeToStream(std::ostream &ost);
     void writeAsDefinesForC(std::ostream &ost){

@@ -36,7 +36,6 @@ PATCHEDITDEPS = tools/patchedit.cxx \
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
-
 nodefaultmake:
 	@echo "No default target is specified as of now."
 

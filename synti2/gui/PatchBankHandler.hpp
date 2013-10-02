@@ -3,6 +3,7 @@
 
 #include "PatchBank.hpp" // Maybe re-implement?
 using synti2base::PatchBank;
+using synti2base::FeatureDescription;
 
 namespace synti2gui {
   // FIXME: Move to its own hpp and cxx?
@@ -48,8 +49,13 @@ namespace synti2gui {
         return true;
       }
     }
-    std::vector<std::string> getFeatureKeys(){
-      return patchBank->getFeatureKeys();
+    std::vector<FeatureDescription>::iterator 
+    getFeatureBegin(){
+      return patchBank->getFeatureBegin();
+    }
+    std::vector<FeatureDescription>::iterator 
+    getFeatureEnd(){
+      return patchBank->getFeatureEnd();
     }
     bool setParamValue(std::string key, float v){
       bool can_do = checkParamValue(key, v);

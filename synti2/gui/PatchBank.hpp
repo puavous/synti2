@@ -120,19 +120,19 @@ namespace synti2base {
     std::vector<FeatureDescription> feats;
     std::vector<Patch> patches;
     void addFeatureDescription(string key, 
-                                 string cname,
-                                 string humanReadable,
-                                 string requires)
+                               string cname,
+                               string humanReadable,
+                               string requires)
     {
       featkeys.push_back(key);
       feats.push_back(FeatureDescription(key, cname, humanReadable, requires));
     }
-  public:
-    PatchBank():patches(14)
-    {
+
+    /** Initializes the on/off -toggled feature descriptions */
+    void initFeatureDescriptions(){
       /*
         These to be toggled by "COMPOSE_MODE" switch only:
-
+        
       addFeatureDescription("sysex","FEAT_COMPOSE_MODE_SYSEX","Receive SysEx (usable in compose mode only)",""); // Need this at all?
       addFeatureDescription("troubleshooting","FEAT_SAFETY","Safe mode (usable in compose mode only)","");
       */
@@ -167,6 +167,11 @@ namespace synti2base {
       addFeatureDescription("csquash","FEAT_CHANNEL_SQUASH","Enable per-channel squash function","");
       addFeatureDescription("stereo","FEAT_STEREO","Enable stereo output","");
       addFeatureDescription("panenv","FEAT_PAN_ENVELOPE","Enable pan envelope","stereo");
+    }
+  public:
+    PatchBank():patches(14)
+    {
+      initFeatureDescriptions();
     };
 
     vector<FeatureDescription>::iterator

@@ -75,6 +75,12 @@ namespace synti2base {
     void toStream(std::ostream &ost);
   };
 
+  class MidiMap{
+  public:
+    MidiMap(){}
+    void toStream(std::ostream &ost);
+  };
+
   /** Derive this to update GUI when a feature is turned on/off. */
   class FeatCallback {
   public:
@@ -113,6 +119,7 @@ namespace synti2base {
   private:
     Features feats;
     Capacities caps;
+    MidiMap midimap;
     std::vector<Patch> patches;
   public:
     PatchBank();

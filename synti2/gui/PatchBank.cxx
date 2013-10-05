@@ -89,6 +89,9 @@ void Capacities::addCapacityDescription(string key,
     ost << "# Can't really output features yet. But the code is here." << std::endl;
   }
  
+  void MidiMap::toStream(std::ostream &ost){
+    ost << "# Can't really output midimap yet. But the code is here." << std::endl;
+  }
   
   
   PatchBank::PatchBank():patches(14)
@@ -104,6 +107,7 @@ void Capacities::addCapacityDescription(string key,
     for(pit=patches.begin(); pit!=patches.end(); ++pit){
       (*pit).toStream(ost);
     }
+    midimap.toStream(ost);
   }
   
   void PatchBank::fromStream(std::istream & ist){

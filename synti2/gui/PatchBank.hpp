@@ -58,8 +58,8 @@ namespace synti2base {
   private:
     /** Default value */
     int defval; 
-    /** Allowed values as a 16-bit pattern */ 
-    int allowed; 
+    /** Allowed values [0,15] as a 16-bit pattern */
+    int allowed;
     /** Names to be used in GUI; empty->"0","1","2",.."15" */
     std::vector<std::string> names;
     //I4ParDescription(){};/*must give all data on creation*/
@@ -111,7 +111,31 @@ namespace synti2base {
   };
 
 
-  class Patch{};
+  class Patch{
+  private:
+    std::vector<string> i4parKeys;
+    std::map<string,I4ParDescription> i4pars;
+    std::vector<int> i4parValues;
+
+    std::vector<string> fparKeys;
+    std::map<string,FParDescription> fpars;
+    std::vector<float> fparValues;
+    void addI4ParDescription(){
+    }
+    void addFParDescription(){
+    }
+    void initI4ParDescriptions(){
+      addI4ParDescription();
+    }
+    void initFParDescriptions(){
+      addFParDescription();
+    }
+  public:
+    Patch(){
+      initI4ParDescriptions();
+      initFParDescriptions();
+    };
+  };
 
   /** 
    * PatchBank stores everything related to a synti2 patch bank, i.e.,

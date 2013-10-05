@@ -144,6 +144,7 @@ namespace synti2base {
     {
       initFeatureDescriptions();
       initCapacityDescriptions();
+      patches[0].toStream(std::cout);
     };
 
     vector<FeatureDescription>::iterator
@@ -160,12 +161,6 @@ namespace synti2base {
 
     int
     getCapacityValue(string key){return capValue[key];}
-
-    vector<I4ParDescription> 
-    getI4ParKeys();
-
-    vector<FParDescription> 
-    getFParKeys();
 
     void setNumPatches(int n);
     int getNumPatches(){return patches.size();}

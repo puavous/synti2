@@ -2,9 +2,8 @@
 #define SYNTI2_GUI_ACTION
 #include <string>
 #include <iostream>
-#include "PatchBankHandler.hpp"
+#include "PatchBank.hpp"
 
-//#include "PatchBankHandler.hpp"
 namespace synti2gui {
   /** Actions communicate between (any) UI and the patch bank model,
    *  and transfer data to/from (any) external connections
@@ -19,10 +18,10 @@ namespace synti2gui {
    */
   class ValuatorAction : public Action {
   private:
-    PatchBankHandler *handler;
+    PatchBank *handler;
     std::string key;
   public:
-    ValuatorAction(PatchBankHandler *ihandler, 
+    ValuatorAction(PatchBank *ihandler, 
                    const std::string& ikey) : handler(ihandler), 
                                               key(ikey){};
     void updateValue(float v){

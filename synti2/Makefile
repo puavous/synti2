@@ -17,7 +17,6 @@ GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/MidiMapperViewFl.hpp gui/MidiMapperViewFl.cxx \
           gui/FeaturesViewFl.hpp gui/FeaturesViewFl.cxx \
           gui/ExeBuilderViewFl.hpp gui/ExeBuilderViewFl.cxx \
-          gui/PatchBankHandler.hpp gui/PatchBankHandler.cxx \
           gui/Action.hpp \
           gui/Patch.hpp gui/Patch.cxx \
           gui/PatchBank.hpp gui/PatchBank.cxx \

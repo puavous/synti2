@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-using synti2gui::PatchBankHandler;
+using synti2base::PatchBank;
 using synti2gui::ViewMidiMapper;
 
 Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
@@ -138,10 +138,10 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
 
 
 void build_message_mapper(int x, int y, int w, int h, 
-                          PatchBankHandler *pbh = NULL)
+                          PatchBank *pbh = NULL)
 {
   if (pbh==NULL) {
-    std::cerr << "Error: No PatchBankHandler given. Can't build GUI." << std::endl;
+    std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
     return;
   }
 
@@ -156,7 +156,7 @@ void build_message_mapper(int x, int y, int w, int h,
 
 ViewMidiMapper::ViewMidiMapper(int x, int y, int w, int h, 
                                const char * name, 
-                               PatchBankHandler *pbh)
+                               PatchBank *pbh)
   : Fl_Group(x, y, w, h, name)
 {
   build_message_mapper(x,y,w,h,pbh);

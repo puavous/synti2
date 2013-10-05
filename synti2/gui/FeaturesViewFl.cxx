@@ -1,5 +1,5 @@
 #include "FeaturesViewFl.hpp"
-#include "PatchBankHandler.hpp"
+#include "PatchBank.hpp"
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Group.H>
@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-using synti2gui::PatchBankHandler;
+using synti2base::PatchBank;
 using synti2gui::ViewFeatures;
 
 
@@ -19,10 +19,10 @@ using synti2gui::ViewFeatures;
  * event.
  */
 void build_feature_selector(int x, int y, int w, int h, 
-                            PatchBankHandler *pbh = NULL)
+                            PatchBank *pbh = NULL)
 {
   if (pbh==NULL) {
-    std::cerr << "Error: No PatchBankHandler given. Can't build GUI." << std::endl;
+    std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
     return;
   }
 
@@ -56,7 +56,7 @@ void build_feature_selector(int x, int y, int w, int h,
 
 ViewFeatures::ViewFeatures(int x, int y, int w, int h, 
                            const char * name, 
-                           PatchBankHandler *pbh)
+                           PatchBank *pbh)
   : Fl_Group(x, y, w, h, name)
 {
   build_feature_selector(x,y,w,h,pbh);

@@ -121,6 +121,15 @@ namespace synti2base {
     Capacities caps;
     MidiMap midimap;
     std::vector<Patch> patches;
+
+    std::string lastErrorMessage;
+
+    /** */
+    bool checkParamValue(std::string key, float v){
+      lastErrorMessage = "None shall pass (sanity check unimplemented)";
+      return false; /*FIXME: Implement.*/
+    }
+
   public:
     PatchBank();
 
@@ -186,6 +195,18 @@ namespace synti2base {
     //bool isFeatureEnabled(const string &key);
     void registerFeatureCallback(FeatCallback cb);
     void registerCapacityCallback(CapacityCallback cb);
+
+    bool setParamValue(std::string key, float v){
+      bool can_do = checkParamValue(key, v);
+      if (can_do){
+        //privSetParam(key,v);
+        //privSendParam(key,v);
+        //viewUpdater->updateAllConnectedViews(key,v);
+      }
+      return can_do;
+    };
+    std::string getLastErrorMessage(){return lastErrorMessage;}
+
   };
 
 }

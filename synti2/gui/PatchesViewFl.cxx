@@ -8,19 +8,22 @@
 
 #include <iostream>
 
-using synti2gui::PatchBankHandler;
+using synti2base::PatchBank;
+
+namespace synti2gui{
 
 /** Changes the current patch, and updates other widgets. */
 void cb_change_patch(Fl_Widget* w, void* p){
+  ViewPatches *ww = (ViewPatches*)w;
   if (p == NULL) {
-    std::cerr << "PatchBankHandler is NULL. Change omitted." << std::endl;
+    std::cerr << "PatchBank is NULL. Change omitted." << std::endl;
     return;
   }
-  PatchBankHandler *pbh = (PatchBankHandler*)p;
+  PatchBank *pbh = (PatchBank*)p;
   double val = ((Fl_Valuator*)w)->value();
-  if (!pbh->setActivePatch(val)){
+  if (!ww->setActivePatch(val)){
     std::cerr << pbh->getLastErrorMessage() << std::endl;
-    val = pbh->getActivePatch();
+    val = ww->getActivePatch();
   }
   ((Fl_Valuator*)w)->value(val);
 }
@@ -36,10 +39,10 @@ void cb_patch_name(Fl_Widget* w, void* p){
 
 
 /** Builds the patch editor widgets. */
-void build_patch_editor(Fl_Group *gr, PatchBankHandler *pbh = NULL)
+void build_patch_editor(Fl_Group *gr, PatchBank *pbh = NULL)
 {
   if (pbh==NULL) {
-    std::cerr << "Error: No PatchBankHandler given. Can't build GUI." << std::endl;
+    std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
     return;
   }
   Fl_Scroll *scroll = new Fl_Scroll(0,25,1200,740);
@@ -49,7 +52,7 @@ void build_patch_editor(Fl_Group *gr, PatchBankHandler *pbh = NULL)
 
   patch->type(FL_SIMPLE_COUNTER);
   patch->align(FL_ALIGN_LEFT);
-  patch->bounds(0,pbh->getNPatches()-1);
+  patch->bounds(0,pbh->getNumPatches()-1);
   patch->precision(0);
   patch->callback(cb_change_patch, pbh);
 
@@ -140,6 +143,9 @@ void build_patch_editor(Fl_Group *gr, PatchBankHandler *pbh = NULL)
 
 
 using namespace synti2gui;
-ViewPatches::ViewPatches(int x, int y, int w, int h, const char * name, PatchBankHandler *pbh)  : Fl_Group(x, y, w, h, name){
-  build_patch_editor(this,pbh);
+ViewPatches::ViewPatches(int x, int y, int w, int h, const char * name, PatchBank *pbh)  : Fl_Group(x, y, w, h, name){
+  pb = pbh;
+  build_patch_editor(this, pb);
+}
+
 }

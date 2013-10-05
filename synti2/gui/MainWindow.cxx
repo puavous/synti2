@@ -3,8 +3,8 @@
 #include "MidiMapperViewFl.hpp"
 #include "FeaturesViewFl.hpp"
 #include "ExeBuilderViewFl.hpp"
-#include "PatchBankHandler.hpp"
-using synti2gui::PatchBankHandler;
+#include "PatchBank.hpp"
+using synti2base::PatchBank;
 using synti2gui::ViewPatches;
 using synti2gui::ViewMidiMapper;
 using synti2gui::ViewFeatures;
@@ -16,7 +16,7 @@ using synti2gui::ViewExeBuilder;
 
 /** Builds the main window with widgets reflecting a patch description. */
 void
-build_main_window(Fl_Window * window, PatchBankHandler *pbh)
+build_main_window(Fl_Window * window, PatchBank *pbh)
 {
   Fl_Group *gr = NULL;
 
@@ -42,6 +42,6 @@ build_main_window(Fl_Window * window, PatchBankHandler *pbh)
 
 using namespace synti2gui;
 MainWindow::MainWindow(int w, int h, 
-                       PatchBankHandler *pbh) : Fl_Window(w,h){
+                       PatchBank *pbh) : Fl_Window(w,h){
   build_main_window(this, pbh);
 }

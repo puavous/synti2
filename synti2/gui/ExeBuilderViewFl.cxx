@@ -5,14 +5,14 @@
 
 #include <iostream>
 
-using synti2gui::PatchBankHandler;
+using synti2base::PatchBank;
 using synti2gui::ViewExeBuilder;
 
 void build_exe_builder(int x, int y, int w, int h, 
-                         PatchBankHandler *pbh = NULL)
+                         PatchBank *pbh = NULL)
 {
   if (pbh==NULL) {
-    std::cerr << "Error: No PatchBankHandler given. Can't build GUI." << std::endl;
+    std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
     return;
   }
 
@@ -24,7 +24,7 @@ void build_exe_builder(int x, int y, int w, int h,
 
 ViewExeBuilder::ViewExeBuilder(int x, int y, int w, int h, 
                                  const char * name, 
-                                 PatchBankHandler *pbh)
+                                 PatchBank *pbh)
   : Fl_Group(x, y, w, h, name)
 {
   build_exe_builder(x,y,w,h,pbh);

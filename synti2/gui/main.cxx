@@ -15,8 +15,8 @@
 #include "MainWindow.hpp"
 
 /* Application logic */
-#include "PatchBankHandler.hpp"
-using synti2gui::PatchBankHandler;
+#include "PatchBank.hpp"
+using synti2base::PatchBank;
 
 /* jack headers */
 #ifdef MIDI_INTERFACE_IS_JACK
@@ -222,8 +222,7 @@ int main(int argc, char **argv) {
   //synti2::Patchtool *pt = new synti2::Patchtool(patchdes_fname);
   synti2base::PatchBank *pbank = new synti2base::PatchBank();
 
-  PatchBankHandler h(pbank, NULL, NULL);
-  Fl_Window *window = new MainWindow(1000,740,&h);
+  Fl_Window *window = new MainWindow(1000,740,pbank);
 
   window->show(argc, argv);
 

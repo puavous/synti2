@@ -30,26 +30,10 @@ namespace synti2gui {
     size_t activePatch;
     std::string lastErrorMessage;
   private:
-    /** */
-    bool checkParamValue(std::string key, float v){
-      lastErrorMessage = "None shall pass (sanity check unimplemented)";
-      return false; /*FIXME: Implement.*/
-    }
   public:
     PatchBankHandler(PatchBank *bank, ViewUpdater *vu, DataSender *ds):
       patchBank(bank),viewUpdater(vu),dataSender(ds) {};
     size_t getNPatches(){return patchBank->getNumPatches();}
-    size_t getActivePatch(){return activePatch;}
-    bool setActivePatch(int ind){
-      if ((ind < 0) || ((size_t)ind > getNPatches())) {
-        lastErrorMessage = "Illegal active patch index request.";
-        return false;
-      } else {
-        activePatch = ind;
-        //viewUpdater->rebuildPatchWidgets(); // FIXME: think!
-        return true;
-      }
-    }
     std::vector<FeatureDescription>::iterator 
     getFeatureBegin(){
       return patchBank->getFeatureBegin();
@@ -70,16 +54,6 @@ namespace synti2gui {
     getCapacityValue(std::string key){
       return patchBank->getCapacityValue(key);
     }
-    bool setParamValue(std::string key, float v){
-      bool can_do = checkParamValue(key, v);
-      if (can_do){
-        //privSetParam(key,v);
-        //privSendParam(key,v);
-        //viewUpdater->updateAllConnectedViews(key,v);
-      }
-      return can_do;
-    };
-    std::string getLastErrorMessage(){return lastErrorMessage;}
   };
 }
 

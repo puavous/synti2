@@ -93,7 +93,6 @@ void Capacities::addCapacityDescription(string key,
     ost << "# Can't really output midimap yet. But the code is here." << std::endl;
   }
   
-  
   PatchBank::PatchBank():patches(14)
   {
     toStream(std::cout); /*FIXME: for debug only.*/

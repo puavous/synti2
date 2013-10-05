@@ -213,9 +213,6 @@ void init_jack(const char * client_name){
 int main(int argc, char **argv) {
   int retval = 2;
 
-  if (argc < 2) {return 1;}
-  char *patchdes_fname = argv[1];
-
   init_jack(default_name);
 
   std::cerr << "synti2gui main(): note: Jack init " 

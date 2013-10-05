@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 
 using std::string;
@@ -290,6 +291,15 @@ std::string line_chop(std::string &str){
   return std::string(res);
 }
 
+/* Formatting tool function for 0x????*/
+static
+void fmt_hex16(std::ostream &outs, int i16){
+  outs << std::setiosflags(std::ios::right)
+       << std::resetiosflags(std::ios::left)
+       << "0x" << std::setfill('0') << std::setw(4) << std::hex << i16;
+}
+
+
 
 void Patch::addI4Par(std::string s){
   I4Par par(s);
@@ -340,7 +350,7 @@ void FPar::toStream(std::ostream &ost){
       << std::endl;
 }
 
-FPar::FPar(){fromLine("a b 0 1 2 3 4");}
+FPar::FPar(){fromLine("ERROR ThisShouldntBeHere 0 1 2 3 4");}
 
 FPar::FPar(string line){
   fromLine(line);
@@ -368,14 +378,14 @@ I4Par::I4Par(string line){
 void I4Par::toStream(std::ostream &ost){
   ost << key 
       << " " << humanReadable
-      << " " << value
-      << " " << allowed
-      << " " << 0
+      << " " << value << " ";
+  fmt_hex16(ost,allowed);
+  ost << " " << 0
       << " " << guigroup
       << std::endl;
 }
 
-I4Par::I4Par(){fromLine("a b 0 1 2 3");}
+I4Par::I4Par(){fromLine("ERROR ThisShouldntBeHere 0 1 2 3");}
 
 Patch::Patch(){
   std::stringstream isst(defPatch);

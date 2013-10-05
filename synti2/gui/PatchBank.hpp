@@ -140,12 +140,12 @@ namespace synti2base {
     }
 
   public:
-    PatchBank():patches(14)
-    {
-      initFeatureDescriptions();
-      initCapacityDescriptions();
-      patches[0].toStream(std::cout);
-    };
+    PatchBank();
+
+    /** Writes a .s2bank to a stream. */
+    void toStream(std::ostream & ost);
+    /** Reads a .s2bank from a stream. */
+    void fromStream(std::istream & ist);
 
     vector<FeatureDescription>::iterator
     getFeatureBegin(){return feats.begin();}

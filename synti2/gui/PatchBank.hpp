@@ -1,6 +1,7 @@
 #ifndef SYNTI2_PATCHBANK2
 #define SYNTI2_PATCHBANK2
 
+#include <map>
 #include <string>
 #include <vector>
 #include <istream>
@@ -8,6 +9,7 @@
 
 using std::string;
 using std::vector;
+using std::map;
 using std::istream;
 
 namespace synti2base {
@@ -39,6 +41,17 @@ namespace synti2base {
     {
       return false;//"reqkeys.contains(rkey);"}
     }
+  };
+
+  class CapacityDescription : public Description{
+  private:
+    int min;
+    int max;
+    string reqf;
+  public:
+    CapacityDescription(string ik, string icd, string ihr, int imin, int imax, string ireqf)
+      : Description(ik,icd,ihr), min(imin), max(imax), reqf(ireqf)
+    {}
   };
 
   class I4ParDescription : public Description {
@@ -118,6 +131,12 @@ namespace synti2base {
   private:
     std::vector<string> featkeys;
     std::vector<FeatureDescription> feats;
+    std::map<string,bool> featureEnabled;
+
+    std::vector<string> capkeys;
+    std::vector<CapacityDescription> caps;
+    std::map<string,int> capValue;
+
     std::vector<Patch> patches;
     void addFeatureDescription(string key, 
                                string cname,
@@ -125,7 +144,21 @@ namespace synti2base {
                                string requires)
     {
       featkeys.push_back(key);
+      featureEnabled[key] = false; // init everything to disabled.
       feats.push_back(FeatureDescription(key, cname, humanReadable, requires));
+    }
+    void addCapacityDescription(string key, 
+                               string cname,
+                               string humanReadable,
+                               int min,
+                               int max,
+                               int initial,
+                               string requiresf
+                               )
+    {
+      capkeys.push_back(key);
+      capValue[key] = initial;
+      caps.push_back(CapacityDescription(key,cname,humanReadable,min,max,requiresf));
     }
 
     /** Initializes the on/off -toggled feature descriptions */
@@ -168,23 +201,38 @@ namespace synti2base {
       addFeatureDescription("stereo","FEAT_STEREO","Enable stereo output","");
       addFeatureDescription("panenv","FEAT_PAN_ENVELOPE","Enable pan envelope","stereo");
     }
+
+    /** Initializes integer-type capacities of the synth. */
+    void initCapacityDescriptions(){
+      addCapacityDescription("num_channels","NUM_CHANNELS","Number of channels (patches)",1,256,16,"");
+      addCapacityDescription("num_delays","NUM_DELAY_LINES","Number of delay lines",1,8,4,"delay");
+      addCapacityDescription("num_ops","NUM_ÖPERATORS","Number of operators/oscillators per channel", 0,4,4,"fm|add");
+      addCapacityDescription("num_envs", "NUM_ENVS", "Number of envelopes per channel", 1,6,2,"");
+      addCapacityDescription("num_knees","NUM_ENV_KNEES","Number of knees per envelope", 2,5,5,"");
+      addCapacityDescription("num_mods","NUM_MODULATORS","Number of controllable modulators per channel",0,4,4,"mods");
+    }
+
   public:
     PatchBank():patches(14)
     {
       initFeatureDescriptions();
+      initCapacityDescriptions();
     };
 
     vector<FeatureDescription>::iterator
-    getFeatureBegin()
-    {
-      return feats.begin();
-    }
+    getFeatureBegin(){return feats.begin();}
 
     vector<FeatureDescription>::iterator
-    getFeatureEnd()
-    {
-      return feats.end();
-    }
+    getFeatureEnd(){return feats.end();}
+
+    vector<CapacityDescription>::iterator
+    getCapacityBegin(){return caps.begin();}
+
+    vector<CapacityDescription>::iterator
+    getCapacityEnd(){return caps.end();}
+
+    int
+    getCapacityValue(string key){return capValue[key];}
 
     vector<I4ParDescription> 
     getI4ParKeys();

@@ -4,6 +4,7 @@
 #include "PatchBank.hpp" // Maybe re-implement?
 using synti2base::PatchBank;
 using synti2base::FeatureDescription;
+using synti2base::CapacityDescription;
 
 namespace synti2gui {
   // FIXME: Move to its own hpp and cxx?
@@ -56,6 +57,18 @@ namespace synti2gui {
     std::vector<FeatureDescription>::iterator 
     getFeatureEnd(){
       return patchBank->getFeatureEnd();
+    }
+    std::vector<CapacityDescription>::iterator 
+    getCapacityBegin(){
+      return patchBank->getCapacityBegin();
+    }
+    std::vector<CapacityDescription>::iterator 
+    getCapacityEnd(){
+      return patchBank->getCapacityEnd();
+    }
+    int
+    getCapacityValue(std::string key){
+      return patchBank->getCapacityValue(key);
     }
     bool setParamValue(std::string key, float v){
       bool can_do = checkParamValue(key, v);

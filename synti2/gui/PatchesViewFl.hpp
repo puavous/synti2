@@ -12,10 +12,12 @@ namespace synti2gui {
     size_t activePatch;
     std::string lastErrorMessage;
 
+    void build_patch_editor(Fl_Group *gr, PatchBank *pbh = NULL);
+
   public:
     size_t getActivePatch(){return activePatch;}
-    bool setActivePatch(int ind){
-      if ((ind < 0) || ((size_t)ind > pb->getNumPatches())) {
+    bool setActivePatch(size_t ind){
+      if ((ind < 0) || (ind > pb->getNumPatches())) {
         lastErrorMessage = "Illegal active patch index request.";
         return false;
       } else {

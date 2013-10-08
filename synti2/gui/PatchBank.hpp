@@ -76,8 +76,10 @@ namespace synti2base {
   };
 
   class MidiMap{
+  private:
+    //initMidiMap();
   public:
-    MidiMap(){}
+    MidiMap(){/*initMidiMap();*/}
     void toStream(std::ostream &ost);
   };
 
@@ -150,11 +152,20 @@ namespace synti2base {
     vector<CapacityDescription>::iterator
     getCapacityEnd(){return caps.end();}
 
+    vector<std::string>::iterator
+    getI4Begin(size_t ipatch){return patches[ipatch].getI4Begin();}
+
+    vector<std::string>::iterator
+    getI4End(size_t ipatch){return patches[ipatch].getI4End();}
+
+    vector<std::string>::iterator
+    getFBegin(size_t ipatch){return patches[ipatch].getFBegin();}
+
     int
     getCapacityValue(string key){return caps.value(key);}
 
     void setNumPatches(int n);
-    int getNumPatches(){return patches.size();}
+    size_t getNumPatches(){return patches.size();}
     int resetPatch(int ipatch);
     int deletePatch(int ipatch);
     void loadPatch(int ipatch, istream iss);
@@ -196,6 +207,9 @@ namespace synti2base {
     void registerFeatureCallback(FeatCallback cb);
     void registerCapacityCallback(CapacityCallback cb);
 
+    I4Par const& getI4Par(size_t ipat, std::string const& key){
+      return patches[ipat].getI4Par(key);
+    }
     bool setParamValue(std::string key, float v){
       bool can_do = checkParamValue(key, v);
       if (can_do){

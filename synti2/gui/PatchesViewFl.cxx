@@ -5,6 +5,8 @@
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Counter.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Value_Input.H>
 
 #include <iostream>
 
@@ -39,7 +41,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
 
 
 /** Builds the patch editor widgets. */
-void build_patch_editor(Fl_Group *gr, PatchBank *pbh = NULL)
+  void ViewPatches::build_patch_editor(Fl_Group *gr, PatchBank *pbh)
 {
   if (pbh==NULL) {
     std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
@@ -59,57 +61,56 @@ void build_patch_editor(Fl_Group *gr, PatchBank *pbh = NULL)
   Fl_Input * widget_patch_name = new Fl_Input(150,25,90,25,"Name");
   widget_patch_name->callback(cb_patch_name,pbh);
 
-#if 0
-
   int px=280, py=25, w=75, h=25, sp=2;
   int labsz = 16;
+
+
   Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
-  box->callback(cb_send_current); box->labelsize(labsz); 
-  button_send_current = box;
+  //box->callback(cb_send_current); box->labelsize(labsz); 
+  //button_send_current = box;
 
   box = new Fl_Button(px + 1*(w+sp),py,w,h,"Send al&l");
-  box->callback(cb_send_all); box->labelsize(labsz); 
-  button_send_all = box;
+  //box->callback(cb_send_all); box->labelsize(labsz); 
+  //button_send_all = box;
 
   px += w/2;
   box = new Fl_Button(px + 2*(w+sp),py,w,h,"Save this");
-  box->callback(cb_save_current); box->labelsize(labsz); 
+  //box->callback(cb_save_current); box->labelsize(labsz); 
 
   box = new Fl_Button(px + 3*(w+sp),py,w,h,"&Save all");
-  box->callback(cb_save_all); box->labelsize(labsz); 
-
-  box = new Fl_Button(px + 4*(w+sp),py,w,h,"Ex&port C");
-  box->callback(cb_export_c); box->labelsize(labsz); 
+  //box->callback(cb_save_all); box->labelsize(labsz); 
 
   box = new Fl_Button(px + 5*(w+sp),py,w,h,"Clear this");
-  box->callback(cb_clear_current); box->labelsize(labsz); 
+  //box->callback(cb_clear_current); box->labelsize(labsz); 
 
   box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load this");
-  box->callback(cb_load_current); box->labelsize(labsz); 
+  //box->callback(cb_load_current); box->labelsize(labsz); 
 
   box = new Fl_Button(px + 7*(w+sp),py,w,h,"Load all");
-  box->callback(cb_load_all); box->labelsize(labsz);
+  //box->callback(cb_load_all); box->labelsize(labsz);
 
-  /*
-    Quit will go to a menu.
-  px += w/2;
-  box = new Fl_Button(px + 8*(w+sp),py,w,h,"&Quit");
-  box->callback(cb_exit); box->argument((long)window); box->labelsize(17); 
-  */
+  int i=0;
+  std::vector<std::string>::const_iterator i4it;
+  Fl_Value_Input *vi;
 
-  /* Parameters Valuator Widgets */
   px=5; py=50; w=25; h=20; sp=2;
-  for (int i=0; i < pd->nPars("I3"); i++){
-    /* Need to store all ptrs and have attach_to_values() */
-    Fl_Value_Input *vi = new Fl_Value_Input(px+i*(w+sp),py,w,h);
-    widgets_i3.push_back(vi);
-    vi->bounds(pd->getMin("I3",i),pd->getMax("I3",i)); 
-    vi->precision(0); vi->argument(i);
-    vi->color(colortab[pd->getGroup("I3",i)]);
-    vi->tooltip(pd->getDescription("I3", i).c_str());
-    vi->argument(i);
-    vi->callback(cb_new_i3_value);
+  //FIXME: Make a derived I4_Input / I4_Filter_Input / I4_OnOff_Input.
+  //FIXME: Include "type of GUI" and allowed values as attributes of
+  //both the derived widget and I4Par description.
+  /* Parameters Valuator Widgets */
+  for (i4it=pbh->getI4Begin(activePatch); 
+       i4it!=pbh->getI4End(activePatch);
+       ++i4it){
+    // FIXME: Actual data from desription
+    vi = new Fl_Value_Input(px+(i++)*(w+sp),py,w,h);
+    vi->tooltip(pbh->getI4Par(activePatch,*i4it).getHumanReadable().c_str());
+    vi->precision(0);
+    //vi->color(colortab[pd->getGroup("I3",i)]);
+    //vi->argument(i); // what is da argument then?
+    //vi->callback(cb_new_i3_value);
   }
+
+#if 0
 
   py=80; w=85;
   int npars = pd->nPars("F");
@@ -143,7 +144,9 @@ void build_patch_editor(Fl_Group *gr, PatchBank *pbh = NULL)
 
 
 using namespace synti2gui;
-ViewPatches::ViewPatches(int x, int y, int w, int h, const char * name, PatchBank *pbh)  : Fl_Group(x, y, w, h, name){
+  ViewPatches::ViewPatches(int x, int y, int w, int h, const char * name, PatchBank *pbh) 
+    : Fl_Group(x, y, w, h, name), activePatch(0)
+{
   pb = pbh;
   build_patch_editor(this, pb);
 }

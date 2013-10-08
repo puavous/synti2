@@ -42,7 +42,7 @@ nodefaultmake:
 tools: patchedit cltool
 
 synti2gui: $(GUIDEPS) Makefile
-	g++ -Wall -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
+	g++ -Wall -g -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
 		-Isrc -Iinclude -Itools \
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`

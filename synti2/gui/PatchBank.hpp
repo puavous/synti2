@@ -161,6 +161,9 @@ namespace synti2base {
     vector<std::string>::iterator
     getFBegin(size_t ipatch){return patches[ipatch].getFBegin();}
 
+    vector<std::string>::iterator
+    getFEnd(size_t ipatch){return patches[ipatch].getFEnd();}
+
     int
     getCapacityValue(string key){return caps.value(key);}
 
@@ -210,6 +213,11 @@ namespace synti2base {
     I4Par const& getI4Par(size_t ipat, std::string const& key){
       return patches[ipat].getI4Par(key);
     }
+
+    FPar const& getFPar(size_t ipat, std::string const& key){
+      return patches[ipat].getFPar(key);
+    }
+
     bool setParamValue(std::string key, float v){
       bool can_do = checkParamValue(key, v);
       if (can_do){

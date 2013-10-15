@@ -1,11 +1,12 @@
 #include "PatchesViewFl.hpp"
 #include "Action.hpp"
 #include <FL/Fl.H>
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Scroll.H>
-#include <FL/Fl_Counter.H>
-#include <FL/Fl_Input.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Counter.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Roller.H>
+#include <FL/Fl_Scroll.H>
 #include <FL/Fl_Value_Input.H>
 
 #include <iostream>
@@ -90,7 +91,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
   //box->callback(cb_load_all); box->labelsize(labsz);
 
   int i=0;
-  std::vector<std::string>::const_iterator i4it;
+  std::vector<std::string>::const_iterator i4it,fit;
   Fl_Value_Input *vi;
 
   px=5; py=50; w=25; h=20; sp=2;
@@ -110,25 +111,40 @@ void cb_patch_name(Fl_Widget* w, void* p){
     //vi->callback(cb_new_i3_value);
   }
 
-#if 0
-
-  py=80; w=85;
-  int npars = pd->nPars("F");
+  py=80; w=85; h=15;
+  int npars = pbh->getFEnd(activePatch) - pbh->getFBegin(activePatch);
   int ncols = 4;
   int nrows = (npars / ncols) + 1;
-  int i = 0;
+  i = 0;
+  int col=0,row=0;
+
+  for (fit=pbh->getFBegin(activePatch); 
+       fit!=pbh->getFEnd(activePatch);
+       ++fit){
+    // FIXME: Actual data from desription
+      Fl_Roller *vsf = 
+        new Fl_Roller(px+col*250,py+row*(h+sp),w,h);
+      vsf->tooltip(pbh->getFPar(activePatch,*fit).getHumanReadable().c_str());
+      vsf->type(FL_HOR_NICE_SLIDER);
+      vsf->label(pbh->getFPar(activePatch,*fit).getHumanReadable().c_str());
+      vsf->align(FL_ALIGN_RIGHT);
+
+      row++;
+      if (row>30){row=0;col++;}
+  }
+#if 0
+
   for (int col=0; col < ncols; col++){
     for (int row=0; row < nrows; row++){
       if (i==npars) break;
       /* Need to store all ptrs and have attach_to_values() */
       Fl_Roller *vsf = 
         new Fl_Roller(px+col*250,py+row*(h+sp),w,h);
-      widgets_f.push_back(vsf);
+      //widgets_f.push_back(vsf);
       /* FIXME: think? */
       vsf->bounds(pd->getMin("F",i),pd->getMax("F",i)); 
       vsf->precision(pd->getPrecision("F",i));
       vsf->color(colortab[pd->getGroup("F",i)]);
-      vsf->type(FL_HOR_NICE_SLIDER);
       vsf->label(createFvalLabel(i,pd->getDescription("F",i)).c_str());
       flbl.push_back(createFvalLabel(i,pd->getDescription("F",i)));//pd->getDescription("F",i)); // for use in the other part
       vsf->align(FL_ALIGN_RIGHT);

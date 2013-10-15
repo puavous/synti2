@@ -105,6 +105,11 @@ using namespace synti2base;
       return i4pars[key];
     }
 
+    FPar const&
+    getFPar(std::string const& key){
+      return fpars[key];
+    }
+
   };
 
 #endif

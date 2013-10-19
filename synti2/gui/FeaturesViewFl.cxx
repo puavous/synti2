@@ -11,8 +11,14 @@
 
 using synti2base::PatchBank;
 using synti2gui::ViewFeatures;
+using synti2gui::FeatureCheckButton;
 
-
+void
+ViewFeatures::feat_callback (Fl_Widget* w, void* p){
+  FeatureCheckButton *fv = (FeatureCheckButton*)w;
+  bool newstate  = fv->value() == 1;
+  std::cerr << "Should set " << fv->featkey() << " to " << (newstate?"on":"off") << std::endl;
+}
 /** FIXME: updateWidgetState() and the dependency logic and
  * updateWidgetState() as a listener to some shoutPatchBankChanged()
  * event.
@@ -28,6 +34,7 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
   Fl_Scroll *scroll = new Fl_Scroll(x+1,y+1,w-2,h-2);
   int px = x+1, py=30, ib=0, width=60, height=20, captwidth=350;
 
+  int iw = 0;
   Fl_Value_Input *vi;
   Fl_Box *lbl;
   std::vector<CapacityDescription>::const_iterator cit;
@@ -41,12 +48,13 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
 
   std::vector<FeatureDescription>::const_iterator it;
 
-  Fl_Check_Button *ckb;
+  FeatureCheckButton *ckb;
   for (it=pb->getFeatureBegin(); it!=pb->getFeatureEnd(); ++it){
-    ckb = new Fl_Check_Button(px,py+(ib++)*height,200,20,
-                              (*it).getHumanReadable().c_str());
+    ckb = new FeatureCheckButton(px,py+(ib++)*height,200,20,
+                                (*it).getHumanReadable().c_str());
+    ckb->featkey((*it).getKey());
     ckb->argument(ib); // string key as argument? No. Some descriptor object that persists throughout the execution?
-    //ckb.callback(ckb_);
+    ckb->callback(feat_callback);
   }
 
   scroll->end();

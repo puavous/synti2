@@ -15,6 +15,22 @@ using synti2base::PatchBank;
 
 namespace synti2gui{
 
+
+/** Update of an "I4" value; FIXME: We need our own widget set! */
+void cb_new_i4_value(Fl_Widget* w, void* p){
+    /*
+    Fl_I4_Valuator *myvtor = (Fl_I4_Valuator*) w;
+    myvtor->getKey() etc..;
+    then maybe.. ((PatchBank*)p)->setI4Value(key,val);
+  double val = ((Fl_Valuator*)w)->value();
+  int d = (long)p;
+
+  (*pbank)[curr_patch].setValue("I3",d,val);
+  send_to_jack_process(pbank->getSysex("I3",curr_patch,d));
+  //send_to_jack_port(MISSS_SYSEX_SET_3BIT, d, curr_patch, val);
+  */
+}
+
 /** Changes the current patch, and updates other widgets. */
 void cb_change_patch(Fl_Widget* w, void* p){
   ViewPatches *ww = (ViewPatches*)w;
@@ -114,8 +130,8 @@ void cb_patch_name(Fl_Widget* w, void* p){
     vi->tooltip(pb->getI4Par(activePatch,*i4it).getHumanReadable().c_str());
     vi->precision(0);
     //vi->color(colortab[pd->getGroup("I3",i)]);
-    //vi->argument(i); // what is da argument then?
-    //vi->callback(cb_new_i3_value);
+    //vi->argument(i); // what is da argument then? ptr type...
+    vi->callback(cb_new_i4_value);
     col++;if (col>=ncols) {col=0;row++;}
   }
 
@@ -129,7 +145,6 @@ void cb_patch_name(Fl_Widget* w, void* p){
   for (fit=pb->getFBegin(activePatch);
        fit!=pb->getFEnd(activePatch);
        ++fit){
-    // FIXME: Actual data from desription
       Fl_Roller *vsf =
         new Fl_Roller(px+col*250,py+row*(h+sp),w,h);
       vsf->tooltip(pb->getFPar(activePatch,*fit).getHumanReadable().c_str());

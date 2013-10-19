@@ -62,7 +62,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
   Fl_Input * widget_patch_name = new Fl_Input(150,25,90,25,"Name");
   widget_patch_name->callback(cb_patch_name,pb);
 
-  int px=280, py=25, w=75, h=25, sp=2;
+  int px=280, py=25, w=70, h=25, sp=2;
   int labsz = 16;
 
 
@@ -81,18 +81,26 @@ void cb_patch_name(Fl_Widget* w, void* p){
   box = new Fl_Button(px + 3*(w+sp),py,w,h,"&Save all");
   //box->callback(cb_save_all); box->labelsize(labsz);
 
-  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Clear this");
+  px += w/2;
+  box = new Fl_Button(px + 4*(w+sp),py,w,h,"Clear this");
   //box->callback(cb_clear_current); box->labelsize(labsz);
 
-  box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load this");
+  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Load this");
   //box->callback(cb_load_current); box->labelsize(labsz);
 
-  box = new Fl_Button(px + 7*(w+sp),py,w,h,"Load all");
+  box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load all");
+  //box->callback(cb_load_all); box->labelsize(labsz);
+
+  px += w/2;
+  box = new Fl_Button(px + 7*(w+sp),py,w,h,"Panic!");
   //box->callback(cb_load_all); box->labelsize(labsz);
 
   int i=0;
   std::vector<std::string>::const_iterator i4it,fit;
   Fl_Value_Input *vi;
+
+  int ncols = 30;
+  int col=0,row=0;
 
   px=5; py=50; w=25; h=20; sp=2;
   //FIXME: Make a derived I4_Input / I4_Filter_Input / I4_OnOff_Input.
@@ -102,21 +110,21 @@ void cb_patch_name(Fl_Widget* w, void* p){
   for (i4it=pb->getI4Begin(activePatch);
        i4it!=pb->getI4End(activePatch);
        ++i4it){
-    // FIXME: Actual data from desription
-    vi = new Fl_Value_Input(px+(i++)*(w+sp),py,w,h);
+    vi = new Fl_Value_Input(px+col*(w+sp),py+row*(h+sp),w,h);
     vi->tooltip(pb->getI4Par(activePatch,*i4it).getHumanReadable().c_str());
     vi->precision(0);
     //vi->color(colortab[pd->getGroup("I3",i)]);
     //vi->argument(i); // what is da argument then?
     //vi->callback(cb_new_i3_value);
+    col++;if (col>=ncols) {col=0;row++;}
   }
 
-  py=80; w=85; h=15;
+  py=100; w=85; h=15;
   int npars = pb->getFEnd(activePatch) - pb->getFBegin(activePatch);
-  int ncols = 4;
+  ncols = 4;
   int nrows = (npars / ncols) + 1;
   i = 0;
-  int col=0,row=0;
+  col=0,row=0;
 
   for (fit=pb->getFBegin(activePatch);
        fit!=pb->getFEnd(activePatch);

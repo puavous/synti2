@@ -8,7 +8,8 @@
 
 using std::string;
 
-const std::string defPatch = "# Patch design.\n"
+const std::string defPatch = "# Default patch; \n"
+  "# Acts also as the patch design documentation.\n"
   "#\n"
   "# Lines beginning with '#' and empty lines are ignored by tools.\n"
   "#\n"
@@ -331,6 +332,8 @@ void FPar::fromLine(string line){
   string smax = line_chop(line);
   string sprecision = line_chop(line);
   string sguigroup = line_chop(line);
+  string sguistyle = line_chop(line);
+  string srules = line_chop(line);
   key = skey;
   cdefine = skey;
   humanReadable = smnemonic;
@@ -338,6 +341,8 @@ void FPar::fromLine(string line){
   maxval = std::strtod(smax.c_str(), 0);
   precision = std::strtol(sprecision.c_str(), 0, 0);
   guigroup = std::strtol(sguigroup.c_str(), 0, 0);
+  guiStyle = sguistyle;
+  ruleString = srules;
 }
 
 void FPar::toStream(std::ostream &ost){
@@ -364,12 +369,16 @@ void I4Par::fromLine(string line){
   string sallowed = line_chop(line);
   string sprecision = line_chop(line);
   string sguigroup = line_chop(line);
+  string sguistyle = line_chop(line);
+  string srules = line_chop(line);
   key = skey;
   cdefine = skey;
   humanReadable = smnemonic;
   value = std::strtol(svalue.c_str(), 0, 0);
   allowed = std::strtol(sallowed.c_str(), 0, 0);
   guigroup = std::strtol(sguigroup.c_str(), 0, 0);
+  guiStyle = sguistyle;
+  ruleString = srules;
 }
 
 I4Par::I4Par(string line){

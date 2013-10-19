@@ -16,7 +16,7 @@ using namespace synti2base;
   private:
     /** Current value (mutable) */
     int value;
-    /** Allowed values [1,16] as a 16-bit pattern; 0 always allowed. */
+    /** Allowed values (mutable) [1,16] as a 16-bit pattern; 0 always allowed. */
     int allowed;
     /** Names to be used in GUI; empty->"0","1","2",.."15" */
     std::vector<std::string> names;

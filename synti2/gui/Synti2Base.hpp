@@ -15,13 +15,20 @@ namespace synti2base {
     string key;
     string cdefine;
     string humanReadable;
+    string guiStyle;
+    string ruleString;
   public:
-    Description() : key("none"),cdefine("none"),humanReadable("none"){};
-    Description(string ikey, string icdefine, string ihumanReadable)
-      :key(ikey),cdefine(icdefine),humanReadable(ihumanReadable){};
+    Description() : key("none"),cdefine("none"),humanReadable("none"),
+                    guiStyle("void"),ruleString(";"){};
+    Description(string ikey, string icdefine, string ihumanReadable,
+                string iguiStyle, string irules)
+      :key(ikey),cdefine(icdefine),humanReadable(ihumanReadable),
+       guiStyle(iguiStyle),ruleString(irules){};
     string getKey() const {return key;}
     string getCDefine() const {return cdefine;}
     string getHumanReadable() const {return humanReadable;}
+    string getGuiStyle() const {return guiStyle;}
+    string getRuleString() const {return ruleString;}
   };
 
   class FeatureDescription : public Description{
@@ -29,7 +36,7 @@ namespace synti2base {
     std::vector<std::string> reqkeys;
   public:
     FeatureDescription(string ik, string icd, string ihr, string ireq)
-      : Description(ik,icd,ihr)
+      : Description(ik,icd,ihr,"void",";")
     {
       // should split/tokenize, if many will be needed.
       reqkeys.push_back(ireq);
@@ -47,7 +54,7 @@ namespace synti2base {
     string reqf;
   public:
     CapacityDescription(string ik, string icd, string ihr, int imin, int imax, string ireqf)
-      : Description(ik,icd,ihr), min(imin), max(imax), reqf(ireqf)
+      : Description(ik,icd,ihr,"void",";"), min(imin), max(imax), reqf(ireqf)
     {}
   };
 

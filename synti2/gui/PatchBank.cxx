@@ -5,7 +5,7 @@
 
 namespace synti2base {
 
-void Capacities::addCapacityDescription(string key, 
+void Capacities::addCapacityDescription(string key,
                                         string cname,
                                         string humanReadable,
                                         int min,
@@ -33,8 +33,8 @@ void Capacities::addCapacityDescription(string key,
     ost << "# Can't really output capacities yet. But the code is here." << std::endl;
   }
 
-  
-  void Features::addFeatureDescription(string key, 
+
+  void Features::addFeatureDescription(string key,
                                        string cname,
                                        string humanReadable,
                                        string requires)
@@ -43,12 +43,12 @@ void Capacities::addCapacityDescription(string key,
     featureEnabled[key] = false; // init everything to disabled.
     feats.push_back(FeatureDescription(key, cname, humanReadable, requires));
   }
-  
+
   /** Initializes the on/off -toggled feature descriptions */
   void Features::initFeatureDescriptions(){
     /*
       These to be toggled by "COMPOSE_MODE" switch only:
-      
+
       addFeatureDescription("sysex","FEAT_COMPOSE_MODE_SYSEX","Receive SysEx (usable in compose mode only)",""); // Need this at all?
       addFeatureDescription("troubleshooting","FEAT_SAFETY","Safe mode (usable in compose mode only)","");
     */
@@ -59,7 +59,7 @@ void Capacities::addCapacityDescription(string key,
     /*
       This won't be necessary in the final version. 1/10 cents is
       enough accuracy for everybody. (or is it!? experience will tell.)
-      
+
       addFeatureDescription("pfine","FEAT_PITCH_FINE_DETUNE","Enable fine detune (convenience only!)","");
     */
     addFeatureDescription("delay","FEAT_DELAY_LINES","Enable delay effects","");
@@ -73,6 +73,7 @@ void Capacities::addCapacityDescription(string key,
     addFeatureDescription("velocity","FEAT_VELOCITY_SENSITIVITY","Respond to velocity","");
     addFeatureDescription("looping","FEAT_LOOPING_ENVELOPES","Enable looping envelopes","");
     addFeatureDescription("legato","FEAT_LEGATO","Enable legato","");
+    addFeatureDescription("pitenv","FEAT_PITCH_ENVELOPE","Enable pitch envelopes","");
     addFeatureDescription("pscale","FEAT_PITCH_SCALING","Enable pitch scaling","");
     addFeatureDescription("filter","FEAT_FILTER","Enable the lo/band/hi-pass filter","");
     addFeatureDescription("fres","FEAT_FILTER_RESO_ADJUSTABLE","Enable adjustable filter resonance","");
@@ -84,20 +85,20 @@ void Capacities::addCapacityDescription(string key,
     addFeatureDescription("stereo","FEAT_STEREO","Enable stereo output","");
     addFeatureDescription("panenv","FEAT_PAN_ENVELOPE","Enable pan envelope","stereo");
   }
- 
+
   void Features::toStream(std::ostream &ost){
     ost << "# Can't really output features yet. But the code is here." << std::endl;
   }
- 
+
   void MidiMap::toStream(std::ostream &ost){
     ost << "# Can't really output midimap yet. But the code is here." << std::endl;
   }
-  
+
   PatchBank::PatchBank():patches(14)
   {
     toStream(std::cout); /*FIXME: for debug only.*/
   };
-  
+
   void PatchBank::toStream(std::ostream & ost){
     ost << "# Output by PatchBank::toStream()" << std::endl;
     caps.toStream(ost);
@@ -108,9 +109,9 @@ void Capacities::addCapacityDescription(string key,
     }
     midimap.toStream(ost);
   }
-  
+
   void PatchBank::fromStream(std::istream & ist){
     std::cerr << "PatchBank::fromStream() Can't read yet!" << std::endl;
   }
-  
+
 }

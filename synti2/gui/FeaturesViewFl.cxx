@@ -13,15 +13,14 @@ using synti2base::PatchBank;
 using synti2gui::ViewFeatures;
 
 
-/** FIXME: Make this a member function; pbh as attribute! And then
- * updateWidgetState() and the dependency logic and
+/** FIXME: updateWidgetState() and the dependency logic and
  * updateWidgetState() as a listener to some shoutPatchBankChanged()
  * event.
  */
-void build_feature_selector(int x, int y, int w, int h, 
-                            PatchBank *pbh = NULL)
+void
+ViewFeatures::build_feature_selector(int x, int y, int w, int h)
 {
-  if (pbh==NULL) {
+  if (pb==NULL) {
     std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
     return;
   }
@@ -32,18 +31,18 @@ void build_feature_selector(int x, int y, int w, int h,
   Fl_Value_Input *vi;
   Fl_Box *lbl;
   std::vector<CapacityDescription>::const_iterator cit;
-  for (cit=pbh->getCapacityBegin(); cit!= pbh->getCapacityEnd(); ++cit){
+  for (cit=pb->getCapacityBegin(); cit!= pb->getCapacityEnd(); ++cit){
     lbl = new Fl_Box(px,py,captwidth,height,(*cit).getHumanReadable().c_str());
     lbl->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
     vi = new Fl_Value_Input(px+captwidth,py,width,height);py+=height;
-    vi->value(pbh->getCapacityValue((*cit).getKey()));
+    vi->value(pb->getCapacityValue((*cit).getKey()));
     //vi->callback(vi_);
   }
 
   std::vector<FeatureDescription>::const_iterator it;
-  
+
   Fl_Check_Button *ckb;
-  for (it=pbh->getFeatureBegin(); it!=pbh->getFeatureEnd(); ++it){
+  for (it=pb->getFeatureBegin(); it!=pb->getFeatureEnd(); ++it){
     ckb = new Fl_Check_Button(px,py+(ib++)*height,200,20,
                               (*it).getHumanReadable().c_str());
     ckb->argument(ib); // string key as argument? No. Some descriptor object that persists throughout the execution?
@@ -54,11 +53,11 @@ void build_feature_selector(int x, int y, int w, int h,
 }
 
 
-ViewFeatures::ViewFeatures(int x, int y, int w, int h, 
-                           const char * name, 
-                           PatchBank *pbh)
-  : Fl_Group(x, y, w, h, name)
+ViewFeatures::ViewFeatures(int x, int y, int w, int h,
+                           const char * name,
+                           PatchBank *ipb)
+  : Fl_Group(x, y, w, h, name), pb(ipb)
 {
-  build_feature_selector(x,y,w,h,pbh);
+  build_feature_selector(x,y,w,h);
   this->end();
 }

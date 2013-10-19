@@ -8,7 +8,7 @@
 using synti2base::PatchBank;
 using synti2gui::ViewExeBuilder;
 
-void build_exe_builder(int x, int y, int w, int h, 
+void build_exe_builder(int x, int y, int w, int h,
                          PatchBank *pbh = NULL)
 {
   if (pbh==NULL) {
@@ -22,8 +22,8 @@ void build_exe_builder(int x, int y, int w, int h,
 }
 
 
-ViewExeBuilder::ViewExeBuilder(int x, int y, int w, int h, 
-                                 const char * name, 
+ViewExeBuilder::ViewExeBuilder(int x, int y, int w, int h,
+                                 const char * name,
                                  PatchBank *pbh)
   : Fl_Group(x, y, w, h, name)
 {

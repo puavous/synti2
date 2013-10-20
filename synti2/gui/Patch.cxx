@@ -10,6 +10,7 @@ using std::string;
 
 const std::string defPatch = "# Default patch; \n"
   "# Acts also as the patch design documentation.\n"
+  "# FIXME: Separate the design and storage formats.. \n"
   "#\n"
   "# Lines beginning with '#' and empty lines are ignored by tools.\n"
   "#\n"

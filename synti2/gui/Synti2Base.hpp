@@ -13,26 +13,6 @@ using std::vector;
 
 namespace synti2base {
 
-#if 0
-  /** Derive this to update GUI when a feature is turned on/off. */
-  class FeatCallback {
-  public:
-    virtual void featureStateWasSet(const std::string &key,bool enabled)
-    {
-      std::cerr << "Using underived FeatCallback." << std::endl;
-    };
-  };
-
-  /** Derive this to update GUI when a capacity is changed. */
-  class CapacityCallback {
-  public:
-    virtual void capacityWasSet(const std::string &key,int state)
-    {
-      std::cerr << "Using underived CapacityCallback." << std::endl;
-    };
-  };
-#endif
-
   /** Derive this to do something when rules are either met or not. */
   class RuleAction {
   public:
@@ -54,7 +34,9 @@ namespace synti2base {
           if (ra_ptr != NULL) {
             /*delete ra_ptr;*/
             /* FIXME: Memory leak. (I suck and need my Java..)
-               No.. just need some reference counting. TODO.
+               No.. just need some reference counting here. TODO.
+               Only object so far that needs it.. so could count itself(?):
+               ra_ptr->nref--;
             */
             std::cerr << "should be counting refs here... " << std::endl;
             }
@@ -68,36 +50,6 @@ namespace synti2base {
       RuleAction const * getRuleAction() const {return ra_ptr;}
   };
 
-#if 0
-  /** Derive this to update GUI when a capacity is changed. */
-  class CapacityCallback {
-  public:
-    virtual void changedTo(int val)
-    {
-        std::cerr << "Using underived CapacityCallback. " << val << std::endl;
-    };
-  };
-#endif
-
-/*
-  class RuleCapacityCallback : public CapacityCallback {
-  private:
-      RuleAction action;
-      std::vector<RuleChecker> checks;
-  public:
-      virtual void changedTo(int val){
-      bool status = true;
-      std::vector<RuleChecker> checks;
-      std::vector<RuleChecker>::const_iterator c;
-      for(c=checks.begin();c<checks.end();++c){
-          status &= *c.check(val);
-      }
-      ra.action(status);
-      RuleCapacityCallback(RuleAction a): CapacityCallback(), action(a) {};
-      void addRuleChecker(RuleChecker){checks.push_back(c);}ĶĶ
-  };
-*/
-
   class Description {
   protected:
     string key;
@@ -105,7 +57,6 @@ namespace synti2base {
     string humanReadable;
     string guiStyle;
     string ruleString;
-    //std::vector<CapacityCallback> ccbs;
   public:
     Description() : key("none"),cdefine("none"),humanReadable("none"),
                     guiStyle("void"),ruleString(";"){};

@@ -139,17 +139,6 @@ void cb_patch_name(Fl_Widget* w, void* p){
     RuleSet rs = pb->getI4Par(activePatch,*i4it).getRuleSet();
     rs.ownThisAction(new RuleAction());
     pb->registerRuleAction(rs);
-    //pb->registerRuleAction(pb->getI4Par(activePatch,*i4it), ra);
-
-
-    //std::vector<ThresholdRuleChecker>::const_iterator icab;
-    //std::vector<ThresholdRuleChecker> const & cbs
-    //   = pb->getI4Par(activePatch,*i4it).registerRuleActions();
-    //for(icab=cbs.begin();icab<cbs.end();++icab){
-    //    /* FIXME: Parse rules and make them callbacks/listeners */
-    //
-    //    pb->registerCapfeatListener("add",*icab);
-    //}
 
   }
 

@@ -10,10 +10,7 @@
 #include "Synti2Base.hpp"
 #include "Patch.hpp"
 
-using std::string;
-using std::vector;
-using std::map;
-using std::istream;
+using namespace std;
 
 namespace synti2base {
 
@@ -26,9 +23,9 @@ namespace synti2base {
    */
   class Capacities {
   private:
-    std::vector<string> capkeys;
-    std::vector<CapacityDescription> caps;
-    std::map<string,int> capValue;
+    vector<string> capkeys;
+    vector<CapacityDescription> caps;
+    map<string,int> capValue;
     void addCapacityDescription(string key,
                                 string cname,
                                 string humanReadable,
@@ -41,17 +38,17 @@ namespace synti2base {
     void initCapacityDescriptions();
   public:
     Capacities(){initCapacityDescriptions();}
-    std::vector<CapacityDescription>::iterator
+    vector<CapacityDescription>::iterator
     begin(){return caps.begin();}
 
-    std::vector<CapacityDescription>::iterator
+    vector<CapacityDescription>::iterator
     end(){return caps.end();}
 
-    int value(std::string key){
+    int value(string key){
       return capValue[key];
     }
-    bool hasKey(std::string key){return capValue.find(key) != capValue.end();}
-    void toStream(std::ostream &ost);
+    bool hasKey(string key){return capValue.find(key) != capValue.end();}
+    void toStream(ostream &ost);
   };
 
   /** "Features" of a synti2 stand-alone compilation - boolean on/off
@@ -60,9 +57,9 @@ namespace synti2base {
    */
   class Features {
   private:
-    std::vector<string> featkeys;
-    std::vector<FeatureDescription> feats;
-    std::map<string,bool> featureEnabled;
+    vector<string> featkeys;
+    vector<FeatureDescription> feats;
+    map<string,bool> featureEnabled;
     void addFeatureDescription(string key,
                                string cname,
                                string humanReadable,
@@ -72,18 +69,18 @@ namespace synti2base {
   public:
     Features(){initFeatureDescriptions();}
 
-    std::vector<FeatureDescription>::iterator
+    vector<FeatureDescription>::iterator
     begin(){return feats.begin();}
 
-    std::vector<FeatureDescription>::iterator
+    vector<FeatureDescription>::iterator
     end(){return feats.end();}
 
-    bool hasKey(std::string key){
+    bool hasKey(string key){
         return featureEnabled.find(key) != featureEnabled.end();
     }
-    int value(std::string key){return featureEnabled[key]?1:0;}
+    int value(string key){return featureEnabled[key]?1:0;}
 
-    void toStream(std::ostream &ost);
+    void toStream(ostream &ost);
   };
 
   class MidiMap{
@@ -91,7 +88,7 @@ namespace synti2base {
     //initMidiMap();
   public:
     MidiMap(){/*initMidiMap();*/}
-    void toStream(std::ostream &ost);
+    void toStream(ostream &ost);
   };
 
 
@@ -114,41 +111,26 @@ namespace synti2base {
     Features feats;
     Capacities caps;
     MidiMap midimap;
-    std::vector<Patch> patches;
-    //std::map<std::string, std::vector<CapacityCallback> > capfeat_listeners;
+    vector<Patch> patches;
 
     /** RuleSets and their actions to be performed upon cap/feat change: */
-    std::map<std::string, std::vector<RuleSet> > capfeat_rulesets;
+    map<string, vector<RuleSet> > capfeat_rulesets;
 
-    std::string lastErrorMessage;
+    string lastErrorMessage;
 
     /** */
-    bool checkParamValue(std::string key, float v){
+    bool checkParamValue(string key, float v){
       lastErrorMessage = "None shall pass (sanity check unimplemented)";
       return false; /*FIXME: Implement.*/
     }
-
-/*
-    void notifyCapfeatListeners(std::string key, int value){
-        if (capfeat_listeners.find(key)==capfeat_listeners.end()){
-            std::cerr << "No registered listeners for " << key << std::endl;
-            return;
-        }
-        std::vector<CapacityCallback> & cbvect = capfeat_listeners[key];
-        std::vector<CapacityCallback>::iterator it;
-        for(it=cbvect.begin();it<cbvect.end();++it){
-            (*it).changedTo(value);
-        }
-    }
-    */
 
   public:
     PatchBank();
 
     /** Writes a .s2bank to a stream. */
-    void toStream(std::ostream & ost);
+    void toStream(ostream & ost);
     /** Reads a .s2bank from a stream. */
-    void fromStream(std::istream & ist);
+    void fromStream(istream & ist);
 
     vector<FeatureDescription>::iterator
     getFeatureBegin(){return feats.begin();}
@@ -162,16 +144,16 @@ namespace synti2base {
     vector<CapacityDescription>::iterator
     getCapacityEnd(){return caps.end();}
 
-    vector<std::string>::iterator
+    vector<string>::iterator
     getI4Begin(size_t ipatch){return patches[ipatch].getI4Begin();}
 
-    vector<std::string>::iterator
+    vector<string>::iterator
     getI4End(size_t ipatch){return patches[ipatch].getI4End();}
 
-    vector<std::string>::iterator
+    vector<string>::iterator
     getFBegin(size_t ipatch){return patches[ipatch].getFBegin();}
 
-    vector<std::string>::iterator
+    vector<string>::iterator
     getFEnd(size_t ipatch){return patches[ipatch].getFEnd();}
 
     int
@@ -198,21 +180,19 @@ namespace synti2base {
     vector<int>
     getEffectiveParAsSysEx(int ipatch, const string &parkey);
 
-    //std::vector<int>getPatchAsMIDISysex(int ipatch);
+    //vector<int>getPatchAsMIDISysex(int ipatch);
     /** Enables an on/off feature. Other features may be enabled as a
      *  side-effect. Functions registered by registerFeatureCallback()
      *  will be called.
      */
     void
     setFeature(const string &key, int value){
-        std::cerr << "Shouldda hava set feature '" << key << "' to " << value << std::endl;
-        //notifyCapfeatListeners(key,value);
+        cerr << "Shouldda hava set feature '" << key << "' to " << value << endl;
         callRuleActions(key);
     }
     void
     setCapacity(const string &key, int value){
-        std::cerr << "Shouldda hava set " << key << " to " << value << std::endl;
-        //notifyCapfeatListeners(key,value);
+        cerr << "Shouldda hava set " << key << " to " << value << endl;
         callRuleActions(key);
     }
     //bool isFeatureEnabled(const string &key);
@@ -226,30 +206,23 @@ namespace synti2base {
         }
         return -1;
     }
-/*
-    void registerFeatureCallback(FeatCallback cb);
-    void registerCapacityCallback(CapacityCallback cb);
 
-    void registerCapfeatListener(std::string key, CapacityCallback cb){
-        capfeat_listeners[key].push_back(cb);
-    }
-*/
     void registerRuleAction(RuleSet irs){
-        std::vector<std::string> keys = irs.getKeys();
+        vector<string> keys = irs.getKeys();
         for (int i=0; i<keys.size(); ++i){
             capfeat_rulesets[keys[i]].push_back(irs);
         }
     }
 
-    void callRuleActions(std::string const & key){
-        std::vector<RuleSet> const & rss = capfeat_rulesets[key];
-        std::vector<RuleSet>::const_iterator it;
+    void callRuleActions(string const & key){
+        vector<RuleSet> const & rss = capfeat_rulesets[key];
+        vector<RuleSet>::const_iterator it;
         for(it=rss.begin();it<rss.end();++it){
-            std::vector<std::string> const & ks = (*it).getKeys();
-            std::vector<int> const & vs = (*it).getThresholds();
+            vector<string> const & ks = (*it).getKeys();
+            vector<int> const & vs = (*it).getThresholds();
             bool cond = true;
             for(int i=0; i<ks.size(); ++i){
-                std::cerr << "Conditional " << ks[i] << " > " << vs[i] << std::endl;
+                cerr << "Conditional " << ks[i] << " > " << vs[i] << endl;
                 cond &= getFeatCap(ks[i]) > vs[i];
             }
             RuleAction const *hmm = (*it).getRuleAction();
@@ -257,15 +230,15 @@ namespace synti2base {
         }
     }
 
-    I4Par const& getI4Par (size_t ipat, std::string const& key) const {
+    I4Par const& getI4Par (size_t ipat, string const& key) const {
       return patches[ipat].getI4Par(key);
     }
 
-    FPar const& getFPar(size_t ipat, std::string const& key) const {
+    FPar const& getFPar(size_t ipat, string const& key) const {
       return patches[ipat].getFPar(key);
     }
 
-    bool setParamValue(std::string key, float v){
+    bool setParamValue(string key, float v){
       bool can_do = checkParamValue(key, v);
       if (can_do){
         //privSetParam(key,v);
@@ -274,7 +247,7 @@ namespace synti2base {
       }
       return can_do;
     };
-    std::string getLastErrorMessage(){return lastErrorMessage;}
+    string getLastErrorMessage(){return lastErrorMessage;}
 
   };
 

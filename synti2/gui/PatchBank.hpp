@@ -195,12 +195,11 @@ namespace synti2base {
      */
     void
     setFeature(const string &key, int value){
-std::cerr << "Shouldda hava set feature '" << key << "' to " << value << std::endl;
+        std::cerr << "Shouldda hava set feature '" << key << "' to " << value << std::endl;
     }
     void
     setCapacity(const string &key, int value){
-  std::cerr << "Shouldda hava set " << key << " to " << value << std::endl;
-
+        std::cerr << "Shouldda hava set " << key << " to " << value << std::endl;
     }
     //bool isFeatureEnabled(const string &key);
     void registerFeatureCallback(FeatCallback cb);

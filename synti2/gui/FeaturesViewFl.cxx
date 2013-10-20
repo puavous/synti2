@@ -28,11 +28,6 @@ ViewFeatures::cap_callback (Fl_Widget* w, void* p){
   fv->pb->setCapacity(keys[ind],fv->value());
 }
 
-
-/** FIXME: updateWidgetState() and the dependency logic and
- * updateWidgetState() as a listener to some shoutPatchBankChanged()
- * event.
- */
 void
 ViewFeatures::build_feature_selector(int x, int y, int w, int h)
 {
@@ -44,10 +39,9 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
   Fl_Scroll *scroll = new Fl_Scroll(x+1,y+1,w-2,h-2);
   int px = x+1, py=30, width=60, height=20, captwidth=350;
 
-  int iw = 0;
+  std::vector<CapacityDescription>::const_iterator cit;
   FeatureValueInput *vi;
   Fl_Box *lbl;
-  std::vector<CapacityDescription>::const_iterator cit;
   for (cit=pb->getCapacityBegin(); cit!= pb->getCapacityEnd(); ++cit){
     lbl = new Fl_Box(px,py,captwidth,height,(*cit).getHumanReadable().c_str());
     lbl->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
@@ -63,14 +57,12 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
     py+=height;
   }
 
-  std::vector<FeatureDescription>::const_iterator it;
-
+  std::vector<FeatureDescription>::const_iterator fit;
   FeatureCheckButton *ckb;
-  for (it=pb->getFeatureBegin(); it!=pb->getFeatureEnd(); ++it){
+  for (fit=pb->getFeatureBegin(); fit!=pb->getFeatureEnd(); ++fit){
     ckb = new FeatureCheckButton(px,py,200,20,
-                                (*it).getHumanReadable().c_str(),pb);
-    //ckb->featkey((*it).getKey());
-    keys.push_back((*it).getKey());
+                                (*fit).getHumanReadable().c_str(),pb);
+    keys.push_back((*fit).getKey());
     ckb->argument(keys.size()-1);
     ckb->callback(feat_callback);
     py += height;

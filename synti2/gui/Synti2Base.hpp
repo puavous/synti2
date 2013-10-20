@@ -6,6 +6,8 @@
 #include <vector>
 
 #include <iostream>
+#include <sstream>
+using std::stringstream;
 using std::string;
 using std::map;
 using std::vector;
@@ -72,7 +74,19 @@ namespace synti2base {
     /* Thresholds (key, min value) seem enough for current purposes. */
     RuleSet const getRuleSet() const {
         RuleSet r;
-        r.addThreshold("add",0); // FIXME: Parse the rulestring here.
+        string rsts = ruleString;
+        while(!rsts.empty()){
+            size_t isep = rsts.find_first_of(";");
+            size_t iop  = rsts.find_first_of(">");
+            string key  = rsts.substr(0,iop);
+            string sval = rsts.substr(iop+1,isep-iop);
+            if (isep==string::npos) isep=rsts.length();
+            rsts.erase(0,isep+1);
+            int intval;
+            stringstream(sval) >> intval;
+            //std::cerr<<"'" << key << "'>'" << sval << "'" << "|" << rsts <<std::endl;
+            r.addThreshold(key,intval);
+        }
         return r;
     }
   };

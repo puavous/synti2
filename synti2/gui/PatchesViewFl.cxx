@@ -159,12 +159,11 @@ void cb_patch_name(Fl_Widget* w, void* p){
       vsf->label(pb->getFPar(activePatch,*fit).getHumanReadable().c_str());
       vsf->align(FL_ALIGN_RIGHT);
 
-#if 0
-      CapacityCallback cab;
-      /* FIXME: Parse rules and make them callbacks/listeners */
-      pb->registerCapfeatListener("add",
-                                  cab);
-#endif // 0
+      //FIXME: WidgetEnablerRuleAction ra(vi);
+      RuleAction ra;
+      RuleSet rs = pb->getFPar(activePatch,*fit).getRuleSet();
+      rs.ownThisAction(new RuleAction());
+      pb->registerRuleAction(rs);
 
       row++;
       if (row>30){row=0;col++;}

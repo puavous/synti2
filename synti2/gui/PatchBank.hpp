@@ -29,7 +29,7 @@ namespace synti2base {
     std::vector<string> capkeys;
     std::vector<CapacityDescription> caps;
     std::map<string,int> capValue;
-    void addCapacityDescription(string key, 
+    void addCapacityDescription(string key,
                                 string cname,
                                 string humanReadable,
                                 int min,
@@ -60,7 +60,7 @@ namespace synti2base {
     std::vector<string> featkeys;
     std::vector<FeatureDescription> feats;
     std::map<string,bool> featureEnabled;
-    void addFeatureDescription(string key, 
+    void addFeatureDescription(string key,
                                string cname,
                                string humanReadable,
                                string requires);
@@ -103,7 +103,7 @@ namespace synti2base {
 
 
 
-  /** 
+  /**
    * PatchBank stores everything related to a synti2 patch bank, i.e.,
    * the enabled features, selected synth capabilities, GUI
    * preferences, MIDI mapping, and the patches themselves.
@@ -173,19 +173,19 @@ namespace synti2base {
     int deletePatch(int ipatch);
     void loadPatch(int ipatch, istream iss);
 
-    string 
+    string
     getPatchAsString(int ipatch);
 
-    vector<vector<int> > 
+    vector<vector<int> >
     getPatchAsSysExes(int ipatch);
 
-    float 
+    float
     getStoredParAsFloat(int ipatch, const string &parkey);
 
-    float 
+    float
     getEffectiveParAsFloat(int ipatch, const string &parkey);
 
-    vector<int> 
+    vector<int>
     getEffectiveParAsSysEx(int ipatch, const string &parkey);
 
     //std::vector<int>getPatchAsMIDISysex(int ipatch);
@@ -193,19 +193,15 @@ namespace synti2base {
      *  side-effect. Functions registered by registerFeatureCallback()
      *  will be called.
      */
-    void 
-    enableFeature(const string &key);
-    /** Disables an on/off feature. Other features may be disabled as
-     *  a side-effect. Functions registered by
-     *  registerFeatureCallback() will be called.
-     */
-    void 
-    disableFeature(const string &key);
-    /** Sets a capacity value. Functions registered by
-     *  setCapacityCallback() will be called.
-     */
-    void 
-    setCapacity(const string &key, int value);
+    void
+    setFeature(const string &key, int value){
+std::cerr << "Shouldda hava set feature '" << key << "' to " << value << std::endl;
+    }
+    void
+    setCapacity(const string &key, int value){
+  std::cerr << "Shouldda hava set " << key << " to " << value << std::endl;
+
+    }
     //bool isFeatureEnabled(const string &key);
     void registerFeatureCallback(FeatCallback cb);
     void registerCapacityCallback(CapacityCallback cb);

@@ -56,6 +56,8 @@ namespace synti2base {
     CapacityDescription(string ik, string icd, string ihr, int imin, int imax, string ireqf)
       : Description(ik,icd,ihr,"void",";"), min(imin), max(imax), reqf(ireqf)
     {}
+    int getMin() const {return min;}
+    int getMax() const {return max;}
   };
 
 }

@@ -52,17 +52,16 @@ void Capacities::addCapacityDescription(string key,
       addFeatureDescription("sysex","FEAT_COMPOSE_MODE_SYSEX","Receive SysEx (usable in compose mode only)",""); // Need this at all?
       addFeatureDescription("troubleshooting","FEAT_SAFETY","Safe mode (usable in compose mode only)","");
     */
-    addFeatureDescription("fm","FEAT_APPLY_FM","Use frequency modulation","");
-    addFeatureDescription("add","FEAT_APPLY_ADD","Use addition matrix","");
-    addFeatureDescription("noise","FEAT_NOISE_SOURCE","Use noise source","");
-    addFeatureDescription("pdetune","FEAT_PITCH_DETUNE","Enable detuning of operators","");
     /*
       This won't be necessary in the final version. 1/10 cents is
       enough accuracy for everybody. (or is it!? experience will tell.)
-
       addFeatureDescription("pfine","FEAT_PITCH_FINE_DETUNE","Enable fine detune (convenience only!)","");
     */
-    addFeatureDescription("delay","FEAT_DELAY_LINES","Enable delay effects","");
+    addFeatureDescription("fm","FEAT_APPLY_FM","Use frequency modulation","");
+    addFeatureDescription("add","FEAT_APPLY_ADD","Use addition (source mixing)","");
+    addFeatureDescription("noise","FEAT_NOISE_SOURCE","Use noise source","");
+    addFeatureDescription("pdetune","FEAT_PITCH_DETUNE","Enable detuning of operators","");
+    addFeatureDescription("delay","FEAT_DELAY_LINES","Enable delay lines","");
     addFeatureDescription("squash","FEAT_OUTPUT_SQUASH","Squash function at output","");
     addFeatureDescription("phase","FEAT_RESET_PHASE","Enable phase reset on note-on","");
     addFeatureDescription("waves","FEAT_EXTRA_WAVETABLES","Generate extra wavetables with harmonics","");

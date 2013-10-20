@@ -2,9 +2,26 @@
 #define SYNTI2_GUI_VIEWPATCHES_FL
 #include <FL/Fl_Group.H>
 #include "PatchBank.hpp"
+#include "Synti2Base.hpp"
 using synti2base::PatchBank;
 
+
 namespace synti2gui {
+
+    class WidgetEnablerRuleAction: public RuleAction{
+    private:
+        Fl_Widget *target;
+    public:
+        WidgetEnablerRuleAction(Fl_Widget *t):target(t){};
+        virtual void action (bool ruleOutcome) const {
+            std::cerr << "tgt:" << target->tooltip() << " " << ruleOutcome << std::endl;
+            if (ruleOutcome){
+                target->activate();
+            } else {
+                target->deactivate();
+            }
+        }
+    };
 
   class ViewPatches: public Fl_Group {
   private:

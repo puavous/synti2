@@ -18,7 +18,8 @@ namespace synti2base {
   /** Derive this to do something when rules are either met or not. */
   class RuleAction {
   public:
-      virtual void action (bool ruleOutcome) const {
+      virtual void action (bool ruleOutcome) //const = 0;
+      const {
           std::cerr << "Using underived RuleAction. " << ruleOutcome << std::endl;
       }
   };

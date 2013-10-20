@@ -47,6 +47,9 @@ namespace synti2base {
     int value(string key){
       return capValue[key];
     }
+    void setValue(string key, int val){
+        capValue[key]=val;
+    }
     bool hasKey(string key){return capValue.find(key) != capValue.end();}
     void toStream(ostream &ost);
   };
@@ -78,7 +81,12 @@ namespace synti2base {
     bool hasKey(string key){
         return featureEnabled.find(key) != featureEnabled.end();
     }
+
     int value(string key){return featureEnabled[key]?1:0;}
+
+    void setValue(string key, int enabled){
+        featureEnabled[key] = (enabled > 0);
+    }
 
     void toStream(ostream &ost);
   };
@@ -187,12 +195,12 @@ namespace synti2base {
      */
     void
     setFeature(const string &key, int value){
-        cerr << "Shouldda hava set feature '" << key << "' to " << value << endl;
+        feats.setValue(key, value);
         callRuleActions(key);
     }
     void
     setCapacity(const string &key, int value){
-        cerr << "Shouldda hava set " << key << " to " << value << endl;
+        caps.setValue(key, value);
         callRuleActions(key);
     }
     //bool isFeatureEnabled(const string &key);
@@ -223,10 +231,11 @@ namespace synti2base {
             bool cond = true;
             for(int i=0; i<ks.size(); ++i){
                 cerr << "Conditional " << ks[i] << " > " << vs[i] << endl;
-                cond &= getFeatCap(ks[i]) > vs[i];
+                cerr << "By values   " << getFeatCap(ks[i])
+                  << " > " << vs[i] << endl;
+                cond &= (getFeatCap(ks[i]) > vs[i]);
             }
-            RuleAction const *hmm = (*it).getRuleAction();
-            hmm->action(cond);
+            (*it).getRuleAction()->action(cond);
         }
     }
 

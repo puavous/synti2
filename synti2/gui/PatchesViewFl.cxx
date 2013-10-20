@@ -134,10 +134,9 @@ void cb_patch_name(Fl_Widget* w, void* p){
     vi->callback(cb_new_i4_value);
     col++;if (col>=ncols) {col=0;row++;}
 
-    //FIXME: WidgetEnablerRuleAction ra(vi);
-    RuleAction ra;
+
     RuleSet rs = pb->getI4Par(activePatch,*i4it).getRuleSet();
-    rs.ownThisAction(new RuleAction());
+    rs.ownThisAction(new WidgetEnablerRuleAction(vi));
     pb->registerRuleAction(rs);
 
   }
@@ -159,10 +158,8 @@ void cb_patch_name(Fl_Widget* w, void* p){
       vsf->label(pb->getFPar(activePatch,*fit).getHumanReadable().c_str());
       vsf->align(FL_ALIGN_RIGHT);
 
-      //FIXME: WidgetEnablerRuleAction ra(vi);
-      RuleAction ra;
       RuleSet rs = pb->getFPar(activePatch,*fit).getRuleSet();
-      rs.ownThisAction(new RuleAction());
+      rs.ownThisAction(new WidgetEnablerRuleAction(vsf));
       pb->registerRuleAction(rs);
 
       row++;

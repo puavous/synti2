@@ -133,6 +133,24 @@ void cb_patch_name(Fl_Widget* w, void* p){
     //vi->argument(i); // what is da argument then? ptr type...
     vi->callback(cb_new_i4_value);
     col++;if (col>=ncols) {col=0;row++;}
+
+    //FIXME: WidgetEnablerRuleAction ra(vi);
+    RuleAction ra;
+    RuleSet rs = pb->getI4Par(activePatch,*i4it).getRuleSet();
+    rs.ownThisAction(new RuleAction());
+    pb->registerRuleAction(rs);
+    //pb->registerRuleAction(pb->getI4Par(activePatch,*i4it), ra);
+
+
+    //std::vector<ThresholdRuleChecker>::const_iterator icab;
+    //std::vector<ThresholdRuleChecker> const & cbs
+    //   = pb->getI4Par(activePatch,*i4it).registerRuleActions();
+    //for(icab=cbs.begin();icab<cbs.end();++icab){
+    //    /* FIXME: Parse rules and make them callbacks/listeners */
+    //
+    //    pb->registerCapfeatListener("add",*icab);
+    //}
+
   }
 
   py=100; w=85; h=15;
@@ -152,6 +170,13 @@ void cb_patch_name(Fl_Widget* w, void* p){
       vsf->label(pb->getFPar(activePatch,*fit).getHumanReadable().c_str());
       vsf->align(FL_ALIGN_RIGHT);
 
+#if 0
+      CapacityCallback cab;
+      /* FIXME: Parse rules and make them callbacks/listeners */
+      pb->registerCapfeatListener("add",
+                                  cab);
+#endif // 0
+
       row++;
       if (row>30){row=0;col++;}
   }
@@ -170,7 +195,6 @@ void cb_patch_name(Fl_Widget* w, void* p){
       vsf->color(colortab[pd->getGroup("F",i)]);
       vsf->label(createFvalLabel(i,pd->getDescription("F",i)).c_str());
       flbl.push_back(createFvalLabel(i,pd->getDescription("F",i)));//pd->getDescription("F",i)); // for use in the other part
-      vsf->align(FL_ALIGN_RIGHT);
       vsf->callback(cb_new_f_value);
       vsf->argument(i);
       i++;

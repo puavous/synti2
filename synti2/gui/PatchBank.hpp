@@ -43,11 +43,14 @@ namespace synti2base {
     Capacities(){initCapacityDescriptions();}
     std::vector<CapacityDescription>::iterator
     begin(){return caps.begin();}
+
     std::vector<CapacityDescription>::iterator
     end(){return caps.end();}
+
     int value(std::string key){
       return capValue[key];
     }
+    bool hasKey(std::string key){return capValue.find(key) != capValue.end();}
     void toStream(std::ostream &ost);
   };
 
@@ -68,10 +71,18 @@ namespace synti2base {
     void initFeatureDescriptions();
   public:
     Features(){initFeatureDescriptions();}
+
     std::vector<FeatureDescription>::iterator
     begin(){return feats.begin();}
+
     std::vector<FeatureDescription>::iterator
     end(){return feats.end();}
+
+    bool hasKey(std::string key){
+        return featureEnabled.find(key) != featureEnabled.end();
+    }
+    int value(std::string key){return featureEnabled[key]?1:0;}
+
     void toStream(std::ostream &ost);
   };
 
@@ -82,25 +93,6 @@ namespace synti2base {
     MidiMap(){/*initMidiMap();*/}
     void toStream(std::ostream &ost);
   };
-
-  /** Derive this to update GUI when a feature is turned on/off. */
-  class FeatCallback {
-  public:
-    virtual void featureStateWasSet(const std::string &key,bool enabled)
-    {
-      std::cerr << "Using underived FeatCallback." << std::endl;
-    };
-  };
-
-  /** Derive this to update GUI when a capacity is changed. */
-  class CapacityCallback {
-  public:
-    virtual void capacityWasSet(const std::string &key,int state)
-    {
-      std::cerr << "Using underived CapacityCallback." << std::endl;
-    };
-  };
-
 
 
   /**
@@ -123,6 +115,10 @@ namespace synti2base {
     Capacities caps;
     MidiMap midimap;
     std::vector<Patch> patches;
+    //std::map<std::string, std::vector<CapacityCallback> > capfeat_listeners;
+
+    /** RuleSets and their actions to be performed upon cap/feat change: */
+    std::map<std::string, std::vector<RuleSet> > capfeat_rulesets;
 
     std::string lastErrorMessage;
 
@@ -131,6 +127,20 @@ namespace synti2base {
       lastErrorMessage = "None shall pass (sanity check unimplemented)";
       return false; /*FIXME: Implement.*/
     }
+
+/*
+    void notifyCapfeatListeners(std::string key, int value){
+        if (capfeat_listeners.find(key)==capfeat_listeners.end()){
+            std::cerr << "No registered listeners for " << key << std::endl;
+            return;
+        }
+        std::vector<CapacityCallback> & cbvect = capfeat_listeners[key];
+        std::vector<CapacityCallback>::iterator it;
+        for(it=cbvect.begin();it<cbvect.end();++it){
+            (*it).changedTo(value);
+        }
+    }
+    */
 
   public:
     PatchBank();
@@ -196,20 +206,62 @@ namespace synti2base {
     void
     setFeature(const string &key, int value){
         std::cerr << "Shouldda hava set feature '" << key << "' to " << value << std::endl;
+        //notifyCapfeatListeners(key,value);
+        callRuleActions(key);
     }
     void
     setCapacity(const string &key, int value){
         std::cerr << "Shouldda hava set " << key << " to " << value << std::endl;
+        //notifyCapfeatListeners(key,value);
+        callRuleActions(key);
     }
     //bool isFeatureEnabled(const string &key);
+
+    int
+    getFeatCap(const string &key){
+        if(feats.hasKey(key)){
+            return feats.value(key);
+        } else if (caps.hasKey(key)) {
+            return caps.value(key);
+        }
+        return -1;
+    }
+/*
     void registerFeatureCallback(FeatCallback cb);
     void registerCapacityCallback(CapacityCallback cb);
 
-    I4Par const& getI4Par(size_t ipat, std::string const& key){
+    void registerCapfeatListener(std::string key, CapacityCallback cb){
+        capfeat_listeners[key].push_back(cb);
+    }
+*/
+    void registerRuleAction(RuleSet irs){
+        std::vector<std::string> keys = irs.getKeys();
+        for (int i=0; i<keys.size(); ++i){
+            capfeat_rulesets[keys[i]].push_back(irs);
+        }
+    }
+
+    void callRuleActions(std::string const & key){
+        std::vector<RuleSet> const & rss = capfeat_rulesets[key];
+        std::vector<RuleSet>::const_iterator it;
+        for(it=rss.begin();it<rss.end();++it){
+            std::vector<std::string> const & ks = (*it).getKeys();
+            std::vector<int> const & vs = (*it).getThresholds();
+            bool cond = true;
+            for(int i=0; i<ks.size(); ++i){
+                std::cerr << "Conditional " << ks[i] << " > " << vs[i] << std::endl;
+                cond &= getFeatCap(ks[i]) > vs[i];
+            }
+            RuleAction const *hmm = (*it).getRuleAction();
+            hmm->action(cond);
+        }
+    }
+
+    I4Par const& getI4Par (size_t ipat, std::string const& key) const {
       return patches[ipat].getI4Par(key);
     }
 
-    FPar const& getFPar(size_t ipat, std::string const& key){
+    FPar const& getFPar(size_t ipat, std::string const& key) const {
       return patches[ipat].getFPar(key);
     }
 

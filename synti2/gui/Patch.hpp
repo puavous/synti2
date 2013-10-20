@@ -101,13 +101,14 @@ using namespace synti2base;
       return fparKeys.end();
     }
     I4Par const&
-    getI4Par(std::string const& key){
-      return i4pars[key];
+    getI4Par(std::string const& key) const {
+        return i4pars.at(key);
+      //return i4pars[key];
     }
 
     FPar const&
-    getFPar(std::string const& key){
-      return fpars[key];
+    getFPar(std::string const& key) const {
+      return fpars.at(key);
     }
 
   };

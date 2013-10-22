@@ -98,6 +98,27 @@ void Capacities::addCapacityDescription(string key,
     toStream(std::cout); /*FIXME: for debug only.*/
   };
 
+    void PatchBank::callRuleActions(string const & key)
+    {
+        vector<RuleSet> const & rss = capfeat_rulesets[key];
+        vector<RuleSet>::const_iterator it;
+        for(it=rss.begin(); it<rss.end(); ++it)
+        {
+            vector<string> const & ks = (*it).getKeys();
+            vector<int> const & vs = (*it).getThresholds();
+            bool cond = true;
+            for(int i=0; i<ks.size(); ++i)
+            {
+                cerr << "Conditional " << ks[i] << " > " << vs[i] << endl;
+                cerr << "By values   " << getFeatCap(ks[i])
+                << " > " << vs[i] << endl;
+                cond &= (getFeatCap(ks[i]) > vs[i]);
+            }
+            (*it).getRuleAction()->action(cond);
+        }
+    }
+
+
   void PatchBank::toStream(std::ostream & ost){
     ost << "# Output by PatchBank::toStream()" << std::endl;
     caps.toStream(ost);

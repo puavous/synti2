@@ -91,6 +91,9 @@ namespace synti2base {
     void toStream(ostream &ost);
   };
 
+  /** The Midi Mapper part of a sound bank; directs midi messages
+   * to synti2 messages.
+   */
   class MidiMap{
   private:
     //initMidiMap();
@@ -131,6 +134,8 @@ namespace synti2base {
       lastErrorMessage = "None shall pass (sanity check unimplemented)";
       return false; /*FIXME: Implement.*/
     }
+
+    void callRuleActions(string const & key);
 
   public:
     PatchBank();
@@ -219,23 +224,6 @@ namespace synti2base {
         vector<string> keys = irs.getKeys();
         for (int i=0; i<keys.size(); ++i){
             capfeat_rulesets[keys[i]].push_back(irs);
-        }
-    }
-
-    void callRuleActions(string const & key){
-        vector<RuleSet> const & rss = capfeat_rulesets[key];
-        vector<RuleSet>::const_iterator it;
-        for(it=rss.begin();it<rss.end();++it){
-            vector<string> const & ks = (*it).getKeys();
-            vector<int> const & vs = (*it).getThresholds();
-            bool cond = true;
-            for(int i=0; i<ks.size(); ++i){
-                cerr << "Conditional " << ks[i] << " > " << vs[i] << endl;
-                cerr << "By values   " << getFeatCap(ks[i])
-                  << " > " << vs[i] << endl;
-                cond &= (getFeatCap(ks[i]) > vs[i]);
-            }
-            (*it).getRuleAction()->action(cond);
         }
     }
 

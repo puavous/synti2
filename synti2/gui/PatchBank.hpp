@@ -127,11 +127,12 @@ namespace synti2base {
     /** RuleSets and their actions to be performed upon cap/feat change: */
     map<string, vector<RuleSet> > capfeat_rulesets;
 
-    string lastErrorMessage;
-
-    /** */
+    /** Checks if v is a valid value for a parameter. For floats, this is
+     * a range, and for integers, a discrete set of nonzero values and zero;
+     * The integers depend on capacities, so cap changes should be handled..
+     */
     bool checkParamValue(string key, float v){
-      lastErrorMessage = "None shall pass (sanity check unimplemented)";
+      std::cerr << "None shall pass (sanity check unimplemented)" << std::endl;
       return false; /*FIXME: Implement.*/
     }
 
@@ -145,6 +146,7 @@ namespace synti2base {
     /** Reads a .s2bank from a stream. */
     void fromStream(istream & ist);
 
+    /* Hmm.. Couldn't we just give out const references to feats/caps? */
     vector<FeatureDescription>::iterator
     getFeatureBegin(){return feats.begin();}
 
@@ -193,6 +195,13 @@ namespace synti2base {
     vector<int>
     getEffectiveParAsSysEx(int ipatch, const string &parkey);
 
+/*
+    void setActivePatch(size_t acti){
+        std::cerr << "Should activate patch #" << acti << std::endl;
+        std::cerr << "... and notify listeners afterwards!" << acti << std::endl;
+    }
+    */
+
     //vector<int>getPatchAsMIDISysex(int ipatch);
     /** Enables an on/off feature. Other features may be enabled as a
      *  side-effect. Functions registered by registerFeatureCallback()
@@ -235,7 +244,8 @@ namespace synti2base {
       return patches[ipat].getFPar(key);
     }
 
-    bool setParamValue(string key, float v){
+    /** Sets a parameter value. */
+    bool setParamValue(size_t ipat, string key, float v){
       bool can_do = checkParamValue(key, v);
       if (can_do){
         //privSetParam(key,v);
@@ -244,8 +254,6 @@ namespace synti2base {
       }
       return can_do;
     };
-    string getLastErrorMessage(){return lastErrorMessage;}
-
   };
 
 }

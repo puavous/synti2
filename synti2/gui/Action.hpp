@@ -11,8 +11,11 @@ namespace synti2gui {
   class Action {
   public:
   };
-  
-  
+
+#if 0
+
+FIXME: Need these at all?
+
   /**
    * Action when a patch parameter has been changed..
    */
@@ -21,8 +24,8 @@ namespace synti2gui {
     PatchBank *handler;
     std::string key;
   public:
-    ValuatorAction(PatchBank *ihandler, 
-                   const std::string& ikey) : handler(ihandler), 
+    ValuatorAction(PatchBank *ihandler,
+                   const std::string& ikey) : handler(ihandler),
                                               key(ikey){};
     void updateValue(float v){
       if (!handler->setParamValue(key,v)){
@@ -31,6 +34,8 @@ namespace synti2gui {
       }
     }
   };
+#endif // 0
+
 }
 
 #endif

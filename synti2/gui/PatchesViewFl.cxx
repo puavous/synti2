@@ -1,3 +1,4 @@
+#include "PatchBank.hpp"
 #include "PatchesViewFl.hpp"
 #include "Action.hpp"
 #include <FL/Fl.H>
@@ -15,36 +16,36 @@ using synti2base::PatchBank;
 
 namespace synti2gui{
 
+std::vector<std::string> ViewPatches::keys;
 
 /** Update of an "I4" value; FIXME: We need our own widget set! */
-void cb_new_i4_value(Fl_Widget* w, void* p){
+void ViewPatches::value_callback(Fl_Widget* w, void* p){
+    I4ValueInput *vin = (I4ValueInput*)w;
+    double val = vin->value();
+    ViewPatches *vp = (ViewPatches*)p;
+    vin->pb->setParamValue(vp->getActivePatch(), vin->getKey(), val);
     /*
     Fl_I4_Valuator *myvtor = (Fl_I4_Valuator*) w;
     myvtor->getKey() etc..;
     then maybe.. ((PatchBank*)p)->setI4Value(key,val);
-  double val = ((Fl_Valuator*)w)->value();
-  int d = (long)p;
 
-  (*pbank)[curr_patch].setValue("I3",d,val);
+  FIXME: This from another callback, pls:
   send_to_jack_process(pbank->getSysex("I3",curr_patch,d));
-  //send_to_jack_port(MISSS_SYSEX_SET_3BIT, d, curr_patch, val);
   */
 }
 
 /** Changes the current patch, and updates other widgets. */
 void cb_change_patch(Fl_Widget* w, void* p){
-  ViewPatches *ww = (ViewPatches*)w;
-  if (p == NULL) {
-    std::cerr << "PatchBank is NULL. Change omitted." << std::endl;
-    return;
-  }
-  PatchBank *pbh = (PatchBank*)p;
   double val = ((Fl_Valuator*)w)->value();
-  if (!ww->setActivePatch(val)){
-    std::cerr << pbh->getLastErrorMessage() << std::endl;
-    val = ww->getActivePatch();
-  }
-  ((Fl_Valuator*)w)->value(val);
+  ViewPatches *vp = (ViewPatches*)p;
+  vp->setActivePatch(val);
+
+  //PatchBank *pbh = (PatchBank*)p;
+  //if (!pbh->setActivePatch(val)){
+  //  std::cerr << "Not really implemented yet!!" << std::endl;
+  //  val = ww->getActivePatch();
+  //}
+  //((Fl_Valuator*)w)->value(val);
 }
 
 void cb_patch_name(Fl_Widget* w, void* p){
@@ -73,6 +74,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
   patch->align(FL_ALIGN_LEFT);
   patch->bounds(0,pb->getNumPatches()-1);
   patch->precision(0);
+  patch->argument((long int)this);
   patch->callback(cb_change_patch, pb);
 
   Fl_Input * widget_patch_name = new Fl_Input(150,25,90,25,"Name");
@@ -113,7 +115,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
 
   int i=0;
   std::vector<std::string>::const_iterator i4it,fit;
-  Fl_Value_Input *vi;
+  I4ValueInput *vi;
 
   int ncols = 30;
   int col=0,row=0;
@@ -126,12 +128,14 @@ void cb_patch_name(Fl_Widget* w, void* p){
   for (i4it=pb->getI4Begin(activePatch);
        i4it!=pb->getI4End(activePatch);
        ++i4it){
-    vi = new Fl_Value_Input(px+col*(w+sp),py+row*(h+sp),w,h);
+    vi = new I4ValueInput(px+col*(w+sp),py+row*(h+sp),w,h,pb);
     vi->tooltip(pb->getI4Par(activePatch,*i4it).getHumanReadable().c_str());
     vi->precision(0);
+    vi->setKey(*i4it);
     //vi->color(colortab[pd->getGroup("I3",i)]);
-    //vi->argument(i); // what is da argument then? ptr type...
-    vi->callback(cb_new_i4_value);
+    vi->argument((long int)this);
+    //keys.push_back(*i4it);
+    vi->callback(value_callback);
     col++;if (col>=ncols) {col=0;row++;}
 
 

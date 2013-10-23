@@ -24,14 +24,6 @@ void ViewPatches::value_callback(Fl_Widget* w, void* p){
     double val = vin->value();
     ViewPatches *vp = (ViewPatches*)p;
     vin->pb->setParamValue(vp->getActivePatch(), vin->getKey(), val);
-    /*
-    Fl_I4_Valuator *myvtor = (Fl_I4_Valuator*) w;
-    myvtor->getKey() etc..;
-    then maybe.. ((PatchBank*)p)->setI4Value(key,val);
-
-  FIXME: This from another callback, pls:
-  send_to_jack_process(pbank->getSysex("I3",curr_patch,d));
-  */
 }
 
 /** Changes the current patch, and updates other widgets. */

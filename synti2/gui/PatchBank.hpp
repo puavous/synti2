@@ -250,6 +250,11 @@ namespace synti2base {
       if (can_do){
         //privSetParam(key,v);
         //privSendParam(key,v);
+    /*
+  FIXME: This maybe from a callback like registerParamChangeListener();
+  send_to_jack_process(pbank->getSysex("I3",curr_patch,d));
+  */
+
         //viewUpdater->updateAllConnectedViews(key,v);
       }
       return can_do;

@@ -111,8 +111,9 @@ void Capacities::addCapacityDescription(string key,
             {
                 bool thiscond = (getFeatCap(ks[i]) > vs[i]);
                 cond &= thiscond;
-                cerr << "Conditional " << ks[i] << " > " << vs[i]
-                     << "(" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
+                cerr << "Conditional " << (i+1) << "/" << ks.size() << ": "
+                     << ks[i] << " > " << vs[i]
+                     << "  (" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
                      << " --> " << thiscond << "  overall: " << cond << endl;
             }
             cerr << "Final decision: " << cond << endl;

@@ -78,12 +78,12 @@ namespace synti2base {
         string rsts = ruleString;
         while(!rsts.empty()){
             size_t isep = rsts.find_first_of(";");
+            if (isep==0){rsts.erase(0,1);continue;}
             size_t iop  = rsts.find_first_of(">");
             string key  = rsts.substr(0,iop);
             string sval = rsts.substr(iop+1,isep-iop);
             if (isep==string::npos) isep=rsts.length();
             rsts.erase(0,isep+1);
-            if (rsts.empty()) break;
             int intval;
             stringstream(sval) >> intval;
             std::cerr<<"'" << key << "'>" << intval << "|" << rsts << "|" <<std::endl;

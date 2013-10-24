@@ -24,8 +24,12 @@ namespace synti2gui {
         PatchBank *pb(){return _pb;}
         virtual void doActivate() = 0;
         virtual void doDeactivate() = 0;
-        void activate(){doActivate();}
-        void deactivate(){doDeactivate();}
+        void activate(){
+            cerr << "activating " << key << endl;
+            doActivate();}
+        void deactivate(){
+            cerr << "deactivating " << key << endl;
+            doDeactivate();}
     };
 
     class WidgetEnablerRuleAction: public RuleAction{

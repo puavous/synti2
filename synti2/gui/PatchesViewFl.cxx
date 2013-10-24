@@ -16,8 +16,6 @@ using synti2base::PatchBank;
 
 namespace synti2gui{
 
-std::vector<std::string> ViewPatches::keys;
-
 /** Update of an "I4" value; FIXME: We need our own widget set! */
 void ViewPatches::value_callback(Fl_Widget* w, void* p){
     S2ValueInput *vin = (S2ValueInput*)w;
@@ -164,6 +162,8 @@ void cb_patch_name(Fl_Widget* w, void* p){
     }
   }
 #endif
+
+  pb->forceAllRuleActions();
 
   scroll->end();
 }

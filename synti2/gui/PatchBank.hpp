@@ -236,6 +236,8 @@ namespace synti2base {
         }
     }
 
+    void forceAllRuleActions();
+
     I4Par const& getI4Par (size_t ipat, string const& key) const {
       return patches[ipat].getI4Par(key);
     }

@@ -109,12 +109,22 @@ void Capacities::addCapacityDescription(string key,
             bool cond = true;
             for(int i=0; i<ks.size(); ++i)
             {
-                cerr << "Conditional " << ks[i] << " > " << vs[i] << endl;
-                cerr << "By values   " << getFeatCap(ks[i])
-                << " > " << vs[i] << endl;
-                cond &= (getFeatCap(ks[i]) > vs[i]);
+                bool thiscond = (getFeatCap(ks[i]) > vs[i]);
+                cond &= thiscond;
+                cerr << "Conditional " << ks[i] << " > " << vs[i]
+                     << "(" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
+                     << " --> " << thiscond << "  overall: " << cond << endl;
             }
+            cerr << "Final decision: " << cond << endl;
             (*it).getRuleAction()->action(cond);
+        }
+    }
+
+    /** Applies all the rule actions that have been registered. */
+    void PatchBank::forceAllRuleActions(){
+        map<std::string, vector<RuleSet> >::const_iterator it;
+        for(it=capfeat_rulesets.begin();it != capfeat_rulesets.end();++it){
+            callRuleActions((*it).first);
         }
     }
 

@@ -83,9 +83,10 @@ namespace synti2base {
             string sval = rsts.substr(iop+1,isep-iop);
             if (isep==string::npos) isep=rsts.length();
             rsts.erase(0,isep+1);
+            if (rsts.empty()) break;
             int intval;
             stringstream(sval) >> intval;
-            //std::cerr<<"'" << key << "'>'" << sval << "'" << "|" << rsts <<std::endl;
+            std::cerr<<"'" << key << "'>" << intval << "|" << rsts << "|" <<std::endl;
             r.addThreshold(key,intval);
         }
         return r;

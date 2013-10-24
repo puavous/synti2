@@ -20,10 +20,10 @@ std::vector<std::string> ViewPatches::keys;
 
 /** Update of an "I4" value; FIXME: We need our own widget set! */
 void ViewPatches::value_callback(Fl_Widget* w, void* p){
-    I4ValueInput *vin = (I4ValueInput*)w;
+    S2ValueInput *vin = (S2ValueInput*)w;
     double val = vin->value();
     ViewPatches *vp = (ViewPatches*)p;
-    vin->pb->setParamValue(vp->getActivePatch(), vin->getKey(), val);
+    vin->pb()->setParamValue(vp->getActivePatch(), vin->getKey(), val);
 }
 
 /** Changes the current patch, and updates other widgets. */
@@ -51,7 +51,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
 
 
 /** Builds the patch editor widgets. */
-  void ViewPatches::build_patch_editor(Fl_Group *gr, PatchBank *pbh)
+  void ViewPatches::build_patch_editor(Fl_Group *gr)
 {
   if (pb==NULL) {
     std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
@@ -107,69 +107,51 @@ void cb_patch_name(Fl_Widget* w, void* p){
 
   int i=0;
   std::vector<std::string>::const_iterator i4it,fit;
-  I4ValueInput *vi;
+  S2Valuator *vi;
 
   int ncols = 30;
   int col=0,row=0;
 
   px=5; py=50; w=25; h=20; sp=2;
-  //FIXME: Make a derived I4_Input / I4_Filter_Input / I4_OnOff_Input.
+  //FIXME: Make a derived I4_Input / I4_Filter_Input / I4_OnOff_Inpu?
   //FIXME: Include "type of GUI" and allowed values as attributes of
-  //both the derived widget and I4Par description.
+  //both the derived widget and I4Par description.(?)
+  //Maybe Take the parameter description with GuiStyle field in ctor of S2VI?
   /* Parameters Valuator Widgets */
   for (i4it=pb->getI4Begin(activePatch);
-       i4it!=pb->getI4End(activePatch);
-       ++i4it){
-    vi = new I4ValueInput(px+col*(w+sp),py+row*(h+sp),w,h,pb);
-    vi->tooltip(pb->getI4Par(activePatch,*i4it).getHumanReadable().c_str());
-    vi->precision(0);
-    vi->setKey(*i4it);
-    //vi->color(colortab[pd->getGroup("I3",i)]);
-    vi->argument((long int)this);
-    //keys.push_back(*i4it);
-    vi->callback(value_callback);
+       i4it!=pb->getI4End(activePatch); ++i4it)
+  {
+    vi = new S2ValueInput(px+col*(w+sp),py+row*(h+sp),w,h,pb,*i4it);
+    vi->callback(value_callback, this);
     col++;if (col>=ncols) {col=0;row++;}
-
 
     RuleSet rs = pb->getI4Par(activePatch,*i4it).getRuleSet();
     rs.ownThisAction(new WidgetEnablerRuleAction(vi));
     pb->registerRuleAction(rs);
-
   }
 
   py=100; w=85; h=15;
   int npars = pb->getFEnd(activePatch) - pb->getFBegin(activePatch);
-  ncols = 4;
   int nrows = (npars / ncols) + 1;
-  i = 0;
-  col=0,row=0;
+  ncols = 4;col=0,row=0;
 
   for (fit=pb->getFBegin(activePatch);
-       fit!=pb->getFEnd(activePatch);
-       ++fit){
-      Fl_Roller *vsf =
-        new Fl_Roller(px+col*250,py+row*(h+sp),w,h);
-      vsf->tooltip(pb->getFPar(activePatch,*fit).getHumanReadable().c_str());
-      vsf->type(FL_HOR_NICE_SLIDER);
-      vsf->label(pb->getFPar(activePatch,*fit).getHumanReadable().c_str());
-      vsf->align(FL_ALIGN_RIGHT);
+       fit!=pb->getFEnd(activePatch); ++fit)
+  {
+      vi = new S2FValueInput(px+col*250,py+row*(h+sp),w,h,pb,*fit);
+      vi->callback(value_callback, this);
+      row++;if (row>30){row=0;col++;}
 
       RuleSet rs = pb->getFPar(activePatch,*fit).getRuleSet();
-      rs.ownThisAction(new WidgetEnablerRuleAction(vsf));
+      rs.ownThisAction(new WidgetEnablerRuleAction(vi));
       pb->registerRuleAction(rs);
-
-      row++;
-      if (row>30){row=0;col++;}
   }
+
 #if 0
 
   for (int col=0; col < ncols; col++){
     for (int row=0; row < nrows; row++){
       if (i==npars) break;
-      /* Need to store all ptrs and have attach_to_values() */
-      Fl_Roller *vsf =
-        new Fl_Roller(px+col*250,py+row*(h+sp),w,h);
-      //widgets_f.push_back(vsf);
       /* FIXME: think? */
       vsf->bounds(pd->getMin("F",i),pd->getMax("F",i));
       vsf->precision(pd->getPrecision("F",i));
@@ -182,6 +164,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
     }
   }
 #endif
+
   scroll->end();
 }
 
@@ -192,7 +175,7 @@ using namespace synti2gui;
     : Fl_Group(x, y, w, h, name), activePatch(0)
 {
   pb = pbh;
-  build_patch_editor(this, pb);
+  build_patch_editor(this);
 }
 
 }

@@ -85,7 +85,7 @@ process_with_jack(jack_nframes_t nframes, void *arg)
 
   int nsent;
 
-  jack_midi_clear_buffer(midi_out_buffer); 
+  jack_midi_clear_buffer(midi_out_buffer);
   nev = jack_midi_get_event_count(midi_in_buffer);
 
   /* Read from UI thread. FIXME: think if synchronization issues persist? */
@@ -107,7 +107,7 @@ process_with_jack(jack_nframes_t nframes, void *arg)
     jack_ringbuffer_read (my_jack.rb, (char*)&sz, sizeof(size_t));
     jack_ringbuffer_read (my_jack.rb, (char*)&sysex_buf, sz);
 
-    /*printf("jack event size %d\n", 
+    /*printf("jack event size %d\n",
       jack_midi_max_event_size(midi_out_buffer));*/
 
     if (jack_midi_event_write(midi_out_buffer, 0, sysex_buf, sz) != 0){
@@ -156,7 +156,7 @@ void init_jack(const char * client_name){
   if ((my_jack.client = jack_client_open (
       my_jack.client_name, JackNoStartServer, &status)) == 0)
   {
-    std::cerr << "jack server not running?" << std::endl; 
+    std::cerr << "jack server not running?" << std::endl;
     jack_is_ok = false;
     return;
   }
@@ -165,11 +165,11 @@ void init_jack(const char * client_name){
   jack_set_process_callback (my_jack.client, process_with_jack, 0);
 
   /* Try to create midi ports */
-  my_jack.inmidi_port = jack_port_register (my_jack.client, "iportti", 
-                                    JACK_DEFAULT_MIDI_TYPE, 
+  my_jack.inmidi_port = jack_port_register (my_jack.client, "iportti",
+                                    JACK_DEFAULT_MIDI_TYPE,
                                     JackPortIsInput, 0);
-  my_jack.outmidi_port = jack_port_register (my_jack.client, "oportti", 
-                                     JACK_DEFAULT_MIDI_TYPE, 
+  my_jack.outmidi_port = jack_port_register (my_jack.client, "oportti",
+                                     JACK_DEFAULT_MIDI_TYPE,
                                      JackPortIsOutput, 0);
 
   /* Set up a ringbuffer for communication from GUI to process().*/
@@ -177,7 +177,7 @@ void init_jack(const char * client_name){
     std::cerr << "Could not allocate ringbuffer. " << std::endl;
     exit(2);
   }
-  std::cerr << "Ringbuffer created with write space " 
+  std::cerr << "Ringbuffer created with write space "
             << jack_ringbuffer_write_space (my_jack.rb)
             << std::endl;
 
@@ -187,7 +187,7 @@ void init_jack(const char * client_name){
     jack_is_ok = false;
     return;
   }
-  
+
   /* install a signal handler to properly quit jack client */
 #ifdef WIN32
   signal(SIGINT, signal_handler_for_jack_shutdown);
@@ -215,12 +215,13 @@ int main(int argc, char **argv) {
 
   init_jack(default_name);
 
-  std::cerr << "synti2gui main(): note: Jack init " 
+  std::cerr << "synti2gui main(): note: Jack init "
             << (weHaveJack()?"succeeded":"failed") << "." << std::endl;
 
   /* FIXME: Better implementation of these: */
   //synti2::Patchtool *pt = new synti2::Patchtool(patchdes_fname);
   synti2base::PatchBank *pbank = new synti2base::PatchBank();
+  pbank->exportCapFeatHeader(std::cout);
 
   Fl_Window *window = new MainWindow(1000,740,pbank);
 
@@ -238,7 +239,7 @@ int main(int argc, char **argv) {
 
   if (pbank != NULL) free(pbank);
   //if (pt != NULL) free(pt);
-  
+
   return retval;
 }
 #else

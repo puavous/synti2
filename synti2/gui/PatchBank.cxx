@@ -23,7 +23,7 @@ void Capacities::addCapacityDescription(string key,
   void Capacities::initCapacityDescriptions(){
     addCapacityDescription("num_channels","NUM_CHANNELS","Number of channels (patches)",1,256,16,"");
     addCapacityDescription("num_delays","NUM_DELAY_LINES","Number of delay lines",1,8,4,"delay");
-    addCapacityDescription("num_ops","NUM_ÖPERATORS","Number of operators/oscillators per channel", 0,4,4,"fm|add");
+    addCapacityDescription("num_ops","NUM_OPERATORS","Number of operators/oscillators per channel", 0,4,4,"fm|add");
     addCapacityDescription("num_envs", "NUM_ENVS", "Number of envelopes per channel", 1,6,2,"");
     addCapacityDescription("num_knees","NUM_ENV_KNEES","Number of knees per envelope", 2,5,5,"");
     addCapacityDescription("num_mods","NUM_MODULATORS","Number of controllable modulators per channel",0,4,4,"mods");
@@ -31,6 +31,21 @@ void Capacities::addCapacityDescription(string key,
 
   void Capacities::toStream(std::ostream &ost){
     ost << "# Can't really output capacities yet. But the code is here." << std::endl;
+  }
+
+  void Capacities::exportHeader(ostream &ost){
+      ost << "/* Capacities (numeric) */ " << endl;
+      vector<CapacityDescription>::const_iterator it;
+      for(it=begin();it!=end();++it){
+        ost << "#define ";
+        ost.width(20); ost.fill(' ');
+        ost << std::left << (*it).getCDefine();
+        ost.width(3); ost.fill(' ');
+        ost << value((*it).getKey());
+        ost << " /*" << (*it).getHumanReadable() << "*/";
+        ost << endl;
+      }
+
   }
 
 
@@ -89,6 +104,24 @@ void Capacities::addCapacityDescription(string key,
     ost << "# Can't really output features yet. But the code is here." << std::endl;
   }
 
+  void Features::exportHeader(ostream &ost){
+      ost << "/* Enabled features */ " << endl;
+      vector<FeatureDescription>::const_iterator it;
+      for(it=begin();it!=end();++it){
+        ost << "#define " ;
+        ost.width(30); ost.fill(' ');
+        ost << std::left << (*it).getCDefine();
+
+        ost << " /*" << (*it).getHumanReadable() << " */" << endl;
+        //ost.width(3); ost.fill(' ');
+        //ost << value((*it).getKey());
+        ost << endl;
+      }
+  }
+
+
+
+
   void MidiMap::toStream(std::ostream &ost){
     ost << "# Can't really output midimap yet. But the code is here." << std::endl;
   }
@@ -143,6 +176,18 @@ void Capacities::addCapacityDescription(string key,
 
   void PatchBank::fromStream(std::istream & ist){
     std::cerr << "PatchBank::fromStream() Can't read yet!" << std::endl;
+  }
+
+  void PatchBank::exportCapFeatHeader(std::ostream & ost){
+      ost << "/** Capacities and features for a customized, unique build of"
+          << endl
+          << " * the synti2 software synthesizer." << endl << " *" << endl
+          << " * Exported by PatchBank.cxx - don't edit manually." << endl
+          << " */"<< endl;
+
+      caps.exportHeader(ost);
+      feats.exportHeader(ost);
+      // export I4 and F parameter indices.
   }
 
 }

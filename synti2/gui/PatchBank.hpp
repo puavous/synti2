@@ -52,6 +52,7 @@ namespace synti2base {
     }
     bool hasKey(string key){return capValue.find(key) != capValue.end();}
     void toStream(ostream &ost);
+    void exportHeader(ostream &ost);
   };
 
   /** "Features" of a synti2 stand-alone compilation - boolean on/off
@@ -89,6 +90,7 @@ namespace synti2base {
     }
 
     void toStream(ostream &ost);
+    void exportHeader(ostream &ost);
   };
 
   /** The Midi Mapper part of a sound bank; directs midi messages
@@ -145,6 +147,9 @@ namespace synti2base {
     void toStream(ostream & ost);
     /** Reads a .s2bank from a stream. */
     void fromStream(istream & ist);
+    /** Writes a C header file for stand-alone synth to a stream. */
+    void exportCapFeatHeader(ostream & ost);
+
 
     /* Hmm.. Couldn't we just give out const references to feats/caps? */
     vector<FeatureDescription>::iterator

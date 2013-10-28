@@ -71,10 +71,11 @@ void cb_patch_name(Fl_Widget* w, void* p){
   widget_patch_name->callback(cb_patch_name,pb);
 
   int px=280, py=25, w=70, h=25, sp=2;
-  int labsz = 16;
+  //int labsz = 16;
 
 
-  Fl_Button *box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
+  Fl_Button *box;
+  box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
   //box->callback(cb_send_current); box->labelsize(labsz);
   //button_send_current = box;
 
@@ -103,7 +104,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
   box = new Fl_Button(px + 7*(w+sp),py,w,h,"Panic!");
   //box->callback(cb_load_all); box->labelsize(labsz);
 
-  int i=0;
+  //int i=0;
   std::vector<std::string>::const_iterator i4it,fit;
   S2Valuator *vi;
 

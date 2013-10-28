@@ -51,6 +51,7 @@ namespace synti2base {
       std::vector<std::string> const & getKeys() const {return keys;}
       std::vector<int> const & getThresholds() const {return thresholds;}
       RuleAction const * getRuleAction() const {return ra_ptr;}
+
   };
 
   class Description {

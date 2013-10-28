@@ -64,6 +64,9 @@ namespace synti2base {
     vector<string> featkeys;
     vector<FeatureDescription> feats;
     map<string,bool> featureEnabled;
+    /* FIXME: Use these to send actual values when features are changed: */
+    map<string,bool> i4ParIsDirty;
+    map<string,bool> fParIsDirty;
     void addFeatureDescription(string key,
                                string cname,
                                string humanReadable,
@@ -89,7 +92,10 @@ namespace synti2base {
         featureEnabled[key] = (enabled > 0);
     }
 
+    /** Stores the feature settings */
     void toStream(ostream &ost);
+
+    /** Exports features for a custom exe build. */
     void exportHeader(ostream &ost);
   };
 
@@ -137,7 +143,7 @@ namespace synti2base {
       std::cerr << "None shall pass (sanity check unimplemented)" << std::endl;
       return false; /*FIXME: Implement.*/
     }
-
+    bool ruleIsSatisfied(RuleSet const & rs);
     void callRuleActions(string const & key);
 
   public:
@@ -149,6 +155,8 @@ namespace synti2base {
     void fromStream(istream & ist);
     /** Writes a C header file for stand-alone synth to a stream. */
     void exportCapFeatHeader(ostream & ost);
+    /** Exports only the enabled parameters for a playble exe song. */
+    void exportStandalone(ostream &ost);
 
 
     /* Hmm.. Couldn't we just give out const references to feats/caps? */
@@ -178,6 +186,8 @@ namespace synti2base {
 
     int
     getCapacityValue(string key){return caps.value(key);}
+    int
+    getFeatureValue(string key){return feats.value(key);}
 
     void setNumPatches(int n);
     size_t getNumPatches(){return patches.size();}
@@ -236,7 +246,7 @@ namespace synti2base {
 
     void registerRuleAction(RuleSet irs){
         vector<string> keys = irs.getKeys();
-        for (int i=0; i<keys.size(); ++i){
+        for (size_t i=0; i<keys.size(); ++i){
             capfeat_rulesets[keys[i]].push_back(irs);
         }
     }

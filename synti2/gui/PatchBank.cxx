@@ -22,9 +22,9 @@ void Capacities::addCapacityDescription(string key,
 /** Initializes integer-type capacities of the synth. */
   void Capacities::initCapacityDescriptions(){
     addCapacityDescription("num_channels","NUM_CHANNELS","Number of channels (patches)",1,256,16,"");
-    addCapacityDescription("num_delays","NUM_DELAY_LINES","Number of delay lines",1,8,4,"delay");
+    addCapacityDescription("num_delays","NUM_DELAY_LINES","Number of delay lines",1,8,8,"delay");
     addCapacityDescription("num_ops","NUM_OPERATORS","Number of operators/oscillators per channel", 0,4,4,"fm|add");
-    addCapacityDescription("num_envs", "NUM_ENVS", "Number of envelopes per channel", 1,6,2,"");
+    addCapacityDescription("num_envs", "NUM_ENVS", "Number of envelopes per channel", 1,6,6,"");
     addCapacityDescription("num_knees","NUM_ENV_KNEES","Number of knees per envelope", 2,5,5,"");
     addCapacityDescription("num_mods","NUM_MODULATORS","Number of controllable modulators per channel",0,4,4,"mods");
   }
@@ -55,7 +55,7 @@ void Capacities::addCapacityDescription(string key,
                                        string requires)
   {
     featkeys.push_back(key);
-    featureEnabled[key] = false; // init everything to disabled.
+    featureEnabled[key] = true; // init everything to enabled.
     feats.push_back(FeatureDescription(key, cname, humanReadable, requires));
   }
 
@@ -63,8 +63,8 @@ void Capacities::addCapacityDescription(string key,
   void Features::initFeatureDescriptions(){
     /*
       These to be toggled by "COMPOSE_MODE" switch only:
-
-      addFeatureDescription("sysex","FEAT_COMPOSE_MODE_SYSEX","Receive SysEx (usable in compose mode only)",""); // Need this at all?
+      FIXME: Or should these be always on in COMPOSE_MODE?
+      addFeatureDescription("sysex","FEAT_COMPOSE_MODE_SYSEX","Receive SysEx (usable in compose mode only)","");
       addFeatureDescription("troubleshooting","FEAT_SAFETY","Safe mode (usable in compose mode only)","");
     */
     /*
@@ -131,26 +131,30 @@ void Capacities::addCapacityDescription(string key,
     toStream(std::cout); /*FIXME: for debug only.*/
   };
 
+      bool PatchBank::ruleIsSatisfied(RuleSet const & rs){
+          vector<string> const & ks = rs.getKeys();
+          vector<int> const & vs = rs.getThresholds();
+          bool cond = true;
+          for(size_t i=0; i<ks.size(); ++i)
+          {
+              bool thiscond = (getFeatCap(ks[i]) > vs[i]);
+              cond &= thiscond;
+              cerr << "Conditional " << (i+1) << "/" << ks.size() << ": "
+                   << ks[i] << " > " << vs[i]
+                   << "  (" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
+                   << " --> " << thiscond << "  overall: " << cond << endl;
+            }
+          cerr << "Final decision: " << cond << endl;
+          return cond;
+      }
+
     void PatchBank::callRuleActions(string const & key)
     {
         vector<RuleSet> const & rss = capfeat_rulesets[key];
         vector<RuleSet>::const_iterator it;
         for(it=rss.begin(); it<rss.end(); ++it)
         {
-            vector<string> const & ks = (*it).getKeys();
-            vector<int> const & vs = (*it).getThresholds();
-            bool cond = true;
-            for(int i=0; i<ks.size(); ++i)
-            {
-                bool thiscond = (getFeatCap(ks[i]) > vs[i]);
-                cond &= thiscond;
-                cerr << "Conditional " << (i+1) << "/" << ks.size() << ": "
-                     << ks[i] << " > " << vs[i]
-                     << "  (" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
-                     << " --> " << thiscond << "  overall: " << cond << endl;
-            }
-            cerr << "Final decision: " << cond << endl;
-            (*it).getRuleAction()->action(cond);
+            (*it).getRuleAction()->action(ruleIsSatisfied(*it));
         }
     }
 
@@ -187,7 +191,34 @@ void Capacities::addCapacityDescription(string key,
 
       caps.exportHeader(ost);
       feats.exportHeader(ost);
-      // export I4 and F parameter indices.
+      std::vector<std::string>::const_iterator sit;
+      int ind;
+
+      /* FIXME: Rulesets need to be checked somewhere before export!! */
+
+      ost << std::dec;
+      ind = 0;
+      for (sit=getI4Begin(0);sit!=getI4End(0); ++sit){
+          RuleSet rs = getI4Par(0,*sit).getRuleSet();
+          if (!ruleIsSatisfied(rs)) continue;
+          std::string const & cdef = getI4Par(0,*sit).getCDefine();
+          ost << "#define ";
+          ost.width(30); ost.fill(' '); ost << std::left << cdef;
+          ost << " " << (ind++) << endl;
+      }
+      ost << "#define NUM_I4_PARS " << ind << endl;
+
+      ind = 0;
+      for (sit=getFBegin(0);sit!=getFEnd(0); ++sit){
+          RuleSet rs = getFPar(0,*sit).getRuleSet();
+          if (!ruleIsSatisfied(rs)) continue;
+          std::string const & cdef = getFPar(0,*sit).getCDefine();
+          ost << "#define ";
+          ost.width(30); ost.fill(' '); ost << std::left << cdef;
+          ost << " " << (ind++) << endl;
+      }
+      ost << "#define NUM_F_PARS " << ind << endl;
+
   }
 
 }

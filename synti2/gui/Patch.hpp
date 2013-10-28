@@ -84,6 +84,8 @@ using namespace synti2base;
     Patch();
     void toStream(std::ostream &ost);
     void fromStream(std::istream &ifs);
+    std::vector<string> const & getI4ParKeys(){return i4parKeys;}
+    std::vector<string> const & getFParKeys(){return fparKeys;}
     std::vector<string>::iterator
     getI4Begin(){
       return i4parKeys.begin();

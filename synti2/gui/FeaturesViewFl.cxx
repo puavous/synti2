@@ -63,6 +63,7 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
     ckb = new FeatureCheckButton(px,py,200,20,
                                 (*fit).getHumanReadable().c_str(),pb);
     keys.push_back((*fit).getKey());
+    ckb->value(pb->getFeatureValue((*fit).getKey()));
     ckb->argument(keys.size()-1);
     ckb->callback(feat_callback);
     py += height;

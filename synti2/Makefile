@@ -159,6 +159,8 @@ i13tiny:
 hack3:
 	make tiny3 CUSTOMFILES="$(A13FILES)"
 	cd hackpack3; make vis2
+	mv hackpack3/vis2 ./jacksynti2
+
 
 tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	-rm -r hackpack3

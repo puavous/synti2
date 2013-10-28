@@ -9,65 +9,6 @@
  * @copyright 2012. MIT License, see LICENSE.txt
  */
 
-/*
-   FIXME: It wasn't final yet, after all. I'm totally going to need
-   one more revision of pretty much everything in the core. The idea
-   is here:
-
-     - For the 4k target, the synthesizer capacities must be
-       configurable on the level of what gets compiled in. By
-       capacities, I mean many things:
-
-         + Of course, the current 'optional' signal paths (filters,
-           delays)
-
-         + But also the number of voices, envelopes, oscillators,
-           delay lines, and maybe also number of envelope knees. With
-           only one delay / one envelope / one operator some loops
-           could be optimized away completely.
-
-         + The patch data must contain no unused parameters.
-
-     - This means that there must be a separate "synti_capacities.h"
-       that can be modified, and all the rest of the code AND patch
-       descriptions must be generated according to the defined
-       capacities.
-
-     - What about the compose-mode synth? It could be with full
-       capacities, but for the 4k target (preferrably generated from
-       the patch editor GUI), the patches could be analyzed, and the
-       restricted capacities automatically set to the minimum
-       requirements of the patch set being edited. For example, if no
-       patch uses velocity for anything, then NO_VELOCITY could be
-       used. Similarly, if only delay lines 1-3 have in-going signals,
-       then NDELAYS could be set to 3. If every parameter on patches
-       12-16 is zero then NPARTS could be set to 11. And so on... The
-       GUI could keep showing the status of restrictions available for
-       the current patch set. Maybe some quick-buttons for "disable
-       all legatos", and the like, could (destructive operations) be
-       available in the GUI. Yep... make it so.
-
-     - Some steps need to be taken:
-
-        + The configure/compile logic needs to be revamped (a
-          bit). The 4k target should become a generated source
-          directory with a Makefile, and so on (the current
-          'hackpack/' hack is almost such a thing already).
-
-        + Something like #ifdef ULTRASMALL .. #include
-          "synti2_cap_custom.h" .. #else .. #include
-          "synti2_cap_default.h"
-
-        + This core may need some changes. In particular, it would be
-          wonderful if the number of envelope knees and of oscillators
-          could be free. Their processing logic would have to be
-          redesigned a bit. Especially the oscillator cascade should
-          be reversed: 4->3->2->1->out instead of 1->2->3->4->out!
-
-  This note now contains the essential parts of many former
-  wishes.. So it'll be the next task to resolve.
-*/
-
 #include <math.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -115,7 +56,7 @@ varlength(const unsigned char * source, unsigned int * dest){
 #endif
 }
 
-#ifndef NO_SYSEX_RECEIVE
+#ifdef DO_RECEIVE_SYSEX
 /**
  * Assemble a 28-bit integer from 7 bit parts that were used
  * in SysEx transfer.
@@ -181,7 +122,7 @@ synti2_player_event_add(synti2_synth *s,
   }
   ev_new = s->seq.freeloc++;
   
-#ifndef NO_SAFETY
+#ifdef DO_SAFETY_CHECKS
   /* Compose-mode checks for storage size. */
   if (ev_new > (s->seq.evpool+SYNTI2_MAX_SONGEVENTS)){
     ev_new = --(s->seq.freeloc);
@@ -237,15 +178,18 @@ synti2_player_merge_chunk(synti2_synth *s,
     r += varlength(r, &tickdelta);
     frame += s->seq.fpt * tickdelta;
     
+    /* FIXME: If modulators are not used, then there's only one kind
+     of chunks. The whole type variable and its check could be
+     ifdeffed.*/
     if (type == MISSS_LAYER_NOTES){
-      /* Produce a 'Note on' message in our internal midi-like format. */
+      /* Produce a 'Note on' message in our internal midi-like fmt. */
       msg[0] = MISSS_MSG_NOTE;
       msg[1] = chan;
       msg[2] = (par[0]==0xff) ? *r++ : par[0];
       msg[3] = (par[1]==0xff) ? *r++ : par[1];
       synti2_player_event_add(s, frame, msg);
     }
-#ifndef NO_CC
+#ifdef FEAT_MODULATORS
     else if (type == MISSS_LAYER_CONTROLLER_RAMPS) {
       msg[0] = MISSS_MSG_RAMP;
       msg[1] = chan;
@@ -268,7 +212,7 @@ synti2_player_merge_chunk(synti2_synth *s,
       synti2_player_event_add(s, frame, msg);
     }
 #endif
-#ifndef NO_SAFETY
+#ifdef DO_SAFETY_CHECKS
     else {
       s->seq.last_error_frame = frame;
       s->seq.last_error_type = SYNTI2_ERROR_UNKNOWN_LAYER;
@@ -279,7 +223,8 @@ synti2_player_merge_chunk(synti2_synth *s,
   return (byte_t*) r;
 }
 
-/** Load and initialize a song. Assumes a freshly created player object!*/
+/** Load and initialize a song. Assumes a freshly created player
+    object!*/
 static
 void
 synti2_player_init_from_misss(synti2_synth *s, const byte_t *r)
@@ -298,10 +243,10 @@ synti2_player_init_from_misss(synti2_synth *s, const byte_t *r)
    * accuracy vs. code size once more in here(?).
    */
   r += varlength(r, &(s->seq.tpq));  /* Ticks per quarter note */
-  r += varlength(r, &uspq);       /* Microseconds per quarter note */
+  r += varlength(r, &uspq);          /* Microseconds per quarter note */
   s->seq.fpt = 
     ((float)uspq / s->seq.tpq) 
-    / (1000000.0f / s->sr); /* frames-per-tick */
+    / (1000000.0f / s->sr);          /* frames-per-tick */
   for(r += varlength(r, &chunksize); chunksize > 0; r += varlength(r, &chunksize)){
     r = synti2_player_merge_chunk(s, r, chunksize); /* read a chunk... */
   }
@@ -345,8 +290,10 @@ synti2_init(synti2_synth * s,
   
   /* Initialize the rest of the synth. */
   
-  /* Create a note-to-frequency look-up table (cents need interpolation). 
-   * TODO: Which is more efficient / small code: linear interpolation 
+  /* Create a note-to-frequency look-up table (cents need
+   * interpolation).
+   * 
+   * TODO: Which is more efficient / small code: linear interpolation
    * on every eval or make a lookup table on the cent scale...
    *
    * TODO: I could have negative notes for LFO's and upper octaves to
@@ -378,7 +325,7 @@ synti2_init(synti2_synth * s,
     
     t = (float)ii/(WAVETABLE_SIZE-1);
     s->wave[0][ii] = sin((float)(2*M_PI)*t);
-#ifndef NO_EXTRA_WAVETABLES
+#ifdef FEAT_EXTRA_WAVETABLES
     t = (float)ii/(WAVETABLE_SIZE-1);
     for(wt=1; wt<NHARM; wt++){
       s->wave[wt][ii] = s->wave[wt-1][ii] 
@@ -427,14 +374,14 @@ synti2_do_noteon(synti2_synth *s,
 {
   int ie;
   
-#ifndef NO_LOOPING_ENVELOPES
+#ifdef FEAT_LOOPING_ENVELOPES
   s->voi[voice].sustain = vel;
 #endif
   
-#ifndef NO_NOTEOFF
+#ifdef FEAT_NOTE_OFF
   if (vel==0){
-    for (ie=0; ie<=NENVPERVOICE; ie++){
-      s->voi[voice].estage[ie] = RELEASESTAGE;
+    for (ie=0; ie<=NUM_ENVS; ie++){
+      s->voi[voice].estage[ie] = ENV_RELEASE_STAGE;
       s->voi[voice].eprog[ie].delta = 0;
     }
     return; /* Note off done. */
@@ -442,30 +389,30 @@ synti2_do_noteon(synti2_synth *s,
 #endif
   
   /* note on */
-#ifndef NO_VELOCITY
+#ifdef FEAT_VELOCITY_SENSITIVITY
   s->voi[voice].velocity = vel;
 #endif
   
   s->voi[voice].note = note;
   
-#ifndef NO_LEGATO
+#ifdef FEAT_LEGATO
   synti2_counter_retarget(&(s->voi[voice].pitch),
-                          s->voi[voice].patch.fpar[SYNTI2_F_LEGLEN],
+                          s->voi[voice].patch.fpar[FPAR_LEGLEN],
                           note, s->sr);
 #endif
   
   /* Trigger all envelopes. Just give a hint to the evaluator function.. */
-  for (ie=0; ie<=NENVPERVOICE; ie++){
-    s->voi[voice].estage[ie] = TRIGGERSTAGE;
+  for (ie=0; ie<=NUM_ENVS; ie++){
+    s->voi[voice].estage[ie] = ENV_TRIGGER_STAGE;
     s->voi[voice].eprog[ie].delta = 0;
   }
   
-#ifdef DO_RESET_PHASE
+#ifdef FEAT_RESET_PHASE
   /* Adds to code size and produces clicks when note tail is still
    * sounding, but makes each note start with deterministic (zero)
    * phase difference between oscillators.
    */
-  for(ie=0;ie<NOSCILLATORS;ie++) {
+  for(ie=0;ie<NUM_OPERATORS;ie++) {
     s->voi[voice].c[ie].val = 0;
   }
 #endif
@@ -488,12 +435,12 @@ synti2_fill_patches_from(synti2_synth *s, const unsigned char *data)
   
   for(ipat=0; *data != 0xf7; ipat++){
     pat = &(s->voi[ipat].patch);
-    for(ir=0;ir<SYNTI2_I3_NPARS; ir+=2){
+    for(ir=0;ir<NUM_IPARS; ir+=2){
       pat->ipar3[ir] = *data >> 4;
       pat->ipar3[ir+1] = (*data++) & 0xf;
     }
     
-    for (ir=0; ir<SYNTI2_F_NPARS; ir++){
+    for (ir=0; ir<NUM_FPARS; ir++){
       /*printf("Reading value %08lx: (%02x %02x) ", data, data[0], data[1]);*/
       nbytes = varlength(data, &intval);
       data += nbytes;
@@ -504,7 +451,7 @@ synti2_fill_patches_from(synti2_synth *s, const unsigned char *data)
   }
 }
 
-#ifndef NO_SYSEX_RECEIVE
+#ifdef DO_RECEIVE_SYSEX
 /** 
  * Receive SysEx data. (Convenient for sound editing, but not
  * necessary for the stand-alone 4k synth. Hence, this is compiled
@@ -543,7 +490,7 @@ synti2_do_receiveSysexData(synti2_synth *s, const byte_t * data){
     decode7b4(data, &encoded_fval);
     s->voi[ipat].patch.fpar[ir] = synti2_decode_f(encoded_fval);
   } 
-#ifndef NO_SAFETY
+#ifdef DO_SAFETY_CHECKS
   else {
     s->last_error_frame = s->framecount;
     s->last_error_type = SYNTI2_ERROR_UNKNOWN_OPCODE;
@@ -585,7 +532,7 @@ synti2_handleInput(synti2_synth *s,
     if (msgbuf[0] == MISSS_MSG_NOTE){
       synti2_do_noteon(s, msgbuf[1], msgbuf[2], msgbuf[3]);
       
-#ifndef NO_CC
+#ifdef FEAT_MODULATORS
     } else if (msgbuf[0] == MISSS_MSG_RAMP){
       /* A ramp message contains controller number, time, and destination value: */
       synti2_counter_retarget(&(s->voi[msgbuf[1]].contr[msgbuf[2]]),
@@ -594,13 +541,13 @@ synti2_handleInput(synti2_synth *s,
                               s->sr);
 #endif
       
-#ifndef NO_SYSEX_RECEIVE
+#ifdef DO_RECEIVE_SYSEX
     } else if (msgbuf[0] == MISSS_MSG_DATA){
       /* Used only in compose mode (patch editor requires this) */
       synti2_do_receiveSysexData(s, msgbuf+1);
 #endif
     
-#ifndef NO_SAFETY
+#ifdef DO_SAFETY_CHECKS
     } else {
       s->last_error_frame = s->framecount;
       s->last_error_type = SYNTI2_ERROR_UNKNOWN_MESSAGE;
@@ -626,10 +573,10 @@ void
 synti2_evalCounters(synti2_voice *v){
   counter *c;
   unsigned int ic, icmax;
-#ifndef NO_LEGATO
-  icmax = 1 + NOSCILLATORS + NENVPERVOICE+1 + NCONTROLLERS;
+#ifdef FEAT_LEGATO
+  icmax = 1 + NUM_OPERATORS + NUM_ENVS+1 + NUM_MODULATORS;
 #else
-  icmax = NOSCILLATORS + NENVPERVOICE+1 + NCONTROLLERS;
+  icmax = NUM_OPERATORS + NUM_ENVS+1 + NUM_MODULATORS;
 #endif
   for(ic=0;ic<icmax;ic++){
     c = v->c+ic;
@@ -637,7 +584,7 @@ synti2_evalCounters(synti2_voice *v){
     c->detect = c->val; 
     c->val += c->delta;  /* Count 0 to MAX*/
     
-    if (ic > NOSCILLATORS) { /* Clamp only latter half of counters. */
+    if (ic > NUM_OPERATORS) { /* Clamp only latter half of counters. */
       if (c->val < c->detect){         /* Detect overflow*/
         c->val = MAX_COUNTER;          /* Clamp. */
         c->delta = 0;                  /* Stop after cycle*/
@@ -670,7 +617,7 @@ synti2_updateEnvelopeStages(synti2_synth *s,
   int ie, ipastend;
   float nextgoal, nexttime;
   
-#ifndef NO_SAFETY
+#ifdef DO_SAFETY_CHECKS
   /* Looping over all-zero times produces an infinite iteration which
    * is not nice, especially in a real-time audio system. So, there is
    * an optional safety mechanism for real-time work. In a
@@ -683,25 +630,25 @@ synti2_updateEnvelopeStages(synti2_synth *s,
   /* Envelope 0 is never touched. Therefore it yields a constant
    * 0. I don't know if this hack is very useful, but it is in its
    * own way very beautiful, so I leave it untouched. That's why the
-   * loop goes through indices 1..NENVPERVOICE (in reverse order):
+   * loop goes through indices 1..NUM_ENVS (in reverse order):
    */
-  for (ie=NENVPERVOICE; ie>0; ie--){
+  for (ie=NUM_ENVS; ie>0; ie--){
     if (v->estage[ie] == 0) continue; /* skip untriggered. */
     
     /* reverse order in the stages, so a bit awkward indexing. */
-    ipastend = SYNTI2_F_ENV1K1T + ie * SYNTI2_NENVD;
+    ipastend = FPAR_ENV1K1T + ie * NUM_ENV_DATA;
     
-#ifndef NO_SAFETY
+#ifdef DO_SAFETY_CHECKS
     iter_watch = 0;
 #endif
     /* Find next non-zero-timed knee (or end). delta==0 on a
        triggered envelope means endclamp/noteon. */
     while ((v->eprog[ie].delta == 0) && ((--v->estage[ie]) > 0)){
-#ifndef NO_LOOPING_ENVELOPES
-      if ((v->estage[ie] == LOOPSTAGE) && (v->sustain != 0)){
-        v->estage[ie] += pat->ipar3[(SYNTI2_I3_ELOOP1-1)+ie]; /*-1*/
-#ifndef NO_SAFETY
-        if ((iter_watch++) > NENVKNEES){
+#ifdef FEAT_LOOPING_ENVELOPES
+      if ((v->estage[ie] == ENV_LOOP_STAGE) && (v->sustain != 0)){
+        v->estage[ie] += pat->ipar3[(IPAR_ELOOP1-1)+ie]; /*-1*/
+#ifdef DO_SAFETY_CHECKS
+        if ((iter_watch++) > NUM_ENV_KNEES){
           v->sustain = 0; /* stop ifinite loop and mark error. */
           s->seq.last_error_frame = s->framecount;
           s->seq.last_error_type = SYNTI2_ERROR_INVALID_LOOPING_ENV;
@@ -745,33 +692,36 @@ synti2_updateFrequencies(const synti2_synth *s,
    * seems to have ended up in this spot.
    */
   
-  for (iosc=0; iosc<NOSCILLATORS; iosc++){
+  for (iosc=0; iosc<NUM_OPERATORS; iosc++){
     /* Pitch either from legato counter or directly from note: */
-#ifndef NO_LEGATO
+#ifdef FEAT_LEGATO
     notemod = v->pitch.f;
 #else
     notemod = v->note;
 #endif
     
-#ifndef NO_PITCH_SCALING
+#ifdef FEAT_PITCH_SCALING
     /* Optional pitch scale */
-    notemod *= (1.f + pat->fpar[SYNTI2_F_PSCALE]);
+    notemod *= (1.f + pat->fpar[FPAR_PSCALE]);
 #endif
     
-#ifndef NO_PITCH_ENV
+#ifdef FEAT_PITCH_ENVELOPE
     /* Optional pitch envelope */
-    notemod += v->eprog[pat->ipar3[SYNTI2_I3_EPIT1+iosc]].f;
+    notemod += v->eprog[pat->ipar3[IPAR_EPIT1+iosc]].f;
 #endif
     
-#ifndef NO_DETUNE
+#ifdef FEAT_PITCH_DETUNE
     /* Optional detune */
-    notemod += pat->fpar[SYNTI2_F_DT1 + iosc];    /* "coarse" */
+    notemod += pat->fpar[FPAR_DT1 + iosc];    /* "coarse" */
+#if 0
+    /* FIXME: Remove for good. Likely to be unused:*/
 #ifndef NO_FINE_DETUNE
-    notemod += pat->fpar[SYNTI2_F_DT1F + iosc];   /* "fine"   */
+    notemod += pat->fpar[FPAR_DT1F + iosc];   /* "fine"   */
+#endif
 #endif
 #endif
     
-#ifndef NO_PITCH_BEND
+#ifdef FEAT_PITCH_BEND
     /* Pitch bend for each oscillator. Different values between
      * oscillators allow some weird effects; normal synth default
      * would be +2 notes on each oscillator. The cube_thing 4k intro
@@ -779,14 +729,14 @@ synti2_updateFrequencies(const synti2_synth *s,
      * parameters, so I think my pitch bend system is now final like
      * this.
      */
-    notemod += pat->fpar[SYNTI2_F_PBVAL] * pat->fpar[SYNTI2_F_PBAM1+iosc];
+    notemod += pat->fpar[FPAR_PBVAL] * pat->fpar[FPAR_PBAM1+iosc];
 #endif
     
     /* Interpolate between two notes (deltas) in a look-up table: */
     v->c[iosc].delta = 
       interpolate_note(s->note2delta,notemod);
     
-#ifndef NO_FILTER_PITCH_FOLLOW
+#ifdef FEAT_FILTER_FOLLOW_PITCH
     /* Store effective note for filter pitch follow: */
     v->effnote[iosc] = notemod;
 #endif
@@ -794,7 +744,7 @@ synti2_updateFrequencies(const synti2_synth *s,
 }
 
 
-#ifndef NO_FILTER
+#ifdef FEAT_FILTER
 /** A filter. Taken from
  *  http://www.musicdsp.org/showArchiveComment.php?ArchiveID=23
  *
@@ -842,7 +792,7 @@ static void apply_filter(synti2_synth *s,
   store[FIL_LP] += f * store[FIL_BP];
   store[FIL_HP]  = q * store[FIL_IN] - store[FIL_LP] - (q*q) * store[FIL_BP];
   store[FIL_BP] += f * store[FIL_HP];
-#ifndef NO_NOTCH_FILTER
+#ifdef FEAT_FILTER_OUTPUT_NOTCH
   store[FIL_NF] = store[FIL_LP] + store[FIL_HP];
 #endif
 }
@@ -866,23 +816,23 @@ synti2_render(synti2_synth *s,
   float *sigin;  /* Input signal table during computation. */
   float *signal; /* Output signal destination during computation. */
   
-#ifndef NO_DELAY
+#ifdef FEAT_DELAY_LINES
   float dlev;
 #endif
-#ifndef NO_CC
+#ifdef FEAT_MODULATORS
   int ccdest;
 #endif
-#ifndef NO_FILTER
+#ifdef FEAT_FILTER
   float fenv, renv;
 #endif
-#ifndef NO_STEREO
+#ifdef FEAT_STEREO
   float pan;
   int iframeR;
 #endif
   
   for (iframe=0; iframe<nframes; iframe++){
     iframeL=2*iframe;
-#ifndef NO_STEREO
+#ifdef FEAT_STEREO
     iframeR=iframeL+1;
 #endif
     
@@ -896,11 +846,11 @@ synti2_render(synti2_synth *s,
     
     /* Sound output begins. Mix channels additively to a cleared frame:*/
     buffer[iframeL] = 0.0f;
-#ifndef NO_STEREO
+#ifdef FEAT_STEREO
     buffer[iframeR] = 0.0f;
 #endif
     
-    for(iv=0;iv<NPARTS;iv++){
+    for(iv=0;iv<NUM_CHANNELS;iv++){
       voi = &(s->voi[iv]);
       pat = &(voi->patch);
       eprog = voi->eprog;
@@ -910,9 +860,9 @@ synti2_render(synti2_synth *s,
       synti2_updateFrequencies(s, voi, pat);
       synti2_evalCounters(voi);
       
-#ifndef NO_CC
-      for (ii=0;ii<NCONTROLLERS;ii++){
-        ccdest = pat->fpar[SYNTI2_F_CDST1+ii];
+#ifdef FEAT_MODULATORS
+      for (ii=0;ii<NUM_MODULATORS;ii++){
+        ccdest = pat->fpar[FPAR_CDST1+ii];
         pat->fpar[ccdest] = voi->contr[ii].f;
       }
 #endif
@@ -920,38 +870,38 @@ synti2_render(synti2_synth *s,
       /* Start creating the sound from this voice. */
       sigin  = signal = &(voi->outp[0]);
       
-#ifndef NO_DELAY
+#ifdef FEAT_DELAY_LINES
       /* Additive mix from delay lines. */
       interm = 0.0f;
       dsamp = s->framecount;
-      for (id = 0; id < NDELAYS; id++){
-        if ((dlev = (pat->fpar[SYNTI2_F_DINLV1+id])) == 0.0f) continue;
-        interm += s->delay[id][dsamp % DELAYSAMPLES] * dlev;
+      for (id = 0; id < NUM_DELAY_LINES; id++){
+        if ((dlev = (pat->fpar[FPAR_DINLV1+id])) == 0.0f) continue;
+        interm += s->delay[id][dsamp % SYNTI2_DELAYSAMPLES] * dlev;
       }
-      sigin[NOSCILLATORS+1] = interm;
+      sigin[NUM_OPERATORS+1] = interm;
 #endif
       
       /* FM / Phase modulation synthesis */
-      for(iosc = 0; iosc < NOSCILLATORS; iosc++){
+      for(iosc = 0; iosc < NUM_OPERATORS; iosc++){
         signal++; /* Go to next output slot. */
         wtoffs = (unsigned int)
           ((voi->c[iosc].fr 
-            + sigin[pat->ipar3[SYNTI2_I3_FMTO1+iosc]])  /* phase modulator */
+            + sigin[pat->ipar3[IPAR_FMTO1+iosc]])  /* phase modulator */
            * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
         
-#ifndef NO_EXTRA_WAVETABLES
-        interm  = s->wave[pat->ipar3[SYNTI2_I3_HARM1+iosc]][wtoffs];
+#ifdef FEAT_EXTRA_WAVETABLES
+        interm  = s->wave[pat->ipar3[IPAR_HARM1+iosc]][wtoffs];
 #else
         interm  = s->wave[0][wtoffs];
 #endif
         
         /* parallel mix could be optional? Actually also FM could be? */
-        interm *= (eprog[pat->ipar3[SYNTI2_I3_EAMP1+iosc]].f);
-        interm += sigin[pat->ipar3[SYNTI2_I3_ADDTO1+iosc]]; /* parallel */
-        interm *= pat->fpar[SYNTI2_F_LV1+iosc]; /* level/gain */
-#ifndef NO_VELOCITY
+        interm *= (eprog[pat->ipar3[IPAR_EAMP1+iosc]].f);
+        interm += sigin[pat->ipar3[IPAR_ADDTO1+iosc]]; /* parallel */
+        interm *= pat->fpar[FPAR_LV1+iosc]; /* level/gain */
+#ifdef FEAT_VELOCITY_SENSITIVITY
         /* Optional velocity sensitivity. */
-        if (pat->ipar3[SYNTI2_I3_VS1+iosc]){
+        if (pat->ipar3[IPAR_VS1+iosc]){
           interm *= voi->velocity / 127.f;
         }
 #endif
@@ -959,108 +909,108 @@ synti2_render(synti2_synth *s,
       }
       
       /* Optional additive noise after FM operator synthesis: */
-#ifndef NO_NOISE
+#ifdef FEAT_NOISE_SOURCE
       RandSeed *= 16807;
-      interm += eprog[pat->ipar3[SYNTI2_I3_EAMPN]].f 
-#ifndef NO_VELOCITY
-        * ((pat->ipar3[SYNTI2_I3_VSN])?(voi->velocity / 127.f) : 1.f)
+      interm += eprog[pat->ipar3[IPAR_EAMPN]].f 
+#ifdef FEAT_VELOCITY_SENSITIVITY
+        * ((pat->ipar3[IPAR_VSN])?(voi->velocity / 127.f) : 1.f)
 #endif
-        * pat->fpar[SYNTI2_F_LVN]       /*noise gain*/
+        * pat->fpar[FPAR_LVN]       /*noise gain*/
         * (float)RandSeed * 4.6566129e-010f; /*noise*/
 #endif
       
-#ifndef NO_DELAY
+#ifdef FEAT_DELAY_LINES
       /* Additive mix from delay lines. */
       signal++; /* Go to next output slot (=delay mix). */
-      interm += *(signal) * pat->fpar[SYNTI2_F_LVD];  /*delay mix gain*/
+      interm += *(signal) * pat->fpar[FPAR_LVD];  /*delay mix gain*/
 #endif
       
-#ifndef NO_FILTER
+#ifdef FEAT_FILTER
       /* Skip for faster computation. Should do the same for delays! */
-      if(pat->ipar3[SYNTI2_I3_FILT]) {
+      if(pat->ipar3[IPAR_FILT]) {
         signal[0] = interm;
         
         /* Base frequency as note value from parameter. */
-        fenv = pat->fpar[SYNTI2_F_FFREQ];
-        renv = pat->fpar[SYNTI2_F_FRESO];
+        fenv = pat->fpar[FPAR_FFREQ];
+        renv = pat->fpar[FPAR_FRESO];
         
         /* Follow the pitch of an oscillator, if requested: */
-#ifndef NO_FILTER_PITCH_FOLLOW
-        if (pat->ipar3[SYNTI2_I3_FFOLL] > 0){
-          fenv += voi->effnote[pat->ipar3[SYNTI2_I3_FFOLL]-1];
+#ifdef FEAT_FILTER_FOLLOW_PITCH
+        if (pat->ipar3[IPAR_FFOLL] > 0){
+          fenv += voi->effnote[pat->ipar3[IPAR_FFOLL]-1];
         }
 #endif
         
         /* Convert to frequency at this point. */
         fenv = interpolate_note(s->note2freq,fenv);
         
-#ifndef NO_FILTER_CUT_ENVELOPE
+#ifdef FEAT_FILTER_CUTOFF_ENVELOPE
         /* Optionally _multiply_ cutoff frequency by an envelope. */
-        if (pat->ipar3[SYNTI2_I3_EFILC]>0){
-          fenv *= eprog[pat->ipar3[SYNTI2_I3_EFILC]].f;
+        if (pat->ipar3[IPAR_EFILC]>0){
+          fenv *= eprog[pat->ipar3[IPAR_EFILC]].f;
         }
 #endif
         
-#ifndef NO_FILTER_RESO_ENVELOPE
+#ifndef FEAT_FILTER_RESO_ENVELOPE
         /* Optionally _multiply_ also resonance by an envelope. */
-        if (pat->ipar3[SYNTI2_I3_EFILR]>0){
-          renv *= eprog[pat->ipar3[SYNTI2_I3_EFILR]].f;
+        if (pat->ipar3[IPAR_EFILR]>0){
+          renv *= eprog[pat->ipar3[IPAR_EFILR]].f;
         }
 #endif
         
         apply_filter(s, fenv, renv, signal);
-        interm = signal[pat->ipar3[SYNTI2_I3_FILT]]; /*choose output*/
+        interm = signal[pat->ipar3[IPAR_FILT]]; /*choose output*/
       }
 #endif
       
-#ifndef NO_DELAY
+#ifdef FEAT_DELAY_LINES
       /* mix also to the delay lines.*/
-      for (id = 0; id < NDELAYS; id++){
-        if ((dlev = (pat->fpar[SYNTI2_F_DLEV1+id])) == 0.0f) continue;
+      for (id = 0; id < NUM_DELAY_LINES; id++){
+        if ((dlev = (pat->fpar[FPAR_DLEV1+id])) == 0.0f) continue;
         /* Unit of the delay length parameter is now millisecond
            unless otherwise specified. WARNING: Sample rates not
-           divisible by 1000 might behave badly! Floating point
-           division would solve the problem, but cost about 10 bytes
-           in code size. */
+           divisible by 1000 might behave badly! Must test with 44.1
+           kHz. Floating point division would solve the problem, but
+           cost about 10 bytes in code size. */
 #ifndef NO_MILLISECOND_DELAY
         dsamp = s->framecount
-          + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * (s->sr / 1000));
+          + (int)(pat->fpar[FPAR_DLEN1+id] * (s->sr / 1000));
 #else
         dsamp = s->framecount
-          + (int)(pat->fpar[SYNTI2_F_DLEN1+id] * s->sr);
+          + (int)(pat->fpar[FPAR_DLEN1+id] * s->sr);
 #endif
-        s->delay[id][dsamp % DELAYSAMPLES] += dlev * interm;
+        s->delay[id][dsamp % SYNTI2_DELAYSAMPLES] += dlev * interm;
       }
 #endif
       
       /* result is both in *signal and in interm (like before). Main
        * mix in either mono or stereo. */
-#ifdef NO_STEREO
-      /* We only output to the left channel. */
-      buffer[iframeL]   += pat->fpar[SYNTI2_F_MIXLEV] * interm;
-#else
+#ifdef FEAT_STEREO
       /* To cut down computations, panning increases volume ([0,2]): */
-      pan = pat->fpar[SYNTI2_F_MIXPAN];
-#ifndef NO_PAN_ENVELOPE
-      pan += eprog[pat->ipar3[SYNTI2_I3_EPAN]].f;
+      pan = pat->fpar[FPAR_MIXPAN];
+#ifdef FEAT_PAN_ENVELOPE
+      pan += eprog[pat->ipar3[IPAR_EPAN]].f;
 #endif
-      buffer[iframeL] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f-pan);
-      buffer[iframeR] += pat->fpar[SYNTI2_F_MIXLEV] * interm * (1.f+pan);
+      buffer[iframeL] += pat->fpar[FPAR_MIXLEV] * interm * (1.f-pan);
+      buffer[iframeR] += pat->fpar[FPAR_MIXLEV] * interm * (1.f+pan);
+#else
+      /* No stereo -> We only output to the left channel. */
+      buffer[iframeL]   += pat->fpar[FPAR_MIXLEV] * interm;
 #endif
     }
     
-#ifndef NO_OUTPUT_SQUASH
+#ifdef FEAT_OUTPUT_SQUASH
     buffer[iframeL] = sin(buffer[iframeL]); /*Hack, but sounds nice*/
-#ifndef NO_STEREO
+#ifdef FEAT_STEREO
     buffer[iframeR] = sin(buffer[iframeR]); /*Hack, but sounds nice*/
 #endif
 #endif
     
-#ifndef NO_DELAY
+#ifdef FEAT_DELAY_LINES
     /* "erase the delay tape" so it can be used again. Must be done
        after each channel has read the current contents. */
-    for(id=0; id<NDELAYS; id++){
-      s->delay[id][s->framecount % DELAYSAMPLES] = 0.f; 
+    for(id=0; id<NUM_DELAY_LINES; id++){
+      s->delay[id][s->framecount % SYNTI2_DELAYSAMPLES] = 0.f; 
     }
 #endif
   }

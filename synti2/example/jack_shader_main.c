@@ -42,10 +42,12 @@ typedef jack_default_audio_sample_t sample_t;
 /* The shaders */
 #include "shaders.c"
 
+#ifdef DO_INCLUDE_PATCH_AND_SONG
 /* These datas are created by the tool programs: */
 /* I'm dirty enough to just include them: */
 #include "patchdata.c"
 #include "songdata.c"
+#endif
 
 typedef void *func_t(void);
 
@@ -187,7 +189,11 @@ static void init_or_die(){
   sr = jack_get_sample_rate (client);
 
   /* My own soft synth to be created. */
+#ifdef DO_INCLUDE_PATCH_AND_SONG
   synti2_init(&global_synth, sr, patch_sysex, hacksong_data);
+#else
+  synti2_init(&global_synth, sr, NULL, NULL);
+#endif
 
   /* Now we activate our new client. */
   if (jack_activate (client)) {

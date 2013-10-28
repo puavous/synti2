@@ -6,63 +6,19 @@
 #ifdef JACK_MIDI
 #define USE_MIDI_INPUT
 #endif
-
-/* If they don't want no nothin' then so be it. */
-#ifdef NO_NOTHING
-#define NO_NOTEOFF
-#define NO_NOISE
-#define NO_LOOPING_ENVELOPES
-#define NO_SYSEX_RECEIVE
-#define NO_LEGATO
-#define NO_PITCH_SCALING
-#define NO_PITCH_ENV
-#define NO_DETUNE
-#define NO_EXTRA_WAVETABLES
-#define NO_OUTPUT_SQUASH
-#define NO_DELAY
-#define NO_FILTER
-#define NO_VELOCITY
-#define NO_CC
-#define NO_STEREO
+#ifdef COMPOSE_MODE
+#define DO_RECEIVE_SYSEX
+#define DO_SAFETY_CHECKS
 #endif
 
-#if defined (NO_FILTER) || defined (NO_FILTER_FRILLS)
-#ifndef NO_FILTER_PITCH_FOLLOW
-#define NO_FILTER_PITCH_FOLLOW
-#endif
-#ifndef NO_FILTER_CUT_ENVELOPE
-#define NO_FILTER_CUT_ENVELOPE
-#endif
-#ifndef NO_FILTER_RESO_ENVELOPE
-#define NO_FILTER_RESO_ENVELOPE
-#endif
-#endif
-
-/* don't know if this is nice, but doing it still: */
-#ifdef BUT_USE_DETUNE
-#undef NO_DETUNE
-#endif
-
-#ifdef BUT_USE_NOISE
-#undef NO_NOISE
-#endif
-
-#ifdef BUT_USE_PITCH_ENV
-#undef NO_PITCH_ENV
-#endif
-
-#ifdef BUT_USE_OUTPUT_SQUASH
-#undef NO_OUTPUT_SQUASH
-#endif
-
-
+#ifdef DO_SAFETY_CHECKS
 #define SYNTI2_ERROR_UNKNOWN_LAYER        1
 #define SYNTI2_ERROR_UNKNOWN_MESSAGE      2
 #define SYNTI2_ERROR_UNKNOWN_OPCODE       3
 #define SYNTI2_ERROR_OUT_OF_EVENT_SPACE   4
 #define SYNTI2_ERROR_OUT_OF_MESSAGE_SPACE 5
 #define SYNTI2_ERROR_INVALID_LOOPING_ENV  6
-
+#endif
 
 typedef float synti2_smp_t;
 

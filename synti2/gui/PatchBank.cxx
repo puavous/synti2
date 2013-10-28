@@ -111,11 +111,7 @@ void Capacities::addCapacityDescription(string key,
         ost << "#define " ;
         ost.width(30); ost.fill(' ');
         ost << std::left << (*it).getCDefine();
-
         ost << " /*" << (*it).getHumanReadable() << " */" << endl;
-        //ost.width(3); ost.fill(' ');
-        //ost << value((*it).getKey());
-        ost << endl;
       }
   }
 
@@ -189,8 +185,9 @@ void Capacities::addCapacityDescription(string key,
           << " * Exported by PatchBank.cxx - don't edit manually." << endl
           << " */"<< endl;
 
-      caps.exportHeader(ost);
-      feats.exportHeader(ost);
+      caps.exportHeader(ost); ost<<endl;
+      feats.exportHeader(ost); ost<<endl;
+
       std::vector<std::string>::const_iterator sit;
       int ind;
 
@@ -203,10 +200,11 @@ void Capacities::addCapacityDescription(string key,
           if (!ruleIsSatisfied(rs)) continue;
           std::string const & cdef = getI4Par(0,*sit).getCDefine();
           ost << "#define ";
-          ost.width(30); ost.fill(' '); ost << std::left << cdef;
+          ost.width(30); ost.fill(' '); ost << std::left;
+          ost << ("IPAR_" + cdef);
           ost << " " << (ind++) << endl;
       }
-      ost << "#define NUM_I4_PARS " << ind << endl;
+      ost << "#define NUM_IPARS " << ind << endl << endl;
 
       ind = 0;
       for (sit=getFBegin(0);sit!=getFEnd(0); ++sit){
@@ -214,10 +212,11 @@ void Capacities::addCapacityDescription(string key,
           if (!ruleIsSatisfied(rs)) continue;
           std::string const & cdef = getFPar(0,*sit).getCDefine();
           ost << "#define ";
-          ost.width(30); ost.fill(' '); ost << std::left << cdef;
+          ost.width(30); ost.fill(' '); ost << std::left;
+          ost << ("FPAR_" + cdef);
           ost << " " << (ind++) << endl;
       }
-      ost << "#define NUM_F_PARS " << ind << endl;
+      ost << "#define NUM_FPARS " << ind << endl << endl;
 
   }
 

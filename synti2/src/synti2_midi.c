@@ -179,7 +179,7 @@ intercept_mode(synti2_midi_map *map,
   map->chn[ic].mode = value;
 
   /* FIXME: Should be done in intercept_voices, but think about default settings in that case. */
-  for(ii=0;(ii<NPARTS) && (map->chn[ic].voices[ii] > 0);){ii++;}
+  for(ii=0;(ii<NUM_CHANNELS) && (map->chn[ic].voices[ii] > 0);){ii++;}
   map->chn[ic].nvoices = ii;
 }
 
@@ -192,7 +192,7 @@ intercept_map_single(synti2_midi_map *map,
   int inote = midi_in[1];
   int value = midi_in[2];
   /* Values need -1 to be actual 0-based indices */
-  if (value > NPARTS) value = 0; /* Zero if illegal. */
+  if (value > NUM_CHANNELS) value = 0; /* Zero if illegal. */
   map->chn[ic].note_channel_map[inote] = value;
 }
 
@@ -206,7 +206,7 @@ intercept_map_all(synti2_midi_map *map,
   for(inote=0;inote<128;inote++){
     value = midi_in[inote];
     /* Values need -1 to be actual 0-based indices */
-    if (value > NPARTS) value = 0; /* Zero if illegal. */
+    if (value > NUM_CHANNELS) value = 0; /* Zero if illegal. */
     map->chn[ic].note_channel_map[inote] = value;
   }
 }
@@ -219,9 +219,9 @@ intercept_voices(synti2_midi_map *map,
   int ic, ii, voice;
   ic = *midi_in++;
   map->chn[ic].nvoices = 0;
-  for(ii=0;ii<NPARTS;ii++){
+  for(ii=0;ii<NUM_CHANNELS;ii++){
     voice = midi_in[ii];
-    if (voice>NPARTS) voice = 0;
+    if (voice>NUM_CHANNELS) voice = 0;
     map->chn[ic].voices[ii] = voice;
     if (voice==0) break;
     else map->chn[ic].nvoices++;
@@ -378,7 +378,7 @@ synti2_map_note_off(synti2_midi_map *map,
       return 0;
     }
     /* Create unison duplicates on the listed voices: */
-    for (ii=0;ii < NPARTS; ii++){
+    for (ii=0;ii < NUM_CHANNELS; ii++){
       voice = map->chn[ic].voices[ii];
       if (voice==0) break;
       voice--; /* adjust index to base 0*/
@@ -435,7 +435,7 @@ synti2_map_note_on(synti2_midi_map *map,
   
   if (map->chn[ic].mode == MM_MODE_DUP){
     /* Create unison duplicates on the listed voices: */
-    for (ii=0;ii < NPARTS; ii++){
+    for (ii=0;ii < NUM_CHANNELS; ii++){
       voice = map->chn[ic].voices[ii];
       if (voice==0) break;
       msgsizes[ii] = synti2_misss_note(misss_out, voice-1, midi_note, midi_vel);
@@ -478,7 +478,7 @@ synti2_yield_mod_ramps(synti2_midi_map *map,
 {
   int ivoi, voice;
   if (dest==0) return 0;
-  for(ivoi = 0; ivoi < NPARTS; ivoi++){
+  for(ivoi = 0; ivoi < NUM_CHANNELS; ivoi++){
     voice = map->chn[ic].voices[ivoi];
     if (voice == 0) break;
     msgsizes[ivoi] = synti2_misss_ramp(misss_out, voice-1, dest-1,
@@ -495,7 +495,7 @@ get_cont_dest(synti2_midi_map *map,
 {
   int dest, ii;
   dest = 0;
-  for (ii = 0; ii<NCONTROLLERS; ii++){
+  for (ii = 0; ii<NUM_MODULATORS; ii++){
     if (map->chn[ic].mod_src[ii] == 0) continue; /* omit Bank. */
     /* First actual possible CC is #1 ("mod wheel") */
     /* +1 because the mapper has "user interface" value range*/

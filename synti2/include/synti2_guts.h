@@ -8,10 +8,12 @@
 #include "synti2_archdep.h"
 
 /* The following will be custom configurable for the 4k target: */
-#ifndef ULTRASMALL
-#include "synti2_cap.h"
-#include "synti2_params.h"
-#else
+#ifdef COMPOSE_MODE
+#include "synti2_cap_full.h"
+/* separate parameters? Not really necessary? */
+#endif
+
+#ifdef ULTRASMALL
 #include "synti2_cap.h"
 #include "synti2_params.h"
 /* FIXME: TBD: 
@@ -116,8 +118,8 @@ struct synti2_player {
 
 /** The synthesizer patch. The way things sound. */
 typedef struct synti2_patch {
-  float fpar[SYNTI2_F_NPARS];
-  int ipar3[SYNTI2_I3_NPARS];
+  float fpar[NUM_FPARS];
+  int ipar3[NUM_IPARS];
 } synti2_patch;
 
 /** Call it voice. (TODO: rename everywhere) It could be channel,
@@ -126,18 +128,18 @@ typedef struct synti2_patch {
  */
 typedef struct synti2_voice {
   /* Must be in this order and next to each other exactly!! Impl. specif?*/
-  counter c[NOSCILLATORS];
-  counter eprog[NENVPERVOICE+1];
-  counter contr[NCONTROLLERS];
+  counter c[NUM_OPERATORS];
+  counter eprog[NUM_ENVS+1];
+  counter contr[NUM_MODULATORS];
 #ifndef NO_LEGATO
   counter pitch;
 #endif
 #ifndef NO_FILTER_PITCH_FOLLOW
-  float effnote[NOSCILLATORS];
+  float effnote[NUM_OPERATORS];
 #endif
 
   /* Envelope stages just a table? TODO: think.*/
-  unsigned int estage[NENVPERVOICE+1];
+  unsigned int estage[NUM_ENVS+1];
 #ifndef NO_LOOPING_ENVELOPES
   unsigned int sustain;
 #endif
@@ -148,7 +150,7 @@ typedef struct synti2_voice {
   unsigned int velocity;
 #endif
 
-  float outp[1+NOSCILLATORS+1+4]; /*"zero", oscillator outputs, delay bus,
+  float outp[1+NUM_OPERATORS+1+4]; /*"zero", oscillator outputs, delay bus,
                                           filter storage (lp,bp,hp,notch).
                                         FIXME: could be a struct? should?*/
 
@@ -177,10 +179,10 @@ struct synti2_synth {
    * difference between oscillators and envelopes!!
    */
   
-  synti2_voice voi[NPARTS];
+  synti2_voice voi[NUM_CHANNELS];
   unsigned int framecount;
 
-  float delay[NDELAYS][DELAYSAMPLES]; /* Use of delays is optional,
+  float delay[NUM_DELAY_LINES][SYNTI2_DELAYSAMPLES]; /* Use of delays is optional,
                                          but the space costs nothing..*/
 #ifdef USE_MIDI_INPUT
   synti2_midi_map midimap;

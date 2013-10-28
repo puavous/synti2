@@ -81,7 +81,7 @@ TINYFILES = src/synti2.c \
 	     example/selfextr.stub \
 
 # These are additionally needed for compose-time with jack engine:
-JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c
+JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c include/synti2_cap_full.h
 
 # These are additionally needed for off-line rendering:
 DUMPERFILES =  example/file_writer_main.c
@@ -154,6 +154,31 @@ i13tiny:
 	    NONOS="-DNO_SAFETY -DNO_CC -DNO_NOTEOFF -DNO_EXTRA_WAVETABLES -DNO_LOOPING_ENVELOPES -DNO_PITCH_SCALING -DNO_LEGATO -DNO_FINE_DETUNE -DNO_PITCH_BEND -DNO_VELOCITY -DNO_FILTER_RESO_ENVELOPE -DNO_NOTCH_FILTER -DNO_FILTER_CUT_ENVELOPE -DNO_FILTER_PITCH_FOLLOW -DNO_STEREO -DNO_SYSEX_RECEIVE"
 	cd hackpack2; make all
 	mv hackpack2/vis2 ./jacksynti2
+
+# A more final attempt for 4k stand-alone
+hack3:
+	make tiny3 CUSTOMFILES="$(A13FILES)"
+	cd hackpack3; make vis2
+
+tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
+	-rm -r hackpack3
+	mkdir hackpack3
+	cp $(filter %.c %.h %.dat, $^) hackpack3/
+	cat tests/tinymaker3.makefile >> hackpack3/Makefile
+#	cp example/selfextr.stub hackpack3/
+	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
+		< $(filter %shaders.c, $^) > hackpack3/shaders.c
+#	./cltool capheader $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/synti2_cap.h
+#	./cltool patchdesign $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/patchdes.dat
+#	./cltool parheader hackpack2/patchdes.dat > hackpack3/synti2_params.h
+#	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack3/patchdes.dat > hackpack3/patchdata.c
+#	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack3/songdata.c
+
+#For the visualization only:
+	cp include/synti2_midi.h hackpack3/
+	cp include/synti2_jack.h hackpack3/
+	cp include/synti2_midi_guts.h hackpack3/
+	cp include/midi_spec.h hackpack3/
 
 
 # For 4k stand-alone mode:

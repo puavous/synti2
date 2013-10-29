@@ -3,7 +3,8 @@
 
 #include <iostream>
 
-namespace synti2base {
+namespace synti2base
+{
 
 void Capacities::addCapacityDescription(string key,
                                         string cname,
@@ -12,55 +13,62 @@ void Capacities::addCapacityDescription(string key,
                                         int max,
                                         int initial,
                                         string requiresf
-                                        )
+                                       )
 {
-  capkeys.push_back(key);
-  capValue[key] = initial;
-  caps.push_back(CapacityDescription(key,cname,humanReadable,min,max,requiresf));
+    capkeys.push_back(key);
+    capValue[key] = initial;
+    caps.push_back(CapacityDescription(key,cname,humanReadable,min,max,requiresf));
 }
 
 /** Initializes integer-type capacities of the synth. */
-  void Capacities::initCapacityDescriptions(){
+void Capacities::initCapacityDescriptions()
+{
     addCapacityDescription("num_channels","NUM_CHANNELS","Number of channels (patches)",1,256,16,"");
     addCapacityDescription("num_delays","NUM_DELAY_LINES","Number of delay lines",1,8,8,"delay");
     addCapacityDescription("num_ops","NUM_OPERATORS","Number of operators/oscillators per channel", 0,4,4,"fm|add");
     addCapacityDescription("num_envs", "NUM_ENVS", "Number of envelopes per channel", 1,6,6,"");
     addCapacityDescription("num_knees","NUM_ENV_KNEES","Number of knees per envelope", 2,5,5,"");
     addCapacityDescription("num_mods","NUM_MODULATORS","Number of controllable modulators per channel",0,4,4,"mods");
-  }
+}
 
-  void Capacities::toStream(std::ostream &ost){
+void Capacities::toStream(std::ostream &ost)
+{
     ost << "# Can't really output capacities yet. But the code is here." << std::endl;
-  }
+}
 
-  void Capacities::exportHeader(ostream &ost){
-      ost << "/* Capacities (numeric) */ " << endl;
-      vector<CapacityDescription>::const_iterator it;
-      for(it=begin();it!=end();++it){
+void Capacities::exportHeader(ostream &ost)
+{
+    ost << "/* Capacities (numeric) */ " << endl;
+    vector<CapacityDescription>::const_iterator it;
+    for(it=begin(); it!=end(); ++it)
+    {
         ost << "#define ";
-        ost.width(20); ost.fill(' ');
+        ost.width(20);
+        ost.fill(' ');
         ost << std::left << (*it).getCDefine();
-        ost.width(3); ost.fill(' ');
+        ost.width(3);
+        ost.fill(' ');
         ost << value((*it).getKey());
         ost << " /*" << (*it).getHumanReadable() << "*/";
         ost << endl;
-      }
+    }
 
-  }
+}
 
 
-  void Features::addFeatureDescription(string key,
-                                       string cname,
-                                       string humanReadable,
-                                       string requires)
-  {
+void Features::addFeatureDescription(string key,
+                                     string cname,
+                                     string humanReadable,
+                                     string requires)
+{
     featkeys.push_back(key);
     featureEnabled[key] = true; // init everything to enabled.
     feats.push_back(FeatureDescription(key, cname, humanReadable, requires));
-  }
+}
 
-  /** Initializes the on/off -toggled feature descriptions */
-  void Features::initFeatureDescriptions(){
+/** Initializes the on/off -toggled feature descriptions */
+void Features::initFeatureDescriptions()
+{
     /*
       These to be toggled by "COMPOSE_MODE" switch only:
       FIXME: Or should these be always on in COMPOSE_MODE?
@@ -98,127 +106,158 @@ void Capacities::addCapacityDescription(string key,
     addFeatureDescription("csquash","FEAT_CHANNEL_SQUASH","Enable per-channel squash function","");
     addFeatureDescription("stereo","FEAT_STEREO","Enable stereo output","");
     addFeatureDescription("panenv","FEAT_PAN_ENVELOPE","Enable pan envelope","stereo");
-  }
+}
 
-  void Features::toStream(std::ostream &ost){
+void Features::toStream(std::ostream &ost)
+{
     ost << "# Can't really output features yet. But the code is here." << std::endl;
-  }
+}
 
-  void Features::exportHeader(ostream &ost){
-      ost << "/* Enabled features */ " << endl;
-      vector<FeatureDescription>::const_iterator it;
-      for(it=begin();it!=end();++it){
+void Features::exportHeader(ostream &ost)
+{
+    ost << "/* Enabled features */ " << endl;
+    vector<FeatureDescription>::const_iterator it;
+    for(it=begin(); it!=end(); ++it)
+    {
         ost << "#define " ;
-        ost.width(30); ost.fill(' ');
+        ost.width(30);
+        ost.fill(' ');
         ost << std::left << (*it).getCDefine();
         ost << " /*" << (*it).getHumanReadable() << " */" << endl;
-      }
-  }
+    }
+}
 
 
 
 
-  void MidiMap::toStream(std::ostream &ost){
+void MidiMap::toStream(std::ostream &ost)
+{
     ost << "# Can't really output midimap yet. But the code is here." << std::endl;
-  }
+}
 
-    PatchBank::PatchBank():patches(16)
+PatchBank::PatchBank():patches(16)
+{
+    midiSender = NULL;
+    toStream(std::cout); /*FIXME: for debug only.*/
+};
+
+bool PatchBank::ruleIsSatisfied(RuleSet const & rs)
+{
+    vector<string> const & ks = rs.getKeys();
+    vector<int> const & vs = rs.getThresholds();
+    bool cond = true;
+    for(size_t i=0; i<ks.size(); ++i)
     {
-        midiSender = NULL;
-        toStream(std::cout); /*FIXME: for debug only.*/
-    };
-
-    bool PatchBank::ruleIsSatisfied(RuleSet const & rs){
-        vector<string> const & ks = rs.getKeys();
-        vector<int> const & vs = rs.getThresholds();
-        bool cond = true;
-        for(size_t i=0; i<ks.size(); ++i)
-        {
-            bool thiscond = (getFeatCap(ks[i]) > vs[i]);
-            cond &= thiscond;
-            cerr << "Conditional " << (i+1) << "/" << ks.size() << ": "
-                 << ks[i] << " > " << vs[i]
-                 << "  (" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
-                 << " --> " << thiscond << "  overall: " << cond << endl;
-          }
-        cerr << "Final decision: " << cond << endl;
-        return cond;
+        bool thiscond = (getFeatCap(ks[i]) > vs[i]);
+        cond &= thiscond;
+        cerr << "Conditional " << (i+1) << "/" << ks.size() << ": "
+             << ks[i] << " > " << vs[i]
+             << "  (" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
+             << " --> " << thiscond << "  overall: " << cond << endl;
     }
+    cerr << "Final decision: " << cond << endl;
+    return cond;
+}
 
-    void PatchBank::callRuleActions(string const & key)
+void PatchBank::callRuleActions(string const & key)
+{
+    vector<RuleSet> const & rss = capfeat_rulesets[key];
+    vector<RuleSet>::const_iterator it;
+    for(it=rss.begin(); it<rss.end(); ++it)
     {
-        vector<RuleSet> const & rss = capfeat_rulesets[key];
-        vector<RuleSet>::const_iterator it;
-        for(it=rss.begin(); it<rss.end(); ++it)
-        {
-            (*it).getRuleAction()->action(ruleIsSatisfied(*it));
-        }
+        (*it).getRuleAction()->action(ruleIsSatisfied(*it));
     }
+}
 
-    /** Applies all the rule actions that have been registered. */
-    void PatchBank::forceAllRuleActions(){
-        map<std::string, vector<RuleSet> >::const_iterator it;
-        for(it=capfeat_rulesets.begin();it != capfeat_rulesets.end();++it){
-            callRuleActions((*it).first);
-        }
+/** Applies all the rule actions that have been registered. */
+void PatchBank::forceAllRuleActions()
+{
+    map<std::string, vector<RuleSet> >::const_iterator it;
+    for(it=capfeat_rulesets.begin(); it != capfeat_rulesets.end(); ++it)
+    {
+        callRuleActions((*it).first);
     }
+}
 
 
-  void PatchBank::toStream(std::ostream & ost){
+void PatchBank::toStream(std::ostream & ost)
+{
     ost << "# Output by PatchBank::toStream()" << std::endl;
     caps.toStream(ost);
     feats.toStream(ost);
     std::vector<Patch>::iterator pit;
-    for(pit=patches.begin(); pit!=patches.end(); ++pit){
-      (*pit).toStream(ost);
+    for(pit=patches.begin(); pit!=patches.end(); ++pit)
+    {
+        (*pit).toStream(ost);
     }
     midimap.toStream(ost);
-  }
+}
 
-  void PatchBank::fromStream(std::istream & ist){
+void PatchBank::fromStream(std::istream & ist)
+{
     std::cerr << "PatchBank::fromStream() Can't read yet!" << std::endl;
-  }
+}
 
-  void PatchBank::exportCapFeatHeader(std::ostream & ost){
-      ost << "/** Capacities and features for a customized, unique build of"
-          << endl
-          << " * the synti2 software synthesizer." << endl << " *" << endl
-          << " * Exported by PatchBank.cxx - don't edit manually." << endl
-          << " */"<< endl;
+void PatchBank::exportCapFeatHeader(std::ostream & ost)
+{
+    ost << "/** Capacities and features for a customized, unique build of"
+        << endl
+        << " * the synti2 software synthesizer." << endl << " *" << endl
+        << " * Exported by PatchBank.cxx - don't edit manually." << endl
+        << " */"<< endl;
 
-      caps.exportHeader(ost); ost<<endl;
-      feats.exportHeader(ost); ost<<endl;
+    caps.exportHeader(ost);
+    ost<<endl;
+    feats.exportHeader(ost);
+    ost<<endl;
 
-      std::vector<std::string>::const_iterator sit;
-      int ind;
+    std::vector<std::string>::const_iterator sit;
+    int ind;
 
-      /* FIXME: Rulesets need to be checked somewhere before export!! */
+    /* FIXME: Rulesets need to be checked somewhere before export!! */
 
-      ost << std::dec;
-      ind = 0;
-      for (sit=getI4Begin(0);sit!=getI4End(0); ++sit){
-          RuleSet rs = getI4Par(0,*sit).getRuleSet();
-          if (!ruleIsSatisfied(rs)) continue;
-          std::string const & cdef = getI4Par(0,*sit).getCDefine();
-          ost << "#define ";
-          ost.width(30); ost.fill(' '); ost << std::left;
-          ost << ("IPAR_" + cdef);
-          ost << " " << (ind++) << endl;
-      }
-      ost << "#define NUM_IPARS " << ind << endl << endl;
+    ost << std::dec;
+    ind = 0;
+    for (sit=getI4Begin(0); sit!=getI4End(0); ++sit)
+    {
+        RuleSet rs = getI4Par(0,*sit).getRuleSet();
+        if (!ruleIsSatisfied(rs)) continue;
+        std::string const & cdef = getI4Par(0,*sit).getCDefine();
+        ost << "#define ";
+        ost.width(30);
+        ost.fill(' ');
+        ost << std::left;
+        ost << ("IPAR_" + cdef);
+        ost << " " << (ind++) << endl;
+    }
+    ost << "#define NUM_IPARS " << ind << endl << endl;
 
-      ind = 0;
-      for (sit=getFBegin(0);sit!=getFEnd(0); ++sit){
-          RuleSet rs = getFPar(0,*sit).getRuleSet();
-          if (!ruleIsSatisfied(rs)) continue;
-          std::string const & cdef = getFPar(0,*sit).getCDefine();
-          ost << "#define ";
-          ost.width(30); ost.fill(' '); ost << std::left;
-          ost << ("FPAR_" + cdef);
-          ost << " " << (ind++) << endl;
-      }
-      ost << "#define NUM_FPARS " << ind << endl << endl;
-
-  }
+    ind = 0;
+    for (sit=getFBegin(0); sit!=getFEnd(0); ++sit)
+    {
+        RuleSet rs = getFPar(0,*sit).getRuleSet();
+        if (!ruleIsSatisfied(rs)) continue;
+        std::string const & cdef = getFPar(0,*sit).getCDefine();
+        ost << "#define ";
+        ost.width(30);
+        ost.fill(' ');
+        ost << std::left;
+        ost << ("FPAR_" + cdef);
+        ost << " " << (ind++) << endl;
+    }
+    ost << "#define NUM_FPARS " << ind << endl << endl;
 
 }
+
+std::vector<unsigned char>
+PatchBank::getEffectiveParAsSysEx(int ipatch, const string &parkey)
+{
+    std::vector<unsigned char> res;
+    /* FIXME: Effective or stored value !? */
+    patches[ipatch].pushValToSysex(ipatch, parkey, res);
+    return res;
+}
+
+
+}
+

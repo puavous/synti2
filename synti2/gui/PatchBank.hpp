@@ -209,7 +209,7 @@ namespace synti2base {
     float
     getEffectiveParAsFloat(int ipatch, const string &parkey);
 
-    vector<int>
+    vector<unsigned char>
     getEffectiveParAsSysEx(int ipatch, const string &parkey);
 
 /*
@@ -270,15 +270,21 @@ namespace synti2base {
     }
 
     /** Sends a parameter via midi, if a sender is given. */
-    void sendMidi(vector<int> const & bytes){
+    void sendMidi(vector<unsigned char> const & bytes){
         if (midiSender != NULL) midiSender->send(bytes);
     };
 
-
+    void privSetParam(size_t ipat, string key, float v){
+        //FIXME: patches[ipat]canAccept(key,v)?
+        patches[ipat].setValue(key,v);
+    }
     /** Sets a parameter value. */
     bool setParamValue(size_t ipat, string key, float v){
 
-        vector<int> hmm; hmm.push_back(123);sendMidi(hmm);
+        std::cerr << "should set to " << v << std::endl;
+
+        privSetParam(ipat,key,v);
+        sendMidi(getEffectiveParAsSysEx(ipat,key));
 
         bool can_do = checkParamValue(key, v);
         if (can_do){

@@ -18,10 +18,11 @@ namespace synti2gui{
 
 /** Update of an "I4" value; FIXME: We need our own widget set! */
 void ViewPatches::value_callback(Fl_Widget* w, void* p){
-    S2ValueInput *vin = (S2ValueInput*)w;
+    S2Valuator *vin = (S2Valuator*)w;
     double val = vin->value();
     ViewPatches *vp = (ViewPatches*)p;
     vin->pb()->setParamValue(vp->getActivePatch(), vin->getKey(), val);
+    vin->updateLooks();
 }
 
 /** Changes the current patch, and updates other widgets. */
@@ -139,6 +140,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
   {
       vi = new S2FValueInput(px+col*250,py+row*(h+sp),w,h,pb,*fit);
       vi->callback(value_callback, this);
+      vi->updateLooks();
       row++;if (row>30){row=0;col++;}
 
       RuleSet rs = pb->getFPar(activePatch,*fit).getRuleSet();

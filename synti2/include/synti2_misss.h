@@ -27,14 +27,16 @@
 
 /* Message types (playable). Not space-limited (Generated at
  * run-time).
- *
- * FIXME: Are SETF or DATA really needed? For these we have real-time
- * operations (SET_x)
  */
 #define MISSS_MSG_NOTE 0x00
 #define MISSS_MSG_RAMP 0x01
+/* FIXME: Are SETF or DATA really needed? For these we have real-time
+ * operations (SET_x)
+ */
 #define MISSS_MSG_SETF 0x02
 #define MISSS_MSG_DATA 0x03
+
+
 
 /* Operations (instantaneous) at compose-time. Not space-limited.
  * These are in the SysEx specification, visible to the world.

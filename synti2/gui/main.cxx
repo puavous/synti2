@@ -68,7 +68,7 @@ class JackMidiSender : public MidiSender {
 private:
     my_jack_T *js_;
 protected:
-    void doSendBytes(std::vector<int> const &bytes)
+    void doSendBytes(std::vector<unsigned char> const &bytes)
     {
         char sysex_buf[2000];
         size_t len = bytes.size();
@@ -85,8 +85,7 @@ protected:
 
         for (int i = 0; i<bytes.size(); i++){
           printf("0x%02x ", (int) ((unsigned char*)sysex_buf)[i]);
-          printf("\n"); fflush(stdout);
-        }
+        } printf("\n"); fflush(stdout);
 
         size_t nwrit = jack_ringbuffer_write (js_->rb, (char*)(&len), sizeof(size_t));
         nwrit = jack_ringbuffer_write (js_->rb, sysex_buf, len);

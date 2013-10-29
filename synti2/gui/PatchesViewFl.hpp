@@ -24,12 +24,21 @@ namespace synti2gui {
         PatchBank *pb(){return _pb;}
         virtual void doActivate() = 0;
         virtual void doDeactivate() = 0;
+        virtual void doUpdateLooks() = 0;
+        virtual double doReturnValue() = 0;
         void activate(){
             cerr << "activating " << key << endl;
             doActivate();}
         void deactivate(){
             cerr << "deactivating " << key << endl;
             doDeactivate();}
+        void updateLooks(){
+            doUpdateLooks();
+        }
+        double value(){
+            return doReturnValue();
+        }
+
     };
 
     class WidgetEnablerRuleAction: public RuleAction{
@@ -69,12 +78,14 @@ namespace synti2gui {
             vi->precision(0);
             /* FIXME: Leaks or not? Fl assigns parent automatically? */
         }
-        double value(){return vi->value();}
         void precision(int pr){vi->precision(pr);} // FIXME: doPrecision??
         void doActivate(){vi->activate();}
         void doDeactivate(){vi->deactivate();}
+        double doReturnValue(){return vi->value();}
     protected:
-        void draw(){};
+        void draw(){}
+        void doUpdateLooks(){}
+
     };
 
     class S2FValueInput: public S2Valuator{
@@ -97,10 +108,16 @@ namespace synti2gui {
           vsf->type(FL_HOR_NICE_SLIDER);
           //vsf->align(FL_HORIZONTAL);
         }
-        double value(){return vsf->value();}
+        double doReturnValue(){return vsf->value();}
         void precision(int pr){vsf->precision(pr);}
         void doActivate(){vsf->activate();}
         void doDeactivate(){vsf->deactivate();}
+        void doUpdateLooks(){
+            std::ostringstream vs;
+            vs << pb()->getFPar(0,key).getHumanReadable() << " = " << value() << "         "; // hack..
+            ((Fl_Valuator*)vsf)->copy_label(vs.str().c_str());
+        }
+
     protected:
         void draw(){};
     };

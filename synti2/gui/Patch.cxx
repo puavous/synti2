@@ -454,7 +454,7 @@ void Patch::fromStream(std::istream & ifs){
     } else if (curr_section=="F"){
       FPar par(line);
       fparKeys.push_back(par.getKey());
-      fparInd[par.getKey()]=i4pars.size();
+      fparInd[par.getKey()]=fpars.size();
       fpars[par.getKey()]=par;
     } else {
       std::cerr << "Unknown section: " << curr_section << std::endl;

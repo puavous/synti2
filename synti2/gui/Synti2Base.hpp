@@ -18,9 +18,9 @@ namespace synti2base {
   /** Derive this to give a concrete Midi API for sending data. */
   class MidiSender {
   protected:
-    virtual void doSendBytes(vector<int> const & bytes) = 0;
+    virtual void doSendBytes(vector<unsigned char> const & bytes) = 0;
   public:
-    void send(vector<int> const & bytes){doSendBytes(bytes);}
+    void send(vector<unsigned char> const & bytes){doSendBytes(bytes);}
   };
 
   /** Derive this to do something when rules are either met or not. */

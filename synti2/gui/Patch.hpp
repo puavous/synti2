@@ -2,6 +2,9 @@
 #define SYNTI2_PATCH2
 #include "Synti2Base.hpp"
 
+#include "midihelper.hpp"
+#include "synti2_misss.h"
+
 #include <string>
 #include <map>
 #include <vector>
@@ -30,6 +33,8 @@ using namespace synti2base;
       {}*/
     I4Par();
     I4Par(string line);
+    void setValue(float v){value = v;}
+    float getValue(){return value;}
     void fromLine(string line);
     void toStream(std::ostream &ost);
   };
@@ -55,6 +60,8 @@ using namespace synti2base;
         {}*/
     FPar();
     FPar(string line);
+    void setValue(float v){value = v;}
+    float getValue(){return value;}
     void fromLine(string line);
     void toStream(std::ostream &ost);
   };
@@ -111,6 +118,41 @@ using namespace synti2base;
     FPar const&
     getFPar(std::string const& key) const {
       return fpars.at(key);
+    }
+
+    void setValue(std::string const &key, float v) {
+        if (i4pars.find(key) != i4pars.end()){
+            i4pars[key].setValue(v);
+        } else if (fpars.find(key) != fpars.end()){
+            fpars[key].setValue(v);
+        }
+    }
+
+    void pushValToSysex(size_t send_index,
+                        std::string key,
+                        std::vector<unsigned char> &res)
+    {
+        synti2_sysex_header(res);
+
+        res.push_back(MISSS_MSG_DATA);
+
+        /* FIXME: Effective or stored value !? */
+
+        if (i4pars.find(key) != i4pars.end()){
+            res.push_back(MISSS_SYSEX_SET_3BIT);
+            res.push_back(i4parInd[key]);
+            res.push_back(send_index);
+            res.push_back(i4pars[key].getValue());
+        } else if (fpars.find(key) != fpars.end()){
+            res.push_back(MISSS_SYSEX_SET_F);
+            res.push_back(fparInd[key]);
+            res.push_back(send_index);
+            push_to_sysex_f(res, fpars[key].getValue());
+        } else {
+            res.push_back(99);
+        }
+        synti2_sysex_footer(res);
+
     }
 
   };

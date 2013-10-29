@@ -3,8 +3,13 @@
 /* A hack (?) to have localized code that is useable as a static
    function inside the core synth. Maybe there is a better way for
    this... need to think.. later.*/
+
 #include "synti2_fdec.c"
 #include "synti2_fenc.c"
+
+/* Nah... copy-paste? */
+
+
 
 /** Decode a "floating point" parameter from off-line storage. */
 float synti2::decode_f(unsigned int encoded_fval){
@@ -56,7 +61,7 @@ encode_varlength(unsigned int value, unsigned char *dest){
   for(i=0; i<=3; i++){
     if ((vllen > 0) || (bytes[i] != 0) || (i==3)){
       vllen += 1;
-      if (i<3) bytes[i] |= 0x80; /* set cont. bit */ 
+      if (i<3) bytes[i] |= 0x80; /* set cont. bit */
     }
   }
 
@@ -78,7 +83,7 @@ decode_varlength(const unsigned char *source, unsigned int *dest)
     byte = *source++;
     *dest += (byte & 0x7f);
     if ((byte & 0x80) == 0){
-      return nread; 
+      return nread;
     }
     else *dest <<= 7;
   }
@@ -92,7 +97,7 @@ void
 synti2_sysex_header(std::vector<unsigned char> &v){
   v.push_back(0xF0); /* Start sysex*/
   v.push_back(0x00); /* Device ID. I go as anonymous0..*/
-  v.push_back(0x00); 
+  v.push_back(0x00);
   v.push_back(0x00);
 }
 

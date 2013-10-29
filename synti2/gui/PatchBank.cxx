@@ -122,27 +122,28 @@ void Capacities::addCapacityDescription(string key,
     ost << "# Can't really output midimap yet. But the code is here." << std::endl;
   }
 
-  PatchBank::PatchBank():patches(14)
-  {
-    toStream(std::cout); /*FIXME: for debug only.*/
-  };
+    PatchBank::PatchBank():patches(16)
+    {
+        midiSender = NULL;
+        toStream(std::cout); /*FIXME: for debug only.*/
+    };
 
-      bool PatchBank::ruleIsSatisfied(RuleSet const & rs){
-          vector<string> const & ks = rs.getKeys();
-          vector<int> const & vs = rs.getThresholds();
-          bool cond = true;
-          for(size_t i=0; i<ks.size(); ++i)
-          {
-              bool thiscond = (getFeatCap(ks[i]) > vs[i]);
-              cond &= thiscond;
-              cerr << "Conditional " << (i+1) << "/" << ks.size() << ": "
-                   << ks[i] << " > " << vs[i]
-                   << "  (" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
-                   << " --> " << thiscond << "  overall: " << cond << endl;
-            }
-          cerr << "Final decision: " << cond << endl;
-          return cond;
-      }
+    bool PatchBank::ruleIsSatisfied(RuleSet const & rs){
+        vector<string> const & ks = rs.getKeys();
+        vector<int> const & vs = rs.getThresholds();
+        bool cond = true;
+        for(size_t i=0; i<ks.size(); ++i)
+        {
+            bool thiscond = (getFeatCap(ks[i]) > vs[i]);
+            cond &= thiscond;
+            cerr << "Conditional " << (i+1) << "/" << ks.size() << ": "
+                 << ks[i] << " > " << vs[i]
+                 << "  (" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
+                 << " --> " << thiscond << "  overall: " << cond << endl;
+          }
+        cerr << "Final decision: " << cond << endl;
+        return cond;
+    }
 
     void PatchBank::callRuleActions(string const & key)
     {

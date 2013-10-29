@@ -60,6 +60,48 @@ bool weHaveJack(){
   return jack_is_ok;
 }
 
+/** Sends a prepared message over to the synth via the jack output port. */
+
+
+
+class JackMidiSender : public MidiSender {
+private:
+    my_jack_T *js_;
+protected:
+    void doSendBytes(std::vector<int> const &bytes)
+    {
+        char sysex_buf[2000];
+        size_t len = bytes.size();
+        if (len>sizeof(sysex_buf))
+        {
+            std::cerr << "No space for messasge." << std::endl;
+            return; /*should throw?*/
+        }
+
+        for (int i = 0; i<bytes.size(); i++)
+        {
+            sysex_buf[i] = bytes.at(i);
+        }
+
+        for (int i = 0; i<bytes.size(); i++){
+          printf("0x%02x ", (int) ((unsigned char*)sysex_buf)[i]);
+          printf("\n"); fflush(stdout);
+        }
+
+        size_t nwrit = jack_ringbuffer_write (js_->rb, (char*)(&len), sizeof(size_t));
+        nwrit = jack_ringbuffer_write (js_->rb, sysex_buf, len);
+        /*
+        std::cerr << "Should send:";
+        for(int i=0;i<bytes.size();++i){
+            std::cerr << " " << bytes[i];
+        }  std::cerr << std::endl;
+        */
+    };
+public:
+    JackMidiSender(my_jack_T *js) : MidiSender(),js_(js){}
+
+};
+
 /** Signal handler that shuts down jack upon forced exit. */
 static void signal_handler_for_jack_shutdown(int sig)
 {
@@ -222,6 +264,11 @@ int main(int argc, char **argv) {
   //synti2::Patchtool *pt = new synti2::Patchtool(patchdes_fname);
   synti2base::PatchBank *pbank = new synti2base::PatchBank();
   pbank->exportCapFeatHeader(std::cout);
+
+  if (weHaveJack()) {
+    JackMidiSender ms(&my_jack);
+    pbank->setMidiSender(&ms);
+  }
 
   Fl_Window *window = new MainWindow(1000,740,pbank);
 

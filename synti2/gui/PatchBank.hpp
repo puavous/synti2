@@ -135,6 +135,8 @@ namespace synti2base {
     /** RuleSets and their actions to be performed upon cap/feat change: */
     map<string, vector<RuleSet> > capfeat_rulesets;
 
+    MidiSender *midiSender;
+
     /** Checks if v is a valid value for a parameter. For floats, this is
      * a range, and for integers, a discrete set of nonzero values and zero;
      * The integers depend on capacities, so cap changes should be handled..
@@ -261,20 +263,35 @@ namespace synti2base {
       return patches[ipat].getFPar(key);
     }
 
+
+    /** Sets a midi sender. */
+    void setMidiSender(MidiSender *ms){
+        midiSender = ms;
+    }
+
+    /** Sends a parameter via midi, if a sender is given. */
+    void sendMidi(vector<int> const & bytes){
+        if (midiSender != NULL) midiSender->send(bytes);
+    };
+
+
     /** Sets a parameter value. */
     bool setParamValue(size_t ipat, string key, float v){
-      bool can_do = checkParamValue(key, v);
-      if (can_do){
-        //privSetParam(key,v);
-        //privSendParam(key,v);
+
+        vector<int> hmm; hmm.push_back(123);sendMidi(hmm);
+
+        bool can_do = checkParamValue(key, v);
+        if (can_do){
+            //privSetParam(key,v);
+            //privSendParam(key,v);
     /*
   FIXME: This maybe from a callback like registerParamChangeListener();
   send_to_jack_process(pbank->getSysex("I3",curr_patch,d));
   */
 
         //viewUpdater->updateAllConnectedViews(key,v);
-      }
-      return can_do;
+        }
+        return can_do;
     };
   };
 

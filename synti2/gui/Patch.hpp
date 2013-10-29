@@ -34,9 +34,10 @@ using namespace synti2base;
     I4Par();
     I4Par(string line);
     void setValue(float v){value = v;}
-    float getValue(){return value;}
+    float getValue() const {return value;}
     void fromLine(string line);
     void toStream(std::ostream &ost);
+    float getMaxValue() const {return 15;} /* FIXME: no good! */
   };
 
   class FPar : public Par {
@@ -49,7 +50,7 @@ using namespace synti2base;
     float maxval;
     /** Preferred granularity in nudged changes (mutable) */
     int precision;
-    /** GUI grouping hint */
+    /** GUI grouping hint (should make this mutable?) */
     int guigroup;
     //FParDescription(){};/*must give all data on creation*/
   public:
@@ -64,6 +65,9 @@ using namespace synti2base;
     float getValue(){return value;}
     void fromLine(string line);
     void toStream(std::ostream &ost);
+    float getMinValue() const {return minval;}
+    float getMaxValue() const {return maxval;}
+    int getPrecision() const {return precision;}
   };
 
 
@@ -149,6 +153,7 @@ using namespace synti2base;
             res.push_back(send_index);
             push_to_sysex_f(res, fpars[key].getValue());
         } else {
+            std::cerr << "Unknown parameter type!" << std::endl;
             res.push_back(99);
         }
         synti2_sysex_footer(res);

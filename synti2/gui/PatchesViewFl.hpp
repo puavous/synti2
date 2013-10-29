@@ -76,6 +76,7 @@ namespace synti2gui {
             vi->callback(vicb,this);
             vi->tooltip(ipb->getI4Par(0,ikey).getHumanReadable().c_str());
             vi->precision(0);
+            vi->bounds(0,ipb->getI4Par(0,ikey).getMaxValue());
             /* FIXME: Leaks or not? Fl assigns parent automatically? */
         }
         void precision(int pr){vi->precision(pr);} // FIXME: doPrecision??
@@ -107,6 +108,10 @@ namespace synti2gui {
           vsf->align(FL_ALIGN_RIGHT);
           vsf->type(FL_HOR_NICE_SLIDER);
           //vsf->align(FL_HORIZONTAL);
+          vsf->bounds(ipb->getFPar(0,ikey).getMinValue(),
+                      ipb->getFPar(0,ikey).getMaxValue());
+          vsf->precision(ipb->getFPar(0,ikey).getPrecision());
+
         }
         double doReturnValue(){return vsf->value();}
         void precision(int pr){vsf->precision(pr);}

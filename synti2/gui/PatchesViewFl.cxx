@@ -105,7 +105,6 @@ void cb_patch_name(Fl_Widget* w, void* p){
   box = new Fl_Button(px + 7*(w+sp),py,w,h,"Panic!");
   //box->callback(cb_load_all); box->labelsize(labsz);
 
-  //int i=0;
   std::vector<std::string>::const_iterator i4it,fit;
   S2Valuator *vi;
 

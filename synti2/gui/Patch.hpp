@@ -132,34 +132,32 @@ using namespace synti2base;
         }
     }
 
+    /** Pushes either the actual value, or zero (so far the only
+     *  no-effect value being used)
+     */
     void pushValToSysex(size_t send_index,
                         std::string key,
-                        std::vector<unsigned char> &res)
+                        std::vector<unsigned char> &res,
+                        bool nonzero = true)
     {
         synti2_sysex_header(res);
-
         res.push_back(MISSS_MSG_DATA);
-
-        /* FIXME: Effective or stored value !? */
-
         if (i4pars.find(key) != i4pars.end()){
             res.push_back(MISSS_SYSEX_SET_3BIT);
             res.push_back(i4parInd[key]);
             res.push_back(send_index);
-            res.push_back(i4pars[key].getValue());
+            res.push_back(nonzero?i4pars[key].getValue():0);
         } else if (fpars.find(key) != fpars.end()){
             res.push_back(MISSS_SYSEX_SET_F);
             res.push_back(fparInd[key]);
             res.push_back(send_index);
-            push_to_sysex_f(res, fpars[key].getValue());
+            push_to_sysex_f(res, nonzero?fpars[key].getValue():0.);
         } else {
             std::cerr << "Unknown parameter type!" << std::endl;
             res.push_back(99);
         }
         synti2_sysex_footer(res);
-
     }
-
   };
 
 #endif

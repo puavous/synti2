@@ -128,7 +128,16 @@ void Features::exportHeader(ostream &ost)
 }
 
 
-
+class ParameterEnablerRuleAction : public RuleAction {
+private:
+    PatchBank *target;
+    string key;
+public:
+    ParameterEnablerRuleAction(PatchBank *t, const string &k):target(t),key(k) {};
+    virtual void action (bool ruleOutcome) const {
+        target->setParEnabled(key,ruleOutcome);
+    }
+};
 
 void MidiMap::toStream(std::ostream &ost)
 {
@@ -139,7 +148,25 @@ PatchBank::PatchBank():patches(16)
 {
     midiSender = NULL;
     toStream(std::cout); /*FIXME: for debug only.*/
-};
+
+    /* FIXME: Set up ruleactions for parameter enable/disable.*/
+    vector<string>::const_iterator it;
+    for (it=getI4Begin(0);it!=getI4End(0); ++it)
+    {
+        RuleSet rs = getI4Par(0,*it).getRuleSet();
+        rs.ownThisAction(new ParameterEnablerRuleAction(this,*it));
+        registerRuleAction(rs);
+        paramEnabled[*it] = true; // Initialize everything to enabled.
+    }
+    for (it=getFBegin(0);it!=getFEnd(0); ++it)
+    {
+        RuleSet rs = getFPar(0,*it).getRuleSet();
+        rs.ownThisAction(new ParameterEnablerRuleAction(this,*it));
+        registerRuleAction(rs);
+        paramEnabled[*it] = true; // Initialize everything to enabled.
+    }
+}
+
 
 bool PatchBank::ruleIsSatisfied(RuleSet const & rs)
 {
@@ -249,12 +276,21 @@ void PatchBank::exportCapFeatHeader(std::ostream & ost)
 
 }
 
+/** Returns a MIDI SysEx message that would change the value of a
+ * parameter in a compose-mode synti2 instance. Actual value is returned
+ * when a feature is turned on, and a zero or "no-effect" value is
+ * returned when relevant features are off.
+ *
+ * Note: The features need to be checked on PatchBank side; lower levels
+ * will have no knowledge of them.
+ */
 std::vector<unsigned char>
 PatchBank::getEffectiveParAsSysEx(int ipatch, const string &parkey)
 {
+
     std::vector<unsigned char> res;
-    /* FIXME: Effective or stored value !? */
-    patches[ipatch].pushValToSysex(ipatch, parkey, res);
+    bool value_ok = isParEnabled(parkey);
+    patches[ipatch].pushValToSysex(ipatch, parkey, res, value_ok);
     return res;
 }
 

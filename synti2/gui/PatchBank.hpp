@@ -65,8 +65,10 @@ namespace synti2base {
     vector<FeatureDescription> feats;
     map<string,bool> featureEnabled;
     /* FIXME: Use these to send actual values when features are changed: */
+    /* Should be part of features or not? */
     map<string,bool> i4ParIsDirty;
     map<string,bool> fParIsDirty;
+    map<string,bool> parIsEnabled;
     void addFeatureDescription(string key,
                                string cname,
                                string humanReadable,
@@ -131,6 +133,7 @@ namespace synti2base {
     Capacities caps;
     MidiMap midimap;
     vector<Patch> patches;
+    map<string,bool> paramEnabled;
 
     /** RuleSets and their actions to be performed upon cap/feat change: */
     map<string, vector<RuleSet> > capfeat_rulesets;
@@ -160,6 +163,22 @@ namespace synti2base {
     /** Exports only the enabled parameters for a playble exe song. */
     void exportStandalone(ostream &ost);
 
+    void setParEnabled(string const & key, bool status){
+        bool old_status = paramEnabled[key];
+        std::cout << (status?"Enabling":"Disabling") << " "<< key << endl;
+        paramEnabled[key] = status;
+        if (status != old_status) {
+            sendParamOnAllPatches(key);
+        }
+    }
+
+    void sendParamOnAllPatches(string const & key){
+        // FIXME: All patches, and not only 0.
+        sendMidi(getEffectiveParAsSysEx(0,key));
+    }
+    bool isParEnabled(string const & key){
+        return paramEnabled[key];
+    }
 
     /* Hmm.. Couldn't we just give out const references to feats/caps? */
     vector<FeatureDescription>::iterator
@@ -281,9 +300,9 @@ namespace synti2base {
     /** Sets a parameter value. */
     bool setParamValue(size_t ipat, string key, float v){
 
-        std::cerr << "should set to " << v << std::endl;
-
+        // We can always set a parameter, regardless of limits/features
         privSetParam(ipat,key,v);
+        // But we must send only the "effective" (limited) values.
         sendMidi(getEffectiveParAsSysEx(ipat,key));
 
         bool can_do = checkParamValue(key, v);

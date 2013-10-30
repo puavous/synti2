@@ -83,8 +83,9 @@
 #define IPAR_ADDTO4                    41
 #define IPAR_FILT                      42
 #define IPAR_FFOLL                     43
+#define IPAR_CSQUASH                   44
 
-#define NUM_IPARS 44
+#define NUM_IPARS 45
 
 
 #define FPAR_NULLTGT                   0
@@ -205,6 +206,7 @@
 #define ENV_RELEASE_STAGE 2
 #define ENV_LOOP_STAGE 1
 #define NUM_ENV_DATA (NUM_ENV_KNEES*2)
+#define NUM_MAX_OPERATORS 6
 
 #define SYNTI2_DELAYSAMPLES 0x10000
 #define SYNTI2_MAX_SONGBYTES 30000

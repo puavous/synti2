@@ -150,9 +150,12 @@ typedef struct synti2_voice {
   unsigned int velocity;
 #endif
 
-  float outp[1+NUM_OPERATORS+1+4]; /*"zero", oscillator outputs, delay bus,
-                                          filter storage (lp,bp,hp,notch).
-                                        FIXME: could be a struct? should?*/
+  float outp[1+NUM_MAX_OPERATORS+1]; /*"zero", operator outputs, delay
+                                        bus FIXME: could be a struct?
+                                        should?*/
+#ifdef FEAT_FILTER
+  float filtp[1+4];     /* Filter playground in + (lp,bp,hp,notch) */
+#endif
 
   synti2_patch patch;   /* The sound parameters per part*/
 } synti2_voice;

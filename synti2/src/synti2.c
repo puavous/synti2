@@ -868,7 +868,8 @@ synti2_render(synti2_synth *s,
 #endif
 
       /* Start creating the sound from this voice. */
-      sigin  = signal = &(voi->outp[0]);
+      sigin  = &(voi->outp[0]);
+      signal = &(voi->outp[NUM_MAX_OPERATORS+1]);
       
 #ifdef FEAT_DELAY_LINES
       /* Additive mix from delay lines. */
@@ -878,15 +879,18 @@ synti2_render(synti2_synth *s,
         if ((dlev = (pat->fpar[FPAR_DINLV1+id])) == 0.0f) continue;
         interm += s->delay[id][dsamp % SYNTI2_DELAYSAMPLES] * dlev;
       }
-      sigin[NUM_OPERATORS+1] = interm;
+      *signal = interm;
 #endif
-      
-      /* FM / Phase modulation synthesis */
-      for(iosc = 0; iosc < NUM_OPERATORS; iosc++){
-        signal++; /* Go to next output slot. */
+      signal -= (NUM_MAX_OPERATORS - NUM_OPERATORS); /* adjust. */
+
+      /* FM / Phase modulation synthesis; from last to first. */
+      for(iosc = NUM_OPERATORS-1; iosc >= 0; iosc--){
+        signal--; /* Go to next output slot. */
         wtoffs = (unsigned int)
           ((voi->c[iosc].fr 
+#ifdef FEAT_APPLY_FM
             + sigin[pat->ipar3[IPAR_FMTO1+iosc]])  /* phase modulator */
+#endif
            * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
         
 #ifdef FEAT_EXTRA_WAVETABLES
@@ -895,9 +899,10 @@ synti2_render(synti2_synth *s,
         interm  = s->wave[0][wtoffs];
 #endif
         
-        /* parallel mix could be optional? Actually also FM could be? */
         interm *= (eprog[pat->ipar3[IPAR_EAMP1+iosc]].f);
+#ifdef FEAT_APPLY_ADD
         interm += sigin[pat->ipar3[IPAR_ADDTO1+iosc]]; /* parallel */
+#endif
         interm *= pat->fpar[FPAR_LV1+iosc]; /* level/gain */
 #ifdef FEAT_VELOCITY_SENSITIVITY
         /* Optional velocity sensitivity. */
@@ -918,17 +923,17 @@ synti2_render(synti2_synth *s,
         * pat->fpar[FPAR_LVN]       /*noise gain*/
         * (float)RandSeed * 4.6566129e-010f; /*noise*/
 #endif
-      
+
 #ifdef FEAT_DELAY_LINES
       /* Additive mix from delay lines. */
-      signal++; /* Go to next output slot (=delay mix). */
-      interm += *(signal) * pat->fpar[FPAR_LVD];  /*delay mix gain*/
+      interm += sigin[NUM_MAX_OPERATORS+1] 
+        * pat->fpar[FPAR_LVD];  /*delay mix gain*/
 #endif
       
 #ifdef FEAT_FILTER
       /* Skip for faster computation. Should do the same for delays! */
       if(pat->ipar3[IPAR_FILT]) {
-        signal[0] = interm;
+        voi->filtp[0] = interm;
         
         /* Base frequency as note value from parameter. */
         fenv = pat->fpar[FPAR_FFREQ];
@@ -958,8 +963,14 @@ synti2_render(synti2_synth *s,
         }
 #endif
         
-        apply_filter(s, fenv, renv, signal);
-        interm = signal[pat->ipar3[IPAR_FILT]]; /*choose output*/
+        apply_filter(s, fenv, renv, voi->filtp);
+        interm = voi->filtp[pat->ipar3[IPAR_FILT]]; /*choose output*/
+      }
+#endif
+
+#ifdef FEAT_CHANNEL_SQUASH
+      if(pat->ipar3[IPAR_CSQUASH]) {
+        interm = sin(interm);
       }
 #endif
       
@@ -983,8 +994,9 @@ synti2_render(synti2_synth *s,
       }
 #endif
       
-      /* result is both in *signal and in interm (like before). Main
-       * mix in either mono or stereo. */
+      /* The proper result is now in interm. Then do main mix in
+       * either mono or stereo.
+       */
 #ifdef FEAT_STEREO
       /* To cut down computations, panning increases volume ([0,2]): */
       pan = pat->fpar[FPAR_MIXPAN];

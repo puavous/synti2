@@ -48,6 +48,11 @@ void cb_patch_name(Fl_Widget* w, void* p){
   }
 }
 
+void
+ViewPatches::butt_send_cb(Fl_Widget* w, void* p){
+    ViewPatches *view = (ViewPatches*)p;
+    view->sendCurrentPatch();
+}
 
 /** Builds the patch editor widgets. */
   void ViewPatches::build_patch_editor(Fl_Group *gr)
@@ -61,6 +66,7 @@ void cb_patch_name(Fl_Widget* w, void* p){
   // FIXME: From a factory who can setup bound updates etc.(?)
   Fl_Counter *patch = new Fl_Counter(50,25,50,25,"Patch");
 
+  /* FIXME: This, fix, properly: */
   patch->type(FL_SIMPLE_COUNTER);
   patch->align(FL_ALIGN_LEFT);
   patch->bounds(0,pb->getNumPatches()-1);
@@ -72,13 +78,12 @@ void cb_patch_name(Fl_Widget* w, void* p){
   widget_patch_name->callback(cb_patch_name,pb);
 
   int px=280, py=25, w=70, h=25, sp=2;
-  //int labsz = 16;
+  int labsz = 16;
 
 
   Fl_Button *box;
   box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
-  //box->callback(cb_send_current); box->labelsize(labsz);
-  //button_send_current = box;
+  box->callback(butt_send_cb,this); box->labelsize(labsz);
 
   box = new Fl_Button(px + 1*(w+sp),py,w,h,"Send al&l");
   //box->callback(cb_send_all); box->labelsize(labsz);

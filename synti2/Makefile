@@ -20,8 +20,7 @@ GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/Action.hpp \
           gui/Patch.hpp gui/Patch.cxx \
           gui/PatchBank.hpp gui/PatchBank.cxx \
-          tools/featuretool.hpp tools/featuretool.cxx \
-          tools/midihelper.hpp tools/midihelper.cxx \
+          gui/midihelper.hpp gui/midihelper.cxx \
           tools/keyvalhelper.cxx tools/keyvalhelper.hpp \
           gui/main.cxx
 

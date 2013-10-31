@@ -205,6 +205,17 @@ namespace synti2base {
     vector<string>::iterator
     getFEnd(size_t ipatch){return patches[ipatch].getFEnd();}
 
+    void sendPatch(size_t ipat){
+        vector<string>::const_iterator it;
+        /* FIXME: Keys in a single key vector!! */
+        for(it=getI4Begin(ipat);it!=getI4End(ipat);++it){
+            sendMidi(getEffectiveParAsSysEx(ipat,*it));
+        }
+        for(it=getFBegin(ipat);it!=getFEnd(ipat);++it){
+            sendMidi(getEffectiveParAsSysEx(ipat,*it));
+        }
+    }
+
     int
     getCapacityValue(string key){return caps.value(key);}
     int

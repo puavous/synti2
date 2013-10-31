@@ -138,8 +138,10 @@ namespace synti2gui {
 
     static std::vector<std::string> keys;
     static void value_callback(Fl_Widget* w, void* p);
+    static void butt_send_cb(Fl_Widget* w, void* p);
   public:
     size_t getActivePatch(){return activePatch;}
+    void sendCurrentPatch(){pb->sendPatch(getActivePatch());}
     bool setActivePatch(size_t ind){
       if ((ind < 0) || (ind > pb->getNumPatches())) {
         lastErrorMessage = "Illegal active patch index request.";

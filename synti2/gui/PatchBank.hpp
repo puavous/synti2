@@ -156,8 +156,17 @@ namespace synti2base {
 
     /** Writes a .s2bank to a stream. */
     void toStream(ostream & ost);
-    /** Reads a .s2bank from a stream. */
+    /** Reads a .s2bank from a stream.
+    FIXME: Actually should just initialize defaults here; rename accordingly!*/
     void fromStream(istream & ist);
+    /** Loads a stored .s2bank from a file. Assume already initialized defaults.*/
+    void reloadFromStream(istream & ist);
+
+    void writeOnePatch(size_t ipat, ostream & ost){cerr << "not impl." << endl;}
+    void readOnePatch(size_t ipat, istream & ist){cerr << "not impl." << endl;}
+    void clearOnePatch(size_t ipat){cerr << "not impl." << endl;}
+    void pleaseSendPanic(){cerr << "not impl." << endl;}
+
     /** Writes a C header file for stand-alone synth to a stream. */
     void exportCapFeatHeader(ostream & ost);
     /** Exports only the enabled parameters for a playble exe song. */

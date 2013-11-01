@@ -84,12 +84,39 @@ std::string fileChooser(string const & path,
 
 /** Saves a whole bank. */
 void ViewPatches::butt_save_bank_cb(Fl_Widget* w, void* p){
-  string fname = fileChooser(".",".s2bank",true);
-  if (fname == "") return;
+    string fname = fileChooser(".",".s2bank",true);
+    if (fname == "") return;
 
-  std::ofstream ofs(fname.c_str(), std::ios::trunc);
-  ((ViewPatches*)p)->pb->toStream(ofs);
+    std::ofstream ofs(fname.c_str(), std::ios::trunc);
+    ((ViewPatches*)p)->pb->toStream(ofs);
 }
+void ViewPatches::butt_load_bank_cb(Fl_Widget* w, void* p){
+    string fname = fileChooser(".",".s2bank",false);
+    if (fname == "") return;
+
+    std::ifstream ifs(fname.c_str());
+    ((ViewPatches*)p)->pb->reloadFromStream(ifs);
+}
+void ViewPatches::butt_save_current_cb(Fl_Widget* w, void* p){
+    string fname = fileChooser(".",".s2patch",true);
+    if (fname == "") return;
+    std::ofstream ofs(fname.c_str(), std::ios::trunc);
+    ((ViewPatches*)p)->pb->writeOnePatch(((ViewPatches*)p)->getActivePatch(),ofs);
+}
+void ViewPatches::butt_load_current_cb(Fl_Widget* w, void* p){
+    string fname = fileChooser(".",".s2patch",false);
+    if (fname == "") return;
+    std::ifstream ifs(fname.c_str());
+    ((ViewPatches*)p)->pb->readOnePatch(((ViewPatches*)p)->getActivePatch(),ifs);
+}
+void ViewPatches::butt_clear_cb(Fl_Widget* w, void* p){
+    ((ViewPatches*)p)->pb->clearOnePatch(((ViewPatches*)p)->getActivePatch());
+}
+void ViewPatches::butt_panic_cb(Fl_Widget* w, void* p){
+    ((ViewPatches*)p)->pb->pleaseSendPanic();
+}
+
+
 
 /** Changes the current patch, and updates other widgets..
  *Or should that be a callback from PatchEdit? */
@@ -132,24 +159,24 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
 
   px += w/2;
   box = new Fl_Button(px + 2*(w+sp),py,w,h,"Save this");
-  //box->callback(cb_save_current); box->labelsize(labsz);
+  box->callback(butt_save_current_cb,this); box->labelsize(labsz);
 
   box = new Fl_Button(px + 3*(w+sp),py,w,h,"&Save all");
   box->callback(butt_save_bank_cb,this); box->labelsize(labsz);
 
   px += w/2;
   box = new Fl_Button(px + 4*(w+sp),py,w,h,"Clear this");
-  //box->callback(cb_clear_current); box->labelsize(labsz);
+  box->callback(butt_clear_cb,this); box->labelsize(labsz);
 
   box = new Fl_Button(px + 5*(w+sp),py,w,h,"Load this");
-  //box->callback(cb_load_current); box->labelsize(labsz);
+  box->callback(butt_load_current_cb,this); box->labelsize(labsz);
 
   box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load all");
-  //box->callback(cb_load_all); box->labelsize(labsz);
+  box->callback(butt_load_bank_cb,this); box->labelsize(labsz);
 
   px += w/2;
   box = new Fl_Button(px + 7*(w+sp),py,w,h,"Panic!");
-  //box->callback(cb_load_all); box->labelsize(labsz);
+  box->callback(butt_panic_cb,this); box->labelsize(labsz);
 
   std::vector<std::string>::const_iterator i4it,fit;
   S2Valuator *vi;

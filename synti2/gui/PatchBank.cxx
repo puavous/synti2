@@ -206,7 +206,7 @@ void PatchBank::forceAllRuleActions()
     }
 }
 
-
+/* FIXME: Different output format for "non-defining" parameters.. */
 void PatchBank::toStream(std::ostream & ost)
 {
     ost << "# Output by PatchBank::toStream()" << std::endl;
@@ -220,7 +220,7 @@ void PatchBank::toStream(std::ostream & ost)
     midimap.toStream(ost);
 }
 
-void PatchBank::fromStream(std::istream & ist)
+void PatchBank::reloadFromStream(std::istream & ist)
 {
     std::cerr << "PatchBank::fromStream() Can't read yet!" << std::endl;
 }

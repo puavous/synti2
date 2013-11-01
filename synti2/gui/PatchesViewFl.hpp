@@ -141,6 +141,11 @@ namespace synti2gui {
     static void butt_send_cb(Fl_Widget* w, void* p);
     static void butt_send_all_cb(Fl_Widget* w, void* p);
     static void butt_save_bank_cb(Fl_Widget* w, void* p);
+    static void butt_load_bank_cb(Fl_Widget* w, void* p);
+    static void butt_save_current_cb(Fl_Widget* w, void* p);
+    static void butt_load_current_cb(Fl_Widget* w, void* p);
+    static void butt_clear_cb(Fl_Widget* w, void* p);
+    static void butt_panic_cb(Fl_Widget* w, void* p);
     static void val_ipat_cb(Fl_Widget* w, void* p);
   public:
     size_t getActivePatch(){return activePatch;}

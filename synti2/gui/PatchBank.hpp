@@ -216,6 +216,10 @@ namespace synti2base {
         }
     }
 
+    void sendAllPatches(){
+        for(int i=0;i<getNumPatches();++i) sendPatch(i);
+    }
+
     int
     getCapacityValue(string key){return caps.value(key);}
     int

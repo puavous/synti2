@@ -25,20 +25,6 @@ void ViewPatches::value_callback(Fl_Widget* w, void* p){
     vin->updateLooks();
 }
 
-/** Changes the current patch, and updates other widgets. */
-void cb_change_patch(Fl_Widget* w, void* p){
-  double val = ((Fl_Valuator*)w)->value();
-  ViewPatches *vp = (ViewPatches*)p;
-  vp->setActivePatch(val);
-
-  //PatchBank *pbh = (PatchBank*)p;
-  //if (!pbh->setActivePatch(val)){
-  //  std::cerr << "Not really implemented yet!!" << std::endl;
-  //  val = ww->getActivePatch();
-  //}
-  //((Fl_Valuator*)w)->value(val);
-}
-
 void cb_patch_name(Fl_Widget* w, void* p){
   if (p == NULL) {
     std::cerr << "PatchBankModel is NULL. Name unchanged." << std::endl;
@@ -48,10 +34,21 @@ void cb_patch_name(Fl_Widget* w, void* p){
   }
 }
 
-void
-ViewPatches::butt_send_cb(Fl_Widget* w, void* p){
+/** Sends current patch to MIDI output. */
+void ViewPatches::butt_send_cb(Fl_Widget* w, void* p){
+    ((ViewPatches*)p)->sendCurrentPatch();
+}
+
+/** Sends all patches. */
+void ViewPatches::butt_send_all_cb(Fl_Widget* w, void* p){
+    ((ViewPatches*)p)->pb->sendAllPatches();
+}
+
+/** Changes the current patch, and updates other widgets..
+ *Or should that be a callback from PatchEdit? */
+void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
     ViewPatches *view = (ViewPatches*)p;
-    view->sendCurrentPatch();
+    view->setActivePatch(((Fl_Valuator*)w)->value());
 }
 
 /** Builds the patch editor widgets. */
@@ -71,23 +68,20 @@ ViewPatches::butt_send_cb(Fl_Widget* w, void* p){
   patch->align(FL_ALIGN_LEFT);
   patch->bounds(0,pb->getNumPatches()-1);
   patch->precision(0);
-  patch->argument((long int)this);
-  patch->callback(cb_change_patch, pb);
+  patch->callback(val_ipat_cb, this);
 
   Fl_Input * widget_patch_name = new Fl_Input(150,25,90,25,"Name");
   widget_patch_name->callback(cb_patch_name,pb);
 
   int px=280, py=25, w=70, h=25, sp=2;
-  int labsz = 16;
-
+  int labsz = 12;
 
   Fl_Button *box;
   box = new Fl_Button(px+ 0*(w+sp),py,w,h,"S&end this");
   box->callback(butt_send_cb,this); box->labelsize(labsz);
 
   box = new Fl_Button(px + 1*(w+sp),py,w,h,"Send al&l");
-  //box->callback(cb_send_all); box->labelsize(labsz);
-  //button_send_all = box;
+  box->callback(butt_send_all_cb,this); box->labelsize(labsz);
 
   px += w/2;
   box = new Fl_Button(px + 2*(w+sp),py,w,h,"Save this");

@@ -410,10 +410,13 @@ synti2_do_noteon(synti2_synth *s,
 #ifdef FEAT_RESET_PHASE
   /* Adds to code size and produces clicks when note tail is still
    * sounding, but makes each note start with deterministic (zero)
-   * phase difference between oscillators.
+   * phase difference between oscillators. Might be useful for 
+   * tighter and more predictable drum sounds?
    */
-  for(ie=0;ie<NUM_OPERATORS;ie++) {
-    s->voi[voice].c[ie].val = 0;
+  if (s->voi[voice].patch.ipar3[IPAR_PHASE] != 0){
+    for(ie=0;ie<NUM_OPERATORS;ie++) {
+      s->voi[voice].c[ie].val = 0;
+    }
   }
 #endif
 
@@ -900,10 +903,22 @@ synti2_render(synti2_synth *s,
 #endif
         
         interm *= (eprog[pat->ipar3[IPAR_EAMP1+iosc]].f);
+
 #ifdef FEAT_APPLY_ADD
         interm += sigin[pat->ipar3[IPAR_ADDTO1+iosc]]; /* parallel */
 #endif
+#ifdef FEAT_POWER_WAVES
+        if (pat->ipar3[IPAR_POWR1+iosc] == 2){
+          interm *= interm;
+        } else if (pat->ipar3[IPAR_POWR1+iosc] == 3){
+          interm *= interm * interm;
+        } else if (pat->ipar3[IPAR_POWR1+iosc] == 5){
+          interm *= (interm * interm) * (interm * interm);
+        }
+#endif
+
         interm *= pat->fpar[FPAR_LV1+iosc]; /* level/gain */
+
 #ifdef FEAT_VELOCITY_SENSITIVITY
         /* Optional velocity sensitivity. */
         if (pat->ipar3[IPAR_VS1+iosc]){

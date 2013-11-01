@@ -309,7 +309,8 @@ static
 void fmt_hex16(std::ostream &outs, int i16){
   outs << std::setiosflags(std::ios::right)
        << std::resetiosflags(std::ios::left)
-       << "0x" << std::setfill('0') << std::setw(4) << std::hex << i16;
+       << "0x" << std::setfill('0') << std::setw(4) << std::hex << i16
+       << std::dec;
 }
 
 

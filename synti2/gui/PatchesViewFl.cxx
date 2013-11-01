@@ -9,8 +9,10 @@
 #include <FL/Fl_Roller.H>
 #include <FL/Fl_Scroll.H>
 #include <FL/Fl_Value_Input.H>
+#include <FL/Fl_File_Chooser.H>
 
 #include <iostream>
+#include <fstream>
 
 using synti2base::PatchBank;
 
@@ -42,6 +44,51 @@ void ViewPatches::butt_send_cb(Fl_Widget* w, void* p){
 /** Sends all patches. */
 void ViewPatches::butt_send_all_cb(Fl_Widget* w, void* p){
     ((ViewPatches*)p)->pb->sendAllPatches();
+}
+
+/* helper. checks that a file exists.. */
+bool file_exists(const char* fname){
+  std::ifstream checkf(fname);
+  return checkf.is_open();
+}
+
+/* Helper: Shows a file chooser dialog; returns filename or empty string
+ * if there was a problem or cancel.
+ */
+std::string fileChooser(string const & path,
+                        string const & extension,
+                        bool save = true){
+
+    string filter = "*"+extension;
+    Fl_File_Chooser chooser(path.c_str(),filter.c_str(),Fl_File_Chooser::CREATE,
+                            save?"Save -- select destination file.":"Load");
+    chooser.show();
+    while(chooser.shown()) Fl::wait();
+    if ( chooser.value() == NULL ) return "";
+
+    string res(chooser.value());
+    if (res.find_first_of(".")==string::npos) res += extension;
+
+    if (save){
+        if (file_exists(res.c_str())){
+            if (2 != fl_choice("File %s exists. \nDo you want to overwrite it?",
+                              "Cancel", "No", "Yes", res.c_str())) return "";
+        }
+    } else {
+        if (!file_exists(res.c_str())){
+            return "";
+        }
+    }
+    return res;
+}
+
+/** Saves a whole bank. */
+void ViewPatches::butt_save_bank_cb(Fl_Widget* w, void* p){
+  string fname = fileChooser(".",".s2bank",true);
+  if (fname == "") return;
+
+  std::ofstream ofs(fname.c_str(), std::ios::trunc);
+  ((ViewPatches*)p)->pb->toStream(ofs);
 }
 
 /** Changes the current patch, and updates other widgets..
@@ -88,7 +135,7 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
   //box->callback(cb_save_current); box->labelsize(labsz);
 
   box = new Fl_Button(px + 3*(w+sp),py,w,h,"&Save all");
-  //box->callback(cb_save_all); box->labelsize(labsz);
+  box->callback(butt_save_bank_cb,this); box->labelsize(labsz);
 
   px += w/2;
   box = new Fl_Button(px + 4*(w+sp),py,w,h,"Clear this");

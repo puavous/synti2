@@ -140,6 +140,7 @@ namespace synti2gui {
     static void value_callback(Fl_Widget* w, void* p);
     static void butt_send_cb(Fl_Widget* w, void* p);
     static void butt_send_all_cb(Fl_Widget* w, void* p);
+    static void butt_save_bank_cb(Fl_Widget* w, void* p);
     static void val_ipat_cb(Fl_Widget* w, void* p);
   public:
     size_t getActivePatch(){return activePatch;}

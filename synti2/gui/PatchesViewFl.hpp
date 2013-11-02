@@ -36,6 +36,7 @@ namespace synti2gui {
         virtual void doDeactivate() = 0;
         virtual void doUpdateLooks() = 0;
         virtual double doReturnValue() = 0;
+        virtual void doReloadValue(size_t ipat) = 0;
         void activate(){
             cerr << "activating " << key << endl;
             doActivate();}
@@ -45,6 +46,7 @@ namespace synti2gui {
         void updateLooks(){
             doUpdateLooks();
         }
+        void reloadValue(size_t ipat){ doReloadValue(ipat); }
         double value(){
             return doReturnValue();
         }
@@ -99,6 +101,9 @@ namespace synti2gui {
             vi->deactivate();
             vi->color(FL_GRAY);
         }
+        void doReloadValue(size_t ipat){
+            vi->value(pb_->getStoredParAsFloat(ipat, key));
+        }
         double doReturnValue(){return vi->value();}
     protected:
         void draw(){}
@@ -133,6 +138,10 @@ namespace synti2gui {
 
         }
         double doReturnValue(){return vsf->value();}
+        void doReloadValue(size_t ipat){
+            vsf->value(pb_->getStoredParAsFloat(ipat, key));
+            updateLooks();
+        }
         void precision(int pr){vsf->precision(pr);}
         void doActivate(){
             vsf->activate();
@@ -155,6 +164,8 @@ namespace synti2gui {
     PatchBank *pb;
     size_t activePatch;
     std::string lastErrorMessage;
+    std::vector<S2Valuator*> ws;
+    Fl_Input* wpatname;
 
     void build_patch_editor(Fl_Group *gr);
 
@@ -168,8 +179,16 @@ namespace synti2gui {
     static void butt_load_current_cb(Fl_Widget* w, void* p);
     static void butt_clear_cb(Fl_Widget* w, void* p);
     static void butt_panic_cb(Fl_Widget* w, void* p);
+    static void inp_name_cb(Fl_Widget* w, void* p);
     static void val_ipat_cb(Fl_Widget* w, void* p);
   public:
+    void reloadWidgetValues(){
+        wpatname->value(pb->getPatchName(getActivePatch()).c_str());
+        std::vector<S2Valuator*>::const_iterator it;
+        for (it=ws.begin();it!=ws.end();++it){
+            (*it)->reloadValue(activePatch);
+        }
+    };
     size_t getActivePatch(){return activePatch;}
     void sendCurrentPatch(){pb->sendPatch(getActivePatch());}
     bool setActivePatch(size_t ind){
@@ -178,7 +197,7 @@ namespace synti2gui {
         return false;
       } else {
         activePatch = ind;
-        //viewUpdater->rebuildPatchWidgets(); // FIXME: think!
+        reloadWidgetValues();
         return true;
       }
     }

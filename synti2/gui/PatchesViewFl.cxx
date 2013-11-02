@@ -27,13 +27,10 @@ void ViewPatches::value_callback(Fl_Widget* w, void* p){
     vin->updateLooks();
 }
 
-void cb_patch_name(Fl_Widget* w, void* p){
-  if (p == NULL) {
-    std::cerr << "PatchBankModel is NULL. Name unchanged." << std::endl;
-    return;
-  } else {
-    //pbank->at(curr_patch).setName(((Fl_Input*)w)->value());
-  }
+void ViewPatches::inp_name_cb(Fl_Widget* w, void* p){
+    ViewPatches *view = (ViewPatches*)p;
+    view->pb->setPatchName(view->getActivePatch(),
+                           ((Fl_Input*)w)->value());
 }
 
 /** Sends current patch to MIDI output. */
@@ -131,13 +128,11 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
     view->setActivePatch(((Fl_Valuator*)w)->value());
 }
 
+
+
 /** Builds the patch editor widgets. */
   void ViewPatches::build_patch_editor(Fl_Group *gr)
 {
-  if (pb==NULL) {
-    std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
-    return;
-  }
   Fl_Scroll *scroll = new Fl_Scroll(0,25,1200,740);
 
   // FIXME: From a factory who can setup bound updates etc.(?)
@@ -150,8 +145,8 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
   patch->precision(0);
   patch->callback(val_ipat_cb, this);
 
-  Fl_Input * widget_patch_name = new Fl_Input(150,25,90,25,"Name");
-  widget_patch_name->callback(cb_patch_name,pb);
+  wpatname = new Fl_Input(150,25,90,25,"Name");
+  wpatname->callback(inp_name_cb,this);
 
   int px=280, py=25, w=70, h=25, sp=2;
   int labsz = 12;
@@ -206,6 +201,8 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
     RuleSet rs = pb->getI4Par(activePatch,*i4it).getRuleSet();
     rs.ownThisAction(new WidgetEnablerRuleAction(vi));
     pb->registerRuleAction(rs);
+
+    ws.push_back(vi);
   }
 
   py=100; w=85; h=15;
@@ -224,22 +221,19 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
       RuleSet rs = pb->getFPar(activePatch,*fit).getRuleSet();
       rs.ownThisAction(new WidgetEnablerRuleAction(vi));
       pb->registerRuleAction(rs);
+
+      ws.push_back(vi);
   }
 
 #if 0
 
   for (int col=0; col < ncols; col++){
     for (int row=0; row < nrows; row++){
-      if (i==npars) break;
       /* FIXME: think? */
       vsf->bounds(pd->getMin("F",i),pd->getMax("F",i));
       vsf->precision(pd->getPrecision("F",i));
-      vsf->color(colortab[pd->getGroup("F",i)]);
       vsf->label(createFvalLabel(i,pd->getDescription("F",i)).c_str());
       flbl.push_back(createFvalLabel(i,pd->getDescription("F",i)));//pd->getDescription("F",i)); // for use in the other part
-      vsf->callback(cb_new_f_value);
-      vsf->argument(i);
-      i++;
     }
   }
 #endif

@@ -247,7 +247,7 @@ namespace synti2base {
     getPatchAsSysExes(int ipatch);
 
     float
-    getStoredParAsFloat(int ipatch, const string &parkey);
+    getStoredParAsFloat(size_t ipatch, const string &parkey);
 
     float
     getEffectiveParAsFloat(int ipatch, const string &parkey);
@@ -306,6 +306,12 @@ namespace synti2base {
       return patches[ipat].getFPar(key);
     }
 
+    const string & getPatchName(size_t ipat) const {
+        return patches[ipat].getName();
+    }
+    void setPatchName(size_t ipat, string const & n) {
+        patches[ipat].setName(n);
+    }
 
     /** Sets a midi sender. */
     void setMidiSender(MidiSender *ms){

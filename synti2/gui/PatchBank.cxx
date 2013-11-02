@@ -288,6 +288,11 @@ void PatchBank::exportCapFeatHeader(ostream & ost)
 
 }
 
+float
+PatchBank::getStoredParAsFloat(size_t ipatch, const string &parkey){
+    return patches[ipatch].getValue(parkey);
+}
+
 /** Returns a MIDI SysEx message that would change the value of a
  * parameter in a compose-mode synti2 instance. Actual value is returned
  * when a feature is turned on, and a zero or "no-effect" value is

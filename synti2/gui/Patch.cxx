@@ -456,12 +456,13 @@ void Patch::toStream(std::ostream & ost){
 }
 
 void Patch::valuesToStream(std::ostream &ost){
+    std::string da_name = getName();
+    if (da_name == "") da_name = "UNNAMED";
     std::vector<string>::iterator it;
+    ost << "# Patch data for '" << da_name << "' begins" << std::endl;
     ost << "# This output is by Patch::valuesToStream()" << std::endl;
-    ost << "UNNAMED" << std::endl;
+    ost << da_name << std::endl;
     ost << "#UNCOMMENTED" << std::endl;
-    ost << "# Patch data for 'UNNAMED' begins" << std::endl;
-    ost << "UNNAMED" << std::endl;
     ost << "[I4]" << std::endl;
     for(it=i4parKeys.begin();it!=i4parKeys.end();++it){
         i4pars[(*it)].mutablesToStream(ost);

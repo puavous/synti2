@@ -77,6 +77,7 @@ using namespace synti2base;
  */
   class Patch{
   private:
+    string name;
     std::vector<string> i4parKeys;
     std::map<string,I4Par> i4pars;
     std::map<string,int> i4parInd;
@@ -132,6 +133,23 @@ using namespace synti2base;
             fpars[key].setValue(v);
         }
     }
+
+    float getValue(std::string const &key) {
+        if (i4pars.find(key) != i4pars.end()){
+            return(i4pars[key].getValue());
+        } else if (fpars.find(key) != fpars.end()){
+           return(fpars[key].getValue());
+         }
+    }
+
+    string const & getName() const {
+        return name;
+    }
+
+    void setName(string const & nn){
+        name = nn;
+    }
+
 
     /** Pushes either the actual value, or zero (so far the only
      *  no-effect value being used)

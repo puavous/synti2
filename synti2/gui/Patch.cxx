@@ -363,6 +363,20 @@ void FPar::toStream(std::ostream &ost){
       << std::endl;
 }
 
+void FPar::mutablesToStream(std::ostream &ost){
+  ost << std::setfill(' ') << std::setw(10) << std::left
+      << key
+      << " "
+      << std::setfill(' ') << std::setw(17) << std::left
+      << value
+      << " " << minval
+      << " " << maxval
+      << " " << precision
+      //<< " " << guiGroup
+      << std::endl;
+}
+
+
 FPar::FPar(){fromLine("ERROR ThisShouldntBeHere 0 1 2 3 4");}
 
 FPar::FPar(string line){
@@ -402,6 +416,16 @@ void I4Par::toStream(std::ostream &ost){
       << std::endl;
 }
 
+void I4Par::mutablesToStream(std::ostream &ost){
+  ost << std::setfill(' ') << std::setw(10) << std::left
+      << key
+      << " " << value
+//      << " " << guiGroup
+      << std::endl;
+}
+
+
+
 I4Par::I4Par(){fromLine("ERROR ThisShouldntBeHere 0 1 2 3");}
 
 Patch::Patch(){
@@ -429,6 +453,24 @@ void Patch::toStream(std::ostream & ost){
     fpars[(*it)].toStream(ost);
   }
   ost << "--- end of patch " << std::endl;
+}
+
+void Patch::valuesToStream(std::ostream &ost){
+    std::vector<string>::iterator it;
+    ost << "# This output is by Patch::valuesToStream()" << std::endl;
+    ost << "UNNAMED" << std::endl;
+    ost << "#UNCOMMENTED" << std::endl;
+    ost << "# Patch data for 'UNNAMED' begins" << std::endl;
+    ost << "UNNAMED" << std::endl;
+    ost << "[I4]" << std::endl;
+    for(it=i4parKeys.begin();it!=i4parKeys.end();++it){
+        i4pars[(*it)].mutablesToStream(ost);
+    }
+    ost << "[F]" << std::endl;
+    for(it=fparKeys.begin();it!=fparKeys.end();++it){
+        fpars[(*it)].mutablesToStream(ost);
+    }
+    ost << "--- end of patch " << std::endl;
 }
 
 /** FIXME: Should not wire key indices from here!? */

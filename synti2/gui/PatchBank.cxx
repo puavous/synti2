@@ -2,6 +2,7 @@
 #include "Synti2Base.hpp"
 
 #include <iostream>
+using namespace std;
 
 namespace synti2base
 {
@@ -31,9 +32,9 @@ void Capacities::initCapacityDescriptions()
     addCapacityDescription("num_mods","NUM_MODULATORS","Number of controllable modulators per channel",0,4,4,"mods");
 }
 
-void Capacities::toStream(std::ostream &ost)
+void Capacities::toStream(ostream &ost)
 {
-    ost << "# Can't really output capacities yet. But the code is here." << std::endl;
+    ost << "# Can't really output capacities yet. But the code is here." << endl;
 }
 
 void Capacities::exportHeader(ostream &ost)
@@ -108,9 +109,9 @@ void Features::initFeatureDescriptions()
     addFeatureDescription("panenv","FEAT_PAN_ENVELOPE","Enable pan envelope","stereo");
 }
 
-void Features::toStream(std::ostream &ost)
+void Features::toStream(ostream &ost)
 {
-    ost << "# Can't really output features yet. But the code is here." << std::endl;
+    ost << "# Can't really output features yet. But the code is here." << endl;
 }
 
 void Features::exportHeader(ostream &ost)
@@ -139,15 +140,15 @@ public:
     }
 };
 
-void MidiMap::toStream(std::ostream &ost)
+void MidiMap::toStream(ostream &ost)
 {
-    ost << "# Can't really output midimap yet. But the code is here." << std::endl;
+    ost << "# Can't really output midimap yet. But the code is here." << endl;
 }
 
 PatchBank::PatchBank():patches(16)
 {
     midiSender = NULL;
-    toStream(std::cout); /*FIXME: for debug only.*/
+    toStream(cout); /*FIXME: for debug only.*/
 
     /* FIXME: Set up ruleactions for parameter enable/disable.*/
     vector<string>::const_iterator it;
@@ -199,7 +200,7 @@ void PatchBank::callRuleActions(string const & key)
 /** Applies all the rule actions that have been registered. */
 void PatchBank::forceAllRuleActions()
 {
-    map<std::string, vector<RuleSet> >::const_iterator it;
+    map<string, vector<RuleSet> >::const_iterator it;
     for(it=capfeat_rulesets.begin(); it != capfeat_rulesets.end(); ++it)
     {
         callRuleActions((*it).first);
@@ -207,25 +208,36 @@ void PatchBank::forceAllRuleActions()
 }
 
 /* FIXME: Different output format for "non-defining" parameters.. */
-void PatchBank::toStream(std::ostream & ost)
+void PatchBank::toStream(ostream & ost)
 {
-    ost << "# Output by PatchBank::toStream()" << std::endl;
+    ost << "# Output by PatchBank::toStream()" << endl;
     caps.toStream(ost);
     feats.toStream(ost);
-    std::vector<Patch>::iterator pit;
+    vector<Patch>::iterator pit;
     for(pit=patches.begin(); pit!=patches.end(); ++pit)
     {
-        (*pit).toStream(ost);
+        (*pit).valuesToStream(ost);
     }
     midimap.toStream(ost);
 }
 
-void PatchBank::reloadFromStream(std::istream & ist)
-{
-    std::cerr << "PatchBank::fromStream() Can't read yet!" << std::endl;
+void PatchBank::writeOnePatch(size_t ipat, ostream &ost){
+    ost << "# Synti2 single patch." << endl;
+    ost << "# Output by " << __FILE__ << endl;
+    ost << "# Capacities and features at the time of writing this patch:" << endl;
+    caps.toStream(ost);
+    feats.toStream(ost);
+    ost << "# One patch follows. (may contain values disabled while editing)." << endl;
+    patches[ipat].valuesToStream(ost);
+    // Midimap plays no role for single patch, so omit that.
 }
 
-void PatchBank::exportCapFeatHeader(std::ostream & ost)
+void PatchBank::reloadFromStream(istream & ist)
+{
+    cerr << "PatchBank::fromStream() Can't read yet!" << endl;
+}
+
+void PatchBank::exportCapFeatHeader(ostream & ost)
 {
     ost << "/** Capacities and features for a customized, unique build of"
         << endl
@@ -238,7 +250,7 @@ void PatchBank::exportCapFeatHeader(std::ostream & ost)
     feats.exportHeader(ost);
     ost<<endl;
 
-    std::vector<std::string>::const_iterator sit;
+    vector<string>::const_iterator sit;
     int ind;
 
     /* FIXME: Rulesets need to be checked somewhere before export!! */
@@ -249,7 +261,7 @@ void PatchBank::exportCapFeatHeader(std::ostream & ost)
     {
         RuleSet rs = getI4Par(0,*sit).getRuleSet();
         if (!ruleIsSatisfied(rs)) continue;
-        std::string const & cdef = getI4Par(0,*sit).getCDefine();
+        string const & cdef = getI4Par(0,*sit).getCDefine();
         ost << "#define ";
         ost.width(30);
         ost.fill(' ');
@@ -264,7 +276,7 @@ void PatchBank::exportCapFeatHeader(std::ostream & ost)
     {
         RuleSet rs = getFPar(0,*sit).getRuleSet();
         if (!ruleIsSatisfied(rs)) continue;
-        std::string const & cdef = getFPar(0,*sit).getCDefine();
+        string const & cdef = getFPar(0,*sit).getCDefine();
         ost << "#define ";
         ost.width(30);
         ost.fill(' ');
@@ -288,7 +300,7 @@ std::vector<unsigned char>
 PatchBank::getEffectiveParAsSysEx(int ipatch, const string &parkey)
 {
 
-    std::vector<unsigned char> res;
+    vector<unsigned char> res;
     bool value_ok = isParEnabled(parkey);
     patches[ipatch].pushValToSysex(ipatch, parkey, res, value_ok);
     return res;

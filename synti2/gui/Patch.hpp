@@ -35,6 +35,7 @@ using namespace synti2base;
     float getValue() const {return value;}
     void fromLine(string line);
     void toStream(std::ostream &ost);
+    void mutablesToStream(std::ostream &ost);
     float getMaxValue() const {return 15;} /* FIXME: no good! */
   };
 
@@ -63,6 +64,7 @@ using namespace synti2base;
     float getValue(){return value;}
     void fromLine(string line);
     void toStream(std::ostream &ost);
+    void mutablesToStream(std::ostream &ost);
     float getMinValue() const {return minval;}
     float getMaxValue() const {return maxval;}
     int getPrecision() const {return precision;}
@@ -92,6 +94,7 @@ using namespace synti2base;
   public:
     Patch();
     void toStream(std::ostream &ost);
+    void valuesToStream(std::ostream &ost);
     void fromStream(std::istream &ifs);
     std::vector<string> const & getI4ParKeys(){return i4parKeys;}
     std::vector<string> const & getFParKeys(){return fparKeys;}

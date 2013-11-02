@@ -162,7 +162,7 @@ namespace synti2base {
     /** Loads a stored .s2bank from a file. Assume already initialized defaults.*/
     void reloadFromStream(istream & ist);
 
-    void writeOnePatch(size_t ipat, ostream & ost){cerr << "not impl." << endl;}
+    void writeOnePatch(size_t ipat, ostream & ost);
     void readOnePatch(size_t ipat, istream & ist){cerr << "not impl." << endl;}
     void clearOnePatch(size_t ipat){cerr << "not impl." << endl;}
     void pleaseSendPanic(){cerr << "not impl." << endl;}

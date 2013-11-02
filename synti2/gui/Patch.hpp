@@ -23,8 +23,6 @@ using namespace synti2base;
     int allowed;
     /** Names to be used in GUI; empty->"0","1","2",.."15" */
     std::vector<std::string> names;
-    /** GUI grouping hint */
-    int guigroup;
   public:
     /*    I4Par(string ik, string icd, string ihr,
                      int idef, int iallow,

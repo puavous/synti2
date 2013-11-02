@@ -15,13 +15,23 @@ namespace synti2gui {
     class S2Valuator: public Fl_Valuator {
     protected:
         std::string key;
-        PatchBank *_pb;
+        PatchBank *pb_;
+
+        /* A fancy color scheme. */
+        Fl_Color colortab[20] = {
+            Fl_Color(246), Fl_Color(254), Fl_Color(241), Fl_Color(254),
+            Fl_Color(247), Fl_Color(255), Fl_Color(242), Fl_Color(253),
+            Fl_Color(248), Fl_Color(253), Fl_Color(243), Fl_Color(252),
+            Fl_Color(249), Fl_Color(252), Fl_Color(244), Fl_Color(251),
+            Fl_Color(249), Fl_Color(252), Fl_Color(244), Fl_Color(251),
+        };
+
     public:
         S2Valuator(int x, int y, int w, int h,
                    PatchBank *ipb, std::string const & ikey):
-                       Fl_Valuator(x,y,w,h,NULL),key(ikey),_pb(ipb){}
+                       Fl_Valuator(x,y,w,h,NULL),key(ikey),pb_(ipb){}
         std::string const & getKey() const {return key;}
-        PatchBank *pb(){return _pb;}
+        PatchBank *pb(){return pb_;}
         virtual void doActivate() = 0;
         virtual void doDeactivate() = 0;
         virtual void doUpdateLooks() = 0;
@@ -77,11 +87,18 @@ namespace synti2gui {
             vi->tooltip(ipb->getI4Par(0,ikey).getHumanReadable().c_str());
             vi->precision(0);
             vi->bounds(0,ipb->getI4Par(0,ikey).getMaxValue());
+            vi->color(colortab[ipb->getI4Par(0,ikey).getGuiGroup()]);
             /* FIXME: Leaks or not? Fl assigns parent automatically? */
         }
         void precision(int pr){vi->precision(pr);} // FIXME: doPrecision??
-        void doActivate(){vi->activate();}
-        void doDeactivate(){vi->deactivate();}
+        void doActivate(){
+            vi->activate();
+            vi->color(colortab[pb_->getI4Par(0,key).getGuiGroup()]);
+        }
+        void doDeactivate(){
+            vi->deactivate();
+            vi->color(FL_GRAY);
+        }
         double doReturnValue(){return vi->value();}
     protected:
         void draw(){}
@@ -91,6 +108,7 @@ namespace synti2gui {
 
     class S2FValueInput: public S2Valuator{
     private:
+
         Fl_Roller *vsf;
         static void cbfwd(Fl_Widget *w, void *p){
             ((S2Valuator*)p)->do_callback();
@@ -111,12 +129,16 @@ namespace synti2gui {
           vsf->bounds(ipb->getFPar(0,ikey).getMinValue(),
                       ipb->getFPar(0,ikey).getMaxValue());
           vsf->precision(ipb->getFPar(0,ikey).getPrecision());
+          vsf->color(colortab[ipb->getFPar(0,ikey).getGuiGroup()]);
 
         }
         double doReturnValue(){return vsf->value();}
         void precision(int pr){vsf->precision(pr);}
-        void doActivate(){vsf->activate();}
-        void doDeactivate(){vsf->deactivate();}
+        void doActivate(){
+            vsf->activate();
+            vsf->color(colortab[pb_->getFPar(0,key).getGuiGroup()]);
+        }
+        void doDeactivate(){vsf->deactivate();vsf->color(FL_GRAY);}
         void doUpdateLooks(){
             std::ostringstream vs;
             vs << pb()->getFPar(0,key).getHumanReadable() << " = " << value() << "         "; // hack..

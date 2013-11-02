@@ -116,6 +116,12 @@ void ViewPatches::butt_panic_cb(Fl_Widget* w, void* p){
     ((ViewPatches*)p)->pb->pleaseSendPanic();
 }
 
+/* if needed...
+void cb_exit(Fl_Widget* w, void* p){
+  ((Fl_Window*)p)->hide();
+}
+*/
+
 
 
 /** Changes the current patch, and updates other widgets..
@@ -181,7 +187,7 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
   std::vector<std::string>::const_iterator i4it,fit;
   S2Valuator *vi;
 
-  int ncols = 30;
+  int ncols = 28;
   int col=0,row=0;
 
   px=5; py=50; w=25; h=20; sp=2;
@@ -204,7 +210,7 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
 
   py=100; w=85; h=15;
   int npars = pb->getFEnd(activePatch) - pb->getFBegin(activePatch);
-  int nrows = (npars / ncols) + 1;
+  //int nrows = (npars / ncols) + 1;
   ncols = 4;col=0,row=0;
 
   for (fit=pb->getFBegin(activePatch);
@@ -213,7 +219,7 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
       vi = new S2FValueInput(px+col*250,py+row*(h+sp),w,h,pb,*fit);
       vi->callback(value_callback, this);
       vi->updateLooks();
-      row++;if (row>30){row=0;col++;}
+      row++;if (row>28){row=0;col++;}
 
       RuleSet rs = pb->getFPar(activePatch,*fit).getRuleSet();
       rs.ownThisAction(new WidgetEnablerRuleAction(vi));

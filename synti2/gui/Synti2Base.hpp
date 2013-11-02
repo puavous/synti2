@@ -67,18 +67,20 @@ namespace synti2base {
     string key;
     string cdefine;
     string humanReadable;
+    int guiGroup;
     string guiStyle;
     string ruleString;
   public:
     Description() : key("none"),cdefine("none"),humanReadable("none"),
                     guiStyle("void"),ruleString(";"){};
     Description(string ikey, string icdefine, string ihumanReadable,
-                string iguiStyle, string irules)
+                int iguiGroup, string iguiStyle, string irules)
       :key(ikey),cdefine(icdefine),humanReadable(ihumanReadable),
-       guiStyle(iguiStyle),ruleString(irules){};
+       guiGroup(iguiGroup),guiStyle(iguiStyle),ruleString(irules){};
     string getKey() const {return key;}
     string getCDefine() const {return cdefine;}
     string getHumanReadable() const {return humanReadable;}
+    int getGuiGroup() const {return guiGroup;}
     string getGuiStyle() const {return guiStyle;}
     string getRuleString() const {return ruleString;}
     /* Thresholds (key, min value) seem enough for current purposes. */
@@ -107,7 +109,7 @@ namespace synti2base {
     std::vector<std::string> reqkeys;
   public:
     FeatureDescription(string ik, string icd, string ihr, string ireq)
-      : Description(ik,icd,ihr,"void",";")
+      : Description(ik,icd,ihr,0,"void",";")
     {
       // should split/tokenize, if many will be needed.
       reqkeys.push_back(ireq);
@@ -125,7 +127,7 @@ namespace synti2base {
     string reqf;
   public:
     CapacityDescription(string ik, string icd, string ihr, int imin, int imax, string ireqf)
-      : Description(ik,icd,ihr,"void",";"), min(imin), max(imax), reqf(ireqf)
+      : Description(ik,icd,ihr,0,"void",";"), min(imin), max(imax), reqf(ireqf)
     {}
     int getMin() const {return min;}
     int getMax() const {return max;}

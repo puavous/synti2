@@ -13,7 +13,9 @@
 using synti2base::PatchBank;
 using synti2gui::ViewMidiMapper;
 
-Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
+Fl_Group *
+ViewMidiMapper::build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic)
+{
   const char *clab[16] = {"1","2","3","4","5","6","7","8","9","10",
                        "11","12","13","14","15","16"};
   int px=ipx, py=ipy;
@@ -36,6 +38,7 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
   ch->add("*Mute*",0,0,0,0);
   ch->value(0);  /*hack default..*/
   ch->argument(ic);
+
 #if 0
   ch->callback(cb_mapper_mode);
   widg_cmode[ic] = ch;
@@ -105,7 +108,7 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
 
     px += 12*(w+sp);
   }
-  
+
   /* key map */
   px=2;py=48;sp=1;
   w=30;h=20;
@@ -115,7 +118,7 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
     unsigned int notecol[] = {
       0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00,
       0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00};
-    
+
     int note = i % 12;
     int oct = i / 12;
     int row = i / 128;
@@ -137,16 +140,10 @@ Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic){
 }
 
 
-void build_message_mapper(int x, int y, int w, int h, 
-                          PatchBank *pbh = NULL)
+void
+ViewMidiMapper::build_message_mapper(int x, int y, int w, int h)
 {
-  if (pbh==NULL) {
-    std::cerr << "Error: No PatchBank given. Can't build GUI." << std::endl;
-    return;
-  }
-
   Fl_Scroll *scroll = new Fl_Scroll(x+1,y+1,w-2,h-2);
-
   for (int i=0;i<16;i++){
     build_channel_mapper(x+2,y+2+i*100,900,96,i);
   }
@@ -154,11 +151,11 @@ void build_message_mapper(int x, int y, int w, int h,
 }
 
 
-ViewMidiMapper::ViewMidiMapper(int x, int y, int w, int h, 
-                               const char * name, 
+ViewMidiMapper::ViewMidiMapper(int x, int y, int w, int h,
+                               const char * name,
                                PatchBank *pbh)
-  : Fl_Group(x, y, w, h, name)
+  : Fl_Group(x, y, w, h, name), pb(pbh)
 {
-  build_message_mapper(x,y,w,h,pbh);
+  build_message_mapper(x,y,w,h);
   this->end();
 }

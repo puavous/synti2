@@ -1,12 +1,36 @@
-#include "midimaptool.hpp"
+#include "MidiMap.hpp"
 #include "midihelper.hpp"
 #include "synti2_misss.h"
+#include "synti2_cap_full.h"
+#include "synti2_midi.h"
+#include "synti2_midi_guts.h"
 
 #include <sstream>
 #include <cstring>
 
+synti2base::MisssEvent::MisssEvent(const unsigned char *misssbuf){
+  type = *misssbuf++;
+  voice = *misssbuf++;
+  par1 = *misssbuf++;
+  if (type==MISSS_MSG_NOTE){
+    par2 = *misssbuf++;
+  } else if (type==MISSS_MSG_RAMP) {
+    time = *((float*)misssbuf);
+    misssbuf += sizeof(float);
+    target = *((float*)misssbuf);
+    misssbuf += sizeof(float);
+  }
+
+  /*std::cout << "MISSS-" << type << " on voice " << voice
+    << " par1=" << par1;
+  if (type==MISSS_MSG_NOTE) std::cout << " vel= " << par2 << std::endl;
+  else std::cout << "time=" << time << " tgt=" << target<< std::endl;
+  */
+}
+
+
 static
-std::vector<unsigned char> 
+std::vector<unsigned char>
 sysexOneByte(int type, int midichn, int thebyte){
   std::vector<unsigned char> res;
   synti2_sysex_header(res);
@@ -18,7 +42,7 @@ sysexOneByte(int type, int midichn, int thebyte){
 }
 
 static
-std::vector<unsigned char> 
+std::vector<unsigned char>
 sysexTwoBytes(int type, int midichn, int firstbyte, int secondbyte){
   std::vector<unsigned char> res;
   synti2_sysex_header(res);
@@ -31,14 +55,14 @@ sysexTwoBytes(int type, int midichn, int firstbyte, int secondbyte){
 }
 
 
-synti2::MidiMap::MidiMap(){
+synti2base::MidiMap::MidiMap(){
   memset (&mmap, 0, sizeof(mmap));
   memset (&state, 0, sizeof(state));
 }
 
 void
-synti2::MidiMap::write(std::ostream &os)
-{ 
+synti2base::MidiMap::write(std::ostream &os)
+{
   /* FIXME: Re-implement. Needs to be "forall params{write param}".
    * The control section must be just another type of patch. Actually
    * I want a generic synth patch editor, to which I can easily hook
@@ -57,11 +81,11 @@ synti2::MidiMap::write(std::ostream &os)
     os << "KeyMap ";
     for (int ik=0;ik<128;ik++){
       os << (ik==0?"":",") << getKeyMap(ic,ik);
-    } 
+    }
     os << std::endl;
     os << "BendDest " << getBendDest(ic) << std::endl;
     os << "PressureDest " << getPressureDest(ic) << std::endl;
-    for (int imod=0;imod<NCONTROLLERS;imod++){
+    for (int imod=0;imod<NUM_MAX_MODULATORS;imod++){
       os << "Mod " << (imod+1);
       os << "," << getModSource(ic,imod);
       os << "," << getModMin(ic,imod);
@@ -108,21 +132,21 @@ static std::string readMapParStr(std::istream &ifs, const std::string &name, std
 }
 
 void
-synti2::MidiMap::read(std::istream &ifs)
-{ 
+synti2base::MidiMap::read(std::istream &ifs)
+{
   std::string line;
   while(std::getline(ifs, line)){
     if (line == "--- Mapper section begins ---") break;
   }
   if (line != "--- Mapper section begins ---"){
-    std::cerr << "No map data found in expected location. Skip read." << std::endl; 
+    std::cerr << "No map data found in expected location. Skip read." << std::endl;
     std::cerr << "Read: " << line << std::endl;
     return;
   }
   /*
   if((!std::getline(ifs, line))
      || (line!="--- Mapper section begins ---")){
-    std::cerr << "No map data found in expected location. Skip read." << std::endl; 
+    std::cerr << "No map data found in expected location. Skip read." << std::endl;
     return;
     }*/
   for(int ic=0;ic<16;ic++){
@@ -135,27 +159,34 @@ synti2::MidiMap::read(std::istream &ifs)
     setKeyMap(ic, readMapParStr(ifs, "KeyMap", ""));
     setBendDest(ic, readMapParInt(ifs, "BendDest", 0));
     setPressureDest(ic, readMapParInt(ifs, "PressureDest", 0));
-    for (int imod=0;imod<NCONTROLLERS; imod++){
+    for (int imod=0;imod<NUM_MAX_MODULATORS; imod++){
       setMod(ic, imod, readMapParStr(ifs, "Mod", "0,0,0,0"));
     }
   }
-  return; 
+  return;
 }
 
-std::vector<synti2::MisssEvent> 
-synti2::MidiMap::midiToMisss(const MidiEvent &evin)
+std::vector<synti2base::MisssEvent>
+synti2base::MidiMap::midiToMisss(const MidiEvent &evin)
 {
   unsigned char inbuf[5];
-  unsigned char outbuf[NPARTS*(1+3+2*sizeof(float))];
-  int msgsizes[NPARTS];
-  
-  std::vector<synti2::MisssEvent> res;
+  unsigned char outbuf[NUM_MAX_CHANNELS*(1+3+2*sizeof(float))];
+  int msgsizes[NUM_MAX_CHANNELS];
+
+  std::vector<synti2base::MisssEvent> res;
   evin.toMidiBuffer(inbuf);
   int nmsg;
+#if 0
   nmsg = synti2_midi_to_misss(&mmap, &state,
                               inbuf, outbuf,
                               msgsizes,
                               0 /* FIXME: problem here?*/);
+#else
+  /* FIXME: I have a build problem with codeblocks.. the C part's symbol
+     doesn't seem to be found. I suck in finding the problem now.
+   */
+  nmsg = 0;
+#endif
   unsigned char *read;
   read = outbuf;
   for(int i=0;i<nmsg;i++){
@@ -168,76 +199,78 @@ synti2::MidiMap::midiToMisss(const MidiEvent &evin)
 
 
 void
-synti2::MidiMap::setMode(int midichn, int val){
+synti2base::MidiMap::setMode(int midichn, int val){
   mmap.chn[midichn].mode = val;}
 
 int
-synti2::MidiMap::getMode(int midichn){
+synti2base::MidiMap::getMode(int midichn){
   return mmap.chn[midichn].mode;}
 
 std::vector<unsigned char>
-synti2::MidiMap::sysexMode(int midichn){
+synti2base::MidiMap::sysexMode(int midichn){
   return sysexOneByte(MISSS_SYSEX_MM_MODE,midichn,getMode(midichn));}
 
 void
-synti2::MidiMap::setSust(int midichn, bool val){
+synti2base::MidiMap::setSust(int midichn, bool val){
   mmap.chn[midichn].use_sustain_pedal = val?1:0;}
 
 bool
-synti2::MidiMap::getSust(int midichn){
+synti2base::MidiMap::getSust(int midichn){
   return (mmap.chn[midichn].use_sustain_pedal != 0);}
 
 std::vector<unsigned char>
-synti2::MidiMap::sysexSust(int midichn){
-  return sysexOneByte(MISSS_SYSEX_MM_SUST, midichn, 
+synti2base::MidiMap::sysexSust(int midichn){
+  return sysexOneByte(MISSS_SYSEX_MM_SUST, midichn,
                       getSust(midichn)?1:0);}
 
 void
-synti2::MidiMap::setNoff(int midichn, bool val){
+synti2base::MidiMap::setNoff(int midichn, bool val){
   mmap.chn[midichn].receive_note_off = val?1:0;}
 
 bool
-synti2::MidiMap::getNoff(int midichn){
+synti2base::MidiMap::getNoff(int midichn){
   return (mmap.chn[midichn].receive_note_off != 0);}
 
 std::vector<unsigned char>
-synti2::MidiMap::sysexNoff(int midichn){
-  return sysexOneByte(MISSS_SYSEX_MM_NOFF, midichn, 
+synti2base::MidiMap::sysexNoff(int midichn){
+  return sysexOneByte(MISSS_SYSEX_MM_NOFF, midichn,
                       getNoff(midichn)?1:0);}
 
 
 void
-synti2::MidiMap::setFixedVelo(int midichn, int val){
+synti2base::MidiMap::setFixedVelo(int midichn, int val){
   mmap.chn[midichn].use_const_velocity = val;}
 
 int
-synti2::MidiMap::getFixedVelo(int midichn){
+synti2base::MidiMap::getFixedVelo(int midichn){
   return mmap.chn[midichn].use_const_velocity;}
 
 std::vector<unsigned char>
-synti2::MidiMap::sysexFixedVelo(int midichn){
+synti2base::MidiMap::sysexFixedVelo(int midichn){
   return sysexOneByte(MISSS_SYSEX_MM_CVEL,midichn,getFixedVelo(midichn));}
 
 
 
-void 
-synti2::MidiMap::setVoices(int midichn, const std::string &val){
+void
+synti2base::MidiMap::setVoices(int midichn, const std::string &val){
   /* Input is a list of zero or more non-negative integers, separated
    * by any non-digits; Accept only a subsequence of integers that is
-   * increasing and less than the number of channels in the compiled
-   * capacities of the synth. Other parts of the input are silently
-   * ignored.
+   * increasing and less than the maximum number of channels in any
+   * possible compiled synth capacities. Other parts of the input are
+   * silently ignored. FIXME: This will allow larger channel indices
+   * than those actually available in a custom synth! Some truncation
+   * logic needs to be applied at some point!!
    */
   std::stringstream ss(val);
   int voi, prev = 0;
-  for (int i=0;i<NPARTS;i++){
+  for (int i=0;i<NUM_MAX_CHANNELS;i++){
     while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
     ss >> voi;
     if (ss.fail() || voi == 0){
       mmap.chn[midichn].voices[i] = 0;
       return;
     }
-    if ((voi <= prev) || (voi > NPARTS)) continue;
+    if ((voi <= prev) || (voi > NUM_MAX_CHANNELS)) continue;
     mmap.chn[midichn].voices[i] = prev = voi;
   }
 }
@@ -249,8 +282,8 @@ static void ignore_until_digit(std::istream ss){
 }
 #endif
 
-void 
-synti2::MidiMap::setKeyMap(int midichn, std::string sval){
+void
+synti2base::MidiMap::setKeyMap(int midichn, std::string sval){
   std::stringstream ss(sval);
   int voi;
   for (int ik=0;ik<128;ik++){
@@ -266,10 +299,10 @@ synti2::MidiMap::setKeyMap(int midichn, std::string sval){
 }
 
 
-std::string 
-synti2::MidiMap::getVoicesString(int midichn){
+std::string
+synti2base::MidiMap::getVoicesString(int midichn){
   std::stringstream res;
-  for (int i=0;i<NPARTS;i++){
+  for (int i=0;i<NUM_MAX_CHANNELS;i++){
     int voi = mmap.chn[midichn].voices[i];
     if (voi==0) break;
     res << (i>0?",":"") << voi;
@@ -277,13 +310,13 @@ synti2::MidiMap::getVoicesString(int midichn){
   return res.str();
 }
 
-std::vector<unsigned char> 
-synti2::MidiMap::sysexVoices(int midichn){
+std::vector<unsigned char>
+synti2base::MidiMap::sysexVoices(int midichn){
   std::vector<unsigned char> res;
   synti2_sysex_header(res);
   res.push_back(MISSS_SYSEX_MM_VOICES);
   res.push_back(midichn);
-  for (int i=0;i<NPARTS;i++){
+  for (int i=0;i<NUM_MAX_CHANNELS;i++){
     int voi = mmap.chn[midichn].voices[i];
     res.push_back(voi);
     if (voi==0) break; /* "Null-terminate". */
@@ -292,22 +325,22 @@ synti2::MidiMap::sysexVoices(int midichn){
   return res;
 }
 
-void 
-synti2::MidiMap::setKeyMap(int midichn, int key, int val){
+void
+synti2base::MidiMap::setKeyMap(int midichn, int key, int val){
   mmap.chn[midichn].note_channel_map[key] = val;}
 
-int 
-synti2::MidiMap::getKeyMap(int midichn, int key){
+int
+synti2base::MidiMap::getKeyMap(int midichn, int key){
   return mmap.chn[midichn].note_channel_map[key];}
 
-std::vector<unsigned char> 
-synti2::MidiMap::sysexKeyMapSingleNote(int midichn, int key){
+std::vector<unsigned char>
+synti2base::MidiMap::sysexKeyMapSingleNote(int midichn, int key){
   return sysexTwoBytes(MISSS_SYSEX_MM_MAPSINGLE,midichn,key,
                        getKeyMap(midichn,key));
 }
 
-std::vector<unsigned char> 
-synti2::MidiMap::sysexKeyMapAll(int midichn){
+std::vector<unsigned char>
+synti2base::MidiMap::sysexKeyMapAll(int midichn){
   std::vector<unsigned char> res;
   synti2_sysex_header(res);
   res.push_back(MISSS_SYSEX_MM_MAPALL);
@@ -320,47 +353,47 @@ synti2::MidiMap::sysexKeyMapAll(int midichn){
 }
 
 void
-synti2::MidiMap::setBendDest(int midichn, int val){
+synti2base::MidiMap::setBendDest(int midichn, int val){
   mmap.chn[midichn].bend_destination = val;}
 
 int
-synti2::MidiMap::getBendDest(int midichn){
+synti2base::MidiMap::getBendDest(int midichn){
   return mmap.chn[midichn].bend_destination;}
 
 std::vector<unsigned char>
-synti2::MidiMap::sysexBendDest(int midichn){
+synti2base::MidiMap::sysexBendDest(int midichn){
   return sysexOneByte(MISSS_SYSEX_MM_BEND,midichn,getBendDest(midichn));}
 
 
 void
-synti2::MidiMap::setPressureDest(int midichn, int val){
+synti2base::MidiMap::setPressureDest(int midichn, int val){
   mmap.chn[midichn].pressure_destination = val;}
 
 int
-synti2::MidiMap::getPressureDest(int midichn){
+synti2base::MidiMap::getPressureDest(int midichn){
   return mmap.chn[midichn].pressure_destination;}
 
 std::vector<unsigned char>
-synti2::MidiMap::sysexPressureDest(int midichn){
+synti2base::MidiMap::sysexPressureDest(int midichn){
   return sysexOneByte(MISSS_SYSEX_MM_PRESSURE,midichn,getPressureDest(midichn));}
 
 
 void
-synti2::MidiMap::setModSource(int midichn, int imod, int val){
+synti2base::MidiMap::setModSource(int midichn, int imod, int val){
   mmap.chn[midichn].mod_src[imod] = val;}
 
 int
-synti2::MidiMap::getModSource(int midichn, int imod){
+synti2base::MidiMap::getModSource(int midichn, int imod){
   return mmap.chn[midichn].mod_src[imod];}
 
 void
-synti2::MidiMap::setModMin(int midichn, int imod, float val){
+synti2base::MidiMap::setModMin(int midichn, int imod, float val){
   val = synti2::decode_f(synti2::encode_f(val));
   mmap.chn[midichn].mod_min[imod] = val;
 }
 
 void
-synti2::MidiMap::setMod(int midichn, int imod, std::string sval){
+synti2base::MidiMap::setMod(int midichn, int imod, std::string sval){
   std::stringstream ss(sval);
   int val; float fval;
   ss >> val;  /*mod num */
@@ -372,21 +405,21 @@ synti2::MidiMap::setMod(int midichn, int imod, std::string sval){
 
 
 float
-synti2::MidiMap::getModMin(int midichn, int imod){
+synti2base::MidiMap::getModMin(int midichn, int imod){
   return mmap.chn[midichn].mod_min[imod];}
 
 void
-synti2::MidiMap::setModMax(int midichn, int imod, float val){
+synti2base::MidiMap::setModMax(int midichn, int imod, float val){
   val = synti2::decode_f(synti2::encode_f(val));
   mmap.chn[midichn].mod_max[imod] = val;}
 
 float
-synti2::MidiMap::getModMax(int midichn, int imod){
+synti2base::MidiMap::getModMax(int midichn, int imod){
   return mmap.chn[midichn].mod_max[imod];}
 
 /* Sends all the parameters of one mod in a package: */
 std::vector<unsigned char>
-synti2::MidiMap::sysexMod(int midichn, int imod)
+synti2base::MidiMap::sysexMod(int midichn, int imod)
 {
   std::vector<unsigned char> res;
   synti2_sysex_header(res);

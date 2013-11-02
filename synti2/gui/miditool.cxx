@@ -5,7 +5,6 @@
 
 #include "miditool.hpp"
 #include "midihelper.hpp"
-#include "patchtool.hpp"
 #include "../include/synti2_midi.h"
 #include "../include/midi_spec.h"
 
@@ -26,7 +25,7 @@ unsigned int read_4byte(std::istream &ins){
   /*  char buf[4];
   ins.read(buf,4);
   return (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];*/
-  unsigned int res = (ins.get() << 24) 
+  unsigned int res = (ins.get() << 24)
     + (ins.get() << 16)
     + (ins.get() << 8)
     + (ins.get());
@@ -54,11 +53,11 @@ int read_varlen(std::istream &ins, unsigned int *dest){
     byte = ins.get();
     *dest += (byte & 0x7f);
     if ((byte & 0x80) == 0)
-      return nread; 
+      return nread;
     else *dest <<= 7;
   }
   std::cerr << "Warning: varlength number longer than 4 bytes." << std::endl;
-  return 0; 
+  return 0;
 }
 
 void MidiTrack::addEvent(miditick_t tick, MidiEvent *ev){
@@ -87,7 +86,7 @@ MidiEvent::read_system_exclusive(std::istream &ins){
 }
 
 
-MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel, 
+MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel,
                      unsigned int par1, std::istream &ins){
   this->type = type;
   this->subtype_or_channel = subtype_or_channel;
@@ -96,14 +95,14 @@ MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel,
 
 
   switch(type){
-  case MIDI_STATUS_PROGRAM: 
+  case MIDI_STATUS_PROGRAM:
   case MIDI_STATUS_CHANNEL_PRESSURE:
     /* Only one parameter for these. */
     return;
-  case MIDI_STATUS_NOTE_OFF: 
+  case MIDI_STATUS_NOTE_OFF:
   case MIDI_STATUS_NOTE_ON:
   case MIDI_STATUS_KEY_PRESSURE:
-  case MIDI_STATUS_CONTROL:  
+  case MIDI_STATUS_CONTROL:
   case MIDI_STATUS_PITCH_WHEEL:
     /* Two parameters for these. */
     this->par2 = ins.get();
@@ -126,7 +125,7 @@ MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel,
 }
 
 
-MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel, 
+MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel,
                      unsigned int par1, unsigned int par2){
   this->type = type;
   this->subtype_or_channel = subtype_or_channel;
@@ -135,7 +134,7 @@ MidiEvent::MidiEvent(int type, unsigned int subtype_or_channel,
 }
 
 /** FIXME: Only works for note events, as of now!!! */
-void 
+void
 MidiEvent::fromMidiBuffer(const unsigned char *buf)
 {
   type = buf[0] >> 4;
@@ -145,7 +144,7 @@ MidiEvent::fromMidiBuffer(const unsigned char *buf)
 }
 
 /** FIXME: Only works for note events, as of now!!! */
-void 
+void
 MidiEvent::toMidiBuffer(unsigned char *buf) const {
   buf[0] = (type << 4) + subtype_or_channel;
   buf[1] = par1;
@@ -158,8 +157,8 @@ MidiEvent::toMidiBuffer(unsigned char *buf) const {
 void
 MidiEvent::print(std::ostream &os)
 {
-  os << "type " << std::hex <<  this->type 
-     << " sub " << std::hex << subtype_or_channel 
+  os << "type " << std::hex <<  this->type
+     << " sub " << std::hex << subtype_or_channel
      << " par1 " << par1 << " par2 " << par2
      << " size of bulk " << bulk.size() << std::endl;
 }
@@ -191,18 +190,18 @@ MidiTrack::createNormalizedEvent(std::istream &ins){
 }
 
 MidiTrack::MidiTrack(){
-  current_tick = 0; 
-  current_type = 0; 
+  current_tick = 0;
+  current_type = 0;
   current_channel = 0;
 }
 
 MidiTrack::MidiTrack(std::istream &ins){
-  MidiTrack(); 
-  readFrom(ins); 
+  MidiTrack();
+  readFrom(ins);
   rewind();
 }
 
-void 
+void
 MidiTrack::readFrom(std::istream &ins){
   unsigned int hdr = read_4byte(ins);
   if (hdr != 0x4d54726b){
@@ -230,7 +229,7 @@ MidiTrack::readFrom(std::istream &ins){
   //std::cout << "length = " << evs.size() << std::endl;
 }
 
-MidiEvent * 
+MidiEvent *
 MidiTrack::locateEvent(int type, int subtype, int par1){
   for (unsigned int i=0; i<vec_evs.size(); i++){
     if (vec_evs[i]->matches(type, subtype, par1)) return vec_evs[i];
@@ -241,7 +240,7 @@ MidiTrack::locateEvent(int type, int subtype, int par1){
 
 
 MidiSong::MidiSong(std::ifstream &ins){
-  
+
   /* TODO: would be better to throw an exception from here. */
   if (!ins.is_open()){
     std::cerr << "Failed to read MIDI file. Reason:" << std::endl;
@@ -273,9 +272,9 @@ MidiSong::MidiSong(std::ifstream &ins){
     std::cerr << "SMPTE timings are not supported." << std::endl;
     return;
   }
-  
+
   ticks_per_beat = time_division;
-  
+
   for (unsigned int i=0; i<ntracks; i++){
     tracks.push_back(new MidiTrack(ins));
   }
@@ -283,16 +282,16 @@ MidiSong::MidiSong(std::ifstream &ins){
 
 
 
-unsigned int 
+unsigned int
 MidiSong::getTPQ(){
   return ticks_per_beat;
 }
 
-unsigned int 
+unsigned int
 MidiSong::getMSPQ(){
   MidiEvent * tempoev = tracks[0]->locateEvent(0xf, 0xf, 0x51);
   if (tempoev == NULL){
-    return 120; 
+    return 120;
   } else {
     return tempoev->get3byte(); /* hacks n hacks. TODO: fix these hacks */
   }
@@ -319,7 +318,7 @@ MidiSong::linearize(std::vector<unsigned int> &ticks,
   while(theyHaveMore){
     /* Yield all events at this tick. No problem if there are none..*/
     for(i=0; i<tracks.size(); i++){
-      while ( (tracks[i]->hasMore()) 
+      while ( (tracks[i]->hasMore())
               && (tracks[i]->peekNextTick() == ntick)){
         ticks.push_back(ntick);
         evs.push_back(tracks[i]->stepOneEvent());
@@ -327,7 +326,7 @@ MidiSong::linearize(std::vector<unsigned int> &ticks,
     }
 
     /* see if our tick should change: */
-    theyHaveMore = false;    
+    theyHaveMore = false;
     unsigned int mint = UINT_MAX; /*c++ way for this?*/
     for(i=0; i<tracks.size(); i++){
       if (tracks[i]->hasMore()){

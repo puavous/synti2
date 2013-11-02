@@ -17,11 +17,12 @@ GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/MidiMapperViewFl.hpp gui/MidiMapperViewFl.cxx \
           gui/FeaturesViewFl.hpp gui/FeaturesViewFl.cxx \
           gui/ExeBuilderViewFl.hpp gui/ExeBuilderViewFl.cxx \
-          gui/Action.hpp \
           gui/Patch.hpp gui/Patch.cxx \
           gui/PatchBank.hpp gui/PatchBank.cxx \
+          gui/MidiMap.hpp gui/MidiMap.cxx \
           gui/midihelper.hpp gui/midihelper.cxx \
-          tools/keyvalhelper.cxx tools/keyvalhelper.hpp \
+          gui/miditool.hpp gui/miditool.cxx \
+	  include/synti2_midi.h src/synti2_midi.c \
           gui/main.cxx
 
 PATCHEDITDEPS = tools/patchedit.cxx \

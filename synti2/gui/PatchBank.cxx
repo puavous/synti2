@@ -140,11 +140,6 @@ public:
     }
 };
 
-void MidiMap::toStream(ostream &ost)
-{
-    ost << "# Can't really output midimap yet. But the code is here." << endl;
-}
-
 PatchBank::PatchBank():patches(16)
 {
     midiSender = NULL;
@@ -213,12 +208,12 @@ void PatchBank::toStream(ostream & ost)
     ost << "# Output by PatchBank::toStream()" << endl;
     caps.toStream(ost);
     feats.toStream(ost);
+    midimap.write(ost);
     vector<Patch>::iterator pit;
     for(pit=patches.begin(); pit!=patches.end(); ++pit)
     {
         (*pit).valuesToStream(ost);
     }
-    midimap.toStream(ost);
 }
 
 void PatchBank::writeOnePatch(size_t ipat, ostream &ost){

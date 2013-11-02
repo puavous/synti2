@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "Synti2Base.hpp"
+#include "MidiMap.hpp"
 #include "Patch.hpp"
 
 using namespace std;
@@ -99,17 +100,6 @@ namespace synti2base {
 
     /** Exports features for a custom exe build. */
     void exportHeader(ostream &ost);
-  };
-
-  /** The Midi Mapper part of a sound bank; directs midi messages
-   * to synti2 messages.
-   */
-  class MidiMap{
-  private:
-    //initMidiMap();
-  public:
-    MidiMap(){/*initMidiMap();*/}
-    void toStream(ostream &ost);
   };
 
 

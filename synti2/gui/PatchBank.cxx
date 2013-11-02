@@ -239,7 +239,15 @@ void PatchBank::readOnePatch(size_t ipat, istream & ist){
 
 void PatchBank::reloadFromStream(istream & ist)
 {
-    cerr << "PatchBank::fromStream() Can't read yet!" << endl;
+    // FIXME: Read capacities
+    // FIXME: Read features
+    // FIXME: Read midimap
+    // FIXME: Implement a proper stop for the following loop:
+    size_t ii=0;
+    while(!ist.eof()){
+        readOnePatch(ii,ist);
+        if(true /* some check to see if we're at the end.*/) ii++; else break;
+    }
 }
 
 void PatchBank::exportCapFeatHeader(ostream & ost)

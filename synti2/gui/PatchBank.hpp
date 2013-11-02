@@ -159,6 +159,7 @@ namespace synti2base {
     /** Reads a .s2bank from a stream.
     FIXME: Actually should just initialize defaults here; rename accordingly!*/
     void fromStream(istream & ist);
+
     /** Loads a stored .s2bank from a file. Assume already initialized defaults.*/
     void reloadFromStream(istream & ist);
 

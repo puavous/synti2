@@ -493,6 +493,7 @@ void Patch::valuesFromStream(std::istream &ist){
   float val;
 
   while(get_nonwhite_line(ist, line)){
+    if (line[0] == '-') break;
     if (line[0]=='['){
       /* Begin section */
       line_to_header(line);

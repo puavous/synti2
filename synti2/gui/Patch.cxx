@@ -6,9 +6,9 @@
 #include <iomanip>
 #include <cstdlib>
 
-using std::string;
+using namespace std;
 
-const std::string defPatch = "# Default patch; \n"
+const string defPatch = "# Default patch; \n"
   "# Acts also as the patch design documentation.\n"
   "# FIXME: Separate the design and storage formats.. \n"
   "#\n"
@@ -278,207 +278,226 @@ const std::string defPatch = "# Default patch; \n"
 
 /* helper functions */
 static
-bool line_is_whitespace(std::string &str){
-  return (str.find_first_not_of(" \t\n\r") == str.npos);
+bool line_is_whitespace(string &str)
+{
+    return (str.find_first_not_of(" \t\n\r") == str.npos);
 }
 
 static
-void line_to_header(std::string &str){
-  int endmark = str.find_first_of(']');
-  int len = endmark-1;
-  str.assign(str.substr(1,len));
+void line_to_header(string &str)
+{
+    int endmark = str.find_first_of(']');
+    int len = endmark-1;
+    str.assign(str.substr(1,len));
 }
 
 static
-std::string line_chop(std::string &str){
-  unsigned long beg = str.find_first_not_of(" \t\n\r");
-  unsigned long wbeg = str.find_first_of(" \t\n\r", beg);
-  if (wbeg == str.npos) wbeg = str.length();
-  std::string res = str.substr(beg,wbeg-beg);
-  if (wbeg<str.length()) str.assign(str.substr(wbeg,str.length()-wbeg));
-  return std::string(res);
+string line_chop(string &str)
+{
+    unsigned long beg = str.find_first_not_of(" \t\n\r");
+    unsigned long wbeg = str.find_first_of(" \t\n\r", beg);
+    if (wbeg == str.npos) wbeg = str.length();
+    string res = str.substr(beg,wbeg-beg);
+    if (wbeg<str.length()) str.assign(str.substr(wbeg,str.length()-wbeg));
+    return string(res);
 }
 
 /* Formatting tool function for 0x????*/
 static
-void fmt_hex16(std::ostream &outs, int i16){
-  outs << std::setiosflags(std::ios::right)
-       << std::resetiosflags(std::ios::left)
-       << "0x" << std::setfill('0') << std::setw(4) << std::hex << i16
-       << std::dec;
+void fmt_hex16(ostream &outs, int i16)
+{
+    outs << std::setiosflags(std::ios::right)
+         << std::resetiosflags(std::ios::left)
+         << "0x" << std::setfill('0') << std::setw(4) << std::hex << i16
+         << std::dec;
 }
 
 
-
-void Patch::addI4Par(std::string s){
-  I4Par par(s);
-  i4parKeys.push_back(par.getKey());
-  i4pars[par.getKey()] = par;
+void Patch::addI4Par(string s)
+{
+    I4Par par(s);
+    i4parKeys.push_back(par.getKey());
+    i4pars[par.getKey()] = par;
 }
 
-void Patch::addFPar(std::string s){
-  FPar par(s);
-  fparKeys.push_back(par.getKey());
-  fpars[par.getKey()] = par;
+void Patch::addFPar(string s)
+{
+    FPar par(s);
+    fparKeys.push_back(par.getKey());
+    fpars[par.getKey()] = par;
 }
 
-/*
-void Patch::initI4Pars(){
-  addI4Par("HARM1 Op1Wav 0 0x00ff   0 5");
-}
-void Patch::initFPars(){
-  addFPar("ENV4K3T En4:3T 0  0 2.56   2 9");
-}
-*/
-
-void FPar::fromLine(string line){
-  string skey = line_chop(line);
-  string smnemonic = line_chop(line);
-  string svalue = line_chop(line);
-  string smin = line_chop(line);
-  string smax = line_chop(line);
-  string sprecision = line_chop(line);
-  string sguigroup = line_chop(line);
-  string sguistyle = line_chop(line);
-  string srules = line_chop(line);
-  key = skey;
-  cdefine = skey;
-  humanReadable = smnemonic;
-  minval = std::strtod(smin.c_str(), 0);
-  maxval = std::strtod(smax.c_str(), 0);
-  precision = std::strtol(sprecision.c_str(), 0, 0);
-  guiGroup = std::strtol(sguigroup.c_str(), 0, 0);
-  guiStyle = sguistyle;
-  ruleString = srules;
+void FPar::fromLine(string line)
+{
+    string skey = line_chop(line);
+    string smnemonic = line_chop(line);
+    string svalue = line_chop(line);
+    string smin = line_chop(line);
+    string smax = line_chop(line);
+    string sprecision = line_chop(line);
+    string sguigroup = line_chop(line);
+    string sguistyle = line_chop(line);
+    string srules = line_chop(line);
+    key = skey;
+    cdefine = skey;
+    humanReadable = smnemonic;
+    minval = std::strtod(smin.c_str(), 0);
+    maxval = std::strtod(smax.c_str(), 0);
+    precision = std::strtol(sprecision.c_str(), 0, 0);
+    guiGroup = std::strtol(sguigroup.c_str(), 0, 0);
+    guiStyle = sguistyle;
+    ruleString = srules;
 }
 
-void FPar::toStream(std::ostream &ost){
-  ost << key
-      << " " << humanReadable
-      << " " << value
-      << " " << minval
-      << " " << maxval
-      << " " << precision
-      << " " << guiGroup
-      << std::endl;
+void FPar::toStream(ostream &ost)
+{
+    ost << key
+        << " " << humanReadable
+        << " " << value
+        << " " << minval
+        << " " << maxval
+        << " " << precision
+        << " " << guiGroup
+        << endl;
 }
 
-void FPar::mutablesToStream(std::ostream &ost){
-  ost << std::setfill(' ') << std::setw(10) << std::left
-      << key
-      << " "
-      << std::setfill(' ') << std::setw(17) << std::left
-      << value
-      << " " << minval
-      << " " << maxval
-      << " " << precision
-      //<< " " << guiGroup
-      << std::endl;
+void FPar::mutablesToStream(ostream &ost)
+{
+    ost << std::setfill(' ') << std::setw(10) << std::left
+        << key
+        << " "
+        << std::setfill(' ') << std::setw(17) << std::left
+        << value
+        << " " << minval
+        << " " << maxval
+        << " " << precision
+        //<< " " << guiGroup
+        << endl;
 }
 
 
-FPar::FPar(){fromLine("ERROR ThisShouldntBeHere 0 1 2 3 4");}
-
-FPar::FPar(string line){
-  fromLine(line);
+FPar::FPar()
+{
+    fromLine("ERROR ThisShouldntBeHere 0 1 2 3 4");
 }
 
-void I4Par::fromLine(string line){
-  string skey = line_chop(line);
-  string smnemonic = line_chop(line);
-  string svalue = line_chop(line);
-  string sallowed = line_chop(line);
-  string sprecision = line_chop(line);
-  string sguigroup = line_chop(line);
-  string sguistyle = line_chop(line);
-  string srules = line_chop(line);
-  key = skey;
-  cdefine = skey;
-  humanReadable = smnemonic;
-  value = std::strtol(svalue.c_str(), 0, 0);
-  allowed = std::strtol(sallowed.c_str(), 0, 0);
-  guiGroup = std::strtol(sguigroup.c_str(), 0, 0);
-  guiStyle = sguistyle;
-  ruleString = srules;
+FPar::FPar(string line)
+{
+    fromLine(line);
 }
 
-I4Par::I4Par(string line){
-  fromLine(line);
+void I4Par::fromLine(string line)
+{
+    string skey = line_chop(line);
+    string smnemonic = line_chop(line);
+    string svalue = line_chop(line);
+    string sallowed = line_chop(line);
+    string sprecision = line_chop(line);
+    string sguigroup = line_chop(line);
+    string sguistyle = line_chop(line);
+    string srules = line_chop(line);
+    key = skey;
+    cdefine = skey;
+    humanReadable = smnemonic;
+    value = std::strtol(svalue.c_str(), 0, 0);
+    allowed = std::strtol(sallowed.c_str(), 0, 0);
+    guiGroup = std::strtol(sguigroup.c_str(), 0, 0);
+    guiStyle = sguistyle;
+    ruleString = srules;
 }
 
-void I4Par::toStream(std::ostream &ost){
-  ost << key
-      << " " << humanReadable
-      << " " << value << " ";
-  fmt_hex16(ost,allowed);
-  ost << " " << 0
-      << " " << guiGroup
-      << std::endl;
+I4Par::I4Par(string line)
+{
+    fromLine(line);
 }
 
-void I4Par::mutablesToStream(std::ostream &ost){
-  ost << std::setfill(' ') << std::setw(10) << std::left
-      << key
-      << " " << value
+void I4Par::toStream(ostream &ost)
+{
+    ost << key
+        << " " << humanReadable
+        << " " << value << " ";
+    fmt_hex16(ost,allowed);
+    ost << " " << 0
+        << " " << guiGroup
+        << endl;
+}
+
+void I4Par::mutablesToStream(ostream &ost)
+{
+    ost << std::setfill(' ') << std::setw(10) << std::left
+        << key
+        << " " << value
 //      << " " << guiGroup
-      << std::endl;
+        << std::endl;
 }
 
 
 
-I4Par::I4Par(){fromLine("ERROR ThisShouldntBeHere 0 1 2 3");}
-
-Patch::Patch(){
-  std::stringstream isst(defPatch);
-  fromStream(isst);
-  /*
-  initI4Pars();
-  initFPars();
-  */
+I4Par::I4Par()
+{
+    fromLine("ERROR ThisShouldntBeHere 0 1 2 3");
 }
 
-void Patch::toStream(std::ostream & ost){
-  std::vector<string>::iterator it;
-  ost << "# This output is by Patch::toStream()" << std::endl;
-  ost << "[PATCH_HEADER]" << std::endl;
-  ost << "UNNAMED" << std::endl;
-  ost << "#UNCOMMENTED" << std::endl;
-  ost << "# Patch data for 'UNNAMED' begins" << std::endl;
-  ost << "UNNAMED" << std::endl;
-  ost << "[I4]" << std::endl;
-  for(it=i4parKeys.begin();it!=i4parKeys.end();++it){
-    i4pars[(*it)].toStream(ost);
-  }
-  ost << "[F]" << std::endl;
-  for(it=fparKeys.begin();it!=fparKeys.end();++it){
-    fpars[(*it)].toStream(ost);
-  }
-  ost << "--- end of patch " << std::endl;
+Patch::Patch()
+{
+    stringstream isst(defPatch);
+    fromStream(isst);
+    /*
+    initI4Pars();
+    initFPars();
+    */
 }
 
-void Patch::valuesToStream(std::ostream &ost){
-    std::string da_name = getName();
+void Patch::toStream(ostream & ost)
+{
+    vector<string>::iterator it;
+    ost << "# This output is by Patch::toStream()" << endl;
+    ost << "[PATCH_HEADER]" << endl;
+    ost << "UNNAMED" << endl;
+    ost << "#UNCOMMENTED" << endl;
+    ost << "# Patch data for 'UNNAMED' begins" << endl;
+    ost << "UNNAMED" << endl;
+    ost << "[I4]" << endl;
+    for(it=i4parKeys.begin(); it!=i4parKeys.end(); ++it)
+    {
+        i4pars[(*it)].toStream(ost);
+    }
+    ost << "[F]" << endl;
+    for(it=fparKeys.begin(); it!=fparKeys.end(); ++it)
+    {
+        fpars[(*it)].toStream(ost);
+    }
+    ost << "--- end of patch " << endl;
+}
+
+void Patch::valuesToStream(ostream &ost)
+{
+    string da_name = getName();
     if (da_name == "") da_name = "UNNAMED";
-    std::vector<string>::iterator it;
-    ost << "# Patch data for '" << da_name << "' begins" << std::endl;
-    ost << "# This output is by Patch::valuesToStream()" << std::endl;
-    ost << "[PATCH_HEADER]" << std::endl;
-    ost << da_name << std::endl;
-    ost << "#UNCOMMENTED" << std::endl;
-    ost << "[I4]" << std::endl;
-    for(it=i4parKeys.begin();it!=i4parKeys.end();++it){
+    vector<string>::iterator it;
+    ost << "# Patch data for '" << da_name << "' begins" << endl;
+    ost << "# This output is by Patch::valuesToStream()" << endl;
+    ost << "[PATCH_HEADER]" << endl;
+    ost << da_name << endl;
+    ost << "#UNCOMMENTED" << endl;
+    ost << "[I4]" << endl;
+    for(it=i4parKeys.begin(); it!=i4parKeys.end(); ++it)
+    {
         i4pars[(*it)].mutablesToStream(ost);
     }
-    ost << "[F]" << std::endl;
-    for(it=fparKeys.begin();it!=fparKeys.end();++it){
+    ost << "[F]" << endl;
+    for(it=fparKeys.begin(); it!=fparKeys.end(); ++it)
+    {
         fpars[(*it)].mutablesToStream(ost);
     }
-    ost << "--- end of patch " << std::endl;
+    ost << "--- end of patch " << endl;
 }
 
-bool get_nonwhite_line(std::istream &ist, std::string &line){
+bool get_nonwhite_line(istream &ist, string &line)
+{
 
-    while (std::getline(ist,line)){
+    while (getline(ist,line))
+    {
         if (line_is_whitespace(line)) continue;
         else if (line[0]=='#') continue;
         else return true;
@@ -487,66 +506,83 @@ bool get_nonwhite_line(std::istream &ist, std::string &line){
 }
 
 /** Reads only mutable values. The patch must already be default-initialized! */
-void Patch::valuesFromStream(std::istream &ist){
-  std::string line, curr_section("");
-  std::string pname,key;
-  float val;
+void Patch::valuesFromStream(istream &ist)
+{
+    string line, curr_section("");
+    string pname,key;
+    float val;
 
-  while(get_nonwhite_line(ist, line)){
-    if (line[0] == '-') break;
-    if (line[0]=='['){
-      /* Begin section */
-      line_to_header(line);
-      curr_section = line;
-      continue;
-    }    /* Else it is a parameter description. */
+    while(get_nonwhite_line(ist, line))
+    {
+        if (line[0] == '-') break;
+        if (line[0]=='[')
+        {
+            /* Begin section */
+            line_to_header(line);
+            curr_section = line;
+            continue;
+        }    /* Else it is a parameter description. */
 
-    if(curr_section=="I4"){
-        key = line_chop(line);
-        std::istringstream(line) >> val;
-        i4pars[key].setValue(val);
-    } else if (curr_section=="F"){
-        key = line_chop(line);
-        std::istringstream(line) >> val;
-        fpars[key].setValue(val);
-    } else if (curr_section=="PATCH_HEADER"){
-        setName(line);
-    } else {
-      std::cerr << "Unknown section: " << curr_section << std::endl;
+        if(curr_section=="I4")
+        {
+            key = line_chop(line);
+            istringstream(line) >> val;
+            i4pars[key].setValue(val);
+        }
+        else if (curr_section=="F")
+        {
+            key = line_chop(line);
+            istringstream(line) >> val;
+            fpars[key].setValue(val);
+        }
+        else if (curr_section=="PATCH_HEADER")
+        {
+            setName(line);
+        }
+        else
+        {
+            cerr << "Unknown section: " << curr_section << endl;
+        }
     }
-  }
 }
-
 /** FIXME: Should not wire key indices from here!?
 
 FIXME: What is the role of this function after all??. Should be
 just an initialization. Maybe rename as initFromStream() ..
 */
-void Patch::fromStream(std::istream & ifs){
-  std::string line, curr_section("");
-  std::string pname, pdescr;
-  while(std::getline(ifs, line)){
-    if (line_is_whitespace(line)) continue;
-    if (line[0]=='#') continue;
-    if (line[0]=='['){
-      /* Begin section */
-      line_to_header(line);
-      curr_section = line;
-      continue;
-    };
-    /* Else it is a parameter description. */
-    if(curr_section=="I4"){
-      I4Par par(line);
-      i4parKeys.push_back(par.getKey());
-      i4parInd[par.getKey()]=i4pars.size();
-      i4pars[par.getKey()]=par;
-    } else if (curr_section=="F"){
-      FPar par(line);
-      fparKeys.push_back(par.getKey());
-      fparInd[par.getKey()]=fpars.size();
-      fpars[par.getKey()]=par;
-    } else {
-      std::cerr << "Unknown section: " << curr_section << std::endl;
+void Patch::fromStream(istream & ifs)
+{
+    string line, curr_section("");
+    string pname, pdescr;
+    while(getline(ifs, line))
+    {
+        if (line_is_whitespace(line)) continue;
+        if (line[0]=='#') continue;
+        if (line[0]=='[')
+        {
+            /* Begin section */
+            line_to_header(line);
+            curr_section = line;
+            continue;
+        };
+        /* Else it is a parameter description. */
+        if(curr_section=="I4")
+        {
+            I4Par par(line);
+            i4parKeys.push_back(par.getKey());
+            i4parInd[par.getKey()]=i4pars.size();
+            i4pars[par.getKey()]=par;
+        }
+        else if (curr_section=="F")
+        {
+            FPar par(line);
+            fparKeys.push_back(par.getKey());
+            fparInd[par.getKey()]=fpars.size();
+            fpars[par.getKey()]=par;
+        }
+        else
+        {
+            cerr << "Unknown section: " << curr_section << endl;
+        }
     }
-  }
 }

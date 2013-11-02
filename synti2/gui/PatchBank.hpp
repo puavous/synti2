@@ -53,6 +53,7 @@ namespace synti2base {
     }
     bool hasKey(string key){return capValue.find(key) != capValue.end();}
     void toStream(ostream &ost);
+    void reloadValuesFromStream(istream &ist);
     void exportHeader(ostream &ost);
   };
 
@@ -76,6 +77,12 @@ namespace synti2base {
                                string requires);
     /** Initializes the on/off -toggled feature descriptions */
     void initFeatureDescriptions();
+    void resetAllTo(bool state){
+        vector<string>::const_iterator k;
+        for(k=featkeys.begin();k!=featkeys.end();++k){
+            featureEnabled[*k] = state;
+        }
+    }
   public:
     Features(){initFeatureDescriptions();}
 
@@ -97,6 +104,8 @@ namespace synti2base {
 
     /** Stores the feature settings */
     void toStream(ostream &ost);
+
+    void reloadValuesFromStream(istream &ist);
 
     /** Exports features for a custom exe build. */
     void exportHeader(ostream &ost);

@@ -138,11 +138,13 @@ synti2base::MidiMap::read(std::istream &ifs)
   while(std::getline(ifs, line)){
     if (line == "--- Mapper section begins ---") break;
   }
+
   if (line != "--- Mapper section begins ---"){
     std::cerr << "No map data found in expected location. Skip read." << std::endl;
     std::cerr << "Read: " << line << std::endl;
     return;
   }
+
   /*
   if((!std::getline(ifs, line))
      || (line!="--- Mapper section begins ---")){
@@ -163,6 +165,7 @@ synti2base::MidiMap::read(std::istream &ifs)
       setMod(ic, imod, readMapParStr(ifs, "Mod", "0,0,0,0"));
     }
   }
+
   return;
 }
 

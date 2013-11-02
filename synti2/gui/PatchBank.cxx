@@ -34,7 +34,34 @@ void Capacities::initCapacityDescriptions()
 
 void Capacities::toStream(ostream &ost)
 {
-    ost << "# Can't really output capacities yet. But the code is here." << endl;
+    ost << "# The following numeric capacities are selected while editing this bank:" << endl;
+    vector<CapacityDescription>::const_iterator it;
+    for(it=begin(); it!=end(); ++it)
+    {
+        ost << (*it).getKey() << " " << capValue[(*it).getKey()] << endl;
+    }
+    ost << "--- End capacity description" << endl;
+}
+
+void Capacities::reloadValuesFromStream(istream &ist){
+    string line;
+    while(getline(ist,line)){
+        if (line[0] == '#') continue;
+        if (line[0] == '-') break;
+        stringstream ss(line);
+        string key;
+        int value;
+        getline(ss, key, ' ');
+        if (capValue.find(key) == capValue.end()){
+            std::cerr<< "Unknown key: " << key << endl;
+            continue; /* FIXME: Unknown key, actually */
+        }
+        ss >> value;
+        capValue[key] = value;
+    }
+    /* FIXME: Proper parser along the original ideas, instead of the above
+    hack-hackedy-hack.
+    */
 }
 
 void Capacities::exportHeader(ostream &ost)
@@ -53,7 +80,6 @@ void Capacities::exportHeader(ostream &ost)
         ost << " /*" << (*it).getHumanReadable() << "*/";
         ost << endl;
     }
-
 }
 
 
@@ -111,7 +137,36 @@ void Features::initFeatureDescriptions()
 
 void Features::toStream(ostream &ost)
 {
-    ost << "# Can't really output features yet. But the code is here." << endl;
+    ost << "# The following on/off features are selected while editing this bank:" << endl;
+    vector<FeatureDescription>::const_iterator it;
+    for(it=begin(); it!=end(); ++it)
+    {
+        if (featureEnabled[(*it).getKey()]){
+            ost << " " << (*it).getKey();
+        }
+    }
+    ost << endl;
+}
+
+void Features::reloadValuesFromStream(istream &ist){
+    string line;
+    while(getline(ist,line)){
+        if (line[0] == '#') continue;
+        else break;
+    }
+    resetAllTo(false);
+    stringstream ss(line);
+    string key;
+    while (getline(ss, key, ' ')) {
+        if (featureEnabled.find(key) == featureEnabled.end()){
+            std::cerr<< "Unknown key: " << key << endl;
+            continue; /* FIXME: Unknown key, actually */
+        }
+        featureEnabled[key] = true;
+    }
+    /* FIXME: Proper parser along the original ideas, instead of the above
+    hack-hackedy-hack.
+    */
 }
 
 void Features::exportHeader(ostream &ost)
@@ -209,6 +264,7 @@ void PatchBank::toStream(ostream & ost)
     caps.toStream(ost);
     feats.toStream(ost);
     midimap.write(ost);
+    ost << "--- Patchdata begins" << endl;
     vector<Patch>::iterator pit;
     for(pit=patches.begin(); pit!=patches.end(); ++pit)
     {
@@ -234,15 +290,23 @@ void PatchBank::readOnePatch(size_t ipat, istream & ist){
 
 void PatchBank::reloadFromStream(istream & ist)
 {
-    // FIXME: Read capacities
-    // FIXME: Read features
-    // FIXME: Read midimap
-    // FIXME: Implement a proper stop for the following loop:
+    caps.reloadValuesFromStream(ist);
+    feats.reloadValuesFromStream(ist);
+    midimap.read(ist);
+
+    string line;
+    getline(ist,line);
+    if (line != "--- Patchdata begins") return;
     size_t ii=0;
+    // FIXME: Implement a proper stop for the following loop:
     while(!ist.eof()){
         readOnePatch(ii,ist);
         if(true /* some check to see if we're at the end.*/) ii++; else break;
     }
+
+    /* Then we need to do some more actions.. maybe here, maybe somewhere else.*/
+    forceAllRuleActions();
+    sendAllPatches();
 }
 
 void PatchBank::exportCapFeatHeader(ostream & ost)

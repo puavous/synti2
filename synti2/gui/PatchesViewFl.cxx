@@ -93,6 +93,7 @@ void ViewPatches::butt_load_bank_cb(Fl_Widget* w, void* p){
 
     std::ifstream ifs(fname.c_str());
     ((ViewPatches*)p)->pb->reloadFromStream(ifs);
+    ((ViewPatches*)p)->reloadWidgetValues();
 }
 void ViewPatches::butt_save_current_cb(Fl_Widget* w, void* p){
     string fname = fileChooser(".",".s2patch",true);
@@ -104,7 +105,9 @@ void ViewPatches::butt_load_current_cb(Fl_Widget* w, void* p){
     string fname = fileChooser(".",".s2patch",false);
     if (fname == "") return;
     std::ifstream ifs(fname.c_str());
-    ((ViewPatches*)p)->pb->readOnePatch(((ViewPatches*)p)->getActivePatch(),ifs);
+    ViewPatches* view = ((ViewPatches*)p);
+    view->pb->readOnePatch(view->getActivePatch(),ifs);
+    view->reloadWidgetValues();
 }
 void ViewPatches::butt_clear_cb(Fl_Widget* w, void* p){
     ((ViewPatches*)p)->pb->clearOnePatch(((ViewPatches*)p)->getActivePatch());

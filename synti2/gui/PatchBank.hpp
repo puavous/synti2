@@ -163,7 +163,7 @@ namespace synti2base {
     void reloadFromStream(istream & ist);
 
     void writeOnePatch(size_t ipat, ostream & ost);
-    void readOnePatch(size_t ipat, istream & ist){cerr << "not impl." << endl;}
+    void readOnePatch(size_t ipat, istream & ist);
     void clearOnePatch(size_t ipat){cerr << "not impl." << endl;}
     void pleaseSendPanic(){cerr << "not impl." << endl;}
 
@@ -255,14 +255,6 @@ namespace synti2base {
     vector<unsigned char>
     getEffectiveParAsSysEx(int ipatch, const string &parkey);
 
-/*
-    void setActivePatch(size_t acti){
-        std::cerr << "Should activate patch #" << acti << std::endl;
-        std::cerr << "... and notify listeners afterwards!" << acti << std::endl;
-    }
-    */
-
-    //vector<int>getPatchAsMIDISysex(int ipatch);
     /** Enables an on/off feature. Other features may be enabled as a
      *  side-effect. Functions registered by registerFeatureCallback()
      *  will be called.

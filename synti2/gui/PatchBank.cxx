@@ -232,6 +232,11 @@ void PatchBank::writeOnePatch(size_t ipat, ostream &ost){
     // Midimap plays no role for single patch, so omit that.
 }
 
+void PatchBank::readOnePatch(size_t ipat, istream & ist){
+    patches[ipat].valuesFromStream(ist);
+}
+
+
 void PatchBank::reloadFromStream(istream & ist)
 {
     cerr << "PatchBank::fromStream() Can't read yet!" << endl;

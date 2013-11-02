@@ -440,6 +440,7 @@ Patch::Patch(){
 void Patch::toStream(std::ostream & ost){
   std::vector<string>::iterator it;
   ost << "# This output is by Patch::toStream()" << std::endl;
+  ost << "[PATCH_HEADER]" << std::endl;
   ost << "UNNAMED" << std::endl;
   ost << "#UNCOMMENTED" << std::endl;
   ost << "# Patch data for 'UNNAMED' begins" << std::endl;
@@ -461,6 +462,7 @@ void Patch::valuesToStream(std::ostream &ost){
     std::vector<string>::iterator it;
     ost << "# Patch data for '" << da_name << "' begins" << std::endl;
     ost << "# This output is by Patch::valuesToStream()" << std::endl;
+    ost << "[PATCH_HEADER]" << std::endl;
     ost << da_name << std::endl;
     ost << "#UNCOMMENTED" << std::endl;
     ost << "[I4]" << std::endl;
@@ -474,7 +476,51 @@ void Patch::valuesToStream(std::ostream &ost){
     ost << "--- end of patch " << std::endl;
 }
 
-/** FIXME: Should not wire key indices from here!? */
+bool get_nonwhite_line(std::istream &ist, std::string &line){
+
+    while (std::getline(ist,line)){
+        if (line_is_whitespace(line)) continue;
+        else if (line[0]=='#') continue;
+        else return true;
+    }
+    return false;
+}
+
+/** Reads only mutable values. The patch must already be default-initialized! */
+void Patch::valuesFromStream(std::istream &ist){
+  std::string line, curr_section("");
+  std::string pname,key;
+  float val;
+
+  while(get_nonwhite_line(ist, line)){
+    if (line[0]=='['){
+      /* Begin section */
+      line_to_header(line);
+      curr_section = line;
+      continue;
+    }    /* Else it is a parameter description. */
+
+    if(curr_section=="I4"){
+        key = line_chop(line);
+        std::istringstream(line) >> val;
+        i4pars[key].setValue(val);
+    } else if (curr_section=="F"){
+        key = line_chop(line);
+        std::istringstream(line) >> val;
+        fpars[key].setValue(val);
+    } else if (curr_section=="PATCH_HEADER"){
+        setName(line);
+    } else {
+      std::cerr << "Unknown section: " << curr_section << std::endl;
+    }
+  }
+}
+
+/** FIXME: Should not wire key indices from here!?
+
+FIXME: What is the role of this function after all??. Should be
+just an initialization. Maybe rename as initFromStream() ..
+*/
 void Patch::fromStream(std::istream & ifs){
   std::string line, curr_section("");
   std::string pname, pdescr;

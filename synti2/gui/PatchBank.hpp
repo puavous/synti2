@@ -154,6 +154,7 @@ namespace synti2base {
 
   public:
     PatchBank();
+    MidiMap* leakMidiMapPtr(){return &midimap;}
     void addReloadListener(fntype fun, void* par){
         reloadListeners.push_back(pair<fntype,void*>(fun,par));
     }

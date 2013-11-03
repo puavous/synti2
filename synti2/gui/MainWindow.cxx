@@ -5,6 +5,7 @@
 #include "ExeBuilderViewFl.hpp"
 #include "PatchBank.hpp"
 using synti2base::PatchBank;
+using synti2base::MidiMap;
 using synti2gui::ViewPatches;
 using synti2gui::ViewMidiMapper;
 using synti2gui::ViewFeatures;
@@ -27,7 +28,7 @@ build_main_window(Fl_Window * window, PatchBank *pbh)
   gr = new ViewPatches(0,22,1200,720,"Patches",pbh);
   gr->end();
 
-  gr = new ViewMidiMapper(0,22,1200,720,"MIDI mapper",pbh);
+  gr = new ViewMidiMapper(0,22,1200,720,"MIDI mapper",pbh->leakMidiMapPtr());
   gr->end();
 
   gr = new ViewFeatures(0,22,1200,720,"Features",pbh);
@@ -41,7 +42,7 @@ build_main_window(Fl_Window * window, PatchBank *pbh)
 }
 
 using namespace synti2gui;
-MainWindow::MainWindow(int w, int h, 
+MainWindow::MainWindow(int w, int h,
                        PatchBank *pbh) : Fl_Window(w,h){
   build_main_window(this, pbh);
 }

@@ -9,22 +9,32 @@
 namespace synti2gui
 {
 
+/* Make also these derived S2Valuators? */
 class FeatureCheckButton: public Fl_Check_Button
 {
 public:
     PatchBank *pb;
+    std::string key;
     FeatureCheckButton(int x, int y, int w, int h,
-                       const char *tit, PatchBank *ipb):
-        Fl_Check_Button(x,y,w,h,tit),pb(ipb) {}
+                       const char *tit, PatchBank *ipb, std::string ikey):
+        Fl_Check_Button(x,y,w,h,tit),pb(ipb),key(ikey) {}
+    void reloadValue(){
+        value(pb->getFeatCap(key));
+    }
 };
 
 class FeatureValueInput: public Fl_Value_Input
 {
 public:
     PatchBank *pb;
+    std::string key;
     FeatureValueInput(int x, int y, int w, int h,
-                       PatchBank *ipb):
-        Fl_Value_Input(x,y,w,h),pb(ipb) {}
+                       PatchBank *ipb, std::string ikey):
+        Fl_Value_Input(x,y,w,h),pb(ipb),key(ikey) {}
+    void reloadValue(){
+        value(pb->getFeatCap(key));
+        std::cerr << "Hep." << std::endl;
+    }
 };
 
 
@@ -32,6 +42,8 @@ class ViewFeatures: public Fl_Group
 {
 private:
     static std::vector<std::string> keys;
+    std::vector<FeatureCheckButton*> wfeat;
+    std::vector<FeatureValueInput*> wcap;
     static void feat_callback (Fl_Widget* w, void* p);
     static void cap_callback (Fl_Widget* w, void* p);
     /** The PatchBank that is controlled must outlast the view**/
@@ -40,6 +52,10 @@ private:
 public:
     ViewFeatures(int,int,int,int,const char*,
                  PatchBank*);
+    static void refreshViewFromData(void *me){
+        ((ViewFeatures*)me)->reloadWidgetValues();
+    }
+    void reloadWidgetValues();
 };
 }
 

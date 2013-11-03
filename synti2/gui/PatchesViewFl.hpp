@@ -182,6 +182,9 @@ namespace synti2gui {
     static void inp_name_cb(Fl_Widget* w, void* p);
     static void val_ipat_cb(Fl_Widget* w, void* p);
   public:
+    static void refreshViewFromData(void *me){
+        ((ViewPatches*)me)->reloadWidgetValues();
+    }
     void reloadWidgetValues(){
         wpatname->value(pb->getPatchName(getActivePatch()).c_str());
         std::vector<S2Valuator*>::const_iterator it;

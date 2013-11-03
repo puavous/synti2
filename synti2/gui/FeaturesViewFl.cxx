@@ -8,6 +8,7 @@
 #include <FL/Fl_Value_Input.H>
 
 #include <iostream>
+#include <vector>
 
 using synti2base::PatchBank;
 namespace synti2gui {
@@ -46,12 +47,13 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
     lbl = new Fl_Box(px,py,captwidth,height,(*cit).getHumanReadable().c_str());
     lbl->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
 
-    vi = new FeatureValueInput(px+captwidth,py,width,height,pb);
+    vi = new FeatureValueInput(px+captwidth,py,width,height,pb,
+                               (*cit).getKey());
     vi->bounds((*cit).getMin(),(*cit).getMax());
     vi->when(FL_WHEN_ENTER_KEY);
-    vi->value(pb->getCapacityValue((*cit).getKey()));
 
     keys.push_back((*cit).getKey());
+    wcap.push_back(vi);
     vi->argument(keys.size()-1);
     vi->callback(cap_callback);
     py+=height;
@@ -61,17 +63,28 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
   FeatureCheckButton *ckb;
   for (fit=pb->getFeatureBegin(); fit!=pb->getFeatureEnd(); ++fit){
     ckb = new FeatureCheckButton(px,py,200,20,
-                                (*fit).getHumanReadable().c_str(),pb);
+                                (*fit).getHumanReadable().c_str(),pb,
+                                (*fit).getKey());
     keys.push_back((*fit).getKey());
-    ckb->value(pb->getFeatureValue((*fit).getKey()));
+    wfeat.push_back(ckb);
     ckb->argument(keys.size()-1);
     ckb->callback(feat_callback);
     py += height;
   }
+  reloadWidgetValues();
+  pb->addReloadListener(refreshViewFromData,this);
 
   scroll->end();
 }
 
+void ViewFeatures::reloadWidgetValues(){
+    for(size_t i=0;i<wcap.size();++i){
+        wcap[i]->reloadValue();
+    }
+    for(size_t i=0;i<wfeat.size();++i){
+        wfeat[i]->reloadValue();
+    }
+}
 
 ViewFeatures::ViewFeatures(int x, int y, int w, int h,
                            const char * name,

@@ -228,10 +228,12 @@ bool PatchBank::ruleIsSatisfied(RuleSet const & rs)
     {
         bool thiscond = (getFeatCap(ks[i]) > vs[i]);
         cond &= thiscond;
+        /*
         cerr << "Conditional " << (i+1) << "/" << ks.size() << ": "
              << ks[i] << " > " << vs[i]
              << "  (" << getFeatCap(ks[i]) << " > " << vs[i] << ") ?"
              << " --> " << thiscond << "  overall: " << cond << endl;
+             */
     }
     cerr << "Final decision: " << cond << endl;
     return cond;
@@ -307,6 +309,7 @@ void PatchBank::reloadFromStream(istream & ist)
     /* Then we need to do some more actions.. maybe here, maybe somewhere else.*/
     forceAllRuleActions();
     sendAllPatches();
+    notifyReloadListeners();
 }
 
 void PatchBank::exportCapFeatHeader(ostream & ost)

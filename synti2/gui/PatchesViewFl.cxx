@@ -93,7 +93,7 @@ void ViewPatches::butt_load_bank_cb(Fl_Widget* w, void* p){
 
     std::ifstream ifs(fname.c_str());
     ((ViewPatches*)p)->pb->reloadFromStream(ifs);
-    ((ViewPatches*)p)->reloadWidgetValues();
+    //((ViewPatches*)p)->reloadWidgetValues();
 }
 void ViewPatches::butt_save_current_cb(Fl_Widget* w, void* p){
     string fname = fileChooser(".",".s2patch",true);
@@ -235,13 +235,12 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
       /* FIXME: think? */
       vsf->bounds(pd->getMin("F",i),pd->getMax("F",i));
       vsf->precision(pd->getPrecision("F",i));
-      vsf->label(createFvalLabel(i,pd->getDescription("F",i)).c_str());
-      flbl.push_back(createFvalLabel(i,pd->getDescription("F",i)));//pd->getDescription("F",i)); // for use in the other part
     }
   }
 #endif
 
   pb->forceAllRuleActions();
+  pb->addReloadListener(refreshViewFromData,this);
 
   scroll->end();
 }

@@ -111,7 +111,7 @@ namespace synti2base {
     void exportHeader(ostream &ost);
   };
 
-
+  typedef void (*fntype)(void*);
   /**
    * PatchBank stores everything related to a synti2 patch bank, i.e.,
    * the enabled features, selected synth capabilities, GUI
@@ -133,6 +133,8 @@ namespace synti2base {
     MidiMap midimap;
     vector<Patch> patches;
     map<string,bool> paramEnabled;
+    vector<pair<fntype,void*> > reloadListeners;
+
 
     /** RuleSets and their actions to be performed upon cap/feat change: */
     map<string, vector<RuleSet> > capfeat_rulesets;
@@ -152,6 +154,15 @@ namespace synti2base {
 
   public:
     PatchBank();
+    void addReloadListener(fntype fun, void* par){
+        reloadListeners.push_back(pair<fntype,void*>(fun,par));
+    }
+    void notifyReloadListeners(){
+        vector<pair<fntype,void*> >::const_iterator it;
+        for(it=reloadListeners.begin();it != reloadListeners.end();++it){
+            (*it).first((*it).second);
+        }
+    }
 
     /** Writes a .s2bank to a stream. */
     void toStream(ostream & ost);

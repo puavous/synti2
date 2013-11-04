@@ -7,9 +7,21 @@
 #include "MidiMap.hpp"
 using namespace synti2base;
 namespace synti2gui {
+
+  class MmCbInfo {
+  public:
+      MidiMap* midimap;
+      size_t channel;
+      size_t targind;
+  };
+
   class ViewMidiMapper: public Fl_Group {
   private:
     MidiMap *midimap;
+    //MidiSender *midiSender;
+
+    /* Widget callback infos. Store for purposes of later destruction */
+    std::vector<MmCbInfo*> cbpars;
 
     /* Mapper pars. */
     std::vector<Fl_Choice*> widg_cmode;
@@ -27,12 +39,19 @@ namespace synti2gui {
     Fl_Group *build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic);
     void build_message_mapper(int x, int y, int w, int h);
 
+    MmCbInfo *newCbInfo(size_t channel, size_t targind){
+        MmCbInfo *res = new MmCbInfo();
+        res->midimap = midimap;
+        res->channel = channel;
+        res->targind = targind;
+        cbpars.push_back(res);
+        return res;
+    }
     /** Updates widgets to current values of the current patch. Works on
      *  global data.
      */
     void reloadWidgetValues()
     {
-
             for(int ic=0; ic<16; ic++)
             {
                 widg_cmode.at(ic)->value(midimap->getMode(ic));
@@ -56,6 +75,13 @@ namespace synti2gui {
     }
 
     public:
+    static void refreshViewFromData(void *me){
+        ((ViewMidiMapper*)me)->reloadWidgetValues();
+    }
+    //void setMidiSender(MidiSender *ms){
+    //    midiSender = ms;
+    //}
+
     ViewMidiMapper(int,int,int,int,const char*,
                    MidiMap*);
   };

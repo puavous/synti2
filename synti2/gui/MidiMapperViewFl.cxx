@@ -12,93 +12,95 @@
 
 using synti2base::PatchBank;
 using synti2gui::ViewMidiMapper;
-
-#if 0
-FIXME: something like
-struct cb_info_t {MidiMap* midimap, void* longpar};
-vector<cb_info_t> cbpars;
-... widg->callback(fun, &(cbpars[i]));
-... or something..
+using synti2gui::MmCbInfo;
 
 
 /* Callbacks for midi mapper. */
 void cb_mapper_mode(Fl_Widget* w, void* p){
-  int chn = (long)p;
+  int chn = ((MmCbInfo*)p)->channel;
   int mode = ((Fl_Choice*)w)->value();
-  midimap->setMode(chn, mode);
-  send_to_jack_process(midimap->sysexMode(chn));
+  ((MmCbInfo*)p)->midimap->setMode(chn, mode);
+  //send_to_jack_process(midimap->sysexMode(chn));
 }
 
 void cb_mapper_fixvelo(Fl_Widget* w, void* p){
-  int chn = (long)p;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
   int velo = ((Fl_Value_Input*)w)->value();
   midimap->setFixedVelo(chn, velo);
-  send_to_jack_process(midimap->sysexFixedVelo(chn));
+  //send_to_jack_process(midimap->sysexFixedVelo(chn));
 }
 
 void cb_mapper_bend(Fl_Widget* w, void* p){
-  int chn = (long)p;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
   int bdest = ((Fl_Value_Input*)w)->value();
   midimap->setBendDest(chn, bdest);
-  send_to_jack_process(midimap->sysexBendDest(chn));
+  //send_to_jack_process(midimap->sysexBendDest(chn));
 }
 
 void cb_mapper_pressure(Fl_Widget* w, void* p){
-  int chn = (long)p;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
   int presdest = ((Fl_Value_Input*)w)->value();
   midimap->setPressureDest(chn, presdest);
-  send_to_jack_process(midimap->sysexPressureDest(chn));
+  //send_to_jack_process(midimap->sysexPressureDest(chn));
 }
 
 void cb_mapper_noff(Fl_Widget* w, void* p){
-  int chn = (long)p;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
   bool newstate  = (((Fl_Check_Button*)w)->value() == 1);
   midimap->setNoff(chn, newstate);
-  send_to_jack_process(midimap->sysexNoff(chn));
+  //send_to_jack_process(midimap->sysexNoff(chn));
 }
 
 void cb_mapper_voicelist(Fl_Widget* w, void* p){
-  int chn = (long)p;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
   std::string value = ((Fl_Input*)w)->value();
   midimap->setVoices(chn, value);
   ((Fl_Input*)w)->value(midimap->getVoicesString(chn).c_str());
-  send_to_jack_process(midimap->sysexVoices(chn));
+  //send_to_jack_process(midimap->sysexVoices(chn));
 }
 
 void cb_mapper_modsrc(Fl_Widget* w, void* p){
-  int chn = ((long)p)>>16;
-  int imod = ((long)p) & 0x7f;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
+  int imod = ((MmCbInfo*)p)->targind; // & 0x7f;
   int newsrc = ((Fl_Value_Input*)w)->value();
   midimap->setModSource(chn,imod,newsrc);
-  send_to_jack_process(midimap->sysexMod(chn,imod));
+  //send_to_jack_process(midimap->sysexMod(chn,imod));
 }
 
 void cb_mapper_modmin(Fl_Widget* w, void* p){
-  int chn = ((long)p)>>16;
-  int imod = ((long)p) & 0x7f;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
+  int imod = ((MmCbInfo*)p)->targind;
   float val = ((Fl_Value_Input*)w)->value();
   midimap->setModMin(chn,imod,val);
   ((Fl_Value_Input*)w)->value(midimap->getModMin(chn,imod));
-  send_to_jack_process(midimap->sysexMod(chn,imod));
+  //send_to_jack_process(midimap->sysexMod(chn,imod));
 }
 
 void cb_mapper_modmax(Fl_Widget* w, void* p){
-  int chn = ((long)p)>>16;
-  int imod = ((long)p) & 0x7f;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
+  int imod = ((MmCbInfo*)p)->targind;
   float val = ((Fl_Value_Input*)w)->value();
   midimap->setModMax(chn,imod,val);
   ((Fl_Value_Input*)w)->value(midimap->getModMax(chn,imod));
-  send_to_jack_process(midimap->sysexMod(chn,imod));
+  //send_to_jack_process(midimap->sysexMod(chn,imod));
 }
 
 void cb_mapper_keysingle(Fl_Widget* w, void* p){
-  int chn = ((long)p)>>16;
-  int inote = ((long)p) & 0x7f;
+  MidiMap *midimap = ((MmCbInfo*)p)->midimap;
+  int chn = ((MmCbInfo*)p)->channel;
+  int inote = ((MmCbInfo*)p)->targind;
   int newvoi = ((Fl_Value_Input*)w)->value();
   midimap->setKeyMap(chn,inote,newvoi);
-  send_to_jack_process(midimap->sysexKeyMapSingleNote(chn,inote));
+  //send_to_jack_process(midimap->sysexKeyMapSingleNote(chn,inote));
 }
-#endif // 0
 
 
 Fl_Group *
@@ -125,47 +127,41 @@ ViewMidiMapper::build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic)
   ch->add("Key Map",0,0,0,0);
   ch->add("*Mute*",0,0,0,0);
   ch->value(0);  /*hack default..*/
-  ch->argument(ic);
-  //ch->callback(cb_mapper_mode);
+  ch->callback(cb_mapper_mode, newCbInfo(ic,0));
   widg_cmode[ic] = ch;
 
   Fl_Input *vl = new Fl_Input(ipx+32+50+w,py,w,h,"-> to: ");
-  vl->argument(ic);
   vl->value(clab[ic]); /*hack default..*/
-  vl->argument(ic);
   vl->when(FL_WHEN_ENTER_KEY|FL_WHEN_RELEASE);
-  //vl->callback(cb_mapper_voicelist);
+  vl->callback(cb_mapper_voicelist, newCbInfo(ic,0));
   widg_cvoices[ic] = vl;
 
   w=30;
 
   Fl_Value_Input *vi;
   vi = new Fl_Value_Input(px+340,py,w,h,"Fix Velo");
-  vi->bounds(0,127); vi->precision(0); vi->argument(ic);
-  //vi->callback(cb_mapper_fixvelo);
+  vi->bounds(0,127); vi->precision(0);
+  vi->callback(cb_mapper_fixvelo, newCbInfo(ic,0));
   widg_cvelo[ic] = vi;
 
-//  Fl_Check_Button *pb;
-//  pb = new Fl_Check_Button(px+400,py,w,h,"Hold");
-//  widg_hold[ic] = pb;
+  Fl_Check_Button *pb;
+  pb = new Fl_Check_Button(px+400,py,w,h,"(Hold, N/A)");
+  widg_hold[ic] = pb;
 
   vi = new Fl_Value_Input(px+580,py,w*2,h,"Bend->");
-  vi->bounds(0,NUM_MAX_MODULATORS); vi->precision(0); vi->argument(ic);
-  //vi->callback(cb_mapper_bend);
+  vi->bounds(0,NUM_MAX_MODULATORS); vi->precision(0);
+  vi->callback(cb_mapper_bend, newCbInfo(ic,0));
   widg_bend[ic] = vi;
 
-
   vi = new Fl_Value_Input(px+720,py,w*2,h,"Pres->");
-  vi->bounds(0,NUM_MAX_MODULATORS); vi->precision(0); vi->argument(ic);
-  //vi->callback(cb_mapper_pressure);
+  vi->bounds(0,NUM_MAX_MODULATORS); vi->precision(0);
+  vi->callback(cb_mapper_pressure, newCbInfo(ic,0));
   widg_pres[ic] = vi;
 
   Fl_Check_Button *cbutt;
   cbutt = new Fl_Check_Button(px+780,py,w,h,"Rcv noff");
-  cbutt->argument(ic);
-  //cbutt->callback(cb_mapper_noff);
+  cbutt->callback(cb_mapper_noff, newCbInfo(ic,0));
   widg_noff[ic] = cbutt;
-
 
   ipx+=31;
 
@@ -177,20 +173,17 @@ ViewMidiMapper::build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic)
     vi = new Fl_Value_Input(ipx+px+1*(w+sp),ipy+py,w*2,h);
     vi->bounds(0,127);
     vi->precision(0);
-    vi->argument((ic<<16)+i);
-    //vi->callback(cb_mapper_modsrc);
+    vi->callback(cb_mapper_modsrc, newCbInfo(ic,i));
     widg_modsrc[ic*NUM_MAX_MODULATORS + i] = vi;
 
     lbl = new Fl_Box(ipx+px+3*(w+sp),ipy+py,w,h,"->");
     vi = new Fl_Value_Input(ipx+px+4*(w+sp),ipy+py,w*3,h);
-    vi->argument((ic<<16)+i);
-    //vi->callback(cb_mapper_modmin);
+    vi->callback(cb_mapper_modmin, newCbInfo(ic,i));
     widg_modmin[ic*NUM_MAX_MODULATORS + i] = vi;
 
     lbl = new Fl_Box(ipx+px+7*(w+sp),ipy+py,w,h,"--");
     vi = new Fl_Value_Input(ipx+px+8*(w+sp),ipy+py,w*3,h);
-    vi->argument((ic<<16)+i);
-    //vi->callback(cb_mapper_modmax);
+    vi->callback(cb_mapper_modmax, newCbInfo(ic,i));
     widg_modmax[ic*NUM_MAX_MODULATORS + i] = vi;
 
     px += 12*(w+sp);
@@ -215,9 +208,8 @@ ViewMidiMapper::build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic)
     Fl_Value_Input *vi = new Fl_Value_Input(ipx+px+col*(w+sp),ipy+py+row*(h+sp),w,h);
     if (i==0x24) vi->color(0xffcccc00);
     else vi->color(notecol[note]);
-    vi->argument((ic<<16)+i);
     vi->range(0,NUM_MAX_CHANNELS); vi->precision(0);
-    //vi->callback(cb_mapper_keysingle);
+    vi->callback(cb_mapper_keysingle, newCbInfo(ic,i));
     widg_keysingle[ic*128+i] = vi;
   }
 
@@ -244,6 +236,7 @@ ViewMidiMapper::ViewMidiMapper(int x, int y, int w, int h,
                                MidiMap *mm)
   : Fl_Group(x, y, w, h, name), midimap(mm)
 {
+  //midiSender = NULL;
   widg_cmode.resize(16);
   widg_cvoices.resize(16);
   widg_cvelo.resize(16);
@@ -257,5 +250,6 @@ ViewMidiMapper::ViewMidiMapper(int x, int y, int w, int h,
   widg_keysingle.resize(16*128);
 
   build_message_mapper(x,y,w,h);
+
   this->end();
 }

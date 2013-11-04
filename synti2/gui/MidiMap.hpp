@@ -10,6 +10,7 @@
 #include "synti2_misss.h"
 //#include "misssevent.hpp"
 #include "miditool.hpp"
+#include "Synti2Base.hpp"
 #include <iostream>
 #include <vector>
 
@@ -58,8 +59,12 @@ namespace synti2base
     /* FIXME: instantiation.*/
     synti2_midi_map mmap;
     synti2_midi_state state;
+    MidiSender *midiSender;
+
   public:
     MidiMap();
+    void setMidiSender(MidiSender *ms);
+
     void write(std::ostream &os);
     void read(std::istream &ins);
 
@@ -114,7 +119,6 @@ namespace synti2base
 
     std::vector<unsigned char> sysexMod(int midichn, int imod);
     void setMod(int midichn, int imod, std::string sval);
-
 
   };
 

@@ -29,6 +29,7 @@ build_main_window(Fl_Window * window, PatchBank *pbh)
   gr->end();
 
   gr = new ViewMidiMapper(0,22,1200,720,"MIDI mapper",pbh->leakMidiMapPtr());
+  pbh->addReloadListener(ViewMidiMapper::refreshViewFromData,gr);
   gr->end();
 
   gr = new ViewFeatures(0,22,1200,720,"Features",pbh);

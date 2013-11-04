@@ -320,6 +320,7 @@ namespace synti2base {
     /** Sets a midi sender. */
     void setMidiSender(MidiSender *ms){
         midiSender = ms;
+        midimap.setMidiSender(ms);
     }
 
     /** Sends a parameter via midi, if a sender is given. */

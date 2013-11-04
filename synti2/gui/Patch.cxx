@@ -512,6 +512,15 @@ void Patch::valuesFromStream(istream &ist)
     string pname,key;
     float val;
 
+    /* hack.. go to first section line */
+    while(get_nonwhite_line(ist, line)){
+        if (line[0] == '['){
+            line_to_header(line);
+            curr_section = line;
+            break;
+        }
+    }
+
     while(get_nonwhite_line(ist, line))
     {
         if (line[0] == '-') break;

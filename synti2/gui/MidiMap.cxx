@@ -58,7 +58,14 @@ sysexTwoBytes(int type, int midichn, int firstbyte, int secondbyte){
 synti2base::MidiMap::MidiMap(){
   memset (&mmap, 0, sizeof(mmap));
   memset (&state, 0, sizeof(state));
+  midiSender = NULL;
 }
+
+void synti2base::MidiMap::setMidiSender(MidiSender *ms){
+  midiSender = ms;
+}
+
+
 
 void
 synti2base::MidiMap::write(std::ostream &os)
@@ -203,54 +210,70 @@ synti2base::MidiMap::midiToMisss(const MidiEvent &evin)
 
 void
 synti2base::MidiMap::setMode(int midichn, int val){
-  mmap.chn[midichn].mode = val;}
+  mmap.chn[midichn].mode = val;
+  if (midiSender != NULL) midiSender->send(sysexMode(midichn));
+}
 
 int
 synti2base::MidiMap::getMode(int midichn){
-  return mmap.chn[midichn].mode;}
+  return mmap.chn[midichn].mode;
+}
 
 std::vector<unsigned char>
 synti2base::MidiMap::sysexMode(int midichn){
-  return sysexOneByte(MISSS_SYSEX_MM_MODE,midichn,getMode(midichn));}
+  return sysexOneByte(MISSS_SYSEX_MM_MODE,midichn,getMode(midichn));
+}
 
 void
 synti2base::MidiMap::setSust(int midichn, bool val){
-  mmap.chn[midichn].use_sustain_pedal = val?1:0;}
+  mmap.chn[midichn].use_sustain_pedal = val?1:0;
+  if (midiSender != NULL) midiSender->send(sysexSust(midichn));
+}
 
 bool
 synti2base::MidiMap::getSust(int midichn){
-  return (mmap.chn[midichn].use_sustain_pedal != 0);}
+  return (mmap.chn[midichn].use_sustain_pedal != 0);
+}
 
 std::vector<unsigned char>
 synti2base::MidiMap::sysexSust(int midichn){
   return sysexOneByte(MISSS_SYSEX_MM_SUST, midichn,
-                      getSust(midichn)?1:0);}
+                      getSust(midichn)?1:0);
+}
 
 void
 synti2base::MidiMap::setNoff(int midichn, bool val){
-  mmap.chn[midichn].receive_note_off = val?1:0;}
+  mmap.chn[midichn].receive_note_off = val?1:0;
+  if (midiSender != NULL) midiSender->send(sysexNoff(midichn));
+}
 
 bool
 synti2base::MidiMap::getNoff(int midichn){
-  return (mmap.chn[midichn].receive_note_off != 0);}
+  return (mmap.chn[midichn].receive_note_off != 0);
+}
 
 std::vector<unsigned char>
 synti2base::MidiMap::sysexNoff(int midichn){
   return sysexOneByte(MISSS_SYSEX_MM_NOFF, midichn,
-                      getNoff(midichn)?1:0);}
+                      getNoff(midichn)?1:0);
+}
 
 
 void
 synti2base::MidiMap::setFixedVelo(int midichn, int val){
-  mmap.chn[midichn].use_const_velocity = val;}
+  mmap.chn[midichn].use_const_velocity = val;
+  if (midiSender != NULL) midiSender->send(sysexFixedVelo(midichn));
+}
 
 int
 synti2base::MidiMap::getFixedVelo(int midichn){
-  return mmap.chn[midichn].use_const_velocity;}
+  return mmap.chn[midichn].use_const_velocity;
+}
 
 std::vector<unsigned char>
 synti2base::MidiMap::sysexFixedVelo(int midichn){
-  return sysexOneByte(MISSS_SYSEX_MM_CVEL,midichn,getFixedVelo(midichn));}
+  return sysexOneByte(MISSS_SYSEX_MM_CVEL,midichn,getFixedVelo(midichn));
+}
 
 
 
@@ -271,36 +294,13 @@ synti2base::MidiMap::setVoices(int midichn, const std::string &val){
     ss >> voi;
     if (ss.fail() || voi == 0){
       mmap.chn[midichn].voices[i] = 0;
-      return;
+      break;
     }
     if ((voi <= prev) || (voi > NUM_MAX_CHANNELS)) continue;
     mmap.chn[midichn].voices[i] = prev = voi;
   }
+  if (midiSender != NULL) midiSender->send(sysexVoices(midichn));
 }
-
-#if 0
-/* TODO: */
-static void ignore_until_digit(std::istream ss){
-  while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
-}
-#endif
-
-void
-synti2base::MidiMap::setKeyMap(int midichn, std::string sval){
-  std::stringstream ss(sval);
-  int voi;
-  for (int ik=0;ik<128;ik++){
-    //ignore_until_digit(ss);
-    while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
-    ss >> voi;
-    if (ss.fail()){
-        std::cerr << "unexpected format of key map. bail out." << std::endl;
-        return;
-    }
-    setKeyMap(midichn, ik, voi);
-  }
-}
-
 
 std::string
 synti2base::MidiMap::getVoicesString(int midichn){
@@ -328,9 +328,34 @@ synti2base::MidiMap::sysexVoices(int midichn){
   return res;
 }
 
+#if 0
+/* TODO: */
+static void ignore_until_digit(std::istream ss){
+  while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
+}
+#endif
+
+void
+synti2base::MidiMap::setKeyMap(int midichn, std::string sval){
+  std::stringstream ss(sval);
+  int voi;
+  for (int ik=0;ik<128;ik++){
+    //ignore_until_digit(ss);
+    while ((!ss.eof()) && ((ss.peek()<'0') || (ss.peek()>'9'))) ss.ignore();
+    ss >> voi;
+    if (ss.fail()){
+        std::cerr << "unexpected format of key map. bail out." << std::endl;
+        return;
+    }
+    setKeyMap(midichn, ik, voi);
+  }
+}
+
 void
 synti2base::MidiMap::setKeyMap(int midichn, int key, int val){
-  mmap.chn[midichn].note_channel_map[key] = val;}
+  mmap.chn[midichn].note_channel_map[key] = val;
+  if (midiSender != NULL) midiSender->send(sysexKeyMapSingleNote(midichn,key));
+}
 
 int
 synti2base::MidiMap::getKeyMap(int midichn, int key){
@@ -357,33 +382,43 @@ synti2base::MidiMap::sysexKeyMapAll(int midichn){
 
 void
 synti2base::MidiMap::setBendDest(int midichn, int val){
-  mmap.chn[midichn].bend_destination = val;}
+  mmap.chn[midichn].bend_destination = val;
+  if (midiSender != NULL) midiSender->send(sysexBendDest(midichn));
+}
 
 int
 synti2base::MidiMap::getBendDest(int midichn){
-  return mmap.chn[midichn].bend_destination;}
+  return mmap.chn[midichn].bend_destination;
+}
 
 std::vector<unsigned char>
 synti2base::MidiMap::sysexBendDest(int midichn){
-  return sysexOneByte(MISSS_SYSEX_MM_BEND,midichn,getBendDest(midichn));}
+  return sysexOneByte(MISSS_SYSEX_MM_BEND,midichn,getBendDest(midichn));
+}
 
 
 void
 synti2base::MidiMap::setPressureDest(int midichn, int val){
-  mmap.chn[midichn].pressure_destination = val;}
+  mmap.chn[midichn].pressure_destination = val;
+  if (midiSender != NULL) midiSender->send(sysexPressureDest(midichn));
+}
 
 int
 synti2base::MidiMap::getPressureDest(int midichn){
-  return mmap.chn[midichn].pressure_destination;}
+  return mmap.chn[midichn].pressure_destination;
+}
 
 std::vector<unsigned char>
 synti2base::MidiMap::sysexPressureDest(int midichn){
-  return sysexOneByte(MISSS_SYSEX_MM_PRESSURE,midichn,getPressureDest(midichn));}
+  return sysexOneByte(MISSS_SYSEX_MM_PRESSURE,midichn,getPressureDest(midichn));
+}
 
 
 void
 synti2base::MidiMap::setModSource(int midichn, int imod, int val){
-  mmap.chn[midichn].mod_src[imod] = val;}
+  mmap.chn[midichn].mod_src[imod] = val;
+  if (midiSender != NULL) midiSender->send(sysexMod(midichn,imod));
+}
 
 int
 synti2base::MidiMap::getModSource(int midichn, int imod){
@@ -393,6 +428,7 @@ void
 synti2base::MidiMap::setModMin(int midichn, int imod, float val){
   val = synti2::decode_f(synti2::encode_f(val));
   mmap.chn[midichn].mod_min[imod] = val;
+  if (midiSender != NULL) midiSender->send(sysexMod(midichn,imod));
 }
 
 void
@@ -404,6 +440,7 @@ synti2base::MidiMap::setMod(int midichn, int imod, std::string sval){
   ss.ignore(); ss >> val; setModSource(midichn, imod, val);
   ss.ignore(); ss >> fval; setModMin(midichn, imod, fval);
   ss.ignore(); ss >> fval; setModMax(midichn, imod, fval);
+  if (midiSender != NULL) midiSender->send(sysexMod(midichn,imod));
 }
 
 
@@ -414,7 +451,9 @@ synti2base::MidiMap::getModMin(int midichn, int imod){
 void
 synti2base::MidiMap::setModMax(int midichn, int imod, float val){
   val = synti2::decode_f(synti2::encode_f(val));
-  mmap.chn[midichn].mod_max[imod] = val;}
+  mmap.chn[midichn].mod_max[imod] = val;
+  if (midiSender != NULL) midiSender->send(sysexMod(midichn,imod));
+}
 
 float
 synti2base::MidiMap::getModMax(int midichn, int imod){

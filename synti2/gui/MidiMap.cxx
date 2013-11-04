@@ -207,6 +207,23 @@ synti2base::MidiMap::midiToMisss(const MidiEvent &evin)
   return res;
 }
 
+void synti2base::MidiMap::sendEverything(){
+  if (midiSender == NULL) return;
+  for(int ic=0;ic<16;ic++){
+    midiSender->send(sysexMode(ic));
+    midiSender->send(sysexSust(ic));
+    midiSender->send(sysexNoff(ic));
+    midiSender->send(sysexFixedVelo(ic));
+    midiSender->send(sysexVoices(ic));
+    midiSender->send(sysexKeyMapAll(ic));
+    midiSender->send(sysexBendDest(ic));
+    midiSender->send(sysexPressureDest(ic));
+    for (int imod=0;imod<NUM_MAX_MODULATORS;imod++){
+      midiSender->send(sysexMod(ic,imod));
+    }
+  }
+
+}
 
 void
 synti2base::MidiMap::setMode(int midichn, int val){

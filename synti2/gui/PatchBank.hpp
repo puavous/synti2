@@ -241,6 +241,10 @@ namespace synti2base {
         for(int i=0;i<getNumPatches();++i) sendPatch(i);
     }
 
+    void sendMidiMap(){
+        midimap.sendEverything();
+    }
+
     int
     getCapacityValue(string key){return caps.value(key);}
     int

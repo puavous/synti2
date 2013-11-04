@@ -40,6 +40,7 @@ void ViewPatches::butt_send_cb(Fl_Widget* w, void* p){
 
 /** Sends all patches. */
 void ViewPatches::butt_send_all_cb(Fl_Widget* w, void* p){
+    ((ViewPatches*)p)->pb->sendMidiMap();
     ((ViewPatches*)p)->pb->sendAllPatches();
 }
 

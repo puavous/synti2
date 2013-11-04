@@ -64,6 +64,7 @@ namespace synti2base
   public:
     MidiMap();
     void setMidiSender(MidiSender *ms);
+    void sendEverything();
 
     void write(std::ostream &os);
     void read(std::istream &ins);

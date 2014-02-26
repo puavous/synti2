@@ -28,7 +28,7 @@
 
 #endif
 
-#ifndef NO_EXTRA_WAVETABLES
+#ifdef FEAT_EXTRA_WAVETABLES
 #define NHARM 8
 #else
 #define NHARM 1
@@ -108,7 +108,7 @@ struct synti2_player {
   /* Playable events. The first will be at evpool[0]! */
   synti2_player_ev evpool[SYNTI2_MAX_SONGEVENTS];
 
-#ifndef NO_SAFETY
+#ifdef DO_SAFETY_CHECKS
   unsigned int last_error_frame; /* Errors can be monitored by tools. */
   unsigned int last_error_type;  /* Error position. */
   unsigned int last_error_info;  /* Some key information about the error. */
@@ -131,22 +131,22 @@ typedef struct synti2_voice {
   counter c[NUM_OPERATORS];
   counter eprog[NUM_ENVS+1];
   counter contr[NUM_MODULATORS];
-#ifndef NO_LEGATO
+#ifdef FEAT_LEGATO
   counter pitch;
 #endif
-#ifndef NO_FILTER_PITCH_FOLLOW
+#ifdef FEAT_FILTER_FOLLOW_PITCH
   float effnote[NUM_OPERATORS];
 #endif
 
   /* Envelope stages just a table? TODO: think.*/
   unsigned int estage[NUM_ENVS+1];
-#ifndef NO_LOOPING_ENVELOPES
+#ifdef FEAT_LOOPING_ENVELOPES
   unsigned int sustain;
 #endif
 
   unsigned int note;
 
-#ifndef NO_VELOCITY
+#ifdef FEAT_VELOCITY_SENSITIVITY
   unsigned int velocity;
 #endif
 

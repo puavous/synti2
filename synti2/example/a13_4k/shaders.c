@@ -11,19 +11,20 @@
  * dude, even if I don't know you (yet) ;).
  *
  * But a note to our students: I couldn't have done this without the
- * basic vector math and stuff taught on this our course.
+ * basic vector math and stuff taught on this course of ours.
  *
  * I tried these with my soft synth, of course, but these should be
  * applicable in any other code that renders a rectangle [-1,1]^2 and
- * transfers 9 uniform parameters from the application.. Later on, I'll
- * make the synth state accessible in a much more easy way ...
+ * transfers 9 uniform parameters from the application.. In a later
+ * revision, I'll make the synth state accessible in a much more easy
+ * way ...
  *
  * s[0] needs to be time since the beginning of the animation
  * s[1] needs to be screen width
  * s[2] needs to be screen height
  * s[3..] are parameters affecting the animation.
  */
-//#define NEED_DEBUG
+/* #define NEED_DEBUG */
 
 const GLchar *vs="\
   void main(){                                  \
@@ -31,7 +32,149 @@ const GLchar *vs="\
   }";
 
 #if 1
-const GLchar *fs= "\
+/* This version is processed using shader_minifier.exe by ctrl-alt-test 
+ * http://www.ctrl-alt-test.fr/?page_id=7
+ * Cool stuff.. The result after packing is 10 bytes smaller than with 
+ * the previous tool.
+ */
+const GLchar *fs= ""
+ "uniform float s[9];"
+ "vec3 v(vec3 v,float y)"
+ "{"
+   "float r,f;"
+   "r=sin(y);"
+   "f=cos(y);"
+   "return vec3(r*v.x-f*v.z,v.y,f*v.x+r*v.z);"
+ "}"
+ "vec3 n(vec3 v,float y)"
+ "{"
+   "float r,f;"
+   "r=sin(y);"
+   "f=cos(y);"
+   "return vec3(r*v.x-f*v.y,f*v.x+r*v.y,v.z);"
+ "}"
+ "vec3 f(vec3 v,float y)"
+ "{"
+   "float r,f;"
+   "r=sin(y);"
+   "f=cos(y);"
+   "return vec3(v.x,r*v.y-f*v.z,f*v.y+r*v.z);"
+ "}"
+ "float e(vec3 v,vec2 y)"
+ "{"
+   "vec2 r=vec2(length(v.xy)-y.x,v.z);"
+   "return length(r)-y.y;"
+ "}"
+ "float t(vec3 v,vec2 y)"
+ "{"
+   "return v.y-=abs(v.x),e(v,vec2(y.x,y.y));"
+ "}"
+ "float e(vec3 y)"
+ "{"
+   "y=n(y,s[0]*.1);"
+   "y=f(y,s[0]*.2);"
+   "y=v(y,s[0]);"
+   "float r,z;"
+   "r=t(y+vec3(4,0,0),vec2(5,1));"
+   "y=f(y,3.14+sin(s[0]*.2));"
+   "z=t(y,vec2(5.+s[6]*2.,1));"
+   "return min(r,z);"
+ "}"
+ "float f(vec3 y)"
+ "{"
+   "y=v(y,s[0]);"
+   "float r=t(y,vec2(7.+s[6]*2.,1));"
+   "return r;"
+ "}"
+ "float n(vec3 y)"
+ "{"
+   "if(s[0]<29.6)"
+     "return f(y);"
+   "else"
+     " return e(y);"
+ "}"
+ "const float z=.01,y=.1;"
+ "const int r=180;"
+ "const float i=80.;"
+ "vec4 c(vec3 v,vec3 y)"
+ "{"
+   "float f=0.;"
+   "int g;"
+   "vec3 c;"
+   "for(g=0;g<r;g++)"
+     "{"
+       "c=v+f*y;"
+       "float t=n(c)*.9;"
+       "f+=t;"
+       "if(t<z)"
+         "break;"
+       "if(f>i)"
+         "return vec4(c,0);"
+     "}"
+   "vec4 t;"
+   "t.xyz=c;"
+   "t.w=1.-float(g)/float(r);"
+   "return t;"
+ "}"
+ "vec3 c(vec3 v)"
+ "{"
+   "return normalize(vec3(n(v+vec3(y,0,0))-n(v-vec3(y,0,0)),n(v+vec3(0,y,0))-n(v-vec3(0,y,0)),n(v+vec3(0,0,y))-n(v-vec3(0,0,y))));"
+ "}"
+ "vec4 c(vec3 y,vec3 v,vec3 r,vec3 f,vec3 x,vec3 t,vec3 c,vec3 n)"
+ "{"
+   "vec3 g,z,i,d,e,w;"
+   "g=t;"
+   "z=normalize(f-v);"
+   "if(z.z>0.)"
+     "return vec4(g,1);"
+   "float m,l;"
+   "m=length(f-v);"
+   "l=1./(1.+.03*m+.003*m*m);"
+   "i=normalize(v-y);"
+   "d=c*max(dot(r,z),0.);"
+   "e=reflect(z,r);"
+   "w=n*pow(max(dot(e,i),0.),4.);"
+   "g+=l*x*(d+w);"
+   "return vec4(g,1);"
+ "}"
+ "void main()"
+ "{"
+   "vec3 v,y,r,f,z;"
+   "v=vec3(0,0,-20.);"
+   "y=vec3(-10.);"
+   "vec2 g=gl_FragCoord.xy/vec2(s[1]/2.,s[2]/2.)-vec2(1);"
+   "g.x*=s[1]/s[2];"
+   "r=vec3(g.x,g.y,1);"
+   "r=normalize(r)*.5;"
+   "vec4 t=c(v,r);"
+   "f=t.xyz;"
+   "float m=t.w;"
+   "z=c(f);"
+   "if(m>0.)"
+     "{"
+       "vec3 i,e,x,w;"
+       "i=vec3(3);"
+       "e=vec3(.3,0,0);"
+       "x=vec3(1,0,0);"
+       "w=vec3(1,1,0);"
+       "vec4 l=c(v,f,z,y,i,e,x,w);"
+       "float d=1.-max(distance(v,f)/120.,0.);"
+       "gl_FragColor=l*d*m;"
+     "}"
+   "else"
+     " if(s[0]>15.)"
+       "{"
+         "vec3 i=n(vec3(g,0),.2*s[0]);"
+         "gl_FragColor=vec4(sin(s[0])*cos(4.*i.x*i.y)+s[3]);"
+       "}"
+     "else"
+       " gl_FragColor=vec4(0);"
+   "gl_FragColor*=1.-smoothstep(56.,65.,s[0]);"
+ "}";
+#endif
+
+#if 0
+"\
 uniform float s[9];vec3 u(vec3 e,float f){float g,h;g=sin(f);h=cos(f);return vec3(g*e.x-h*e.z,e.y,h*e.x+g*e.z);}vec3 v(vec3 e,float f){float g,h;g=sin(f);h=cos(f);return vec3(g*e.x-h*e.y,h*e.x+g*e.y,e.z);}vec3 w(vec3 e,float f){float g,h;g=sin(f);h=cos(f);return vec3(e.x,g*e.y-h*e.z,h*e.y+g*e.z);}float x(vec3 e,vec2 f){vec2 g=vec2(length(e.xy)-f.x,e.z);return length(g)-f.y;}float y(vec3 e,vec2 f){e.y-=abs(e.x);return x(e,vec2(f.x,f.y));}float z(vec3 e){e=v(e,s[0]*.1);e=w(e,s[0]*.2);e=u(e,s[0]);float f,g;f=y(e+vec3(4,0,0),vec2(5,1));e=w(e,3.14+sin(s[0]*.2));g=y(e,vec2(5.+s[6]*2.,1));return min(f,g);}float A(vec3 e){e=u(e,s[0]);float f=y(e,vec2(7.+s[6]*2.,1));return f;}float B(vec3 e){if(s[0]<29.6)return A(e);else return z(e);}const float a=.01;const float b=.1;const int c=180;const float d=80.;vec4 C(vec3 e,vec3 f){float g=0.;int h;vec3 i;for(h=0;h<c;h++){i=e+g*f;float j=B(i)*.9;g+=j;if(j<a)break;if(g>d)return vec4(i,0);}vec4 j;j.xyz=i;j.w=1.-float(h)/float(c);return j;}vec3 D(vec3 e){return normalize(vec3(B(e+vec3(b,0,0))-B(e-vec3(b,0,0)),B(e+vec3(0,b,0))-B(e-vec3(0,b,0)),B(e+vec3(0,0,b))-B(e-vec3(0,0,b))));}vec4 E(vec3 e,vec3 f,vec3 g,vec3 h,vec3 i,vec3 j,vec3 k,vec3 l){vec3 m,n,q,r,s,t;m=j;n=normalize(h-f);if(n.z>0.)return vec4(m,1);float o,p;o=length(h-f);p=1./(1.+.03*o+.003*o*o);q=normalize(f-e);r=k*max(dot(g,n),0.);s=reflect(n,g);t=l*pow(max(dot(s,q),0.),4.);m+=p*i*(r+t);return vec4(m,1);}void main(){vec3 e,f,h,j,l;e=vec3(0,0,-20.);f=vec3(-10.);vec2 g=gl_FragCoord.xy/vec2(s[1]/2.,s[2]/2.)-vec2(1);g.x*=s[1]/s[2];h=vec3(g.x,g.y,1);h=normalize(h)*.5;vec4 i=C(e,h);j=i.xyz;float k=i.w;l=D(j);if(k>0.){vec3 m,n,o,p;m=vec3(3);n=vec3(.3,0,0);o=vec3(1,0,0);p=vec3(1,1,0);vec4 q=E(e,j,l,f,m,n,o,p);float r=1.-max(distance(e,j)/120.,0.);gl_FragColor=q*r*k;}else if(s[0]>15.){vec3 m=v(vec3(g,0),.2*s[0]);gl_FragColor=vec4(sin(s[0])*cos(4.*m.x*m.y)+s[3]);}else gl_FragColor=vec4(0);gl_FragColor*=1.-smoothstep(56.,65.,s[0]);}";
 #endif
 
@@ -146,7 +289,7 @@ vec4 march(vec3 from, vec3 direction) {                                 \
 // Distance estimation describes a hyperplane (local tangent plane of   \
 // a geometry) in an implicit form (f(p)==0 exactly on the plane,       \
 // f(p)>0 on the front side). Gradient of the function gives a vector   \
-// normal to the plane. Here we approximate the gradient with finite    \
+// orthogonal to the plane. Here we approximate the gradient with finite \
 // differences along the coordinate axes.                               \
                                                                         \
 vec3 normalEstimation(vec3 p){                                          \

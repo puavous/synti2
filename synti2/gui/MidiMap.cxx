@@ -165,17 +165,17 @@ synti2base::MidiMap::midiToMisss(const MidiEvent &evin)
   std::vector<synti2base::MisssEvent> res;
   evin.toMidiBuffer(inbuf);
   int nmsg;
-#if 0
+
   nmsg = synti2_midi_to_misss(&mmap, &state,
                               inbuf, outbuf,
                               msgsizes,
                               0 /* FIXME: problem here?*/);
-#else
-  /* FIXME: I have a build problem with codeblocks.. the C part's symbol
-     doesn't seem to be found. I suck in finding the problem now.
+
+  /* FIXME: The above yields a build problem with codeblocks.. the C
+     part's symbol doesn't seem to be found. I suck in finding the
+     reason for this problem now.
    */
-  nmsg = 0;
-#endif
+
   unsigned char *read;
   read = outbuf;
   for(int i=0;i<nmsg;i++){

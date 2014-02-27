@@ -303,22 +303,21 @@ int command_line_mode(int argc, char **argv)
     exit(0);
   } 
   else if (strcmp(argv[1],"--write-song") == 0){
-    std::cerr << "FIXME: song writer not yet provided." << argv[0] << std::endl;
     if ((argc<4) 
         || (!check_file_exists(argv[2]))
         || (!check_file_exists(argv[3]))) {
-      std::cerr << "Must have --write-song SONG.mid PATCHES.s2bank";
+      std::cerr << 
+        "Must have --write-song SONG.mid PATCHES.s2bank" << endl;
       exit(2);
     }
-    
     char *smf_fname = argv[2];
     char *s2bank_fname = argv[3];
+    
     std::ifstream ifs(smf_fname, std::ios::in|std::ios::binary);
     MidiSong ms(ifs);
     ifs.close();
     
     synti2base::MidiMap mapper;
-    
     std::ifstream mapperfs(s2bank_fname);
     mapper.read(mapperfs);
     mapperfs.close();
@@ -326,11 +325,10 @@ int command_line_mode(int argc, char **argv)
     /* Spec could come from "exe builder GUI"? Could be part of mapper?
        No?*/
     std::stringstream spec("hm. Should be all like TPQ=24;");
-    int tpq = 24; /* FIXME: get this from somewhere. */
+    int tpq = 12; /* FIXME: get this from somewhere. */
     ms.decimateTime(tpq);
 
     synti2base::MisssSong misss(ms, mapper, spec);
-
     misss.write_as_c(std::cout);
 
     exit(0);

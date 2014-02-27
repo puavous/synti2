@@ -18,6 +18,9 @@
 #include "PatchBank.hpp"
 using synti2base::PatchBank;
 
+#include "MidiMap.hpp"
+#include "misss.hpp"
+
 /* jack headers */
 #ifdef MIDI_INTERFACE_IS_JACK
 #include <jack/jack.h>
@@ -28,6 +31,7 @@ using synti2base::PatchBank;
 
 /* stdlib headers */
 #include <iostream>
+#include <fstream>
 
 /* C headers */
 #include <errno.h>
@@ -78,17 +82,20 @@ protected:
             return; /*should throw?*/
         }
 
-        for (int i = 0; i<bytes.size(); i++)
+        for (size_t i = 0; i<bytes.size(); i++)
         {
             sysex_buf[i] = bytes.at(i);
         }
 
-        for (int i = 0; i<bytes.size(); i++){
+        for (size_t i = 0; i<bytes.size(); i++){
           printf("0x%02x ", (int) ((unsigned char*)sysex_buf)[i]);
         } printf("\n"); fflush(stdout);
 
         size_t nwrit = jack_ringbuffer_write (js_->rb, (char*)(&len), sizeof(size_t));
-        nwrit = jack_ringbuffer_write (js_->rb, sysex_buf, len);
+        nwrit += jack_ringbuffer_write (js_->rb, sysex_buf, len);
+        if (nwrit < (sizeof(size_t) + len)){
+          std::cerr << "Write to ringbuffer failed? wrote" << nwrit;
+        }
         /*
         std::cerr << "Should send:";
         for(int i=0;i<bytes.size();++i){
@@ -249,10 +256,99 @@ void init_jack(const char * client_name){
 /* --------------------------- End Jack interface -- */
 #endif
 
+static
+bool file_exists(const char* fname){
+  std::ifstream checkf(fname);
+  return checkf.is_open();
+}
+
+static
+bool check_file_exists(const char* fname){
+  if (!file_exists(fname)){
+    std::cerr << "File not found: " << fname << std::endl;
+    return false;
+  } else return true;
+}
+
+/** Process non-interactive requests such as generation of 4k
+ * data. This function will exit the program after the non-interactive
+ * operation is completed or if the arguments are invalid.
+ *
+ * TODO: use a proper parser library..
+ */
+int command_line_mode(int argc, char **argv)
+{
+  /* Skip if no parameters were given */
+  if (argc < 2) return 0;
+  if (strcmp(argv[1],"--help") == 0){
+    std::cout << "FIXME: Help text not yet written" << std::endl;
+    exit(0);
+  } 
+  else if (strcmp(argv[1],"--write-caps") == 0){
+    synti2base::PatchBank pbank;
+    if (!check_file_exists(argv[2])) exit(2);
+    ifstream ifs(argv[2]);
+    pbank.reloadFromStream(ifs);
+    pbank.exportCapFeatHeader(std::cout);
+
+    exit(0);
+  } 
+  else if (strcmp(argv[1],"--write-patches") == 0){
+    synti2base::PatchBank pbank;
+    if (!check_file_exists(argv[2])) exit(2);
+    ifstream ifs(argv[2]); /* FIXME: Deal with errors with open. */
+    pbank.reloadFromStream(ifs);
+    pbank.exportStandalone(std::cout);
+    
+    exit(0);
+  } 
+  else if (strcmp(argv[1],"--write-song") == 0){
+    std::cerr << "FIXME: song writer not yet provided." << argv[0] << std::endl;
+    if ((argc<4) 
+        || (!check_file_exists(argv[2]))
+        || (!check_file_exists(argv[3]))) {
+      std::cerr << "Must have --write-song SONG.mid PATCHES.s2bank";
+      exit(2);
+    }
+    
+    char *smf_fname = argv[2];
+    char *s2bank_fname = argv[3];
+    std::ifstream ifs(smf_fname, std::ios::in|std::ios::binary);
+    MidiSong ms(ifs);
+    ifs.close();
+    
+    synti2base::MidiMap mapper;
+    
+    std::ifstream mapperfs(s2bank_fname);
+    mapper.read(mapperfs);
+    mapperfs.close();
+    
+    /* Spec could come from "exe builder GUI"? Could be part of mapper?
+       No?*/
+    std::stringstream spec("hm. Should be all like TPQ=24;");
+    int tpq = 24; /* FIXME: get this from somewhere. */
+    ms.decimateTime(tpq);
+
+    synti2base::MisssSong misss(ms, mapper, spec);
+
+    misss.write_as_c(std::cout);
+
+    exit(0);
+  } else {
+    std::cerr << "Unknown command line parameters for " << argv[0] << std::endl;
+    exit(1);
+  }
+}
+
 
 #ifdef MIDI_INTERFACE_IS_JACK
 int main(int argc, char **argv) {
   int retval = 2;
+
+  /* Process in non-gui mode; will exit there if non-gui operation was
+   * requested.
+   */
+  command_line_mode(argc, argv);
 
   init_jack(default_name);
 
@@ -261,15 +357,15 @@ int main(int argc, char **argv) {
 
   /* FIXME: Better implementation of these: */
   //synti2::Patchtool *pt = new synti2::Patchtool(patchdes_fname);
-  synti2base::PatchBank *pbank = new synti2base::PatchBank();
-  pbank->exportCapFeatHeader(std::cout);
+  synti2base::PatchBank pbank;
+  pbank.exportCapFeatHeader(std::cout);
 
   if (weHaveJack()) {
     JackMidiSender ms(&my_jack);
-    pbank->setMidiSender(&ms);
+    pbank.setMidiSender(&ms);
   }
 
-  Fl_Window *window = new MainWindow(1000,740,pbank);
+  Fl_Window *window = new MainWindow(1000,740,&pbank);
 
   window->show(argc, argv);
 
@@ -283,7 +379,6 @@ int main(int argc, char **argv) {
   if (weHaveJack()) {jack_ringbuffer_free(my_jack.rb);}
   if (weHaveJack()) {jack_client_close(my_jack.client);}
 
-  if (pbank != NULL) free(pbank);
   //if (pt != NULL) free(pt);
 
   return retval;

@@ -181,25 +181,18 @@ namespace synti2base {
 
     /** Writes a C header file for stand-alone synth to a stream. */
     void exportCapFeatHeader(ostream & ost);
+
     /** Exports only the enabled parameters for a playble exe song. */
     void exportStandalone(ostream &ost);
 
-    void setParEnabled(string const & key, bool status){
-        bool old_status = paramEnabled[key];
-        std::cout << (status?"Enabling":"Disabling") << " "<< key << endl;
-        paramEnabled[key] = status;
-        if (status != old_status) {
-            sendParamOnAllPatches(key);
-        }
-    }
+    /** Sets the enabled/disabled status for a parameter. */
+    void setParEnabled(string const & key, bool status);
 
     void sendParamOnAllPatches(string const & key){
         // FIXME: All patches, and not only 0.
         sendMidi(getEffectiveParAsSysEx(0,key));
     }
-    bool isParEnabled(string const & key){
-        return paramEnabled[key];
-    }
+    bool isParEnabled(string const & key){return paramEnabled[key];}
 
     /* Hmm.. Couldn't we just give out const references to feats/caps? */
     vector<FeatureDescription>::iterator
@@ -238,7 +231,7 @@ namespace synti2base {
     }
 
     void sendAllPatches(){
-        for(int i=0;i<getNumPatches();++i) sendPatch(i);
+        for(size_t i=0;i<getNumPatches();++i) sendPatch(i);
     }
 
     void sendMidiMap(){

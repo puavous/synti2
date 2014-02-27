@@ -7,6 +7,7 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Choice.H>
+#include "synti2_limits.h"
 
 #include <iostream>
 
@@ -194,14 +195,13 @@ ViewMidiMapper::build_channel_mapper(int ipx, int ipy, int ipw, int iph, int ic)
   w=30;h=20;
   Fl_Scroll *keys = new Fl_Scroll(ipx+px,ipy+py,800,2*h);
 
-  int oct;
   for(int i=0;i<128;i++){
     unsigned int notecol[] = {
       0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00,
       0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00, 0xcccccc00, 0xffffff00};
 
     int note = i % 12;
-    int oct = i / 12;
+    //int oct = i / 12;
     int row = i / 128;
     int col = i % 128;
 
@@ -253,3 +253,28 @@ ViewMidiMapper::ViewMidiMapper(int x, int y, int w, int h,
 
   this->end();
 }
+
+void 
+ViewMidiMapper::reloadWidgetValues()
+    {
+            for(int ic=0; ic<16; ic++)
+            {
+                widg_cmode.at(ic)->value(midimap->getMode(ic));
+                widg_cvoices.at(ic)->value(midimap->getVoicesString(ic).c_str());
+                widg_cvelo.at(ic)->value(midimap->getFixedVelo(ic));
+                widg_hold.at(ic)->value(midimap->getSust(ic));
+                widg_bend.at(ic)->value(midimap->getBendDest(ic));
+                widg_pres.at(ic)->value(midimap->getPressureDest(ic));
+                widg_noff.at(ic)->value(midimap->getNoff(ic));
+                for (int imod=0; imod<NUM_MAX_MODULATORS; imod++)
+                {
+                    widg_modsrc.at(ic*NUM_MAX_MODULATORS + imod)->value(midimap->getModSource(ic,imod));
+                    widg_modmin.at(ic*NUM_MAX_MODULATORS + imod)->value(midimap->getModMin(ic,imod));
+                    widg_modmax.at(ic*NUM_MAX_MODULATORS + imod)->value(midimap->getModMax(ic,imod));
+                }
+                for (int ikey=0; ikey<128; ikey++)
+                {
+                    widg_keysingle.at(ic*128 + ikey)->value(midimap->getKeyMap(ic,ikey));
+                }
+            }
+    }

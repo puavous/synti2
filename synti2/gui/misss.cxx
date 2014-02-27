@@ -4,6 +4,7 @@
  */
 
 #include "synti2_misss.h"
+#include "synti2_limits.h"
 #include "misss.hpp"
 #include "midihelper.hpp"
 
@@ -49,7 +50,7 @@ void fmt_varlen(std::ostream &outs, unsigned int val){
   outs << "   /*" << std::dec << val <<  "*/ ";
 }
 
-synti2::MisssEvent::MisssEvent(const unsigned char *misssbuf){
+synti2base::MisssEvent::MisssEvent(const unsigned char *misssbuf){
   type = *misssbuf++;
   voice = *misssbuf++;
   par1 = *misssbuf++;
@@ -62,7 +63,7 @@ synti2::MisssEvent::MisssEvent(const unsigned char *misssbuf){
     misssbuf += sizeof(float);
   }
 
-  /*std::cout << "MISSS-" << type << " on voice " << voice 
+  /*std::cout << "MISSS-" << type << " on voice " << voice
     << " par1=" << par1;
   if (type==MISSS_MSG_NOTE) std::cout << " vel= " << par2 << std::endl;
   else std::cout << "time=" << time << " tgt=" << target<< std::endl;
@@ -70,7 +71,7 @@ synti2::MisssEvent::MisssEvent(const unsigned char *misssbuf){
 }
 
 void
-synti2::MisssChunk::do_write_header_as_c(std::ostream &outs){
+synti2base::MisssChunk::do_write_header_as_c(std::ostream &outs){
   outs << std::endl;
   outs << "/* CHUNK begins ----------------------- */ " << std::endl;
   fmt_comment(outs, "Number of events"); fmt_varlen(outs, tick.size());
@@ -80,7 +81,7 @@ synti2::MisssChunk::do_write_header_as_c(std::ostream &outs){
 }
 
 void 
-synti2::MisssNoteChunk::do_write_header_as_c(std::ostream &outs)
+synti2base::MisssNoteChunk::do_write_header_as_c(std::ostream &outs)
 {
   MisssChunk::do_write_header_as_c(outs);
   fmt_comment(outs, "Type"); outs << "MISSS_LAYER_NOTES";
@@ -92,7 +93,7 @@ synti2::MisssNoteChunk::do_write_header_as_c(std::ostream &outs)
 }
 
 void
-synti2::MisssNoteChunk::do_write_data_as_c(std::ostream &outs)
+synti2base::MisssNoteChunk::do_write_data_as_c(std::ostream &outs)
 {
   outs << "/* delta and info : */ " << std::endl;
   unsigned int prev_tick=0;
@@ -118,7 +119,7 @@ synti2::MisssNoteChunk::do_write_data_as_c(std::ostream &outs)
 
 
 int
-synti2::MisssNoteChunk::computeDefaultNote()
+synti2base::MisssNoteChunk::computeDefaultNote()
 {
   if (size()==0) return -1;
   int def = evt[0].getNote();
@@ -129,7 +130,7 @@ synti2::MisssNoteChunk::computeDefaultNote()
 }
 
 int
-synti2::MisssNoteChunk::computeDefaultVelocity()
+synti2base::MisssNoteChunk::computeDefaultVelocity()
 {
   if (size()==0) return -1;
   int def = evt[0].getVelocity();
@@ -141,7 +142,7 @@ synti2::MisssNoteChunk::computeDefaultVelocity()
 
 
 bool
-synti2::MisssNoteChunk::acceptEvent(unsigned int t, MisssEvent &ev)
+synti2base::MisssNoteChunk::acceptEvent(unsigned int t, MisssEvent &ev)
 {
   if (!ev.isNote()) return false;
   if (!voiceMatch(ev)) return false;
@@ -154,7 +155,7 @@ synti2::MisssNoteChunk::acceptEvent(unsigned int t, MisssEvent &ev)
 }
 
 void 
-synti2::MisssRampChunk::do_write_header_as_c(std::ostream &outs)
+synti2base::MisssRampChunk::do_write_header_as_c(std::ostream &outs)
 {
   MisssChunk::do_write_header_as_c(outs);
   fmt_comment(outs, "Type"); outs << "MISSS_LAYER_CONTROLLER_RAMPS";
@@ -166,7 +167,7 @@ synti2::MisssRampChunk::do_write_header_as_c(std::ostream &outs)
 }
 
 void
-synti2::MisssRampChunk::do_write_data_as_c(std::ostream &outs)
+synti2base::MisssRampChunk::do_write_data_as_c(std::ostream &outs)
 {
   outs << "/* delta and info : */ " << std::endl;
   unsigned int prev_tick=0;
@@ -187,7 +188,7 @@ synti2::MisssRampChunk::do_write_data_as_c(std::ostream &outs)
 }
 
 void 
-synti2::MisssRampChunk::optimize(std::vector<MisssChunk*> &extra, double ticklen)
+synti2base::MisssRampChunk::optimize(std::vector<MisssChunk*> &extra, double ticklen)
 {
   /* Idea: Ramp ends will be: extreme values where they occur, and
      heuristic "ends of continuous tweaks" elsewhere. Other events
@@ -266,7 +267,7 @@ synti2::MisssRampChunk::optimize(std::vector<MisssChunk*> &extra, double ticklen
 }
 
 bool
-synti2::MisssRampChunk::acceptEvent(unsigned int t, MisssEvent &ev)
+synti2base::MisssRampChunk::acceptEvent(unsigned int t, MisssEvent &ev)
 {
   if (!ev.isRamp()) return false;
   if (!voiceMatch(ev)) return false;
@@ -284,7 +285,7 @@ synti2::MisssRampChunk::acceptEvent(unsigned int t, MisssEvent &ev)
 
 
 
-synti2::MisssSong::MisssSong(MidiSong &midi_song, 
+synti2base::MisssSong::MisssSong(MidiSong &midi_song, 
                      MidiMap &mapper, 
                      std::istream &spec)
 {
@@ -294,21 +295,21 @@ synti2::MisssSong::MisssSong(MidiSong &midi_song,
 }
 
 void 
-synti2::MisssSong::figure_out_tempo_from_midi(MidiSong &midi_song){
+synti2base::MisssSong::figure_out_tempo_from_midi(MidiSong &midi_song){
   ticks_per_quarter = midi_song.getTPQ();
   usec_per_quarter = midi_song.getMSPQ();
 }
 
 void
-synti2::MisssSong::build_chunks_from_spec(std::istream &spec)
+synti2base::MisssSong::build_chunks_from_spec(std::istream &spec)
 {
-  for (int i=0; i<NPARTS; i++){
+  for (int i=0; i<NUM_MAX_CHANNELS; i++){
     /* note ons: */
     chunks.push_back(new MisssNoteChunk(i, 1, 127));
     /* note offs: */
     chunks.push_back(new MisssNoteChunk(i, 0, 0));
     /* modulators: */
-    for (int im=0;im<NCONTROLLERS; im++){
+    for (int im=0;im<NUM_MAX_MODULATORS; im++){
       chunks.push_back(new MisssRampChunk(i, im));
     }
   }
@@ -325,7 +326,7 @@ synti2::MisssSong::build_chunks_from_spec(std::istream &spec)
 
 
 void
-synti2::MisssSong::translated_grab_from_midi(
+synti2base::MisssSong::translated_grab_from_midi(
       MidiSong &midi_song, 
       MidiMap &mapper)
 {
@@ -364,7 +365,7 @@ synti2::MisssSong::translated_grab_from_midi(
 
 
 void
-synti2::MisssSong::write_as_c(std::ostream &outs){
+synti2base::MisssSong::write_as_c(std::ostream &outs){
   outs << "/*Song data generated by MisssSong */" << std::endl;
   outs << "#include \"synti2_misss.h\"" << std::endl;
 

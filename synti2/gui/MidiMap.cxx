@@ -1,33 +1,12 @@
 #include "MidiMap.hpp"
 #include "midihelper.hpp"
 #include "synti2_misss.h"
-#include "synti2_cap_full.h"
+#include "synti2_limits.h"
 #include "synti2_midi.h"
 #include "synti2_midi_guts.h"
 
 #include <sstream>
 #include <cstring>
-
-synti2base::MisssEvent::MisssEvent(const unsigned char *misssbuf){
-  type = *misssbuf++;
-  voice = *misssbuf++;
-  par1 = *misssbuf++;
-  if (type==MISSS_MSG_NOTE){
-    par2 = *misssbuf++;
-  } else if (type==MISSS_MSG_RAMP) {
-    time = *((float*)misssbuf);
-    misssbuf += sizeof(float);
-    target = *((float*)misssbuf);
-    misssbuf += sizeof(float);
-  }
-
-  /*std::cout << "MISSS-" << type << " on voice " << voice
-    << " par1=" << par1;
-  if (type==MISSS_MSG_NOTE) std::cout << " vel= " << par2 << std::endl;
-  else std::cout << "time=" << time << " tgt=" << target<< std::endl;
-  */
-}
-
 
 static
 std::vector<unsigned char>

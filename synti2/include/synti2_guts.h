@@ -7,25 +7,19 @@
 /* More or less architecture dependent values: */
 #include "synti2_archdep.h"
 
+/* Universally constant values: */
+#include "synti2_limits.h"
+
 /* The following will be custom configurable for the 4k target: */
 #ifdef COMPOSE_MODE
 #include "synti2_cap_full.h"
-/* separate parameters? Not really necessary? */
-#endif
-
-#ifdef ULTRASMALL
-#include "synti2_cap.h"
-#include "synti2_params.h"
-/* FIXME: TBD: 
+#else
 #include "synti2_cap_custom.h"
-#include "synti2_par_custom.h"
- */
 #endif
 
 #ifdef USE_MIDI_INPUT
 #include "synti2_midi.h"
 #include "synti2_midi_guts.h"
-
 #endif
 
 #ifdef FEAT_EXTRA_WAVETABLES
@@ -119,7 +113,7 @@ struct synti2_player {
 /** The synthesizer patch. The way things sound. */
 typedef struct synti2_patch {
   float fpar[NUM_FPARS];
-  int ipar3[NUM_IPARS];
+  int ipar3[NUM_IPARS + 1]; /* Room for odd number of pars. */
 } synti2_patch;
 
 /** Call it voice. (TODO: rename everywhere) It could be channel,

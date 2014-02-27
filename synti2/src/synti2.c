@@ -267,7 +267,7 @@ synti2_init(synti2_synth * s,
   float t;
   float deltaf;
   
-  memset(s, 0, sizeof(s));     /* zero */
+  memset(s, 0, sizeof(synti2_synth));     /* zero */
   
   /* Initialize the player module. (Not much to be done...) */
   s->sr = sr;

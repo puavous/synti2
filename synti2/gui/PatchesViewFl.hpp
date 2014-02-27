@@ -17,7 +17,7 @@ namespace synti2gui {
         std::string key;
         PatchBank *pb_;
 
-        /* A fancy color scheme. */
+        /* A fancy color scheme. (Non-static initializer requires C++11)*/
         Fl_Color colortab[20] = {
             Fl_Color(246), Fl_Color(254), Fl_Color(241), Fl_Color(254),
             Fl_Color(247), Fl_Color(255), Fl_Color(242), Fl_Color(253),

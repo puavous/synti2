@@ -8,7 +8,7 @@
 
 #include "synti2_midi_guts.h"
 #include "synti2_misss.h"
-//#include "misssevent.hpp"
+#include "misssevent.hpp"
 #include "miditool.hpp"
 #include "Synti2Base.hpp"
 #include <iostream>
@@ -16,43 +16,6 @@
 
 namespace synti2base
 {
-
-  /** Misss event is the message type used internally by Synti2. There
-      are two kinds of messages:
-
-      - note on
-
-      - controller ramp. // Think about subclassing here!
-  */
-  class MisssEvent{
-    /* FIXME: Proper interface and so on..  */
-  private:
-    int type;   /* MisssEvent is either a note or a ramp.. */
-    int voice;  /* Always on a voice. */
-    int par1;   /* Always one param*/
-    int par2;   /* In notes also velocity. */
-    float time; /* In ramps time and target value*/
-    float target; /* In ramps time and target value*/
-  public:
-    MisssEvent(const unsigned char *misssbuf);
-    MisssEvent(int itype, int ivoic,
-               int imod, float itime, float itarget){
-      type = itype; voice = ivoic; par1 = imod; time = itime;
-      target = itarget; /* No huhhuh. */
-    };
-    bool isNote() {return type == MISSS_MSG_NOTE;}
-    bool isRamp() {return type == MISSS_MSG_RAMP;}
-    int getVoice() {return voice;}
-    int getNote() {return par1;}
-    int getVelocity() {return par2;}
-
-    int getMod() {return par1;}
-    float getTime() {return time;}
-    float getTarget() {return target;}
-    //print(std::ostream os);
-  };
-
-
   class MidiMap{
   private:
     /* We wrap the whole thingy here: */

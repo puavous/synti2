@@ -22,6 +22,7 @@ GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/MidiMap.hpp gui/MidiMap.cxx \
           gui/midihelper.hpp gui/midihelper.cxx \
           gui/miditool.hpp gui/miditool.cxx \
+	  gui/misss.hpp gui/misss.cxx gui/misssevent.hpp \
 	  include/synti2_midi.h src/synti2_midi.c \
           gui/main.cxx
 
@@ -77,6 +78,7 @@ TINYFILES = src/synti2.c \
 	     include/synti2_guts.h \
 	     include/synti2_misss.h \
 	     include/synti2_archdep.h \
+	     include/synti2_limits.h \
 	     tests/tinymaker.makefile \
 	     example/selfextr.stub \
 
@@ -85,6 +87,15 @@ JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c incl
 
 # These are additionally needed for off-line rendering:
 DUMPERFILES =  example/file_writer_main.c
+
+
+# Instanssi 2014 4k entry:
+# Specifics needed are song, sounds, and gfx:
+I14FILES = example/i14_4k/i14_4k.mid \
+	   example/i14_4k/i14_4k.s2bank \
+	   example/i14_4k/render.c \
+	   example/i14_4k/shaders.c \
+	   example/glfuncs.c
 
 
 # Assembly Summer 13 4k entry:
@@ -157,8 +168,8 @@ i13tiny:
 
 # A more final attempt for 4k stand-alone
 hack3:
-	make tiny3 CUSTOMFILES="$(A13FILES)"
-	cd hackpack3; make vis2
+	make tiny3 CUSTOMFILES="$(I14FILES)"
+	cd hackpack3; make all
 	mv hackpack3/vis2 ./jacksynti2
 
 
@@ -167,14 +178,12 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	mkdir hackpack3
 	cp $(filter %.c %.h %.dat, $^) hackpack3/
 	cat tests/tinymaker3.makefile >> hackpack3/Makefile
-#	cp example/selfextr.stub hackpack3/
+	cp example/selfextr.stub hackpack3/
 	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
 		< $(filter %shaders.c, $^) > hackpack3/shaders.c
-#	./cltool capheader $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/synti2_cap.h
-#	./cltool patchdesign $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/patchdes.dat
-#	./cltool parheader hackpack2/patchdes.dat > hackpack3/synti2_params.h
-#	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack3/patchdes.dat > hackpack3/patchdata.c
-#	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack3/songdata.c
+	./synti2gui --write-caps $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/synti2_cap_custom.h
+	./synti2gui --write-patches $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/patchdata.c
+	./synti2gui --write-song $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/songdata.c
 
 #For the visualization only:
 	cp include/synti2_midi.h hackpack3/

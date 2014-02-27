@@ -50,29 +50,7 @@ namespace synti2gui {
     /** Updates widgets to current values of the current patch. Works on
      *  global data.
      */
-    void reloadWidgetValues()
-    {
-            for(int ic=0; ic<16; ic++)
-            {
-                widg_cmode.at(ic)->value(midimap->getMode(ic));
-                widg_cvoices.at(ic)->value(midimap->getVoicesString(ic).c_str());
-                widg_cvelo.at(ic)->value(midimap->getFixedVelo(ic));
-                widg_hold.at(ic)->value(midimap->getSust(ic));
-                widg_bend.at(ic)->value(midimap->getBendDest(ic));
-                widg_pres.at(ic)->value(midimap->getPressureDest(ic));
-                widg_noff.at(ic)->value(midimap->getNoff(ic));
-                for (int imod=0; imod<NUM_MAX_MODULATORS; imod++)
-                {
-                    widg_modsrc.at(ic*NUM_MAX_MODULATORS + imod)->value(midimap->getModSource(ic,imod));
-                    widg_modmin.at(ic*NUM_MAX_MODULATORS + imod)->value(midimap->getModMin(ic,imod));
-                    widg_modmax.at(ic*NUM_MAX_MODULATORS + imod)->value(midimap->getModMax(ic,imod));
-                }
-                for (int ikey=0; ikey<128; ikey++)
-                {
-                    widg_keysingle.at(ic*128 + ikey)->value(midimap->getKeyMap(ic,ikey));
-                }
-            }
-    }
+    void reloadWidgetValues();
 
     public:
     static void refreshViewFromData(void *me){

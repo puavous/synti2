@@ -3,7 +3,7 @@
 
 #include "synti2_misss.h"
 
-namespace synti2{
+namespace synti2base{
 
   /** Misss event is the message type used internally by Synti2. There
       are two kinds of messages:

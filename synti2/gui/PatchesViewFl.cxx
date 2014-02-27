@@ -210,7 +210,7 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
   }
 
   py=100; w=85; h=15;
-  int npars = pb->getFEnd(activePatch) - pb->getFBegin(activePatch);
+  //int npars = pb->getFEnd(activePatch) - pb->getFBegin(activePatch);
   //int nrows = (npars / ncols) + 1;
   ncols = 4;col=0,row=0;
 

@@ -4,9 +4,9 @@
 #include <iostream>
 #include "misssevent.hpp"
 #include "miditool.hpp"
-#include "midimaptool.hpp"
+#include "MidiMap.hpp"
 
-namespace synti2{
+namespace synti2base{
 
   /** 
    * A Misss chunk is a container for "distilled" and "pre-ordered"

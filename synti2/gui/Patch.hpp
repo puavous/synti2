@@ -135,12 +135,17 @@ using namespace synti2base;
         }
     }
 
+    /** Returns value by the key, or 0.0 if key not found.*/
     float getValue(std::string const &key) {
-        if (i4pars.find(key) != i4pars.end()){
-            return(i4pars[key].getValue());
-        } else if (fpars.find(key) != fpars.end()){
-           return(fpars[key].getValue());
-         }
+      if (i4pars.find(key) != i4pars.end()){
+        return(i4pars[key].getValue());
+      } else if (fpars.find(key) != fpars.end()){
+        return(fpars[key].getValue());
+      } else {
+        std::cerr << "Return 0.0 for unknown parameter key: "
+                  << key << std::endl;
+        return 0.f;
+      }
     }
 
     string const & getName() const {

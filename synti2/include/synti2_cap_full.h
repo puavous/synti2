@@ -201,15 +201,8 @@
 
 #define NUM_FPARS 110
 
-/* FIXME: These need to be written somewhere: */
+/* Constants that may depend on custom values: */
 #define ENV_TRIGGER_STAGE (NUM_ENV_KNEES + 1)
 #define ENV_RELEASE_STAGE 2
 #define ENV_LOOP_STAGE 1
 #define NUM_ENV_DATA (NUM_ENV_KNEES*2)
-#define NUM_MAX_OPERATORS 6
-#define NUM_MAX_MODULATORS 4
-#define NUM_MAX_CHANNELS 256
-
-#define SYNTI2_DELAYSAMPLES 0x10000
-#define SYNTI2_MAX_SONGBYTES 30000
-#define SYNTI2_MAX_SONGEVENTS 15000

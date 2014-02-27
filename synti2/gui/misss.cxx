@@ -341,8 +341,10 @@ synti2base::MisssSong::translated_grab_from_midi(
       if (!(ev.isNote() || ev.isCC() || ev.isBend())) continue;
       //ev.print(std::cout);
       //std::cout << "Tick " << t << " " << chunks.size() << " ... ";
+
       std::vector<MisssEvent> mev = mapper.midiToMisss(ev);
       //std::cout << "Translated to " << mev.size() << " MISSS events" << std::endl;
+
       for(size_t ie=0;ie<mev.size();ie++){
         for(unsigned int c=0; c<chunks.size(); c++){
           if (chunks[c]->acceptEvent(t, mev[ie])) {

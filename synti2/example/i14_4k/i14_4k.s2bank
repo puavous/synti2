@@ -1,14 +1,14 @@
 # Output by PatchBank::toStream()
 # The following numeric capacities are selected while editing this bank:
 num_channels 16
-num_delays 5
+num_delays 2
 num_ops 3
 num_envs 5
-num_knees 5
+num_knees 4
 num_mods 4
 --- End capacity description
 # The following on/off features are selected while editing this bank:
- fm add noise pdetune delay squash phase legato pitenv csquash
+ fm add noise pdetune delay squash phase legato pitenv
 --- Mapper section begins ---
 #Mapping of Midi channel 0
 Mode 0

@@ -953,9 +953,10 @@ synti2_render(synti2_synth *s,
 #endif
       
 #ifdef FEAT_FILTER
-      /* Skip for faster computation. Should do the same for delays! 
-         FIXME: maybe #ifdef ULTRASMALL though? */
+#ifndef ULTRASMALL
+      /* Skip for faster computation when not tinifying */
       if(pat->ipar3[IPAR_FILT]) {
+#endif
         voi->filtp[0] = interm;
         
         /* Base frequency as note value from parameter. */
@@ -988,7 +989,10 @@ synti2_render(synti2_synth *s,
         
         apply_filter(s, fenv, renv, voi->filtp);
         interm = voi->filtp[pat->ipar3[IPAR_FILT]]; /*choose output*/
+#ifndef ULTRASMALL
       }
+#endif
+
 #endif
 
 #ifdef FEAT_CHANNEL_SQUASH

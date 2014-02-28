@@ -163,6 +163,7 @@ synti2_player_merge_chunk(synti2_synth *s,
   unsigned int frame, tickdelta, intval;
   const byte_t *par;
   byte_t msg[SYNTI2_MAX_EVDATA];
+  unsigned int prev_note = 0;
   
   chan = *r++;
   type = *r++;
@@ -187,7 +188,15 @@ synti2_player_merge_chunk(synti2_synth *s,
       /* Produce a 'Note on' message in our internal midi-like fmt. */
       msg[0] = MISSS_MSG_NOTE;
       msg[1] = chan;
-      msg[2] = (par[0]==0xff) ? *r++ : par[0];
+      //msg[2] = (par[0]==0xff) ? *r++ : par[0];
+      if (par[0]==0xff){
+        /* Delta encoding by signed 8bit bytes.. */
+        prev_note = prev_note + (*((char*)r++));
+        msg[2] = prev_note;
+      } else {
+        /* Default note. */
+        msg[2] = par[0];
+      }
       msg[3] = (par[1]==0xff) ? *r++ : par[1];
       synti2_player_event_add(s, frame, msg);
     }

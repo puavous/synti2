@@ -97,6 +97,7 @@ synti2base::MisssNoteChunk::do_write_data_as_c(std::ostream &outs)
 {
   outs << "/* delta and info : */ " << std::endl;
   unsigned int prev_tick=0;
+  unsigned int prev_note=0;
   int defnote = computeDefaultNote();
   int defvel = computeDefaultVelocity();
   for (unsigned int i=0; i<tick.size(); i++){
@@ -105,7 +106,10 @@ synti2base::MisssNoteChunk::do_write_data_as_c(std::ostream &outs)
     fmt_varlen(outs, delta);
     outs << ", ";
     if (defnote < 0) {
-      fmt_hexbyte(outs, evt[i].getNote());
+      int this_note = evt[i].getNote();
+      int delta = this_note - prev_note;
+      prev_note = this_note;
+      fmt_hexbyte(outs, delta);
       outs << ", ";
     }
     if (defvel < 0) {

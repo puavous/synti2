@@ -163,7 +163,7 @@ synti2_player_merge_chunk(synti2_synth *s,
   unsigned int frame, tickdelta, intval;
   const byte_t *par;
   byte_t msg[SYNTI2_MAX_EVDATA];
-  unsigned int prev_note = 0;
+  msg[2] = 0;  /* Initialize note value for delta encoding */
   
   chan = *r++;
   type = *r++;
@@ -191,8 +191,7 @@ synti2_player_merge_chunk(synti2_synth *s,
       //msg[2] = (par[0]==0xff) ? *r++ : par[0];
       if (par[0]==0xff){
         /* Delta encoding by signed 8bit bytes.. */
-        prev_note = prev_note + (*((char*)r++));
-        msg[2] = prev_note;
+        msg[2] += (*((char*)r++));
       } else {
         /* Default note. */
         msg[2] = par[0];

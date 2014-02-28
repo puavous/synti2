@@ -60,7 +60,7 @@ VISHACKS =  shaders.c render.c glfuncs.c
 tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o $@.unstripped.payload \
-		-DULTRASMALL -DNO_SAFETY -nostdlib  -nostartfiles -lc \
+		-DULTRASMALL -DNO_FULLSCREEN -nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYSOURCES)) \
 		$(ARCHLIBS)
 

@@ -6,7 +6,10 @@
  *
  * MISSS_SYSEX_x are part of both internal and also *external*
  * specification (directly passed on to the engine in compose mode).
- * Hmm.. that means that they should be in their own header file..
+ * Hmm.. that means that they should be in their own header file?
+ * (Maybe).
+ *
+ * FIXME: Implement the Panic/reset sysex.
  */
 #ifndef MISSS_INCLUDED
 #define MISSS_INCLUDED

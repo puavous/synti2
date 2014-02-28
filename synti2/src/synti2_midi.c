@@ -261,8 +261,6 @@ intercept_const_velocity(synti2_midi_map *map,
   map->chn[ic].use_const_velocity = cvelo;
 }
 
-/* FIXME: Decode is a copy-paste from synti2.c - should refactor maybe*/
-
 /* TODO: This too much of a hack? */
 static
 #include "synti2_fdec.c"

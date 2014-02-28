@@ -179,8 +179,10 @@ synti2_player_merge_chunk(synti2_synth *s,
     frame += s->seq.fpt * tickdelta;
     
     /* FIXME: If modulators are not used, then there's only one kind
-     of chunks. The whole type variable and its check could be
-     ifdeffed.*/
+     * of chunks. The whole type variable and its check could be
+     * ifdeffed away. That would save only 7 bytes in this check, but
+     * perhaps more in the loader and actual song data?
+     */
     if (type == MISSS_LAYER_NOTES){
       /* Produce a 'Note on' message in our internal midi-like fmt. */
       msg[0] = MISSS_MSG_NOTE;

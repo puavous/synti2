@@ -716,14 +716,8 @@ synti2_updateFrequencies(const synti2_synth *s,
 #endif
     
 #ifdef FEAT_PITCH_DETUNE
-    /* Optional detune */
-    notemod += pat->fpar[FPAR_DT1 + iosc];    /* "coarse" */
-#if 0
-    /* FIXME: Remove for good. Likely to be unused:*/
-#ifndef NO_FINE_DETUNE
-    notemod += pat->fpar[FPAR_DT1F + iosc];   /* "fine"   */
-#endif
-#endif
+    /* Optional detune; granularity is .001 half-tones (0.1 cents) */
+    notemod += pat->fpar[FPAR_DT1 + iosc];
 #endif
     
 #ifdef FEAT_PITCH_BEND
@@ -892,11 +886,13 @@ synti2_render(synti2_synth *s,
       for(iosc = NUM_OPERATORS-1; iosc >= 0; iosc--){
         signal--; /* Go to next output slot. */
         wtoffs = (unsigned int)
-          ((voi->c[iosc].fr 
+          ( (voi->c[iosc].fr 
 #ifdef FEAT_APPLY_FM
-            + sigin[pat->ipar3[IPAR_FMTO1+iosc]])  /* phase modulator */
+             + sigin[pat->ipar3[IPAR_FMTO1+iosc]]  /* phase modulator */
 #endif
-           * WAVETABLE_SIZE) & WAVETABLE_BITMASK;
+            )
+           * WAVETABLE_SIZE
+          ) & WAVETABLE_BITMASK;
         
 #ifdef FEAT_EXTRA_WAVETABLES
         interm  = s->wave[pat->ipar3[IPAR_HARM1+iosc]][wtoffs];
@@ -909,6 +905,7 @@ synti2_render(synti2_synth *s,
 #ifdef FEAT_APPLY_ADD
         interm += sigin[pat->ipar3[IPAR_ADDTO1+iosc]]; /* parallel */
 #endif
+        /* FIXME: Are these a good idea? Other functions better?*/
 #ifdef FEAT_POWER_WAVES
         if (pat->ipar3[IPAR_POWR1+iosc] == 2){
           interm *= interm;
@@ -948,7 +945,8 @@ synti2_render(synti2_synth *s,
 #endif
       
 #ifdef FEAT_FILTER
-      /* Skip for faster computation. Should do the same for delays! */
+      /* Skip for faster computation. Should do the same for delays! 
+         FIXME: maybe #ifdef ULTRASMALL though? */
       if(pat->ipar3[IPAR_FILT]) {
         voi->filtp[0] = interm;
         

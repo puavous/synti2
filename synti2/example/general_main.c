@@ -48,6 +48,16 @@
 #include "synti2.h"
 #include "synti2_guts.h"
 
+#ifdef SYNTH_COMPOSE_JACK
+#ifndef WIN32
+#include <unistd.h>
+#endif
+#include <signal.h>
+#include <jack/jack.h>
+#include <jack/midiport.h>
+typedef jack_default_audio_sample_t sample_t;
+#endif
+
 #ifndef SAMPLE_RATE
 #define SAMPLE_RATE 48000
 #endif
@@ -64,6 +74,16 @@
 /* For autodetecting reso: */
 SDL_VideoInfo myVideoInfo;
 SDL_VideoInfo * vid;
+
+#ifdef SYNTH_COMPOSE_JACK
+jack_client_t *client;
+jack_port_t *output_portL;
+jack_port_t *output_portR;
+jack_port_t *inmidi_port;
+unsigned long sr;
+char * client_name = "jacksynti2";
+synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
+#endif
 
 /* I'm dirty enough to just include everything in the same compilation
  * unit. Then I don't have to think about linking and special
@@ -104,7 +124,35 @@ float audiobuf[AUDIO_BUFFER_SIZE];
 synti2_synth global_synth;
 //float synthtime;
 
+#ifdef SYNTH_COMPOSE_JACK
+static void signal_handler(int sig)
+{
+  jack_client_close(client);
+  fprintf(stderr, "signal received, exiting ...\n");
+  exit(0);
+}
 
+static int
+sound_callback_jack (jack_nframes_t nframes, void *arg)
+{
+  int i;
+  sample_t *bufferL = (sample_t*)jack_port_get_buffer(output_portL, nframes);
+  sample_t *bufferR = (sample_t*)jack_port_get_buffer(output_portR, nframes);
+
+  synti2_read_jack_midi(&global_synth, inmidi_port, nframes);
+  synti2_render(&global_synth, global_buffer, nframes); 
+
+  for (i=0;i<nframes;i++){
+    bufferL[i] = global_buffer[2*i];
+#ifdef NO_STEREO
+    bufferR[i] = bufferL[i];
+#else
+    bufferR[i] = global_buffer[2*i+1];
+#endif
+  }
+  return 0;
+}
+#endif
 
 
 /**
@@ -115,7 +163,7 @@ synti2_synth global_synth;
  */
 static 
 void 
-sound_callback(void *udata, Uint8 *stream, int len)
+sound_callback_sdl(void *udata, Uint8 *stream, int len)
 {
   int i;
   float vol = 32767.0f; /* Synti2 waveshaper squashes output to [-1,1] */
@@ -174,14 +222,88 @@ static void printProgramInfoLog(GLuint obj)
     }
 }
 
+#ifdef SYNTH_COMPOSE_JACK
+/** Initialize Jack realtime audio and midi; exit if problems
+ *  occur. 
+ */
+static void init_or_die_jack_audio(){
+  jack_status_t status;
+  /* Initial Jack setup. Open (=create?) a client. */
+  if ((client = jack_client_open (client_name, 
+                                  JackNoStartServer, 
+                                  &status)) == 0) {
+    fprintf (stderr, "jack server not running?\n");
+    exit(1);
+  }
 
+  /* Set up process callback */
+  jack_set_process_callback (client, sound_callback_jack, 0);
+  
+  output_portL = jack_port_register (client, 
+                                     "bportL", 
+                                     JACK_DEFAULT_AUDIO_TYPE, 
+                                     JackPortIsOutput, 
+                                     0);
 
-static void init_or_die(){
+  output_portR = jack_port_register (client, 
+                                     "bportR", 
+                                     JACK_DEFAULT_AUDIO_TYPE, 
+                                     JackPortIsOutput, 
+                                     0);
+
+  inmidi_port = jack_port_register (client, 
+                                    "iportti", 
+                                    JACK_DEFAULT_MIDI_TYPE, 
+                                    JackPortIsInput, 
+                                    0);
+
+  sr = jack_get_sample_rate (client);
+
+  /* My own soft synth to be created. */
+#ifdef DO_INCLUDE_PATCH_AND_SONG
+  synti2_init(&global_synth, sr, patch_sysex, hacksong_data);
+#else
+  synti2_init(&global_synth, sr, NULL, NULL);
+#endif
+
+  /* Now we activate our new client. */
+  if (jack_activate (client)) {
+    fprintf (stderr, "cannot activate client\n");
+    exit(1);
+  }
+  
+  /* install a signal handler to properly quit jack client */
+#ifdef WIN32
+  signal(SIGINT, signal_handler);
+  signal(SIGABRT, signal_handler);
+  signal(SIGTERM, signal_handler);
+#else
+  signal(SIGQUIT, signal_handler);
+  signal(SIGTERM, signal_handler);
+  signal(SIGHUP, signal_handler);
+  signal(SIGINT, signal_handler);
+#endif
+
+}
+#endif
+
+static void ini_or_die_sdl_audio(){
+}
+
+/** Initialize SDL video and audio, or exit if problems occur. */
+static void init_or_die_sdl(){
   SDL_AudioSpec aud;
   int i;
   
   /* Do some SDL init stuff.. */
+#ifdef SYNTH_PLAYBACK_SDL
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
+#elif SYNTH_COMPOSE_JACK
+  SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
+#else
+#error Where should I output sound??
+#endif
+
   
   for(i=0; i<NUMFUNCTIONS;i++)
     {
@@ -233,7 +355,7 @@ static void init_or_die(){
   aud.format   = AUDIO_S16SYS;
   aud.channels = 2;
   aud.samples  = AUDIO_BUFFER_SIZE/2;  /* "samples" means frames */
-  aud.callback = sound_callback;
+  aud.callback = sound_callback_sdl;
   /*aud.userdata = NULL;*/
   /* My data is global, so userdata reference is not used */
   
@@ -247,7 +369,9 @@ static void init_or_die(){
   SDL_OpenAudio(&aud, NULL);  /* Would return <0 upon failure.*/
 #endif
 
+#ifdef SYNTH_PLAYBACK_SDL
   synti2_init(&global_synth, SAMPLE_RATE, patch_sysex, hacksong_data);
+#endif
     
   /* Ok.. These need to be done after SDL is initialized: */
   pid = oglCreateProgram();
@@ -273,9 +397,15 @@ static void init_or_die(){
 static void main2(){
   SDL_Event event;
     
-  init_or_die();
+  init_or_die_sdl();
+
+#ifdef SYNTH_COMPOSE_JACK
+  init_or_die_jack_audio();
+#endif
   
+#ifdef SYNTH_PLAYBACK_SDL
   SDL_PauseAudio(0); /* Start audio after inits are done.. */
+#endif
   
   do {
     render_w_shaders(&global_synth,ar);
@@ -286,8 +416,12 @@ static void main2(){
     SDL_PollEvent(&event);
   } while ((event.type!=SDL_KEYDOWN)); // && (synthtime <78.0f));
   
+#ifdef SYNTH_PLAYBACK_SDL
 #ifndef ULTRASMALL
   SDL_CloseAudio();  /* This evil? Call to SDL_Quit() sufficient? */
+#endif
+#elif SYNTH_COMPOSE_JACK
+  jack_client_close(client);
 #endif
   
   SDL_Quit();  /* This must happen. Otherwise problems with exit! */

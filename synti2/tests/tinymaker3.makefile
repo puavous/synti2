@@ -43,7 +43,7 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 SSTRIP = sstrip
 
 # These are required for the compilation:
-JACKSOURCES = jack_shader_main.c synti2.c synti2_jack.c synti2_midi.c
+JACKSOURCES = general_main.c synti2_jack.c synti2_midi.c
 WRITERSOURCES = file_writer_main.c synti2.c 
 TINYSOURCES = general_main.c synti2.c
 TINYHEADERS = synti2_archdep.h synti2_limits.h synti2_cap_custom.h  synti2_guts.h  synti2.h  synti2_misss.h
@@ -60,7 +60,9 @@ VISHACKS =  shaders.c render.c glfuncs.c
 tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(HCFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o $@.unstripped.payload \
-		-DULTRASMALL -DNO_FULLSCREEN -nostdlib  -nostartfiles -lc \
+		-DULTRASMALL \
+		-DSYNTH_PLAYBACK_SDL \
+		-nostdlib  -nostartfiles -lc \
 		$(filter %.c, $(TINYSOURCES)) \
 		$(ARCHLIBS)
 
@@ -86,7 +88,8 @@ vis2: $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
 	$(CC) $(CFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o $@ \
 		-DCOMPOSE_MODE \
-                -DJACK_MIDI -DNO_FULLSCREEN \
+                -DJACK_MIDI \
+		-DSYNTH_COMPOSE_JACK \
 		$(filter %.c, $(JACKSOURCES)) \
 		`pkg-config --cflags --libs jack` \
 		$(ARCHLIBS) -lGLU

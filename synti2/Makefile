@@ -47,10 +47,10 @@ TINYFILES =  src/synti2.c \
 	     example/selfextr.stub 
 
 # These are additionally needed for compose-time with jack engine:
-JACKFILES =  example/jack_shader_main.c src/synti2_jack.c src/synti2_midi.c include/synti2_cap_full.h
+JACKFILES =  src/synti2_jack.c src/synti2_midi.c include/synti2_cap_full.h
 
 # These are additionally needed for off-line rendering:
-DUMPERFILES =  example/file_writer_main.c
+DUMPERFILES = 
 
 # Instanssi 2014 4k entry:
 # Specifics needed are song, sounds, and gfx:

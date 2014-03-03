@@ -160,7 +160,10 @@ synti2_player_merge_chunk(synti2_synth *s,
 {
   char chan, type;
   int ii;
-  unsigned int frame, tickdelta, intval;
+  unsigned int frame, tickdelta;
+#ifdef FEAT_MODULATORS
+  unsigned int intval;
+#endif
   const byte_t *par;
   byte_t msg[SYNTI2_MAX_EVDATA];
   msg[2] = 0;  /* Initialize note value for delta encoding */
@@ -273,7 +276,10 @@ synti2_init(synti2_synth * s,
             const byte_t * patchdata, 
             const byte_t * songdata)
 {
-  int ii, wt;
+  int ii;
+#ifdef FEAT_EXTRA_WAVETABLES
+  int wt;
+#endif
   float t;
   float deltaf;
   

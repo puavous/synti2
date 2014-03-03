@@ -50,6 +50,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include "GL/glew.h"
 #include "GL/gl.h"
 #include "GL/glx.h"
 #include "SDL/SDL.h"
@@ -201,28 +202,28 @@ sound_callback_sdl(void *udata, Uint8 *stream, int len)
 #ifdef DUMP_FRAMES_AND_SNDFILE
 static void write_image(int n, int w, int h, unsigned char *data){
   char fname[80];
-  int i,j;
+  int i;
+  FILE *ff;
   sprintf(fname, "frame_%05d.ppm", n);
-  FILE *ff = fopen(fname, "w");
+  ff = fopen(fname, "w");
   fprintf(ff, "P6\n");
   fprintf(ff, "%d %d %d\n",w,h,255);
   /* Lines in reverse order: */
   for(i=h-1;i>=0;i--){
     fwrite(&data[(3*i*w)],3,w,ff);
-    /*    for(j=0;j<w;j++){
-      fprintf(ff, "%d %d %d ", data[(3*i*w+j)+0],data[(3*i*w+j)+1],data[(3*i*w+j)+2]);
-      } fprintf(ff, "\n");*/
   }
   fclose(ff);
 }
 
 static void grab_frame(){
-  unsigned char data[3*(int)(ar*window_h*window_h)];
   static int n=0;
+  unsigned char *data;
+  data = malloc(3*(int)(ar*window_h*window_h));
+  /*unsigned char data[3*(int)(ar*window_h*window_h)];*/
   n++;
-  //if ((n % 50) != 0) return; /*grab a frame */
   glReadPixels(0,0,ar*window_h,window_h,GL_RGB,GL_UNSIGNED_BYTE,data);
   write_image(n, ar*window_h, window_h, data);
+  free(data);
 }
 
 #endif
@@ -330,12 +331,23 @@ static void init_or_die_jack_audio(){
 }
 #endif
 
-static void ini_or_die_sdl_audio(){
+#ifdef SYNTH_PLAYBACK_SDL
+static void init_or_die_sdl_audio(SDL_AudioSpec *aud){
+  aud->freq     = SAMPLE_RATE;
+  aud->format   = AUDIO_S16SYS;
+  aud->channels = 2;
+  aud->samples  = AUDIO_BUFFER_SIZE/2;  /* "samples" means frames */
+  aud->callback = sound_callback_sdl;
+  /* aud->userdata = NULL; */
+  /* My data is global, so userdata reference is not used */
 }
+#endif
 
 /** Initialize SDL video and audio, or exit if problems occur. */
 static void init_or_die_sdl(){
+#if SYNTH_PLAYBACK_SDL
   SDL_AudioSpec aud;
+#endif
   int i;
   
   /* Do some SDL init stuff.. */
@@ -350,7 +362,7 @@ static void init_or_die_sdl(){
   
   for(i=0; i<NUMFUNCTIONS;i++)
     {
-      myglfunc[i] = glXGetProcAddress( (const unsigned char *)strs[i] );
+      myglfunc[i] = (func_t*) glXGetProcAddress( (const unsigned char *)strs[i] );
       
 #ifdef NEED_DEBUG
       printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
@@ -394,16 +406,9 @@ static void init_or_die_sdl(){
   SDL_ShowCursor(SDL_DISABLE);
   
   /* They say that OpenAudio needs to be called after video init. */
-  aud.freq     = SAMPLE_RATE;
-  aud.format   = AUDIO_S16SYS;
-  aud.channels = 2;
-  aud.samples  = AUDIO_BUFFER_SIZE/2;  /* "samples" means frames */
-  aud.callback = sound_callback_sdl;
-  /*aud.userdata = NULL;*/
-  /* My data is global, so userdata reference is not used */
-  
 #ifdef SYNTH_PLAYBACK_SDL
   /* NULL 2nd param makes SDL automatically convert btw formats. Nice! */
+  init_or_die_sdl_audio(&aud);
 #ifndef ULTRASMALL
   if (SDL_OpenAudio(&aud, NULL) < 0) {
     printf("SDL_OpenAudio failed: %s\n", SDL_GetError());
@@ -456,7 +461,7 @@ init_or_die_libsndfile(){
 }
 static void
 dump_audio_for_one_frame(){
-  int s;
+  size_t s;
   synti2_render(&global_synth, 
                 audiobuf, spf);
   /* Mono dup. */

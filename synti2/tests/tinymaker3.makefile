@@ -3,17 +3,14 @@
 # really need is a robust and neat way to generate a stand-alone
 # source package... No time to think about this right now, though.
 
-# The HCFLAGS (as in "hardcore") are for making a very small executable.
-# I used to get a crash in PulseAudio due to misaligned stack (pa uses
-# vector registers and those instructions require 16 byte alignment). 
-# I hope my current init replacement will be enough...
+# The HCFLAGS (as in "hardcore") are for making a very small
+# executable.
 HCFLAGS = -Os -mfpmath=387 -funsafe-math-optimizations -fwhole-program \
 	-Wall -Wextra -pedantic \
 	$(NONOS)
 
-# With these, the dependency of libm could be lifted (just a few bytes gained, though):
-#  -mfpmath=387 -funsafe-math-optimizations
-
+# With these, the dependency of libm could be lifted (just a few bytes
+# gained, though): -mfpmath=387 -funsafe-math-optimizations
 
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
@@ -21,11 +18,7 @@ CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 ARCHFLAGS = `sdl-config --cflags`
 ARCHLIBS = `sdl-config --libs` -lGL -lm
 
-# For linking against 32-bit libraries (approx. 5% smaller packed exe):
-# On my Fedora 16, as of now, the 32 bit SDL fails to init audio
-# (according to the error message, there is no available device). This
-# worked fine on Fedora 14, so I sort of think this is an issue in the
-# current version of SDL.i686)
+# For linking against 32-bit libraries (ca 5% smaller packed exe):
 #ARCHFLAGS = -m32 -DNO_I64 `sdl-config --cflags` 
 #ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
 
@@ -37,15 +30,16 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 
 # I'm taking away all I can so that the executable still works...
 # This must not be taken away: .gnu.hash (Seems to work on the build
-# system, but not others.. need to study the elf business a bit. See
-# how --hash-style= option affects this)
+# system, but not others.. need to study the elf business a bit. TODO:
+# See if the --hash-style= option affects this)
 
 SSTRIP = sstrip
 
 # These are required for the compilation:
-JACKSOURCES = general_main.c synti2_jack.c synti2_midi.c
-WRITERSOURCES = general_main.c 
-TINYSOURCES = general_main.c synti2.c
+MAINFILE = general_main.c
+JACKSOURCES = synti2_jack.c synti2_midi.c
+WRITERSOURCES = 
+TINYSOURCES = 
 TINYHEADERS = synti2_archdep.h synti2_limits.h synti2_cap_custom.h  synti2_guts.h  synti2.h  synti2_misss.h
 VISHEADERS = synti2_archdep.h  synti2_cap_full.h  synti2_guts.h  synti2.h  synti2_misss.h
 TINYHACKS = shaders.c render.c glfuncs.c patchdata.c songdata.c 
@@ -63,7 +57,7 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-DULTRASMALL \
 		-DSYNTH_PLAYBACK_SDL \
 		-nostdlib  -nostartfiles -lc \
-		$(filter %.c, $(TINYSOURCES)) \
+		$(MAINFILE) \
 		$(ARCHLIBS)
 
 	cp $@.unstripped.payload $@.payload 
@@ -82,33 +76,27 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	@echo End result:
 	@ls -lt $@
 
-#		-I../include \
+
 #The "no-nos" are used here, too, now(!):
-vis2: $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
+vis2: $(MAINFILE) $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
 	$(CC) $(CFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
 		-o $@ \
 		-DCOMPOSE_MODE \
                 -DJACK_MIDI \
 		-DSYNTH_COMPOSE_JACK \
-		$(filter %.c, $(JACKSOURCES)) \
+		$(MAINFILE) $(filter %.c, $(JACKSOURCES)) \
 		`pkg-config --cflags --libs jack` \
 		$(ARCHLIBS) -lGLU
 
-	@echo End result:
-	@ls -lt $@
-
 #The "no-nos" are used here, too, now(!):
 writ2: $(WRITERSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) $(CFLAGS) $(ARCHFLAGS) $(ADDFLAGS) \
-		-o $@ -DDUMP_FRAMES_AND_SNDFILE -DPLAYBACK_DURATION=10.f\
-		$(NONOS) \
-		$(filter %.c, $(WRITERSOURCES)) \
+	$(CC) $(CFLAGS) $(NONOS) $(ARCHFLAGS) $(ADDFLAGS) \
+		-o $@ \
+		-DDUMP_FRAMES_AND_SNDFILE \
+		-DPLAYBACK_DURATION=10.f \
+		$(MAINFILE) \
 		`pkg-config --cflags --libs jack` \
 		`sdl-config --cflags --libs` -lm -lGL -lGLU \
 		-lsndfile
 
-	@echo End result:
-	@ls -lt $@
-
-
-all: vis2 tiny2
+all: vis2 tiny2 writ2

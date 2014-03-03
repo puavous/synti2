@@ -153,6 +153,10 @@ rsp is the most crucial thing. But the bp reset could also be nice.
    0x0000000000400e04 <+36>:	callq  0x400c50 <__libc_start_main@plt>
  */
 
+# I used to get a crash in PulseAudio due to misaligned stack (pa uses
+# vector registers and those instructions require 16 byte alignment). 
+# I hope my current init replacement will be enough...
+
 
 
 About to be done.. 

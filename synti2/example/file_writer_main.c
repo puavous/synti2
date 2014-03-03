@@ -4,6 +4,9 @@
 
      for f in frame_000{00..19}.ppm; do cp frame_00020.ppm $f; done
      for f in *.ppm; do echo $f; convert $f -quality 90 `basename $f .ppm`.jpg; done
+     ffmpeg -r 50 -i frame_%05d.jpg -i audio.wav -strict -2 test1800.mp4
+
+   This didn't work out-of-the-box after I upgraded to Fedora 20..
      mencoder 'mf://*.jpg' -oac mp3lame -audiofile audio.wav -mf fps=50 -o output.mp4 -ovc x264
 
    (mencoder dislikes the first 20-or-so frames, maybe because they

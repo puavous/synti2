@@ -24,7 +24,7 @@ static void render_scene(const synti2_synth *s){
 
   state[0] = synthtime;
 
-#ifndef NO_FULLSCREEN
+#ifdef FULLSCREEN
   state[1] = vid->current_w; /* global struc now */
   state[2] = vid->current_h; /* global struc now */
 #else

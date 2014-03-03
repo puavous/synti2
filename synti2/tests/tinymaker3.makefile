@@ -44,7 +44,7 @@ SSTRIP = sstrip
 
 # These are required for the compilation:
 JACKSOURCES = general_main.c synti2_jack.c synti2_midi.c
-WRITERSOURCES = file_writer_main.c synti2.c 
+WRITERSOURCES = general_main.c 
 TINYSOURCES = general_main.c synti2.c
 TINYHEADERS = synti2_archdep.h synti2_limits.h synti2_cap_custom.h  synti2_guts.h  synti2.h  synti2_misss.h
 VISHEADERS = synti2_archdep.h  synti2_cap_full.h  synti2_guts.h  synti2.h  synti2_misss.h
@@ -71,8 +71,8 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
 	$(SSTRIP) $@.payload
 
-#	7za a -tgzip -mx=9 $@.payload.gz $@.payload
-	zopfli --i1000 $@.payload
+	7za a -tgzip -mx=9 $@.payload.gz $@.payload
+#	zopfli --i1000 $@.payload
 	mv $@.payload.gz tmp.gz
 	cat selfextr.stub tmp.gz > $@
 	rm tmp.gz
@@ -100,7 +100,7 @@ vis2: $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
 #The "no-nos" are used here, too, now(!):
 writ2: $(WRITERSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(CFLAGS) $(ARCHFLAGS) $(ADDFLAGS) \
-		-o $@ -DNO_DEFAULT_CAPS \
+		-o $@ -DDUMP_FRAMES_AND_SNDFILE -DPLAYBACK_DURATION=10.f\
 		$(NONOS) \
 		$(filter %.c, $(WRITERSOURCES)) \
 		`pkg-config --cflags --libs jack` \

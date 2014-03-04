@@ -317,6 +317,8 @@ synti2_init(synti2_synth * s,
    * a bigger table here and let the pitch envelopes go beyond the
    * beyond!
    *
+   * TODO: C0 is now 8.1758Hz; smaller code with some other tuning?
+   *
    * Notes: The iterative multiplication produces slightly inaccurate
    * notes but without powf(). Many bytes shorter exe. My ears find
    * the result very tolerable; I don't know about others... Compute

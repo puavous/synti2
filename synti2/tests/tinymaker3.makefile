@@ -46,8 +46,8 @@ TINYHACKS = shaders.c render.c glfuncs.c patchdata.c songdata.c
 VISHACKS =  shaders.c render.c glfuncs.c
 
 # Just for looking at the machine code being produced by gcc
-#synti2.asm.annotated: $(S2SOURCES) $(S2HEADERS)
-#	$(CC) $(HCFLAGS) -Iinclude -S -fverbose-asm -g src/synti2.c
+#synti2.asm.annotated: synti2.c
+#	$(CC) $(HCFLAGS) -S -fverbose-asm -g synti2.c
 #	as -alhnd synti2.s > $@
 
 

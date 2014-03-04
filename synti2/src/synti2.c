@@ -456,11 +456,16 @@ synti2_fill_patches_from(synti2_synth *s, const unsigned char *data)
   
   for(ipat=0; *data != 0xf7; ipat++){
     pat = &(s->voi[ipat].patch);
+#if 0
     for(ir=0;ir<NUM_IPARS; ir+=2){
       pat->ipar3[ir] = *data >> 4;
       pat->ipar3[ir+1] = (*data++) & 0xf;
     }
-    
+#endif
+    for(ir=0;ir<NUM_IPARS; ir++){
+      pat->ipar3[ir] = *data++;
+    }
+
     for (ir=0; ir<NUM_FPARS; ir++){
       /*printf("Reading value %08lx: (%02x %02x) ", data, data[0], data[1]);*/
       nbytes = varlength(data, &intval);

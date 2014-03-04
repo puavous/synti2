@@ -401,25 +401,30 @@ PatchBank::exportStandalone(ostream &ost)
   ost << "/* A sound patch bank for synti2. */" << endl;
   
   ost << "unsigned char patch_sysex[] = {" << endl; 
+  
 
   for (unsigned int ipat=0; ipat<getNumPatches(); ipat++){
     vector<string>::const_iterator it;
     std::vector<unsigned char> bytes;
-    
+
+    ost << "    ";
     for(it=getI4Begin(ipat);it!=getI4End(ipat);++it){
       if (isParEnabled(*it)){
         float v = getStoredParAsFloat(ipat, (*it));
         bytes.push_back(v);
         //encode_f_to_text(v, ost);
+        // Consecutive bytes:
+        ost << (int)v << ", ";
       }
     }
+    /*
+    // Original version; make byte-size pairs
     if ((bytes.size()%2) == 1) bytes.push_back(0);
-
-    ost << "    ";
     for (size_t i = 0; i<bytes.size(); i += 2){
       int towrite = (bytes[i]<<4) + bytes[i+1];
       ost << towrite << ", ";
     }
+    */
     ost << "/* Patch " << ipat << " integer pars.*/" << endl;
 
         //ost << "/* Patch " << ipat << " " << (*it) << " = " 

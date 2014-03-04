@@ -130,6 +130,7 @@ hack3:
 	make tiny3 CUSTOMFILES="$(I14FILES)"
 	cd hackpack3; make all
 	mv hackpack3/vis2 ./jacksynti2
+	ls -l hackpack3/tiny2
 
 tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	-rm -r hackpack3

@@ -112,10 +112,8 @@ struct synti2_player {
 
 /** The synthesizer patch. The way things sound. */
 typedef struct synti2_patch {
-  float dummy_fpar[NUM_IPARS]; /* Read as ipars.. */
-  float fpar[NUM_FPARS];
-  int ipar3[NUM_IPARS];
-  int dummy_ipar[NUM_FPARS];   /* Read as fpars.. */
+  float fpar[NUM_FPARS+NUM_IPARS]; /*replicated for simpler reader code */
+  int ipar3[NUM_IPARS+NUM_FPARS];
 } synti2_patch;
 
 /** Call it voice. (TODO: rename everywhere) It could be channel,

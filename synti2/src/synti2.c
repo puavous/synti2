@@ -466,7 +466,7 @@ synti2_fill_patches_from(synti2_synth *s, const unsigned char *data)
       nbytes = varlength(data, &intval);
       data += nbytes;
       pat->ipar3[ir] = intval;
-      pat->dummy_fpar[ir] = synti2_decode_f(intval);
+      pat->fpar[ir] = synti2_decode_f(intval);
       /*pat->ipar3[ir] = *data++;*/
     }
 #if 0

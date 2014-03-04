@@ -349,6 +349,7 @@ void PatchBank::exportCapFeatHeader(ostream & ost)
   }
   ost << "#define NUM_IPARS " << ind << endl << endl;
   
+  int nipar = ind;
   ind = 0;
   for (sit=getFBegin(0); sit!=getFEnd(0); ++sit){
     RuleSet rs = getFPar(0,*sit).getRuleSet();
@@ -359,7 +360,7 @@ void PatchBank::exportCapFeatHeader(ostream & ost)
     ost.fill(' ');
     ost << std::left;
     ost << ("FPAR_" + cdef);
-    ost << " " << (ind++) << endl;
+    ost << " " << nipar+(ind++) << endl;
   }
   ost << "#define NUM_FPARS " << ind << endl << endl;
   

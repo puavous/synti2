@@ -462,10 +462,14 @@ synti2_fill_patches_from(synti2_synth *s, const unsigned char *data)
       pat->ipar3[ir+1] = (*data++) & 0xf;
     }
 #endif
-    for(ir=0;ir<NUM_IPARS; ir++){
-      pat->ipar3[ir] = *data++;
+    for(ir=0;ir<NUM_IPARS + NUM_FPARS; ir++){
+      nbytes = varlength(data, &intval);
+      data += nbytes;
+      pat->ipar3[ir] = intval;
+      pat->dummy_fpar[ir] = synti2_decode_f(intval);
+      /*pat->ipar3[ir] = *data++;*/
     }
-
+#if 0
     for (ir=0; ir<NUM_FPARS; ir++){
       /*printf("Reading value %08lx: (%02x %02x) ", data, data[0], data[1]);*/
       nbytes = varlength(data, &intval);
@@ -474,6 +478,7 @@ synti2_fill_patches_from(synti2_synth *s, const unsigned char *data)
       /*printf("%04x len=%d %03d <- %f\n", intval, nbytes, ir, pat->fpar[ir]);*/
       /*fflush(stdout);*/
     }
+#endif
   }
 }
 

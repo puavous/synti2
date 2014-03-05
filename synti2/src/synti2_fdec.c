@@ -10,7 +10,7 @@
     but we assume it is read into an int before calling this function)
   - two least significant bits are the accuracy, as negative power of ten.
   - shift right to rid of two bits.
-  - the next bit is the sign (0 = positive, 1 = negative)
+  - the next bit is the sign (1 = positive, 0 = negative)
     FIXME: Alternatives for this?
   - shift right to rid of one bit.
   - the rest of bits are now the significant digits of the value
@@ -27,7 +27,7 @@ float synti2_decode_f(int stored){
   int negative;
   i = stored & 0x3; stored >>= 2;
   negative = stored & 0x1; stored >>= 1;
-  res = (negative)?(-stored):stored;
+  res = ((negative)?stored:-stored);
   for (; i > 0; i--) res /= 10.f;
   return res;
 }

@@ -14,7 +14,7 @@ unsigned int synti2_encode_f(float val){
   float tol = 0.0005f;
   float divis = .1f;
 
-  negative = (val < 0.f);
+  negative = (val <= 0.f);
   val = negative?-val:val; /*abs*/
 
   /* find required accuracy: */
@@ -29,7 +29,7 @@ unsigned int synti2_encode_f(float val){
 
   intval = val*divis;
   intval <<= 1;
-  intval += negative;
+  intval += negative?0:1;
   intval <<= 2;
   intval += neg10;
   return intval;

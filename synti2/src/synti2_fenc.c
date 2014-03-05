@@ -28,9 +28,9 @@ unsigned int synti2_encode_f(float val){
   if (neg10==4) neg10--;
 
   intval = val*divis;
-  intval <<= 2;
-  intval += neg10;
   intval <<= 1;
   intval += negative;
+  intval <<= 2;
+  intval += neg10;
   return intval;
 }

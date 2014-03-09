@@ -3,8 +3,8 @@
 num_channels 16
 num_delays 2
 num_ops 3
-num_envs 5
-num_knees 4
+num_envs 3
+num_knees 3
 num_mods 4
 --- End capacity description
 # The following on/off features are selected while editing this bank:
@@ -566,7 +566,7 @@ EAMP2      0
 EAMP3      0
 EAMP4      0
 EAMPN      0
-EPIT1      5
+EPIT1      2
 EPIT2      0
 EPIT3      0
 EPIT4      0
@@ -616,16 +616,6 @@ ENV1K4T    0                 0 1.27 2
 ENV1K4L    0                 0 1.27 2
 ENV1K5T    0.08              0 1.27 2
 ENV1K5L    0                 0 1.27 2
-ENV2K1T    0                 0 0.255 3
-ENV2K1L    0                 0 5 2
-ENV2K2T    0                 0 1.27 2
-ENV2K2L    0                 0 5 2
-ENV2K3T    0                 0 2.55 2
-ENV2K3L    0                 0 5 2
-ENV2K4T    0                 0 2.55 2
-ENV2K4L    0                 0 5 2
-ENV2K5T    0                 0 2.55 2
-ENV2K5L    0                 0 5 2
 ENV3K1T    0                 0 0.255 3
 ENV3K1L    0                 0 12 1
 ENV3K2T    0                 0 1.27 2
@@ -646,16 +636,16 @@ ENV4K4T    0                 0 5.11 2
 ENV4K4L    0                 -1.27 1.27 2
 ENV4K5T    0                 0 2.56 2
 ENV4K5L    0                 -1.27 1.27 2
-ENV5K1T    0                 0 1.27 2
-ENV5K1L    64                -63 64 0
-ENV5K2T    0.01              0 1.27 2
-ENV5K2L    16                -63 64 0
-ENV5K3T    0.09              0 1.27 2
-ENV5K3L    0                 -63 64 0
-ENV5K4T    0                 0 1.27 2
-ENV5K4L    0                 -63 64 0
-ENV5K5T    0                 0 1.27 2
-ENV5K5L    0                 -63 64 0
+ENV2K1T    0                 0 1.27 2
+ENV2K1L    64                -63 64 0
+ENV2K2T    0.01              0 1.27 2
+ENV2K2L    16                -63 64 0
+ENV2K3T    0.09              0 1.27 2
+ENV2K3L    0                 -63 64 0
+ENV2K4T    0                 0 1.27 2
+ENV2K4L    0                 -63 64 0
+ENV2K5T    0                 0 1.27 2
+ENV2K5L    0                 -63 64 0
 ENV6K1T    0                 0 1.27 2
 ENV6K1L    0                 -31 32 1
 ENV6K2T    0                 0 1.27 2
@@ -725,7 +715,7 @@ POWR2      0
 POWR3      0
 POWR4      0
 EAMP1      1
-EAMP2      4
+EAMP2      3
 EAMP3      1
 EAMP4      0
 EAMPN      2
@@ -789,36 +779,16 @@ ENV2K4T    0                 0 2.55 2
 ENV2K4L    0                 0 5 2
 ENV2K5T    0.23              0 2.55 2
 ENV2K5L    0                 0 5 2
-ENV3K1T    0                 0 0.255 3
-ENV3K1L    0                 0 12 1
-ENV3K2T    0                 0 1.27 2
-ENV3K2L    0                 0 12 1
-ENV3K3T    0                 0 2.55 2
-ENV3K3L    0                 0 12 1
-ENV3K4T    0                 0 2.55 2
-ENV3K4L    0                 0 12 1
-ENV3K5T    0                 0 2.55 2
-ENV3K5L    0                 0 12 1
-ENV4K1T    0.002             0 0.255 3
-ENV4K1L    1                 -1.27 1.27 2
-ENV4K2T    0.01              0 1.27 2
-ENV4K2L    1                 -1.27 1.27 2
-ENV4K3T    1                 0 2.56 2
-ENV4K3L    1                 -1.27 1.27 2
-ENV4K4T    0.24              0 5.11 2
-ENV4K4L    0                 -1.27 1.27 2
-ENV4K5T    0                 0 2.56 2
-ENV4K5L    0                 -1.27 1.27 2
-ENV5K1T    0                 0 1.27 2
-ENV5K1L    27                -63 64 0
-ENV5K2T    0.02              0 1.27 2
-ENV5K2L    33                -63 64 0
-ENV5K3T    0.07              0 1.27 2
-ENV5K3L    0                 -63 64 0
-ENV5K4T    0                 0 1.27 2
-ENV5K4L    0                 -63 64 0
-ENV5K5T    0                 0 1.27 2
-ENV5K5L    0                 -63 64 0
+ENV3K1T    0.002             0 0.255 3
+ENV3K1L    1                 -1.27 1.27 2
+ENV3K2T    0.01              0 1.27 2
+ENV3K2L    1                 -1.27 1.27 2
+ENV3K3T    1                 0 2.56 2
+ENV3K3L    1                 -1.27 1.27 2
+ENV3K4T    0.24              0 5.11 2
+ENV3K4L    0                 -1.27 1.27 2
+ENV3K5T    0                 0 2.56 2
+ENV3K5L    0                 -1.27 1.27 2
 ENV6K1T    0                 0 1.27 2
 ENV6K1L    0                 -31 32 1
 ENV6K2T    0                 0 1.27 2

@@ -8,7 +8,10 @@
  */
 
 #define NUM_GLOBAL_PARAMS 3
-#define NUM_SYNTH_PARAMS 9
+#define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_ENVS + 1 + NUM_MODULATORS + 1))
+
+/* Global now. Some bytes shorter code..: */
+  GLfloat state[NUM_SYNTH_PARAMS];
 
 /** Paint it. */
 static void render_scene(const synti2_synth *s){
@@ -17,44 +20,46 @@ static void render_scene(const synti2_synth *s){
   float cf;
 
   GLint unipar;
-  GLfloat state[NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS];
 
-  float synthtime;
-  synthtime =  (float)(s->framecount) / s->sr;
 
-  state[0] = synthtime;
+  int isp;
 
-#ifdef FULLSCREEN
-  state[1] = vid->current_w; /* global struc now */
-  state[2] = vid->current_h; /* global struc now */
-#else
-  state[1] = window_h*ar; /* globals */
-  state[2] = window_h;    /* globals */
-#endif
+  /* Global now:
+     float synthtime;
+     synthtime =  (float)(s->framecount) / s->sr;
+  */
+
+  isp = 3;
+  
+  //state[0] = synthtime;
+  //state[1] = window_h*ar; /* globals */
+  //state[2] = window_h;    /* globals */
 
 #if 0
-  // BD = 4
-  for(i=NUM_GLOBAL_PARAMS;
-      i<NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS;
-      i++){
-    state[i] = s->voi[i-NUM_GLOBAL_PARAMS].eprog[1].f;  // FIXME: (later.)
+  synti2_voice *v = s->voi;
+  for(i=0; i<NUM_CHANNELS; i++){
+    for(j=0; j<NUM_ENVS+1; j++)
+      state[isp++] = v->eprog[j].f;
+    for(j=0; j<NUM_MODULATORS; j++)
+      state[isp++] = v->contr[j].f;
+    state[isp++] = v->note;
+    v++;
   }
 #endif
 
-  int isp=0;
-  for(i=NUM_GLOBAL_PARAMS; i<NUM_CHANNELS; i++){
+  for(i=0; i<NUM_CHANNELS; i++){
     for(j=0;j<NUM_ENVS+1;j++){
-      state[NUM_GLOBAL_PARAMS+isp++] 
-        = s->voi[i].eprog[j].f;
+      state[isp++] = s->voi[i].eprog[j].f;
     }
     for(j=0;j<NUM_MODULATORS;j++){
-      state[NUM_GLOBAL_PARAMS+isp++] 
-        = s->voi[i].contr[j].f;
+      state[isp++] = s->voi[i].contr[j].f;
     }
+    state[isp++] = s->voi[i].note;    
   }
 
+
   unipar = oglGetUniformLocation(pid, "s");
-  oglUniform1fv(unipar, NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS, state);
+  oglUniform1fv(unipar, NUM_SYNTH_PARAMS, state);
 
   //  glEnable(GL_DEPTH_TEST);
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
@@ -62,12 +67,11 @@ static void render_scene(const synti2_synth *s){
   //sivu(10,-2);
   glRects( -1, -1, 1, 1 );
 
-
 }
 
 /** Render something that varies with time and "audio snapshot". */
 static
-void render_w_shaders(const synti2_synth *s, float ar){
+void render_w_shaders(const synti2_synth *s){
 
   //oglMatrixMode(GL_PROJECTION);
   //oglLoadIdentity();

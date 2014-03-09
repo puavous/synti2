@@ -99,6 +99,8 @@ char * client_name = "jacksynti2";
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 #endif
 
+float synthtime;
+
 /* I'm dirty enough to just include everything in the same compilation
  * unit. Then I don't have to think about linking and special
  * link-time optimizations.
@@ -136,7 +138,6 @@ static float ar;
 float audiobuf[AUDIO_BUFFER_SIZE];
 
 synti2_synth global_synth;
-//float synthtime;
 
 #ifdef SYNTH_COMPOSE_JACK
 static void signal_handler(int sig)
@@ -399,6 +400,9 @@ static void init_or_die_sdl(){
   window_h = vid->current_h;
   ar = (float)vid->current_w / vid->current_h;
 
+  state[1] = window_h*ar; /* globals */
+  state[2] = window_h;    /* globals */
+
 #ifndef ULTRASMALL
   SDL_WM_SetCaption("Soft synth SDL interface",0);
 #endif
@@ -446,9 +450,9 @@ static void init_or_die_sdl(){
 #ifdef DUMP_FRAMES_AND_SNDFILE
 int fps;
 size_t spf;
-float time;
 SF_INFO sfi;
 SNDFILE *sf;
+
 static void
 init_or_die_libsndfile(){
   fps = 50;
@@ -459,6 +463,7 @@ init_or_die_libsndfile(){
   /*sfi.frames = ;  sfi.sections = ;  sfi.seekable = ;*/
   sf = sf_open("audio.wav",SFM_WRITE,&sfi);
 }
+
 static void
 dump_audio_for_one_frame(){
   size_t s;
@@ -494,14 +499,17 @@ static void main2(){
   do {
 #ifdef DUMP_FRAMES_AND_SNDFILE
     dump_audio_for_one_frame();
-    render_w_shaders(&global_synth,ar);
-    time = (float)global_synth.framecount / global_synth.sr;
-    grab_frame();
-#else
-    render_w_shaders(&global_synth,ar);
 #endif
 
+    synthtime = (float)global_synth.framecount / global_synth.sr;
+    state[0] = synthtime;
+    render_w_shaders(&global_synth);
     SDL_GL_SwapBuffers();
+
+#ifdef DUMP_FRAMES_AND_SNDFILE
+    grab_frame();
+#endif
+
     SDL_PollEvent(&event);
 
 #ifdef SYNTH_PLAYBACK_SDL
@@ -509,7 +517,7 @@ static void main2(){
 #elif SYNTH_COMPOSE_JACK
   } while ((event.type!=SDL_QUIT));
 #elif DUMP_FRAMES_AND_SNDFILE
-  } while ((event.type!=SDL_KEYDOWN) && (time < PLAYBACK_DURATION));
+  } while ((event.type!=SDL_KEYDOWN) && (synthtime < PLAYBACK_DURATION));
 #else
 #error End condition not determined by sound output
 #endif
@@ -547,7 +555,7 @@ _start()
   asm (                                         \
        "movl $1,%eax\n"                         \
        "xor %ebx,%ebx\n"                        \
-       "int $128\n"                                 \
+       "int $128\n"                             \
                                                 );
 }
 #else

@@ -4,7 +4,7 @@ num_channels 16
 num_delays 2
 num_ops 3
 num_envs 3
-num_knees 3
+num_knees 4
 num_mods 4
 --- End capacity description
 # The following on/off features are selected while editing this bank:

@@ -121,7 +121,10 @@ typedef struct synti2_patch {
  *  it stands for. So just call it voice.
  */
 typedef struct synti2_voice {
-  /* Must be in this order and next to each other exactly!! Impl. specif?*/
+  /* Must be in this order and next to each other exactly!! FIXME:
+   * Basically memory layout is implementation dependent, so I want to
+   * rid of this hack, after all.
+   */
   counter c[NUM_OPERATORS];
   counter eprog[NUM_ENVS+1];
   counter contr[NUM_MODULATORS];

@@ -24,10 +24,10 @@
 float synti2_decode_f(int stored){
   int i;
   float res;
-  int negative;
+  int positive;
   i = stored & 0x3; stored >>= 2;
-  negative = stored & 0x1; stored >>= 1;
-  res = ((negative)?stored:-stored);
+  positive = stored & 0x1; stored >>= 1;
+  res = ((positive)?stored:-stored);
   for (; i > 0; i--) res /= 10.f;
   return res;
 }

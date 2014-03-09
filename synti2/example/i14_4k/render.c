@@ -32,12 +32,25 @@ static void render_scene(const synti2_synth *s){
   state[2] = window_h;    /* globals */
 #endif
 
-
+#if 0
   // BD = 4
   for(i=NUM_GLOBAL_PARAMS;
       i<NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS;
       i++){
     state[i] = s->voi[i-NUM_GLOBAL_PARAMS].eprog[1].f;  // FIXME: (later.)
+  }
+#endif
+
+  int isp=0;
+  for(i=NUM_GLOBAL_PARAMS; i<NUM_CHANNELS; i++){
+    for(j=0;j<NUM_ENVS+1;j++){
+      state[NUM_GLOBAL_PARAMS+isp++] 
+        = s->voi[i].eprog[j].f;
+    }
+    for(j=0;j<NUM_MODULATORS;j++){
+      state[NUM_GLOBAL_PARAMS+isp++] 
+        = s->voi[i].contr[j].f;
+    }
   }
 
   unipar = oglGetUniformLocation(pid, "s");

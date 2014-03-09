@@ -38,7 +38,7 @@ const GLchar *vs="\
  * the previous tool.
  */
 const GLchar *fs= ""
- "uniform float s[9];"
+ "uniform float s[2000];"
  "vec3 v(vec3 v,float y)"
  "{"
    "float r,f;"

@@ -68,7 +68,7 @@ typedef struct {
   unsigned int detect;
   unsigned int delta;
   float f;   /* current output value (interpolant) */
-  float fr;  /* current output value (0..1) */ /* (FIXME: only f needed?) */
+  float fr;  /* current output value (0..1) */
   float aa;  /* for interpolation start */
   float bb;  /* for interpolation end */
 } counter;

@@ -19,6 +19,18 @@ static void render_scene(const synti2_synth *s){
   GLint unipar;
   GLfloat *isp;
 
+  /*
+     compression    old  new
+     7za    -mx=9   4176 4244
+     zopfli --i25   4110 4128
+
+     Somehow this renderer gets compressed better
+     than the previous one, and now we get all
+     the envelopes, controllers, and notes for
+     all voices into the shader side.
+     
+  */
+
   /* Global now:
      float synthtime;
      synthtime =  (float)(s->framecount) / s->sr;

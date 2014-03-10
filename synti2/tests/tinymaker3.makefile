@@ -66,6 +66,7 @@ tiny2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(SSTRIP) $@.payload
 
 	7za a -tgzip -mx=9 $@.payload.gz $@.payload
+#	zopfli --i25 $@.payload
 #	zopfli --i1000 $@.payload
 	mv $@.payload.gz tmp.gz
 	cat selfextr.stub tmp.gz > $@

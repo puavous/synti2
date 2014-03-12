@@ -231,41 +231,61 @@ static void grab_frame(){
 
 
 
-/* For Shader debugging, when ULTRASMALL is not used. */
+#ifdef NEED_DEBUG
+/* For Shader debugging, when NEED_DEBUG is set. */
 static void printShaderInfoLog(GLuint obj)
 {
-  int infologLength = 0;
+  GLint infologLength = 0;
   int charsWritten  = 0;
   char *infoLog;
+
+  /* Instead of learning how to link properly, I'm getting the
+   * addresses:
+   */
+  PFNGLGETSHADERIVPROC oglGetShaderiv;
+  PFNGLGETSHADERINFOLOGPROC oglGetShaderInfoLog;
+
+  oglGetShaderiv = glXGetProcAddress("glGetShaderiv");
+  oglGetShaderInfoLog = glXGetProcAddress("glGetShaderInfoLog");
   
-  glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+  printf("printShaderInfoLog():\n"); fflush(stdout);
+  oglGetShaderiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
   
   if (infologLength > 0)
     {
       infoLog = (char *)malloc(infologLength);
-      glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
+      oglGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
       printf("%s\n",infoLog);
       free(infoLog);
     }
 }
 
-/* For Shader debugging, when ULTRASMALL is not used. */
+/* For Shader debugging, when NEED_DEBUG is set. */
 static void printProgramInfoLog(GLuint obj)
 {
   int infologLength = 0;
   int charsWritten  = 0;
   char *infoLog;
+
+  PFNGLGETPROGRAMIVPROC oglGetProgramiv;
+  PFNGLGETPROGRAMINFOLOGPROC oglGetProgramInfoLog;
+
+  oglGetProgramiv = glXGetProcAddress("glGetProgramiv");
+  oglGetProgramInfoLog = glXGetProcAddress("glGetProgramInfoLog");
   
-  glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+  printf("printProgramInfoLog():\n"); fflush(stdout);
+  oglGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
   
   if (infologLength > 0)
     {
       infoLog = (char *)malloc(infologLength);
-      glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
+      oglGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
       printf("%s\n",infoLog);
       free(infoLog);
     }
 }
+#endif
+
 
 #ifdef SYNTH_COMPOSE_JACK
 /** Initialize Jack realtime audio and midi; exit if problems

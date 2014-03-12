@@ -66,9 +66,9 @@ float f(vec3 p){
 const float MinimumDistance = .01; // FIXME: accuracy vs. frame rate?
 const float epsilon = 0.1;
 const int MaxRaySteps = 180;
-const float TooFar = 80.0;
 
 vec4 march(vec3 from, vec3 direction) {
+  float TooFar = 80.0; // shader_minifier got confused if this was outside.. 
   float totalDistance = 0.0;
   int steps;
   vec3 p;

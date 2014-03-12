@@ -144,6 +144,7 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	echo $(filter %vertex.vert, $^)
 	echo '/*Shaders, by the messiest makefile ever..*/' > hackpack3/shaders.c
 	echo 'const GLchar *vs=""' >> hackpack3/shaders.c
+
 	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/\(.*\)\/\/.*$$/\1/g; s/\(.*\)/"\1"/g;' \
 		< $(filter %vertex.vert, $^) >> hackpack3/shaders.c
 	echo '"";' >> hackpack3/shaders.c
@@ -152,6 +153,20 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 		< $(filter %fragment.frag, $^) >> hackpack3/shaders.c
 	echo '"";' >> hackpack3/shaders.c
 
+#	shaders to c source, using the shader_minifier tool:
+	mono ~/files/hacking/shader_minifier/shader_minifier.exe --format none \
+		--preserve-externals \
+		-o vertshader.tmp $(filter %vertex.vert, $^)
+	mono ~/files/hacking/shader_minifier/shader_minifier.exe --format none \
+		--preserve-externals \
+		-o fragshader.tmp $(filter %fragment.frag, $^)
+	echo '/*Shaders, by the messiest makefile ever..*/' > hackpack3/shaders.c
+	echo -n 'const GLchar *vs="' >> hackpack3/shaders.c
+	cat vertshader.tmp >> hackpack3/shaders.c
+	echo '";' >> hackpack3/shaders.c
+	echo -n 'const GLchar *fs="' >> hackpack3/shaders.c
+	cat fragshader.tmp >> hackpack3/shaders.c
+	echo '";' >> hackpack3/shaders.c
 
 	./synti2gui --write-caps $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/synti2_cap_custom.h
 	./synti2gui --write-patches $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/patchdata.c

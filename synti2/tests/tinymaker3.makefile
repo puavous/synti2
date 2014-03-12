@@ -16,7 +16,7 @@ CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
 ## For normal 64-bit build:
 ARCHFLAGS = `sdl-config --cflags`
-ARCHLIBS = `sdl-config --libs` -lGL -lm
+ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm
 
 # For linking against 32-bit libraries (ca 5% smaller packed exe):
 #ARCHFLAGS = -m32 -DNO_I64 `sdl-config --cflags` 
@@ -87,7 +87,7 @@ vis2: $(MAINFILE) $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
 		-DSYNTH_COMPOSE_JACK \
 		$(MAINFILE) $(filter %.c, $(JACKSOURCES)) \
 		`pkg-config --cflags --libs jack` \
-		$(ARCHLIBS) -lGLU
+		$(ARCHLIBS) -lGLU -lGLEW
 
 #The "no-nos" are used here, too, now(!):
 writ2: $(WRITERSOURCES) $(TINYHEADERS) $(TINYHACKS)
@@ -97,7 +97,7 @@ writ2: $(WRITERSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-DPLAYBACK_DURATION=10.f \
 		$(MAINFILE) \
 		`pkg-config --cflags --libs jack` \
-		`sdl-config --cflags --libs` -lm -lGL -lGLU \
+		`sdl-config --cflags --libs` -lm -lGL -lGLU -lGLEW \
 		-lsndfile
 
 all: vis2 tiny2 writ2

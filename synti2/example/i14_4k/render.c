@@ -10,6 +10,8 @@
 #define NUM_GLOBAL_PARAMS 3
 #define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_ENVS + 1 + NUM_MODULATORS + 1))
 
+/*#define NEED_DEBUG*/
+
 /* Global now. Some bytes shorter code..: */
   GLfloat state[NUM_SYNTH_PARAMS];
 

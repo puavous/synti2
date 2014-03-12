@@ -57,7 +57,8 @@ DUMPERFILES =
 I14FILES = example/i14_4k/i14_4k.mid \
 	   example/i14_4k/i14_4k.s2bank \
 	   example/i14_4k/render.c \
-	   example/i14_4k/shaders.c \
+	   example/i14_4k/vertex.vert \
+	   example/i14_4k/fragment.frag \
 	   example/glfuncs.c
 
 # Assembly Summer 13 4k entry:
@@ -138,8 +139,20 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	cp $(filter %.c %.h , $^) hackpack3/
 	cp tests/tinymaker3.makefile hackpack3/Makefile
 	cp example/selfextr.stub hackpack3/
-	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
-		< $(filter %shaders.c, $^) > hackpack3/shaders.c
+
+#	shaders to c source:
+	echo $(filter %vertex.vert, $^)
+	echo '/*Shaders, by the messiest makefile ever..*/' > hackpack3/shaders.c
+	echo 'const GLchar *vs=""' >> hackpack3/shaders.c
+	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/.*\/\/.*$$//g; s/\(.*\)/"\1"/g;' \
+		< $(filter %vertex.vert, $^) >> hackpack3/shaders.c
+	echo '"";' >> hackpack3/shaders.c
+	echo 'const GLchar *fs=""' >> hackpack3/shaders.c
+	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/.*\/\/.*$$//g; s/\(.*\)/"\1"/g;' \
+		< $(filter %fragment.frag, $^) >> hackpack3/shaders.c
+	echo '"";' >> hackpack3/shaders.c
+
+
 	./synti2gui --write-caps $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/synti2_cap_custom.h
 	./synti2gui --write-patches $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/patchdata.c
 	./synti2gui --write-song $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/songdata.c

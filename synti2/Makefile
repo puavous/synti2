@@ -140,6 +140,7 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	cp tests/tinymaker3.makefile hackpack3/Makefile
 	cp example/selfextr.stub hackpack3/
 
+# ------------------- Shaders.
 #	shaders to c source:
 	echo $(filter %vertex.vert, $^)
 	echo '/*Shaders, by the messiest makefile ever..*/' > hackpack3/shaders.c

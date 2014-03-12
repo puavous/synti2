@@ -1,5 +1,5 @@
 uniform float s[2000]; // State parameters from app.
-
+/*
 // FIXME: Should do proper rotation matrices?
 // (my axes can be the wrong way around..
 // I made this 'out from my head')
@@ -170,3 +170,21 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
     // Fade out at the end:
     gl_FragColor*=1.-smoothstep(56.,65.,s[0]);
   }
+*/
+
+  /* Pretty much the simplest possible visualization. Squares'
+   * intensities show the values in the synthesizer state.
+   */
+
+  void main(){
+    vec2 pix = gl_FragCoord.xy / vec2(s[1],s[2]);
+    pix.y = 1.-pix.y;
+
+    pix *= vec2(9.,8.);
+    int row = int(pix.y);
+    int col = int(pix.x);
+    
+    float intensity = s[3+9*row + col];
+    gl_FragColor = vec4(intensity);
+  }
+

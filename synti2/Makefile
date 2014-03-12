@@ -144,11 +144,11 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	echo $(filter %vertex.vert, $^)
 	echo '/*Shaders, by the messiest makefile ever..*/' > hackpack3/shaders.c
 	echo 'const GLchar *vs=""' >> hackpack3/shaders.c
-	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/.*\/\/.*$$//g; s/\(.*\)/"\1"/g;' \
+	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/\(.*\)\/\/.*$$/\1/g; s/\(.*\)/"\1"/g;' \
 		< $(filter %vertex.vert, $^) >> hackpack3/shaders.c
 	echo '"";' >> hackpack3/shaders.c
 	echo 'const GLchar *fs=""' >> hackpack3/shaders.c
-	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/.*\/\/.*$$//g; s/\(.*\)/"\1"/g;' \
+	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/\(.*\)\/\/.*$$/\1/g; s/\(.*\)/"\1"/g;' \
 		< $(filter %fragment.frag, $^) >> hackpack3/shaders.c
 	echo '"";' >> hackpack3/shaders.c
 

@@ -239,22 +239,21 @@ static void printShaderInfoLog(GLuint obj)
   int charsWritten  = 0;
   char *infoLog;
 
-  /* Instead of learning how to link properly, I'm getting the
-   * addresses:
-   */
+  /* 
   PFNGLGETSHADERIVPROC oglGetShaderiv;
   PFNGLGETSHADERINFOLOGPROC oglGetShaderInfoLog;
 
   oglGetShaderiv = glXGetProcAddress("glGetShaderiv");
   oglGetShaderInfoLog = glXGetProcAddress("glGetShaderInfoLog");
-  
+   */
+
   printf("printShaderInfoLog():\n"); fflush(stdout);
-  oglGetShaderiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
+  glGetShaderiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
   
   if (infologLength > 0)
     {
       infoLog = (char *)malloc(infologLength);
-      oglGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
+      glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
       printf("%s\n",infoLog);
       free(infoLog);
     }
@@ -267,19 +266,21 @@ static void printProgramInfoLog(GLuint obj)
   int charsWritten  = 0;
   char *infoLog;
 
+  /*
   PFNGLGETPROGRAMIVPROC oglGetProgramiv;
   PFNGLGETPROGRAMINFOLOGPROC oglGetProgramInfoLog;
 
   oglGetProgramiv = glXGetProcAddress("glGetProgramiv");
   oglGetProgramInfoLog = glXGetProcAddress("glGetProgramInfoLog");
-  
+  */
+
   printf("printProgramInfoLog():\n"); fflush(stdout);
-  oglGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+  glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
   
   if (infologLength > 0)
     {
       infoLog = (char *)malloc(infologLength);
-      oglGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
+      glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
       printf("%s\n",infoLog);
       free(infoLog);
     }
@@ -460,6 +461,11 @@ static void init_or_die_sdl(){
   oglLinkProgram(pid);
 
 #ifdef NEED_DEBUG
+  GLenum gres = glewInit();
+  if (gres != GLEW_OK){
+    fprintf(stderr, "Error in GLEW init: %s\n", glewGetErrorString(gres));
+    exit(1);
+  }
   printShaderInfoLog(vsh);
   printShaderInfoLog(fsh);
   printProgramInfoLog(pid);

@@ -8,8 +8,11 @@
 Instanssi 2014 -- Aloittelijatyöpaja 4k-demokoodaukseen
 #########################################################
 
-Paavo Nieminen, ``paavo.j.nieminen@jyu.fi``, a.k.a qma (or his
-Instanssi alter ego, "The Old Dude")
+Paavo Nieminen, ``paavo.j.nieminen@jyu.fi`` (a.k.a qma or his
+alter ego at Instanssi, "The Old Dude")
+
+Osallistujat: Yaamboo, Logio, shiona, bebraw, rakeinen, Jonne, diedos.
+
 
 
 .. contents::
@@ -36,22 +39,24 @@ Lähtökohdaksi otetaan Windows-alustalla Iñigo Quilezin "4ksystem" ja
 Linux-alustalla allekirjoittaneen tämän päiväinen versio
 "synti2"-softasyntikkaprojektista.
 
-Aikatauluarvio::
+Työpajan kokonaiskesto on 4 tuntia. Tarkempi aikatauluarvio::
 
-  21:00 Aloitetaan, tutustutaan, ja kartoitetaan toimintamallit.
+  22:05 Aloitetaan, tutustutaan, ja kartoitetaan toimintamallit.
 
         Pieni esittely 4k:n perusideasta ja työpajan sisällöstä.
 
-  21:15 Tekeminen alkaa.
+  22:40 Tekeminen alkaa; asennetaan kirjastot ja työkalut.
 
-  23:00 Tauko; happea.
+  23:10 (Oletus:) Kirjastot, työkalut ja esimerkkikoodit on asennettu.
 
-  23:15 Tekeminen jatkuu.  
+  00:00 Tauko; happea.
 
-  01:00 Työpaja päättyy (ei tarkoita, etteikö apua voisi kysyä aina
-        kilpailun deadlineen saakka!)
+  00:15 Tekeminen jatkuu.  
 
-Työpaja etenee jokaisen osallistujan kohdalta seuraavin
+  02:00 Työpaja päättyy (ei tarkoita, etteikö apua voisi kysyä
+        myöhemminkin)
+
+Työpaja etenee jokaisen osallistujan kohdalta omaan tahtiin seuraavin
 askelin. Meillä tulee varmasti olemaan runsaasti yllättäviä alustoihin
 liittyviä haasteita ja uutta opittavaa kaikista vaiheista:
 
@@ -65,6 +70,11 @@ liittyviä haasteita ja uutta opittavaa kaikista vaiheista:
       pakettimanagerilla ja loput etsitään netistä yhdessä tuumin. En
       muista ulkoa, mitä kaikkea tarvitaan (ainakin dev-kirjastoineen
       GL, SDL, fltk, jack sekä apuohjelmapuolella sstrip ja zopfli)
+
+   Järkevän audiopuolen toteuttaminen vaatisi 4k-tarkoituksiin tehdyn
+   softasyntikan ja musiikkiohjelmistoja, mutta näiden haltuunottoon
+   ei välttämättä ole aikaa tässä workshopissa. Selväksi käy
+   kuitenkin, miten ja mihin kohtaan syntikka voidaan integroida.
 
 2. Frameworkin haku omalle koneelle
 
@@ -82,11 +92,11 @@ liittyviä haasteita ja uutta opittavaa kaikista vaiheista:
    siitä pienin muutoksin tehdyt omat tuotokset toimivat. Ja puuta
    koputetaan tässä kohtaa nyt nii-in kovaa!!!)
 
-5. Kopioidaan Framework-esimerkki pohjaksi omalle tuotokselle ja
-   aloitetaan modaamaan. **HUOM: Muista tuotoksen yhteydessä
-   rehellisesti ilmoittaa tekijän nimen ja nettiosoitteen kera, mistä
-   esimerkistä olet lähtenyt liikkeelle! Tämä on sanomattakin selvää,
-   mutta sanotaan se tässä kuitenkin.**
+5. Kopioidaan joku sopiva Framework-esimerkki pohjaksi omalle
+   tuotokselle ja aloitetaan modaamaan. **HUOM: Muista tuotoksen
+   yhteydessä rehellisesti ilmoittaa tekijän nimi ja nettiosoite,
+   josta pohjatyö löytyy!** (Tämä on sanomattakin selvää, mutta
+   sanotaan se tässä kuitenkin.)
 
 .. raw:: latex
 

@@ -10,7 +10,7 @@
 #define NUM_GLOBAL_PARAMS 3
 #define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_ENVS + 1 + NUM_MODULATORS + 1))
 
-/*#define NEED_DEBUG*/
+#define NEED_DEBUG
 
 /* Global now. Some bytes shorter code..: */
   GLfloat state[NUM_SYNTH_PARAMS];
@@ -52,18 +52,6 @@ static void render_scene(const synti2_synth *s){
     *isp++ = v->note;
     v++;
   }
-
-#if 0
-  for(i=0; i<NUM_CHANNELS; i++){
-    for(j=0;j<NUM_ENVS+1;j++){
-      *isp++ = s->voi[i].eprog[j].f;
-    }
-    for(j=0;j<NUM_MODULATORS;j++){
-      *isp++ = s->voi[i].contr[j].f;
-    }
-    *isp++ = s->voi[i].note;
-  }
-#endif
 
   unipar = oglGetUniformLocation(pid, "s");
   oglUniform1fv(unipar, NUM_SYNTH_PARAMS, state);

@@ -63,64 +63,7 @@ float f(vec3 p){
 }
 
 
-const float MinimumDistance = .01; // FIXME: accuracy vs. frame rate?
-const float epsilon = 0.1;
-const int MaxRaySteps = 180;
 
-vec4 march(vec3 from, vec3 direction) {
-  float TooFar = 80.0; // shader_minifier got confused if this was outside.. 
-  float totalDistance = 0.0;
-  int steps;
-  vec3 p;
-  for (steps=0; steps < MaxRaySteps; steps++) {
-    p = from + totalDistance * direction;
-    float distance = f(p)*.9;
-    totalDistance += distance;
-    if (distance < MinimumDistance){
-      break;
-    }
-    if (totalDistance > TooFar) return vec4(p,0.0);
-  }
-  vec4 res; res.xyz = p;
-  res.w = 1.-float(steps)/float(MaxRaySteps);
-  return res;
-}
-
-// Distance estimation describes a hyperplane (local tangent plane of
-// a geometry) in an implicit form (f(p)==0 exactly on the plane,
-// f(p)>0 on the front side). Gradient of the function gives a vector
-// orthogonal to the plane. Here we approximate the gradient with finite
-// differences along the coordinate axes.
-
-vec3 normalEstimation(vec3 p){
-  return normalize( vec3(
-      f(p + vec3(epsilon,0.,0.) ) - f(p - vec3(epsilon,0.,0.))
-    , f(p + vec3(0.,epsilon,0.) ) - f(p - vec3(0.,epsilon,0.))
-    , f(p + vec3(0.,0.,epsilon) ) - f(p - vec3(0.,0.,epsilon))
-) );}
-
-
-// Phong model
-vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
-                  vec3 lightC, vec3 amb, vec3 dfs, vec3 spec)
-{
-  // Ambient component:
-  vec3 c = amb;
-
-  // Compute light direction; finished if light is behind the surface:
-  vec3 ldir = normalize(lpos - p);
-  if (ldir.z > 0.) return vec4(c,1.);
-
-  // Diffuse and specular component:
-  float ldist = length(lpos-p);
-  float attn = 1. / (1. + 0.03*ldist + 0.003*ldist*ldist);
-  vec3 camdir = normalize(p-pcam);
-  vec3 idfs = dfs * max(dot(n,ldir),0.0);
-  vec3 refldir = reflect(ldir, n);
-  vec3 ispec = spec * pow(max(dot(refldir,camdir),0.0),4.0);
-  c += attn * lightC * (idfs + ispec);
-  return vec4 (c,1.); // no alpha blending in use...
-}
 
   void main(){
     vec3 cameraPosition = vec3(0.,0.,-20.);
@@ -176,15 +119,108 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
    * intensities show the values in the synthesizer state.
    */
 
-  void main(){
-    vec2 pix = gl_FragCoord.xy / vec2(s[1],s[2]);
-    pix.y = 1.-pix.y;
+float sdSphere( vec3 p, float s )
+{
+  return length(p)-s;
+}
 
-    pix *= vec2(9.,8.);
-    int row = int(pix.y);
-    int col = int(pix.x);
+float kissa(vec3 p){
+  return sdSphere(p, 5.);
+}
+
+
+float f(vec3 p){
+  return kissa(p);
+}
+
+
+vec4 march(vec3 from, vec3 direction) {
+  float MinimumDistance = .01;
+  int MaxRaySteps = 180;
+  float TooFar = 80.0; // shader_minifier got confused if this was outside.. 
+  float totalDistance = 0.0;
+  int steps;
+  vec3 p;
+
+  for (steps=0; steps < MaxRaySteps; steps++) {
+    p = from + totalDistance * direction;
+    float distance = f(p)*.9;
+    totalDistance += distance;
+    if (distance < MinimumDistance){
+      break;
+    }
+    if (totalDistance > TooFar) return vec4(p,0.0);
+  }
+  vec4 res; res.xyz = p;
+  res.w = 1.-float(steps)/float(MaxRaySteps);
+  return res;
+}
+
+
+// Distance estimation describes a hyperplane (local tangent plane of
+// a geometry) in an implicit form (f(p)==0 exactly on the plane,
+// f(p)>0 on the front side). Gradient of the function gives a vector
+// orthogonal to the plane. Here we approximate the gradient with finite
+// differences along the coordinate axes.
+
+const float epsilon = 0.1;
+
+vec3 normalEstimation(vec3 p){
+  return normalize( vec3(
+      f(p + vec3(epsilon,0.,0.) ) - f(p - vec3(epsilon,0.,0.))
+    , f(p + vec3(0.,epsilon,0.) ) - f(p - vec3(0.,epsilon,0.))
+    , f(p + vec3(0.,0.,epsilon) ) - f(p - vec3(0.,0.,epsilon))
+) );}
+
+// Phong model
+vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
+                  vec3 lightC, vec3 amb, vec3 dfs, vec3 spec)
+{
+  // Ambient component:
+  vec3 c = amb;
+
+  // Compute light direction; finished if light is behind the surface:
+  vec3 ldir = normalize(lpos - p);
+  if (ldir.z > 0.) return vec4(c,1.);
+
+  // Diffuse and specular component:
+  float ldist = length(lpos-p);
+  float attn = 1. / (1. + 0.03*ldist + 0.003*ldist*ldist);
+  vec3 camdir = normalize(p-pcam);
+  vec3 idfs = dfs * max(dot(n,ldir),0.0);
+  vec3 refldir = reflect(ldir, n);
+  vec3 ispec = spec * pow(max(dot(refldir,camdir),0.0),4.0);
+  c += attn * lightC * (idfs + ispec);
+  return vec4 (c,1.); // no alpha blending in use...
+}
+
+
+  void main(){
+    vec2 pix = 1. - gl_FragCoord.xy / (.5 * vec2(s[1],s[2]));
+    pix.x *= s[1]/s[2];
+
+    vec3 cameraPosition = vec3(0.,0.,-20.);
+    vec3 lightPosition = vec3(-10.);
+    // I just shoot 'over there'.
+    // TODO: Proper vector length and direction; from resol.
+    vec3 vdir = vec3(pix.x,pix.y,1.);
+    // Hmm.. think about how the direction affects the rendering:
+    vdir = normalize(vdir);
+
+    vec4 pr = march(cameraPosition,vdir);
+    vec3 p = pr.xyz;
+    float r = pr.w;
+    vec3 n = normalEstimation(p);
+
+    vec3 lightC = vec3(3.);
+    vec3 ambient = vec3(0.3,0.3,0.4);
+    vec3 diffuse = vec3(0.8,0.0,0.4);
+    vec3 specular = vec3(1.0,1.0,1.0);
+
+    vec4 color = doLightPhong(cameraPosition, p, n,
+                              lightPosition,
+                              lightC,ambient,diffuse,specular);
     
-    float intensity = s[3+9*row + col];
-    gl_FragColor = vec4(intensity);
+    gl_FragColor = color;
   }
 

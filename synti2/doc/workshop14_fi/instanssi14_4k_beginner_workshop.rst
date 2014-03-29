@@ -39,7 +39,7 @@ Lähtökohdaksi otetaan Windows-alustalla Iñigo Quilezin "4ksystem" ja
 Linux-alustalla allekirjoittaneen tämän päiväinen versio
 "synti2"-softasyntikkaprojektista.
 
-Työpajan kokonaiskesto on 4 tuntia. Tarkempi aikatauluarvio::
+Työpajan kokonaiskesto on 4 tuntia. Tarkempi aikataulu::
 
   22:05 Aloitetaan, tutustutaan, ja kartoitetaan toimintamallit.
 
@@ -78,11 +78,14 @@ liittyviä haasteita ja uutta opittavaa kaikista vaiheista:
 
 2. Frameworkin haku omalle koneelle
 
-    - Windows-käyttäjät ottavat Inigon 4ksystem-frameworkin auki VC++:aan
+    - Windows-käyttäjät ottavat Inigon 4ksystem -frameworkin auki
+      VC++:aan
 
     - Linux-käyttäjät ottavat uusimman version synti2:n
       master-haarasta. (Varaudutaan debuggaamaan tätä tapahtuman
       mittaan)
+
+    - Javascript-puolesta ei ole itselläni liiemmin kokemusta.
 
 3. Frameworkista löytyvän 4k-demoesimerkin kääntäminen ja
    linkittäminen alle 4096 tavun mittaiseksi exeksi.
@@ -173,22 +176,33 @@ Miksi ihmeessä tällaista hulluutta oikein tehdään?
   yllättävänkin suuren määrän respektiä!
 
 
-Tietolähteitä ja foorumeita
-================================
+Tietolähteitä, alustoja ja foorumeita
+========================================
 
+- http://in4k.northerndragons.ca/
 
-Alustoja
-================================
-
-- IQ
-
-- qma
-
-- etsivä löytää varmasti muitakin
+- http://www.iquilezles.org/
 
 
 Muuta mitä mieleen tulee
 ================================
 
 TODO: Täydennetään työpajan mittaan, riippuen siitä mitä tapahtuu.
+
+Havaintoja:
+
+- Periaatteessa VC++ ja Crinkler olivat helppoja asentaa, mutta
+  törmättiin sitten myös kummallisiin ja epämiellyttäviin ilmiöihin:
+  Visual Studion eri versiot ilmeisesti saattavat sotkea toisensa
+  kummallisesti. Crinklerillä tehdyt exet voivat jäädä kiinni
+  virustutkaan, ja jotkut tutkat eivät millään anna pakottaa ohjelman
+  suoritusta, vaikka se tunnettaisiin turvalliseksi. Muutenkin
+  Crinklerin linkkaamat ohjelmat vaikuttivat hiukan heiveröisiltä
+  ainakin tämän workshopin osallistujilla käytössään olleissa
+  järjestelmissä.
+
+- Oma frameworkini oli jälleen aika pahasti vaiheessa, ja uusia
+  yllättäviä ongelmia ilmeni.
+
+Opettavaista oli kyllä. Kiitos osallistujille!
 

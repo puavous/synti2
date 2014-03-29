@@ -46,7 +46,9 @@ float catField( vec3 p, vec3 c )
     vec3 q = mod(p,c)-0.5*c;
     return kissa( q );
 }
+*/
 
+/*
 float one(vec3 p){
     return sdBox(p, vec3(1.,4.,1.));
 }
@@ -73,24 +75,25 @@ float three(vec3 p){
 */
 
 float f(vec3 p){
-  /*
+ 
   if (sin(2.*s[0]) > .9){
-    return one(p);
+      p.z -= 30.;
+      return kissa(p);
+      /*
   } else if (sin(2.*s[0]) > .8){
-    return two(p);
+    return one(p);
   } else if (sin(2.*s[0]) > .7){
     return three(p);
   } else if (sin(2.*s[0]) > .6){
-  */
-    p.z -= 30.;
-    return kissa(p);
-    /*
-  } else {
+      */
+  }else{
     p = rotZ(p,.3*sin(s[0])+sin(s[0])*p.z*.04);
-    return catField(p+vec3(0.,16.,60.*s[0]),
-                    vec3(30.,30.,30.));
+    vec3 c = vec3(30.,30.,30.);
+    p += vec3(0.,16.,60.*s[0]);
+
+    vec3 q = mod(p,c)-0.5*c;
+    return kissa( q );
   }
-    */
 }
 
 

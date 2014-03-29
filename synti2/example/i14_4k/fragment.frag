@@ -125,7 +125,11 @@ float sdSphere( vec3 p, float s )
 }
 
 float kissa(vec3 p){
-  return sdSphere(p, 5.);
+  float a = sdSphere(p, 5.);
+  p.y += 5.;
+  float b = sdSphere(p, 5.);
+
+  return 
 }
 
 

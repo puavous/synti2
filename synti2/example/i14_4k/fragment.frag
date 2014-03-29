@@ -222,7 +222,8 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
     vec3 lightPosition = vec3(-10.);
     // I just shoot 'over there'.
     // TODO: Proper vector length and direction; from resol.
-    vec3 vdir = vec3(pix.x,pix.y,1.);
+    vec3 vto = vec3(pix.x*2.,pix.y*2.,3.);
+    vec3 vdir = vto - vec3(pix.x,pix.y,1.);
     // Hmm.. think about how the direction affects the rendering:
     vdir = normalize(vdir);
 

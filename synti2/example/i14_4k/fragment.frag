@@ -1,25 +1,8 @@
-uniform float s[2000]; // State parameters from app.
+uniform float s[200]; // State parameters from app.
 /*
 // FIXME: Should do proper rotation matrices?
 // (my axes can be the wrong way around..
 // I made this 'out from my head')
-vec3 rotY(vec3 p, float th){
-  float si = sin(th);
-  float co = cos(th);
-  return vec3(si*p.x - co*p.z, p.y, co*p.x + si * p.z);
-}
-
-vec3 rotZ(vec3 p, float th){
-  float si = sin(th);
-  float co = cos(th);
-  return vec3(si*p.x - co*p.y, co*p.x + si * p.y, p.z);
-}
-
-vec3 rotX(vec3 p, float th){
-  float si = sin(th);
-  float co = cos(th);
-  return vec3(p.x, si*p.y - co*p.z, co*p.y + si * p.z);
-}
 
 float sdTorus( vec3 p, vec2 t )
 {
@@ -115,26 +98,59 @@ float f(vec3 p){
   }
 */
 
-  /* Pretty much the simplest possible visualization. Squares'
-   * intensities show the values in the synthesizer state.
-   */
+vec3 rotY(vec3 p, float th){
+  float si = sin(th);
+  float co = cos(th);
+  return vec3(si*p.x - co*p.z, p.y, co*p.x + si * p.z);
+}
+
+vec3 rotZ(vec3 p, float th){
+  float si = sin(th);
+  float co = cos(th);
+  return vec3(si*p.x - co*p.y, co*p.x + si * p.y, p.z);
+}
+
+vec3 rotX(vec3 p, float th){
+  float si = sin(th);
+  float co = cos(th);
+  return vec3(p.x, si*p.y - co*p.z, co*p.y + si * p.z);
+}
+
+float sdBox( vec3 p, vec3 b )
+{
+  vec3 d = abs(p) - b;
+  return min(max(d.x,max(d.y,d.z)),0.0) +
+         length(max(d,0.0));
+}
 
 float sdSphere( vec3 p, float s )
 {
-  return length(p)-s;
+  return length(p) - s;
 }
 
 float kissa(vec3 p){
-  float a = sdSphere(p, 5.);
-  p.y += 5.;
-  float b = sdSphere(p, 5.);
-
-  return 
+  p.y -= 4.;
+  vec3 q = p + vec3(0.,9.,0.);
+  float korvat = sdBox(q, vec3(4.5,2.,1.));
+  float maha = sdSphere(p, 7.);
+  p.y += 7.;
+  float paa = sdSphere(p, 5.);
+  return min(maha,min(paa,korvat));
 }
 
+float catField( vec3 p, vec3 c )
+{
+    vec3 q = mod(p,c)-0.5*c;
+    return kissa( q );
+}
 
 float f(vec3 p){
-  return kissa(p);
+  /*
+  p = rotY(p,s[0]);
+  p = rotX(p,s[0]*.3);
+  //  return kissa(p);
+  */
+  return catField(p+vec3(8.,0.,s[0]),vec3(20.,20.,20.));
 }
 
 
@@ -167,9 +183,8 @@ vec4 march(vec3 from, vec3 direction) {
 // orthogonal to the plane. Here we approximate the gradient with finite
 // differences along the coordinate axes.
 
-const float epsilon = 0.1;
-
 vec3 normalEstimation(vec3 p){
+  float epsilon = 0.1;
   return normalize( vec3(
       f(p + vec3(epsilon,0.,0.) ) - f(p - vec3(epsilon,0.,0.))
     , f(p + vec3(0.,epsilon,0.) ) - f(p - vec3(0.,epsilon,0.))
@@ -193,7 +208,7 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
   vec3 camdir = normalize(p-pcam);
   vec3 idfs = dfs * max(dot(n,ldir),0.0);
   vec3 refldir = reflect(ldir, n);
-  vec3 ispec = spec * pow(max(dot(refldir,camdir),0.0),4.0);
+  vec3 ispec = spec * pow(max(dot(refldir,camdir),0.0),2.0);
   c += attn * lightC * (idfs + ispec);
   return vec4 (c,1.); // no alpha blending in use...
 }
@@ -217,14 +232,15 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
     vec3 n = normalEstimation(p);
 
     vec3 lightC = vec3(3.);
-    vec3 ambient = vec3(0.3,0.3,0.4);
-    vec3 diffuse = vec3(0.8,0.0,0.4);
-    vec3 specular = vec3(1.0,1.0,1.0);
+    vec3 ambient = vec3(0.2,0.2,0.2);
+    vec3 diffuse = vec3(0.8,0.8,0.8);
+    vec3 specular = vec3(0.8,0.8,1.0);
 
     vec4 color = doLightPhong(cameraPosition, p, n,
                               lightPosition,
                               lightC,ambient,diffuse,specular);
     
+    if (r<.1) color = vec4(0.);
     gl_FragColor = color;
   }
 

@@ -5,8 +5,8 @@
 
 #include "miditool.hpp"
 #include "midihelper.hpp"
-#include "../include/synti2_midi.h"
-#include "../include/midi_spec.h"
+#include "synti2_midi.h"
+#include "midi_spec.h"
 
 #include <iostream>
 #include <fstream>

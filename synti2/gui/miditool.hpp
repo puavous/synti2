@@ -13,8 +13,8 @@
 #include <cmath>
 
 /* We're gonna use the same mapper here as in the synth.. */
-#include "../include/synti2_midi.h"
-#include "../include/synti2_midi_guts.h"
+#include "synti2_midi.h"
+#include "synti2_midi_guts.h"
 
 #define MIDI_NCHANNELS 16
 #define MIDI_NNOTES 128

@@ -20,6 +20,7 @@
 #include "synti2.h"
 #include "synti2_guts.h"
 #include "synti2_misss.h"
+#include "synti2_fcoding.h"
 
 /* local subr. declared here */
 static
@@ -143,10 +144,6 @@ synti2_player_event_add(synti2_synth *s,
     *msg++ = *src++;
   }
 }
-
-/* FIXME: This too much of a hack? */
-static
-#include "synti2_fdec.c"
 
 /** Merges a chunk, aka layer, to the list of events to be played,
  *  converting layers (stored) into messages (playable). Returns a

@@ -15,6 +15,7 @@
 #include "synti2_midi.h"
 #include "synti2_midi_guts.h"
 #include "synti2_misss.h"
+#include "synti2_fcoding.h"
 #include "midi_spec.h"
 
 #include "stdio.h"
@@ -260,10 +261,6 @@ intercept_const_velocity(synti2_midi_map *map,
   cvelo = *midi_in++;
   map->chn[ic].use_const_velocity = cvelo;
 }
-
-/* TODO: This too much of a hack? */
-static
-#include "synti2_fdec.c"
 
 static
 void

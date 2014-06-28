@@ -39,6 +39,8 @@ synti2gui: $(GUIDEPS) Makefile
 # These files are needed for every stand-alone 4k compilation:
 TINYFILES =  src/synti2.c \
 	     src/synti2_fdec.c \
+	     src/synti2_fenc.c \
+	     src/synti2_fcoding.h \
 	     example/general_main.c \
 	     include/synti2.h \
 	     include/synti2_guts.h \

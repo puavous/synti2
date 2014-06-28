@@ -1,5 +1,7 @@
 .PHONY: nodefaultmake tools mostlyclean clean veryveryclean
 
+# FIXME: Should have a proper make system, finally..
+
 GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/PatchesViewFl.hpp gui/PatchesViewFl.cxx \
           gui/MidiMapperViewFl.hpp gui/MidiMapperViewFl.cxx \
@@ -51,6 +53,15 @@ JACKFILES =  src/synti2_jack.c src/synti2_midi.c include/synti2_cap_full.h
 
 # These are additionally needed for off-line rendering:
 DUMPERFILES = 
+
+# Assembly 2014 4k entry:
+# Specifics needed are song, sounds, and gfx:
+A14FILES = example/a14_4k/a14_4k.mid \
+	   example/a14_4k/a14_4k.s2bank \
+	   example/a14_4k/render.c \
+	   example/a14_4k/vertex.vert \
+	   example/a14_4k/fragment.frag \
+	   example/glfuncs.c
 
 # Instanssi 2014 4k entry:
 # Specifics needed are song, sounds, and gfx:
@@ -128,7 +139,7 @@ i13tiny:
 
 # A more final attempt for 4k stand-alone
 hack3:
-	make tiny3 CUSTOMFILES="$(I14FILES)"
+	make tiny3 CUSTOMFILES="$(A14FILES)"
 	cd hackpack3; make all
 	mv hackpack3/vis2 ./jacksynti2
 	ls -l hackpack3/tiny2

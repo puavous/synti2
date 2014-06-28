@@ -192,47 +192,7 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	cp engine/synti2_midi_guts.h hackpack3/
 	cp engine/midi_spec.h hackpack3/
 
-
-# For 4k stand-alone mode:
-tiny2: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
-	-rm -r hackpack2
-	-mkdir hackpack2
-	cp $(filter %.c %.h %.dat, $^) hackpack2/
-	echo 'NONOS=' $(NONOS) '' > hackpack2/Makefile
-	cat tests/tinymaker.makefile >> hackpack2/Makefile
-	cp example/selfextr.stub hackpack2/
-	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
-		< $(filter %shaders.c, $^) > hackpack2/shaders.c
-	./cltool capheader $(filter %.s2bank, $(CUSTOMFILES)) > hackpack2/synti2_cap.h
-	./cltool patchdesign $(filter %.s2bank, $(CUSTOMFILES)) > hackpack2/patchdes.dat
-	./cltool parheader hackpack2/patchdes.dat > hackpack2/synti2_params.h
-	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
-	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
-#For the visualization only:
-	cp engine/synti2_midi.h hackpack2/
-	cp engine/synti2_jack.h hackpack2/
-	cp engine/synti2_midi_guts.h hackpack2/
-	cp engine/midi_spec.h hackpack2/
-
-# For 4k stand-alone mode, 32bit linux:
-tiny2_32: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
-	-rm -r hackpack2
-	-mkdir hackpack2
-	cp $(filter %.c %.h %.dat, $^) hackpack2/
-	echo 'NONOS=' $(NONOS) '' > hackpack2/Makefile
-	cat tests/tinymaker.makefile32 >> hackpack2/Makefile
-	cp example/selfextr.stub hackpack2/
-	sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/ *\/\/.*$$/\\/g' \
-		< $(filter %shaders.c, $^) > hackpack2/shaders.c
-	./cltool capheader $(filter %.s2bank, $(CUSTOMFILES)) > hackpack2/synti2_cap.h
-	./cltool patchdesign $(filter %.s2bank, $(CUSTOMFILES)) > hackpack2/patchdes.dat
-	./cltool parheader hackpack2/patchdes.dat > hackpack2/synti2_params.h
-	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
-	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
-
-
 # Clean-up targets:
-
 mostlyclean:
 	-rm `find . -name "*~"` *.o
 	-rm -r hackpack

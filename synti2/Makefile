@@ -13,7 +13,7 @@ GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
           gui/midihelper.hpp gui/midihelper.cxx \
           gui/miditool.hpp gui/miditool.cxx \
 	  gui/misss.hpp gui/misss.cxx gui/misssevent.hpp \
-	  src/synti2_midi.h src/synti2_midi.c \
+	  engine/synti2_midi.h engine/synti2_midi.c \
           gui/main.cxx
 
 # C flags common to all files (normal/debug build)
@@ -26,32 +26,32 @@ tools: synti2gui
 
 synti2gui: $(GUIDEPS) Makefile
 	g++ -Wall -g -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
-		-Isrc \
+		-Iengine \
 		`fltk-config --cxxflags`  \
 		`pkg-config --cflags --libs jack`
 
 # Experiments with dry runs, benchmarking, and SDL
-#benchmark: tests/benchmark.c src/synti2.c include/synti2.h testdata.c Makefile
+#benchmark: tests/benchmark.c engine/synti2.c include/synti2.h testdata.c Makefile
 #	$(CC) $(CFLAGS) -I./ -I./include -o $@ \
 #		$(filter %.c , $^) -lm
 
 
 # These files are needed for every stand-alone 4k compilation:
-TINYFILES =  src/synti2.c \
-	     src/synti2_fdec.c \
-	     src/synti2_fenc.c \
-	     src/synti2_fcoding.h \
+TINYFILES =  engine/synti2.c \
+	     engine/synti2_fdec.c \
+	     engine/synti2_fenc.c \
+	     engine/synti2_fcoding.h \
 	     example/general_main.c \
-	     src/synti2.h \
-	     src/synti2_guts.h \
-	     src/synti2_misss.h \
-	     src/synti2_archdep.h \
-	     src/synti2_limits.h \
+	     engine/synti2.h \
+	     engine/synti2_guts.h \
+	     engine/synti2_misss.h \
+	     engine/synti2_archdep.h \
+	     engine/synti2_limits.h \
 	     tests/tinymaker.makefile \
 	     example/selfextr.stub 
 
 # These are additionally needed for compose-time with jack engine:
-JACKFILES =  src/synti2_jack.c src/synti2_midi.c src/synti2_cap_full.h
+JACKFILES =  engine/synti2_jack.c engine/synti2_midi.c engine/synti2_cap_full.h
 
 # These are additionally needed for off-line rendering:
 DUMPERFILES = 
@@ -187,10 +187,10 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	./synti2gui --write-song $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/songdata.c
 
 #For the visualization only:
-	cp src/synti2_midi.h hackpack3/
-	cp src/synti2_jack.h hackpack3/
-	cp src/synti2_midi_guts.h hackpack3/
-	cp src/midi_spec.h hackpack3/
+	cp engine/synti2_midi.h hackpack3/
+	cp engine/synti2_jack.h hackpack3/
+	cp engine/synti2_midi_guts.h hackpack3/
+	cp engine/midi_spec.h hackpack3/
 
 
 # For 4k stand-alone mode:
@@ -209,10 +209,10 @@ tiny2: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	./cltool patchdata $(filter %.s2bank, $(CUSTOMFILES)) hackpack2/patchdes.dat > hackpack2/patchdata.c
 	./cltool songdata $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $^) > hackpack2/songdata.c
 #For the visualization only:
-	cp src/synti2_midi.h hackpack2/
-	cp src/synti2_jack.h hackpack2/
-	cp src/synti2_midi_guts.h hackpack2/
-	cp src/midi_spec.h hackpack2/
+	cp engine/synti2_midi.h hackpack2/
+	cp engine/synti2_jack.h hackpack2/
+	cp engine/synti2_midi_guts.h hackpack2/
+	cp engine/midi_spec.h hackpack2/
 
 # For 4k stand-alone mode, 32bit linux:
 tiny2_32: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)

@@ -52,7 +52,7 @@ static void render_scene(const synti2_synth *s){
       *isp++ = v->eprog[j].f;
     for(j=0; j<NUM_MODULATORS; j++)
       *isp++ = v->contr[j].f;
-    *isp++ = v->note;
+    *isp++ = v->note / 128.;
     v++;
   }
 

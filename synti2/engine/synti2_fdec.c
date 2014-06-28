@@ -5,14 +5,13 @@
   This code (and algorithm) is now localized here; it must match the
   encoding code in synti2_fenc.c
 
-  Format:
+  Format (as decoding algorithm):
   - Input is an integer (actually a MIDI "varlength" of 1-4 bytes, 
     but we assume it is read into an int before calling this function)
   - two least significant bits are the accuracy, as negative power of ten.
-  - shift right to rid of two bits.
   - the next bit is the sign (1 = positive, 0 = negative)
     FIXME: Alternatives for this?
-  - shift right to rid of one bit.
+  - shift right to rid of the previous bits.
   - the rest of bits are now the significant digits of the value
   - apply sign and the negative power of ten (0-3)
 
@@ -25,9 +24,11 @@ float synti2_decode_f(int stored){
   int i;
   float res;
   int positive;
-  i = stored & 0x3; stored >>= 2;
-  positive = stored & 0x1; stored >>= 1;
-  res = ((positive)?stored:-stored);
+  i = stored & 0x3;
+  positive = stored & 0x4;
+  stored = ((positive)?stored:-stored);
+  stored >>= 3;
+  res = stored;
   for (; i > 0; i--) res /= 10.f;
   return res;
 }

@@ -14,11 +14,14 @@ uniform float s[200]; // State parameters from app.
     vec2 pix = gl_FragCoord.xy / vec2(s[1],s[2]);
     pix.y = 1.-pix.y;
 
-    pix *= vec2(9.,8.);
+    int nchan = int(s[3]);
+    int nstat = int(s[4]) + int(s[5]) + 1;
+
+    pix *= vec2(nstat,nchan);
     int row = int(pix.y);
     int col = int(pix.x);
     
-    float intensity = s[3+9*row + col];
+    float intensity = s[6 + nstat*row + col];
     gl_FragColor = vec4(intensity);
   }
 

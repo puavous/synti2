@@ -7,7 +7,7 @@
  * thing compiled in small space.
  */
 
-#define NUM_GLOBAL_PARAMS 3
+#define NUM_GLOBAL_PARAMS 6
 #define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_ENVS + 1 + NUM_MODULATORS + 1))
 
 /*#define NEED_DEBUG*/
@@ -37,9 +37,12 @@ static void render_scene(const synti2_synth *s){
      float synthtime;
      synthtime =  (float)(s->framecount) / s->sr;
   */
-  //state[0] = synthtime;
-  //state[1] = window_h*ar; /* globals */
-  //state[2] = window_h;    /* globals */
+  state[0] = synthtime;
+  state[1] = window_h*ar; /* globals */
+  state[2] = window_h;    /* globals */
+  state[3] = NUM_CHANNELS;     /* constants */
+  state[4] = NUM_ENVS + 1;     /* constants */
+  state[5] = NUM_MODULATORS;   /* constants */
 
   isp = state + NUM_GLOBAL_PARAMS;
   
@@ -53,22 +56,8 @@ static void render_scene(const synti2_synth *s){
     v++;
   }
 
-#if 0
-  for(i=0; i<NUM_CHANNELS; i++){
-    for(j=0;j<NUM_ENVS+1;j++){
-      *isp++ = s->voi[i].eprog[j].f;
-    }
-    for(j=0;j<NUM_MODULATORS;j++){
-      *isp++ = s->voi[i].contr[j].f;
-    }
-    *isp++ = s->voi[i].note;
-  }
-#endif
-
   unipar = oglGetUniformLocation(pid, "s");
   oglUniform1fv(unipar, NUM_SYNTH_PARAMS, state);
-
-  //  glEnable(GL_DEPTH_TEST);
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
   glRects( -1, -1, 1, 1 );

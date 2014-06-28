@@ -60,9 +60,9 @@ DUMPERFILES =
 # Specifics needed are song, sounds, and gfx:
 A14FILES = example/a14_4k/a14_4k.mid \
 	   example/a14_4k/a14_4k.s2bank \
-	   example/a14_4k/render.c \
+	   example/shader_test/render.c \
 	   example/a14_4k/vertex.vert \
-	   example/a14_4k/fragment.frag \
+	   example/shader_test/fragment.frag \
 	   example/glfuncs.c
 
 # Instanssi 2014 4k entry:

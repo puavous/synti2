@@ -144,7 +144,7 @@ synti2_player_event_add(synti2_synth *s,
   }
 }
 
-/* TODO: This too much of a hack? */
+/* FIXME: This too much of a hack? */
 static
 #include "synti2_fdec.c"
 
@@ -182,10 +182,11 @@ synti2_player_merge_chunk(synti2_synth *s,
     r += varlength(r, &tickdelta);
     frame += s->seq.fpt * tickdelta;
     
-    /* FIXME: If modulators are not used, then there's only one kind
-     * of chunks. The whole type variable and its check could be
-     * ifdeffed away. That would save only 7 bytes in this check, but
-     * perhaps more in the loader and actual song data?
+    /* TODO: (possible size optimization) If modulators are not used,
+     * then there's only one kind of chunks. The whole type variable
+     * and its check could be ifdeffed away. That would save only 7
+     * bytes in this check, but perhaps more in the loader and actual
+     * song data?
      */
     if (type == MISSS_LAYER_NOTES){
       /* Produce a 'Note on' message in our internal midi-like fmt. */
@@ -931,7 +932,9 @@ synti2_render(synti2_synth *s,
 #ifdef FEAT_APPLY_ADD
         interm += sigin[pat->ipar3[IPAR_ADDTO1+iosc]]; /* parallel */
 #endif
-        /* FIXME: Are these a good idea? Other functions better?*/
+        /* FIXME: Are these a good idea? Other functions better?
+         * sign()? abs()?
+         */
 #ifdef FEAT_POWER_WAVES
         if (pat->ipar3[IPAR_POWR1+iosc] == 2){
           interm *= interm;

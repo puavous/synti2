@@ -484,6 +484,16 @@ PatchBank::getEffectiveParAsSysEx(int ipatch, const string &parkey)
     return res;
 }
 
+std::vector<unsigned char>
+PatchBank::getPanicMessageAsSysEx()
+{
+    vector<unsigned char> res;
+    synti2_sysex_header(res);
+    res.push_back(MISSS_MSG_DATA);
+    res.push_back(MISSS_SYSEX_PANIC_MAJOR);
+    synti2_sysex_footer(res);
+    return res;
+}
 
 }
 

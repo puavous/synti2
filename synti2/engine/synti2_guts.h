@@ -151,7 +151,9 @@ typedef struct synti2_voice {
   float outp[1+NUM_MAX_OPERATORS+1];
 
 #ifdef FEAT_FILTER
-  float filtp[1+4];     /* Filter playground in + (lp,bp,hp,notch) */
+/* Filter playground in + (lp,bp,hp,notch) */
+#define FILTER_PLAYGROUND_SIZE (1+4)
+  float filtp[FILTER_PLAYGROUND_SIZE];
 #endif
 
   synti2_patch patch;   /* The sound parameters per part*/

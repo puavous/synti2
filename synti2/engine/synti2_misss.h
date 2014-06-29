@@ -47,9 +47,10 @@
 /* Operations (instantaneous) at compose-time. Not space-limited.
  * These are in the SysEx specification, visible to the world.
  */
-#define MISSS_SYSEX_SET_3BIT 0
-#define MISSS_SYSEX_SET_7BIT 1
-#define MISSS_SYSEX_SET_F    2
+#define MISSS_SYSEX_SET_3BIT     0
+#define MISSS_SYSEX_SET_7BIT     1 /* unused as of now! */
+#define MISSS_SYSEX_SET_F        2
+#define MISSS_SYSEX_PANIC_MAJOR  3
 
 #define MISSS_SYSEX_MM_SUST      9
 #define MISSS_SYSEX_MM_MODE      10

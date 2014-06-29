@@ -360,6 +360,44 @@ synti2_init(synti2_synth * s,
 }
 
 
+/**
+ * Panic reset - Zero everything that might contribute to infinite
+ * feedbacks etc. Only needed in compose mode as a real-time SysEx.
+ *
+ * TODO: Doesn't work for all scenarios yet, but this is already very
+ * good for some bad delay-feedbacks, if you're quick enough with the
+ * Panic-button.. (Doesn't recover from some situations,
+ * though.. perhaps when outputs are in infities, nan, or
+ * something.. should examine that situation with more rigor some
+ * day..)
+ */
+static
+void
+synti2_panic_reset(synti2_synth * s)
+{
+  unsigned long sr;
+  int ii, id, iv;
+
+  for (iv=0;iv<NUM_CHANNELS;iv++){
+#ifdef FEAT_FILTER
+    for (ii=0;ii<FILTER_PLAYGROUND_SIZE;ii++){
+      s->voi[iv].filtp[ii] = 0.f;
+    }
+#endif
+#ifdef FEAT_DELAY_LINES
+    s->voi[iv].patch.fpar[FPAR_LVD] = 0.f;
+    /* Hmm... individual lines OK..
+    for (id = 0; id < NUM_DELAY_LINES; id++){
+      voi.patch.fpar[FPAR_DINLV1+id] = 0.f;
+      }
+    */
+#endif
+  }
+}
+
+
+
+
 /** 
  * Note on OR note off (upon velocity == 0).
  *
@@ -508,17 +546,22 @@ synti2_do_receiveSysexData(synti2_synth *s, const byte_t * data){
   
   /* Data header: what to do, for which parameter of which patch:*/
   opcode = *data++;
-  ir = *data++;
-  ipat = *data++;
   
   if (opcode==MISSS_SYSEX_SET_3BIT) {
     /* Receive one parameter at location (patch,i3par_index) */
+    ir = *data++;
+    ipat = *data++;
     s->voi[ipat].patch.ipar3[ir] = *data;
   } else if (opcode==MISSS_SYSEX_SET_F){
     /* Receive one float parameter at location (patch,fpar_index) */
+    ir = *data++;
+    ipat = *data++;
     decode7b4(data, &encoded_fval);
     s->voi[ipat].patch.fpar[ir] = synti2_decode_f(encoded_fval);
-  } 
+  } else if (opcode==MISSS_SYSEX_PANIC_MAJOR){
+    /* Can't do full init in RT.. should have faster operation(?).. */
+    synti2_panic_reset(s);
+  }
 #ifdef DO_SAFETY_CHECKS
   else {
     s->last_error_frame = s->framecount;

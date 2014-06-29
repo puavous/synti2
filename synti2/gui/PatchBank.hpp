@@ -177,7 +177,7 @@ namespace synti2base {
     void writeOnePatch(size_t ipat, ostream & ost);
     void readOnePatch(size_t ipat, istream & ist);
     void clearOnePatch(size_t ipat){cerr << "not impl." << endl;}
-    void pleaseSendPanic(){cerr << "not impl." << endl;}
+    void pleaseSendPanic(){sendMidi(getPanicMessageAsSysEx());}
 
     /** Writes a C header file for stand-alone synth to a stream. */
     void exportCapFeatHeader(ostream & ost);
@@ -263,6 +263,9 @@ namespace synti2base {
 
     vector<unsigned char>
     getEffectiveParAsSysEx(int ipatch, const string &parkey);
+
+    vector<unsigned char>
+    getPanicMessageAsSysEx();
 
     /** Enables an on/off feature. Other features may be enabled as a
      *  side-effect. Functions registered by registerFeatureCallback()

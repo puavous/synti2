@@ -67,26 +67,6 @@ synti2_misss_note(
   return 4;
 }
 
-#if 0
-/** Creates a MISSS "F-value" message; returns length of the
- *  message. Output buffer must have enough space. Currently, the
- *  length is 3 + sizeof(float). Is this used anywhere anymore,
- *  actually?
- */
-static
-int
-synti2_misss_setf(byte_t *misss_out,
-                  byte_t misss_chn,
-                  byte_t fval_index,
-                  float fval){
-  *misss_out++ = MISSS_MSG_SETF;
-  *misss_out++ = misss_chn; /* TODO: Channel dispersion logic in caller?*/
-  *misss_out++ = fval_index;
-  *(float*)misss_out = fval;
-  return 3+sizeof(float); /* A native float floats out. */
-}
-#endif
-
 /** Creates a MISSS "Controller ramp" message; returns length of the
  * message. Output buffer must have enough space. Currently, the
  * length is 3 + 2 * sizeof(float).

@@ -5,10 +5,10 @@ Final decisions and their rationale
 
 I don't find many valid reasons (at least for myself) to take up such
 a silly and time consuming spare-time project as programming a tiny
-software synthesizer. The most defining and basic reason in this case
-was that I wanted to learn some new things, and to prove to myself
-with a finalized artefact that I have gained a substantial amount of
-knowledge on the initially chosen topics. Most of the final
+software synthesizer. The fundamental reason in this case was that I
+wanted to learn some new things, and to prove to myself with a
+finalized artefact that I have gained a substantial amount of
+knowledge on the topics initially chosen. Most of the final
 technology-limiting decisions arise quite directly from this
 fundamental goal setting.
 
@@ -42,8 +42,8 @@ fundamental goal setting.
   software synthesizer "plug-in" - just to know how such things are
   made in principle. This clearly conflicts with the other, equally
   important target, which was to make the synthesis engine very
-  tiny. The compromising balance between these two goals must remain
-  equal till the end (even as the hunger for smaller and smaller
+  tiny. The compromise between these two goals must remain balanced
+  till the end (even as the hunger for smaller and smaller
   implementation grows). The whole thing wouldn't exist if it wasn't
   equally (and highly) interesting to try both of the two things, not
   only one or the other.
@@ -66,17 +66,17 @@ synth projects (The TODO here is to go over the loads of abandoned
 code and scrap papers to find more of these)::
 
  * TODO: (In some later, re-designed project) the envelope code could
- * be made simpler by letting go of the whole loop idea, and, instead,
- * using some kind of LFOs or inter-channel patching for modulation
- * effects.
- *
+   be made simpler by letting go of the whole loop idea, and, instead,
+   using some kind of LFOs or inter-channel patching for modulation
+   effects.
+  
  * TODO: (In some other later project) the envelopes could be made
- * more interesting by combining more parts than just 5 linear
- * interpolation knees. Consider a freely editable list of arbitrary
- * combinations of constant+anyWaveTable at editable frequencies. I
- * think that such code could (somehow, maybe) support both compact
- * storage for 4k and, at the same time, unlimited flexibility for
- * sound design, when size limitations need not to be considered.
+   more interesting by combining more parts than just 5 linear
+   interpolation knees. Consider a freely editable list of arbitrary
+   combinations of constant+anyWaveTable at editable frequencies. I
+   think that such code could (somehow, maybe) support both compact
+   storage for 4k and, at the same time, unlimited flexibility for
+   sound design, when size limitations need not to be considered.
 
  * TODO: Velocity is not connected nicely to the amp envelopes. There
    is a pop when velocity changes, because it affects the output
@@ -84,9 +84,9 @@ code and scrap papers to find more of these)::
    Remember to deal with this in future projects!
 
  * TODO: (Before future projects with re-designed synths) Evaluate if
- * this everything-is-a-counter thing was a good idea.
+   this everything-is-a-counter thing was a good idea.
 
+ * TODO: I'm not using C structs as much as I should. It was an early
+   decision, which probably should be made differently in a later
+   project.
 
-/* TODO: Think about the whole envelope madness... use LFOs instead of
- * looping envelopes?
- */

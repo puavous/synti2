@@ -21,9 +21,12 @@
  * limited the most, because the song data will be in layers. So maybe
  * these should be combined with other header information?
  *
- * FIXME: If only one bit is used for layer identification in the end,
- * then maybe use the remaining 7 for some useful aspect (could hold
- * par[0], for example). But... do I want _LAYER_DATA !?
+ * TODO: (perhaps in a later version) If only one bit is used for
+ * layer identification in the end, then maybe use the remaining 7 for
+ * some useful aspect (could hold par[0], for example). But... do I
+ * want MISSS_LAYER_DATA !? TODO: If ramps were not used, there would
+ * be only one kind of layers, and the whole identification byte/bit
+ * would be unnecessary.
  */
 #define MISSS_LAYER_NOTES 0x00
 #define MISSS_LAYER_CONTROLLER_RAMPS 0x01
@@ -33,11 +36,11 @@
  */
 #define MISSS_MSG_NOTE 0x00
 #define MISSS_MSG_RAMP 0x01
-/* FIXME: Are SETF or DATA really needed? For these we have real-time
- * operations (SET_x)
+#define MISSS_MSG_DATA 0x02
+/* SETF wasn't really needed.. For the purpose we have real-time
+ * operations (MISSS_SYSEX_SET_x)
  */
-#define MISSS_MSG_SETF 0x02
-#define MISSS_MSG_DATA 0x03
+/*  #define MISSS_MSG_SETF 0x03*/
 
 
 

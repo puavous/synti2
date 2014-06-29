@@ -147,9 +147,9 @@ typedef struct synti2_voice {
   unsigned int velocity;
 #endif
 
-  float outp[1+NUM_MAX_OPERATORS+1]; /*"zero", operator outputs, delay
-                                        bus FIXME: could be a struct?
-                                        should?*/
+  /* Computation area for "zero", operator outputs, delay bus: */
+  float outp[1+NUM_MAX_OPERATORS+1];
+
 #ifdef FEAT_FILTER
   float filtp[1+4];     /* Filter playground in + (lp,bp,hp,notch) */
 #endif

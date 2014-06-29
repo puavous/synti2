@@ -9,7 +9,6 @@
  * Hmm.. that means that they should be in their own header file?
  * (Maybe).
  *
- * FIXME: Implement the Panic/reset sysex.
  */
 #ifndef MISSS_INCLUDED
 #define MISSS_INCLUDED

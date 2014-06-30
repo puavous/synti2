@@ -23,7 +23,7 @@ typedef struct {
   float mod_max[NUM_MODULATORS]; /* destination-specific max value. */
   /* Internal: */
   float instant_ramp_length;   /* length of "intantaneous" transition (expose?)*/
-  int nvoices;             /* length of the "voices" string. Computed on mode change. */
+  int nvoices;             /* length of the "voices" array. Computed on mode change. */
 
 /*int cc_destination[128];*/  /* Fast look-up helper table for the 128 MIDI
                                  controllers to internal modulators.(needed?) */

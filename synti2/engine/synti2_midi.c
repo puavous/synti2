@@ -148,6 +148,19 @@ intercept_noff(synti2_midi_map *map,
   map->chn[ic].receive_note_off = value;
 }
 
+/** Recompute length of a voice array (count of non-zero
+ *  elements). TODO: think about default settings(?).
+ */
+static
+void
+compute_voices_length(synti2_midi_map *map,
+                      int ichan)
+{
+  int ii;
+  for(ii=0;(ii<NUM_CHANNELS) && (map->chn[ichan].voices[ii] > 0);){ii++;}
+  map->chn[ichan].nvoices = ii;
+}
+
 /* Could be "intercept single byte"!*/
 static
 void
@@ -156,12 +169,8 @@ intercept_mode(synti2_midi_map *map,
 {
   int ic = midi_in[0];
   int value = midi_in[1];
-  int ii;
   map->chn[ic].mode = value;
-
-  /* FIXME: Should be done in intercept_voices, but think about default settings in that case. */
-  for(ii=0;(ii<NUM_CHANNELS) && (map->chn[ic].voices[ii] > 0);){ii++;}
-  map->chn[ic].nvoices = ii;
+  compute_voices_length(map, ic);
 }
 
 static

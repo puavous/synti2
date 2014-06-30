@@ -29,8 +29,8 @@ synti2_player_init_from_jack_midi(synti2_synth *s,
 {
   jack_midi_event_t ev;
   jack_nframes_t i, nev;
-  byte_t msg[2000]; /* FIXME: What sizes do we actually need!? */
-  int msgsz[1000];  /* FIXME: What sizes do we actually need!? */
+  byte_t msg[MISSS_MAX_BYTES];
+  int msgsz[MISSS_MAX_MESSAGES];
   void *midi_in_buffer = (void*) jack_port_get_buffer (inmidi_port, nframes);
   int iout,nout,cumout;
 

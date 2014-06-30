@@ -113,11 +113,10 @@ synti2_misss_data(const byte_t *midi_in,
  * Converts MIDI System messages. Assumes midi_status to be between F0
  * and FF (which means a System Message).
  *
- *
- * FIXME: Manufacturer ID check.. Should also check that there is F7
- *  in the end :) length check; checksums :) could (and should) have
- *  checks now that this code is moved outside the stand-alone synth
- *  and thus is not size critical anymore..
+ * TODO: Manufacturer ID check.. Should also check that there is F7
+ *  in the end :) checksums :) should write checks now that this code
+ *  is moved outside the stand-alone synth and thus is not size
+ *  critical anymore..
  */
 static
 int
@@ -130,6 +129,7 @@ synti2_sysmsg_to_misss(byte_t midi_status,
   case 0xf0:
     /* Sysex header: */
     midi_in += 3; /* skip Manufacturer IDs n stuff TODO: think about this */
+    if ((input_size-3) > MISSS_MAX_BYTES) return 0;
     return synti2_misss_data(midi_in, misss_out, input_size-3);
   default:
     /* Other System Messages are swallowed by void, as of now.*/

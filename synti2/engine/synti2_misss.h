@@ -41,8 +41,6 @@
  */
 /*  #define MISSS_MSG_SETF 0x03*/
 
-
-
 /* Operations (instantaneous) at compose-time. Not space-limited.
  * These are in the SysEx specification, visible to the world.
  */

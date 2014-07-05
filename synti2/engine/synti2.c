@@ -325,7 +325,9 @@ synti2_init(synti2_synth * s,
    */
   deltaf = 8.175798915643707f;
   for(ii=0;ii<128;ii++){
+#ifdef FEAT_FILTER
     s->note2freq[ii] = deltaf;
+#endif
     s->note2delta[ii] = ((MAX_COUNTER) / s->sr) * deltaf ;
     deltaf *= 1.0594630943592953f;
   }

@@ -121,20 +121,15 @@ typedef struct synti2_patch {
  *  it stands for. So just call it voice.
  */
 typedef struct synti2_voice {
-  /* Must be in this order and next to each other exactly!! FIXME:
-   * Basically memory layout is implementation dependent, so I want to
-   * rid of this hack, after all.
+  /* Counters in one array (so that they can be iterated in one loop):
+   * Operator phases, envelope timers, modulators, pitch.
    */
-#define CI_ENVS NUM_OPERATORS
-#define CI_MODS (NUM_OPERATORS + (NUM_ENVS+1))
-#define CI_PITCH (NUM_OPERATORS + (NUM_ENVS+1) + NUM_MODULATORS)
+#define CI_OPERS     0
+#define CI_ENVS      (CI_OPERS + NUM_OPERATORS)
+#define CI_MODS      (CI_ENVS  + (1 + NUM_ENVS))
+#define CI_PITCH     (CI_MODS  + NUM_MODULATORS)
 #define NUM_COUNTERS (CI_PITCH + 1)
   counter c[NUM_COUNTERS];
-  //counter eprog[NUM_ENVS+1];
-  //counter contr[NUM_MODULATORS];
-#ifdef FEAT_LEGATO
-  //counter pitch;
-#endif
 #ifdef FEAT_FILTER_FOLLOW_PITCH
   float effnote[NUM_OPERATORS];
 #endif
@@ -170,12 +165,15 @@ struct synti2_synth {
   unsigned int sr; /* Better for code size to have indiv. attrib 1st?*/
   synti2_player seq;
 
-  float infranotes[128]; /* TODO: This space could be used for LFO's */
+  /* TODO: This space could be used for LFO's. But I suppose memory
+   * layout is implementation-dependent!
+   */
+  float infranotes[128]; 
   float note2delta[128];  /* pre-computed frequencies of notes... Tuning
 			    systems would be easy to change - just
 			    compute a different table here (?)..*/
   float ultranotes[128]; /* TODO: This space could be used for noises? */
-  float note2freq[256]; /* For filter.. */
+  float note2freq[256];  /* For filter.. */
 
   float wave[NHARM][WAVETABLE_SIZE];
   /*float noise[WAVETABLE_SIZE]; Maybe?? */

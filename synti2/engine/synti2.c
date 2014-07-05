@@ -436,7 +436,7 @@ synti2_do_noteon(synti2_synth *s,
   if (vel==0){
     for (ie=0; ie<=NUM_ENVS; ie++){
       s->voi[voice].estage[ie] = ENV_RELEASE_STAGE;
-      s->voi[voice].eprog[ie].delta = 0;
+      s->voi[voice].c[CI_ENVS+ie].delta = 0;
     }
     return; /* Note off done. */
   }
@@ -450,7 +450,7 @@ synti2_do_noteon(synti2_synth *s,
   s->voi[voice].note = note;
   
 #ifdef FEAT_LEGATO
-  synti2_counter_retarget(&(s->voi[voice].pitch),
+  synti2_counter_retarget(&(s->voi[voice].c[CI_PITCH]),
                           s->voi[voice].patch.fpar[FPAR_LEGLEN],
                           note, s->sr);
 #endif
@@ -458,7 +458,7 @@ synti2_do_noteon(synti2_synth *s,
   /* Trigger all envelopes. Just give a hint to the evaluator function.. */
   for (ie=0; ie<=NUM_ENVS; ie++){
     s->voi[voice].estage[ie] = ENV_TRIGGER_STAGE;
-    s->voi[voice].eprog[ie].delta = 0;
+    s->voi[voice].c[CI_ENVS+ie].delta = 0;
   }
   
 #ifdef FEAT_RESET_PHASE
@@ -607,7 +607,7 @@ synti2_handleInput(synti2_synth *s,
 #ifdef FEAT_MODULATORS
     } else if (msgbuf[0] == MISSS_MSG_RAMP){
       /* A ramp message contains controller number, time, and destination value: */
-      synti2_counter_retarget(&(s->voi[msgbuf[1]].contr[msgbuf[2]]),
+      synti2_counter_retarget(&(s->voi[msgbuf[1]].c[CI_MODS + msgbuf[2]]),
                               (*((float*)(msgbuf+3))) /*in given time */,
                               (*((float*)(msgbuf+3+sizeof(float)))) /*to next*/,
                               s->sr);
@@ -715,7 +715,7 @@ synti2_updateEnvelopeStages(synti2_synth *s,
 #endif
     /* Find next non-zero-timed knee (or end). delta==0 on a
        triggered envelope means endclamp/noteon. */
-    while ((v->eprog[ie].delta == 0) && ((--v->estage[ie]) > 0)){
+    while ((v->c[CI_ENVS+ie].delta == 0) && ((--v->estage[ie]) > 0)){
 #ifdef FEAT_LOOPING_ENVELOPES
       if ((v->estage[ie] == ENV_LOOP_STAGE) && (v->sustain != 0)){
         v->estage[ie] += pat->ipar3[(IPAR_ELOOP1-1)+ie]; /*-1*/
@@ -736,7 +736,7 @@ synti2_updateEnvelopeStages(synti2_synth *s,
        */
       nexttime = pat->fpar[ipastend - v->estage[ie] * 2 + 0];
       nextgoal = pat->fpar[ipastend - v->estage[ie] * 2 + 1];
-      synti2_counter_retarget(&(v->eprog[ie]), nexttime, nextgoal, s->sr);
+      synti2_counter_retarget(&(v->c[CI_ENVS+ie]), nexttime, nextgoal, s->sr);
     }
   } 
 }
@@ -767,7 +767,7 @@ synti2_updateFrequencies(const synti2_synth *s,
   for (iosc=0; iosc<NUM_OPERATORS; iosc++){
     /* Pitch either from legato counter or directly from note: */
 #ifdef FEAT_LEGATO
-    notemod = v->pitch.f;
+    notemod = v->c[CI_PITCH].f;
 #else
     notemod = v->note;
 #endif
@@ -779,7 +779,7 @@ synti2_updateFrequencies(const synti2_synth *s,
     
 #ifdef FEAT_PITCH_ENVELOPE
     /* Optional pitch envelope */
-    notemod += v->eprog[pat->ipar3[IPAR_EPIT1+iosc]].f;
+    notemod += v->c[CI_ENVS+pat->ipar3[IPAR_EPIT1+iosc]].f;
 #endif
     
 #ifdef FEAT_PITCH_DETUNE
@@ -919,7 +919,7 @@ synti2_render(synti2_synth *s,
     for(iv=0;iv<NUM_CHANNELS;iv++){
       voi = &(s->voi[iv]);
       pat = &(voi->patch);
-      eprog = voi->eprog;
+      eprog = voi->c + CI_ENVS;
       
       /* Update status of everything on this voice. */
       synti2_updateEnvelopeStages(s, voi, pat);
@@ -929,7 +929,7 @@ synti2_render(synti2_synth *s,
 #ifdef FEAT_MODULATORS
       for (ii=0;ii<NUM_MODULATORS;ii++){
         ccdest = pat->fpar[FPAR_CDST1+ii];
-        pat->fpar[ccdest] = voi->contr[ii].f;
+        pat->fpar[ccdest] = voi->c[CI_MODS+ii].f;
       }
 #endif
 

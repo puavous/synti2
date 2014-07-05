@@ -125,11 +125,15 @@ typedef struct synti2_voice {
    * Basically memory layout is implementation dependent, so I want to
    * rid of this hack, after all.
    */
-  counter c[NUM_OPERATORS];
-  counter eprog[NUM_ENVS+1];
-  counter contr[NUM_MODULATORS];
+#define CI_ENVS NUM_OPERATORS
+#define CI_MODS (NUM_OPERATORS + (NUM_ENVS+1))
+#define CI_PITCH (NUM_OPERATORS + (NUM_ENVS+1) + NUM_MODULATORS)
+#define NUM_COUNTERS (CI_PITCH + 1)
+  counter c[NUM_COUNTERS];
+  //counter eprog[NUM_ENVS+1];
+  //counter contr[NUM_MODULATORS];
 #ifdef FEAT_LEGATO
-  counter pitch;
+  //counter pitch;
 #endif
 #ifdef FEAT_FILTER_FOLLOW_PITCH
   float effnote[NUM_OPERATORS];

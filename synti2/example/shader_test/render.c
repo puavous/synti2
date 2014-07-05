@@ -49,9 +49,9 @@ static void render_scene(const synti2_synth *s){
   synti2_voice *v = s->voi;
   for(i=0; i<NUM_CHANNELS; i++){
     for(j=0; j<NUM_ENVS+1; j++)
-      *isp++ = v->eprog[j].f;
+      *isp++ = v->c[CI_ENVS+j].f;
     for(j=0; j<NUM_MODULATORS; j++)
-      *isp++ = v->contr[j].f;
+      *isp++ = v->c[CI_MODS+j].f;
     *isp++ = v->note / 128.;
     v++;
   }

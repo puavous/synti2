@@ -35,7 +35,10 @@ synti2gui: $(GUIDEPS) Makefile
 #	$(CC) $(CFLAGS) -I./ -I./include -o $@ \
 #		$(filter %.c , $^) -lm
 
-bin/atest: engine/atest.c
+bin:
+	mkdir bin
+
+bin/atest: engine/atest.c bin
 	gcc -o $@ $<
 
 engine/synti2_archdep.h: bin/atest
@@ -205,5 +208,6 @@ mostlyclean:
 	-rm -r hackpack3
 
 clean: mostlyclean
+	-rm -r bin
 	-rm jacksynti2 synti2gui
 	-rm engine/synti2_archdep.h

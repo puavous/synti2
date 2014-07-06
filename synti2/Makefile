@@ -2,33 +2,15 @@
 
 # FIXME: Should have a proper make system, finally..
 
-GUIDEPS = gui/MainWindow.hpp gui/MainWindow.cxx \
-          gui/PatchesViewFl.hpp gui/PatchesViewFl.cxx \
-          gui/MidiMapperViewFl.hpp gui/MidiMapperViewFl.cxx \
-          gui/FeaturesViewFl.hpp gui/FeaturesViewFl.cxx \
-          gui/ExeBuilderViewFl.hpp gui/ExeBuilderViewFl.cxx \
-          gui/Patch.hpp gui/Patch.cxx \
-          gui/PatchBank.hpp gui/PatchBank.cxx \
-          gui/MidiMap.hpp gui/MidiMap.cxx \
-          gui/midihelper.hpp gui/midihelper.cxx \
-          gui/miditool.hpp gui/miditool.cxx \
-	  gui/misss.hpp gui/misss.cxx gui/misssevent.hpp \
-	  engine/synti2_midi.h engine/synti2_midi.c \
-          gui/main.cxx
-
 # C flags common to all files (normal/debug build)
 CFLAGS = -O3 -ffast-math -g -Wall -Wextra -pedantic
 
 nodefaultmake:
 	@echo "No default target is specified as of now."
 
-tools: synti2gui
-
-synti2gui: $(GUIDEPS) Makefile
-	g++ -Wall -g -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
-		-Iengine \
-		`fltk-config --cxxflags`  \
-		`pkg-config --cflags --libs jack`
+bin/synti2gui: engine/synti2_midi.o
+	cd gui; make
+	mv gui/synti2gui bin/synti2gui
 
 # Experiments with dry runs, benchmarking, and SDL
 #benchmark: tests/benchmark.c engine/synti2.c include/synti2.h testdata.c Makefile
@@ -40,6 +22,11 @@ bin/atest: engine/atest.c bin
 
 engine/synti2_archdep.h: bin/atest
 	bin/atest > $@
+
+engine/synti2_midi.o: engine/synti2_midi.c engine/synti2_midi.h engine/synti2_archdep.h
+	g++ -c -o $@ $<
+
+
 
 # These files are needed for every stand-alone 4k compilation:
 TINYFILES =  engine/synti2.c \
@@ -188,9 +175,9 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	echo '";' >> hackpack3/shaders.c
 	rm vertshader.tmp fragshader.tmp
 
-	./synti2gui --write-caps $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/synti2_cap_custom.h
-	./synti2gui --write-patches $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/patchdata.c
-	./synti2gui --write-song $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/songdata.c
+	bin/synti2gui --write-caps $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/synti2_cap_custom.h
+	bin/synti2gui --write-patches $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/patchdata.c
+	bin/synti2gui --write-song $(filter %.mid, $(CUSTOMFILES)) $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/songdata.c
 
 #For the visualization only:
 	cp engine/synti2_midi.h hackpack3/
@@ -200,12 +187,13 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 
 # Clean-up targets:
 mostlyclean:
-	-rm `find . -name "*~"` *.o
-	-rm -r hackpack
-	-rm -r hackpack2
+	cd gui; make clean
+	-rm `find . -name "*~"`
+	-rm engine/*.o
 	-rm -r hackpack3
 
 clean: mostlyclean
+	cd gui; make veryclean
 	-rm bin/*
-	-rm jacksynti2 synti2gui
+	-rm jacksynti2
 	-rm engine/synti2_archdep.h

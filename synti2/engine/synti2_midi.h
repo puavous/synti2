@@ -2,7 +2,6 @@
 #define SYNTI2_MIDI_TRANSLATOR_H
 
 #include "synti2.h"
-#include "synti2_archdep.h"
 
 /* Worst-case data sizes for translating one incoming midi message
  * into a series of misss messages. Bytes buffer is bigger than

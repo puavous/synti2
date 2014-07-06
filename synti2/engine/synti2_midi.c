@@ -17,6 +17,7 @@
 #include "synti2_misss.h"
 #include "synti2_fcoding.h"
 #include "midi_spec.h"
+#include "synti2_archdep.h"
 
 #include "stdio.h"
 

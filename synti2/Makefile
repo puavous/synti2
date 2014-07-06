@@ -35,6 +35,11 @@ synti2gui: $(GUIDEPS) Makefile
 #	$(CC) $(CFLAGS) -I./ -I./include -o $@ \
 #		$(filter %.c , $^) -lm
 
+bin/atest: engine/atest.c
+	gcc -o $@ $<
+
+engine/synti2_archdep.h: bin/atest
+	bin/atest > $@
 
 # These files are needed for every stand-alone 4k compilation:
 TINYFILES =  engine/synti2.c \

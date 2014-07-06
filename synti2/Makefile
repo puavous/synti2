@@ -206,3 +206,4 @@ mostlyclean:
 
 clean: mostlyclean
 	-rm jacksynti2 synti2gui
+	-rm engine/synti2_archdep.h

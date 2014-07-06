@@ -186,6 +186,7 @@ tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	echo -n 'const GLchar *fs="' >> hackpack3/shaders.c
 	cat fragshader.tmp >> hackpack3/shaders.c
 	echo '";' >> hackpack3/shaders.c
+	rm vertshader.tmp fragshader.tmp
 
 	./synti2gui --write-caps $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/synti2_cap_custom.h
 	./synti2gui --write-patches $(filter %.s2bank, $(CUSTOMFILES)) > hackpack3/patchdata.c

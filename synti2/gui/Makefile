@@ -23,8 +23,3 @@ clean:
 
 veryclean: clean
 	-rm synti2gui
-
-#	g++ -Wall -g -o $@ $(filter %.cxx %.hpp %.c , $^) -lfltk \
-#		-Iengine \
-#		`fltk-config --cxxflags`  \
-#		`pkg-config --cflags --libs jack`

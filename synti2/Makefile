@@ -65,6 +65,12 @@ hack3:
 	mv hackpack3/vis2 ./jacksynti2
 	ls -l hackpack3/tiny2
 
+product:
+	-rm -r product
+	mkdir product
+	mkdir product/src
+	mkdir product/bin
+
 tiny3: $(TINYFILES) $(JACKFILES) $(DUMPERFILES) $(CUSTOMFILES)
 	-rm -r hackpack3
 	mkdir hackpack3

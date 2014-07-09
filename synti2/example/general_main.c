@@ -107,8 +107,10 @@ float synthtime;
  */
 
 /* These datas are created by the tool programs: */
+#if SYNTH_PLAYBACK_SDL || DUMP_FRAMES_AND_SNDFILE
 #include "patchdata.c"
 #include "songdata.c"
+#endif
 
 /* opengl functions bypassing normal linkage */
 #include "glfuncs.c"

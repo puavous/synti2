@@ -2,9 +2,17 @@ Synti2 Software Synthesizer with some tool programs and examples.
 
 Status:
 
-  - The synth core has only one (or maybe two) changes to be done. I'm
-    very close to defining synti2 complete as a synthesis engine /
-    interface.
+  - The engine code and some examples (including the Assembly 2013
+    entry) will be shown at the sponsor stand of the Department of
+    Mathematical Information Technology / University of Jyväskylä at
+    Assembly Summer 2014. I also have a local, hidden branch for a new
+    compo entry for the 4k compo at Asm'14; that branch will be pushed
+    to the public repository after the 4k compo has been shown on the
+    big screen.
+
+  - The synth engine has only one (or maybe two) changes to be
+    done. I'm very close to defining synti2 complete as a synthesis
+    engine / interface.
 
   - There is some evil timing-issue (tempo instability) with SDL
     stand-alone. Needs to be analysed and fixed, if at all possible!
@@ -13,9 +21,10 @@ Status:
     hacks. They suffice for my current purposes. Feel free to
     implement them better ...
 
-  - Let's not even talk about the current build "system" ..
+  - Also the build "system" may remain flaky and convoluted for this
+    project..
 
-Follow this space for updates...
+
 
 Dependencies:
 
@@ -38,7 +47,7 @@ Dependencies:
 
   - libsndfile for exporting stand-alone audio as wav.
 
-  - any standard MIDI sequencer for composing
+  - any standard MIDI sequencer for composing music
 
   - docutils & tex for some of the documentation / presentation slides
 

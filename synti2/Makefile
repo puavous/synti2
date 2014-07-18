@@ -1,4 +1,4 @@
-.PHONY: nodefaultmake final mostlyclean clean veryveryclean
+.PHONY: nodefaultmake tools final mostlyclean clean
 
 nodefaultmake:
 	@echo "No default target is specified as of now."
@@ -20,12 +20,13 @@ CUSTOMFILES=$(A14FILES)
 #   include custom.make
 # Users could create their own makefile from there..
 
+tools: bin/synti2gui
 
 bin/synti2gui: engine/synti2_midi.o
 	cd gui; make
 	mv gui/synti2gui bin/synti2gui
 
-bin/atest: engine/atest.c bin
+bin/atest: engine/atest.c
 	gcc -o $@ $<
 
 engine/synti2_archdep.h: bin/atest
@@ -57,14 +58,17 @@ MIDIFILES = engine/synti2_midi.c engine/synti2_midi.h engine/synti2_midi_guts.h 
 JACKFILES = $(MIDIFILES) engine/synti2_jack.c engine/synti2_jack.h \
 	engine/synti2_cap_full.h
 
-product: $(ENGINEFILES) $(TINYFILES) $(JACKFILES) $(CUSTOMFILES) tests/tinymaker4.makefile Makefile
+# All these are required for "current production":
+PRODFILES = $(ENGINEFILES) $(TINYFILES) $(JACKFILES) $(CUSTOMFILES) tests/tinymaker4.makefile
+
+product/: tools Makefile $(PRODFILES)
 	mkdir -p product
 	mkdir -p product/src
 	mkdir -p product/bin
-	cp $^ product/src
+	cp $(ENGINEFILES) $(TINYFILES) $(JACKFILES) $(CUSTOMFILES) product/src
 	cp tests/tinymaker4.makefile product/Makefile
 
-bin/jackvsynti2: product
+bin/jackvsynti2: product/ $(PRODFILES)
 	cd product; make bin/jackvsynti2
 	mv product/bin/jackvsynti2 ./bin
 

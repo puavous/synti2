@@ -2,6 +2,24 @@
 
 nodefaultmake:
 	@echo "No default target is specified as of now."
+	@echo "'make product' generates a source folder for the current project."
+
+# FIXME: Should define entries elsewhere, not in a common Makefile (?)
+# Assembly 2014 4k entry:
+# Specifics needed are song, sounds, and gfx:
+A14FILES = example/a14_4k/a14_4k.mid \
+	   example/a14_4k/a14_4k.s2bank \
+	   example/shader_test/render.c \
+	   example/a14_4k/vertex.vert \
+	   example/shader_test/fragment.frag \
+	   example/glfuncs.c
+
+CUSTOMFILES=$(A14FILES)
+
+# Maybe include a makefile here that could define CUSTOMFILES:
+#   include custom.make
+# Users could create their own makefile from there..
+
 
 bin/synti2gui: engine/synti2_midi.o
 	cd gui; make
@@ -25,29 +43,19 @@ ENGINEFILES = engine/synti2.c \
 	     engine/synti2_guts.h \
 	     engine/synti2_misss.h \
 	     engine/synti2_archdep.h \
-	     engine/synti2_limits.h \
+	     engine/synti2_limits.h
 
-# These are additionally needed for tiny 4k executables:
+# These are additionally needed for tiny executables (like 4k intros):
 TINYFILES = example/selfextr.stub \
 	     example/general_main.c 
 
+# These are additionally needed for any compose-mode MIDI synth:
+MIDIFILES = engine/synti2_midi.c engine/synti2_midi.h engine/synti2_midi_guts.h \
+	     engine/midi_spec.h 
+
 # These are additionally needed for compose-time with jack engine:
-JACKFILES =  engine/synti2_jack.c engine/synti2_jack.h \
-	engine/synti2_midi.c engine/synti2_midi.h engine/synti2_midi_guts.h \
-	engine/midi_spec.h \
+JACKFILES = $(MIDIFILES) engine/synti2_jack.c engine/synti2_jack.h \
 	engine/synti2_cap_full.h
-
-# Assembly 2014 4k entry:
-# Specifics needed are song, sounds, and gfx:
-A14FILES = example/a14_4k/a14_4k.mid \
-	   example/a14_4k/a14_4k.s2bank \
-	   example/shader_test/render.c \
-	   example/a14_4k/vertex.vert \
-	   example/shader_test/fragment.frag \
-	   example/glfuncs.c
-
-# A more final attempt for 4k stand-alone
-CUSTOMFILES=$(A14FILES)
 
 product: $(ENGINEFILES) $(TINYFILES) $(JACKFILES) $(CUSTOMFILES) tests/tinymaker4.makefile Makefile
 	mkdir -p product

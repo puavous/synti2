@@ -72,7 +72,7 @@ bin/jackvsynti2: product/ $(PRODFILES)
 	cd product; make bin/jackvsynti2
 	mv product/bin/jackvsynti2 ./bin
 
-final: product
+final: product/
 	cd product; make all
 
 # Clean-up targets:

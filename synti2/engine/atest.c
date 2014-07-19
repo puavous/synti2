@@ -14,7 +14,7 @@
  * program deduces other values from actual length of "unsigned int".
  * TODO: Why not make this a command line argument?
  */
-#define BITS_FOR_WAVETABLE 10
+#define BITS_FOR_WAVETABLE 16
 
 #include<stdio.h>
 int main(int argc, char **argv){

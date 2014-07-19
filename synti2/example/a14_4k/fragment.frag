@@ -1,5 +1,11 @@
 uniform float s[200]; // State parameters from app.
 
+struct marchRes {
+  vec3 point;
+  float closestD;
+  float marchLen;
+};
+
 vec3 rotY(vec3 p, float th){
   float si = sin(th);
   float co = cos(th);
@@ -79,13 +85,6 @@ float f(vec3 p){
   if (sin(2.*s[0]) > .9){
       p.z -= 30.;
       return kissa(p);
-      /*
-  } else if (sin(2.*s[0]) > .8){
-    return one(p);
-  } else if (sin(2.*s[0]) > .7){
-    return three(p);
-  } else if (sin(2.*s[0]) > .6){
-      */
   }else{
     p = rotZ(p,.3*sin(s[0])+sin(s[0])*p.z*.04);
     vec3 c = vec3(30.,30.,30.);
@@ -96,26 +95,35 @@ float f(vec3 p){
   }
 }
 
-
-vec4 march(vec3 from, vec3 direction) {
-  float MinimumDistance = .01;
+marchRes march(vec3 from, vec3 direction) {
+  float ThresholdDistance = .01;
   int MaxRaySteps = 180;
   float TooFar = 480.0;
   float totalDistance = 0.0;
+  float closestDistance = TooFar;
   int steps;
   vec3 p;
 
   for (steps=0; steps < MaxRaySteps; steps++) {
     p = from + totalDistance * direction;
-    float distance = f(p)*.9;
-    totalDistance += distance;
-    if (distance < MinimumDistance){
+    float dist = f(p)*.9;
+    totalDistance += dist;
+    if (dist < ThresholdDistance){
       break;
     }
-    if (totalDistance > TooFar) return vec4(p,0.0);
+    if (dist < closestDistance){
+      closestDistance = dist;
+    }
+    if (totalDistance > TooFar){
+      steps = MaxRaySteps;
+      break;
+    }
   }
-  vec4 res; res.xyz = p;
-  res.w = 1.-float(steps)/float(MaxRaySteps);
+  marchRes res;
+  res.point = p;
+  res.closestD = closestDistance;
+  res.marchLen = 1.-float(steps)/float(MaxRaySteps);
+
   return res;
 }
 
@@ -170,14 +178,14 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
     // Hmm.. think about how the direction affects the rendering:
     vdir = normalize(vdir);
 
-    vec4 pr = march(cameraPosition,vdir);
-    vec3 p = pr.xyz;
-    float r = pr.w;
+    marchRes pr = march(cameraPosition,vdir);
+    vec3 p = pr.point;
+    float r = pr.marchLen;
     vec3 n = normalEstimation(p);
 
     vec3 lightC = vec3(8.);
     vec3 ambient = vec3(0.2,0.0,0.0);
-    vec3 diffuse = vec3(0.8,0.8,0.8);
+    vec3 diffuse = vec3(0.8,0.8,0.0);
     vec3 specular = vec3(0.8,0.8,1.0);
 
     vec4 color = doLightPhong(cameraPosition, p, n,
@@ -186,6 +194,6 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
 
     color *= (300.-p.z)/300.;
     
-    if (r<.01) color = vec4(0.);
+    if (r<.01) color = vec4(sin(pr.closestD)); //vec4(0.);
     gl_FragColor = 1.5*color;
   }

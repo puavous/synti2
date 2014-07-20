@@ -48,39 +48,6 @@ float kissa(vec3 p){
   return min(maha,min(paa,korvat));
 }
 
-/*
-float catField( vec3 p, vec3 c )
-{
-    vec3 q = mod(p,c)-0.5*c;
-    return kissa( q );
-}
-*/
-
-/*
-float one(vec3 p){
-    return sdBox(p, vec3(1.,4.,1.));
-}
-
-float two(vec3 p){
-  float a = sdBox(p + vec3(-2.,0.,0.), 
-                  vec3(1.,4.,1.));
-
-  float b = sdBox(p + vec3(2.,0.,0.), 
-                  vec3(1.,4.,1.));
-  return min(a,b);
-}
-
-float three(vec3 p){
-  float a = sdBox(p + vec3(-4.,0.,0.), 
-                  vec3(1.,4.,1.));
-  float b = sdBox(p + vec3(0.,0.,0.), 
-                  vec3(1.,4.,1.));
-  float c = sdBox(p + vec3(4.,0.,0.), 
-                  vec3(1.,4.,1.));
-  return min(a,min(b,c)); 
-}
-
-*/
 
 float f(vec3 p){
  
@@ -137,20 +104,9 @@ marchRes march(vec3 from, vec3 direction) {
       break;
     }
   }
-  return marchRes(p,
-                  normalEstimation(p),
+  return marchRes(p, normalEstimation(p),
                   closestDistance,
-                  1.-float(steps)/float(MaxRaySteps)
-                  );
-  /*
-  marchRes res;
-  res.point = p;
-  res.n = normalEstimation(p);
-  res.closestD = closestDistance;
-  res.marchLen = 1.-float(steps)/float(MaxRaySteps);
-
-  return res;
-  */
+                  1.-float(steps)/float(MaxRaySteps));
 }
 
 
@@ -161,12 +117,12 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
   // Ambient component:
   vec3 c = amb;
 
-  // Compute light direction; finished if light is behind the surface:
-  vec3 ldir = normalize(lpos - p);
+  // Compute light dir and dist; finished if light is behind the surface:
+  vec3 ldir = normalize(lpos-p);
+  float ldist = length(lpos-p);
   if (ldir.z > 0.) return vec4(c,1.);
 
   // Diffuse and specular component:
-  float ldist = length(lpos-p);
   float attn = 1. / (1. + 0.06*ldist + 0.006*ldist*ldist);
   vec3 camdir = normalize(p-pcam);
   vec3 idfs = dfs * max(dot(n,ldir),0.0);
@@ -177,35 +133,41 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
 }
 
 
-  void main(){
-    vec2 pix = 1. - gl_FragCoord.xy / (.5 * vec2(s[1],s[2]));
-    pix.x *= s[1]/s[2];
+void main(){
+  // Expect screen width in s[1], height in s[2].
+  // Compute normalized coordinate: x in [-ar,ar], y in [-1,1]
+  // y increasing top to down. (eye at origin, facing positive z)
+  vec2 pix = 1. - gl_FragCoord.xy / (.5 * vec2(s[1],s[2]));
+  pix.x *= s[1]/s[2];
 
-    vec3 cameraPosition = vec3(0.,0.,-40.);
-    vec3 lightPosition = vec3(0.,5.,-40.);
-    // I just shoot 'over there'.
-    // TODO: Proper vector length and direction; from resol.
-    vec3 vto = vec3(pix.x*2.,pix.y*2.,8.);
-    vec3 vdir = vto - vec3(pix.x,pix.y,1.);
-    // Hmm.. think about how the direction affects the rendering:
-    vdir = normalize(vdir);
+  vec3 cameraPosition = vec3(0.,0.,-40.);
+  vec3 lightPosition = vec3(50.*sin(s[0]),5.,-40.);
+  // I just shoot 'over there'..
+  // TODO: Proper vector length and direction; from resol.
+  //vec3 vto = vec3(pix.x*2.,pix.y*2.,8.);
+  //vec3 vdir = vto - vec3(pix.x,pix.y,1.);
+  // // Hmm.. think about how the direction affects the rendering:
+  // vdir = normalize(vdir);
 
-    marchRes pr = march(cameraPosition,vdir);
-    vec3 p = pr.point;
-    float r = pr.marchLen;
-    vec3 n = pr.n;
+  // Watch into positive x-axis.. Determine viewing angle by a far plane:
+  vec3 vdir = normalize(vec3(pix,7.));
 
-    vec3 lightC = vec3(8.);
-    vec3 ambient = vec3(0.2,0.0,0.0);
-    vec3 diffuse = vec3(0.8,0.8,0.0);
-    vec3 specular = vec3(0.8,0.8,1.0);
+  marchRes pr = march(cameraPosition,vdir);
+  vec3  p = pr.point;
+  float r = pr.marchLen;
+  vec3  n = pr.n;
+
+  vec3 lightC   = vec3(8.);
+  vec3 ambient  = vec3(0.2,0.0,0.0);
+  vec3 diffuse  = vec3(0.8,0.8,0.0);
+  vec3 specular = vec3(0.8,0.8,1.0);
 
     vec4 color = doLightPhong(cameraPosition, p, n,
                               lightPosition,
                               lightC,ambient,diffuse,specular);
 
-    color *= (300.-p.z)/300.;
+    //color *= (300.-p.z)/300.;
     
     if (r<.01) color = vec4(1./log(pr.closestD)); //vec4(0.);
     gl_FragColor = 1.5*color;
-  }
+}

@@ -1,7 +1,9 @@
 uniform float s[200]; // State parameters from app.
 
+// Structure for the ray march result.
 struct marchRes {
   vec3 point;
+  vec3 n;
   float closestD;
   float marchLen;
 };
@@ -95,6 +97,22 @@ float f(vec3 p){
   }
 }
 
+
+// Distance estimation describes a hyperplane (local tangent plane of
+// a geometry) in an implicit form (f(p)==0 exactly on the plane,
+// f(p)>0 on the front side). Gradient of the function gives a vector
+// orthogonal to the plane. Here we approximate the gradient with finite
+// differences along the coordinate axes.
+
+vec3 normalEstimation(vec3 p){
+  float epsilon = 0.1;
+  return normalize( vec3(
+      f(p + vec3(epsilon,0.,0.) ) - f(p - vec3(epsilon,0.,0.))
+    , f(p + vec3(0.,epsilon,0.) ) - f(p - vec3(0.,epsilon,0.))
+    , f(p + vec3(0.,0.,epsilon) ) - f(p - vec3(0.,0.,epsilon))
+) );}
+
+// Actual marching
 marchRes march(vec3 from, vec3 direction) {
   float ThresholdDistance = .01;
   int MaxRaySteps = 180;
@@ -119,28 +137,22 @@ marchRes march(vec3 from, vec3 direction) {
       break;
     }
   }
+  return marchRes(p,
+                  normalEstimation(p),
+                  closestDistance,
+                  1.-float(steps)/float(MaxRaySteps)
+                  );
+  /*
   marchRes res;
   res.point = p;
+  res.n = normalEstimation(p);
   res.closestD = closestDistance;
   res.marchLen = 1.-float(steps)/float(MaxRaySteps);
 
   return res;
+  */
 }
 
-
-// Distance estimation describes a hyperplane (local tangent plane of
-// a geometry) in an implicit form (f(p)==0 exactly on the plane,
-// f(p)>0 on the front side). Gradient of the function gives a vector
-// orthogonal to the plane. Here we approximate the gradient with finite
-// differences along the coordinate axes.
-
-vec3 normalEstimation(vec3 p){
-  float epsilon = 0.1;
-  return normalize( vec3(
-      f(p + vec3(epsilon,0.,0.) ) - f(p - vec3(epsilon,0.,0.))
-    , f(p + vec3(0.,epsilon,0.) ) - f(p - vec3(0.,epsilon,0.))
-    , f(p + vec3(0.,0.,epsilon) ) - f(p - vec3(0.,0.,epsilon))
-) );}
 
 // Phong model
 vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
@@ -181,7 +193,7 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
     marchRes pr = march(cameraPosition,vdir);
     vec3 p = pr.point;
     float r = pr.marchLen;
-    vec3 n = normalEstimation(p);
+    vec3 n = pr.n;
 
     vec3 lightC = vec3(8.);
     vec3 ambient = vec3(0.2,0.0,0.0);
@@ -194,6 +206,6 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
 
     color *= (300.-p.z)/300.;
     
-    if (r<.01) color = vec4(sin(pr.closestD)); //vec4(0.);
+    if (r<.01) color = vec4(1./log(pr.closestD)); //vec4(0.);
     gl_FragColor = 1.5*color;
   }

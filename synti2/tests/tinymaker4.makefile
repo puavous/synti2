@@ -6,11 +6,16 @@
 
 # The HCFLAGS (as in "hardcore") are for making a very small
 # executable. Could be tuned further?
-HCFLAGS = -Os -mfpmath=387 -funsafe-math-optimizations -fwhole-program \
-	-Wall -Wextra -pedantic -Isrc
+HCFLAGS = -Os -fwhole-program -Isrc \
+	-mfpmath=387 -ffast-math \
+	-Wl,--hash-style=sysv \
+	-Wall -Wextra -pedantic
 
 # With these, the dependency of libm could be lifted (just a few bytes
 # gained, though): -mfpmath=387 -funsafe-math-optimizations
+#
+# -ffast-math implies -funsafe-math-optimizations.. compatibility of
+# this and other math optimizations?
 
 # Normal CFLAGS are for real-time compose-mode:
 CFLAGS = -O3 -ffast-math -Wall -Wextra -pedantic -Isrc
@@ -29,7 +34,8 @@ ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm
 # With strip, I'm taking away all I can so that the executable still
 # works...  This must not be taken away: .gnu.hash (Seems to work on
 # the build system, but not others.. need to study the elf business a
-# bit. TODO: See if the --hash-style= option affects this)
+# bit. TODO: See if the --hash-style= option affects this.. in any case
+# we get a smaller exe with sysv hash)
 
 ARCHSTRIP    = strip
 ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
@@ -44,7 +50,10 @@ SHADER_CMD = mono ~/files/hacking/shader_minifier/shader_minifier.exe --format n
 		--preserve-externals 
 
 # Command for creating gzip-compatible tmp.gz from tmp.file:
+#GZIP_TMP_CMD = gzip -9 tmp
 GZIP_TMP_CMD = 7za a -tgzip -mx=9 tmp.gz tmp
+#GZIP_TMP_CMD = zopfli --i25 tmp
+#GZIP_TMP_CMD = zopfli --i1000 tmp
 
 
 # These are required for the compilation:
@@ -109,7 +118,8 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-o $@.unstripped.payload \
 		-DULTRASMALL \
 		-DSYNTH_PLAYBACK_SDL \
-		-nostdlib  -nostartfiles -lc \
+		-fwhole-program -flto \
+		-nostdlib -nostartfiles -lc \
 		$(MAINFILE) \
 		$(ARCHLIBS)
 
@@ -118,13 +128,9 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
 	$(SSTRIP) $@.payload
 
-	mv $@.payload tmp
+# Pack through tmp->tmp.gz to allow different packers to be used
+	cp $@.payload tmp
 	$(GZIP_TMP_CMD)
-
-#	7za a -tgzip -mx=9 $@.payload.gz $@.payload
-#	zopfli --i25 $@.payload
-#	zopfli --i1000 $@.payload
-#	mv $@.payload.gz tmp.gz
 	cat src/selfextr.stub tmp.gz > $@
 	rm tmp.gz
 

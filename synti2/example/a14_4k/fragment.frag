@@ -162,12 +162,12 @@ void main(){
   vec3 diffuse  = vec3(0.8,0.8,0.0);
   vec3 specular = vec3(0.8,0.8,1.0);
 
-    vec4 color = doLightPhong(cameraPosition, p, n,
-                              lightPosition,
-                              lightC,ambient,diffuse,specular);
+  vec4 color = doLightPhong(cameraPosition, p, n,
+                            lightPosition,
+                            lightC,ambient,diffuse,specular);
 
-    //color *= (300.-p.z)/300.;
+  //color *= (300.-p.z)/300.;
     
-    if (r<.01) color = vec4(1./log(pr.closestD)); //vec4(0.);
-    gl_FragColor = 1.5*color;
+  if (r<.01) color = vec4(1./log(pr.closestD)); //vec4(0.);
+  gl_FragColor = 1.5*color;
 }

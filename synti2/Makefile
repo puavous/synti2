@@ -2,23 +2,11 @@
 
 nodefaultmake:
 	@echo "No default target is specified as of now."
-	@echo "'make product' generates a source folder for the current project."
+	@echo "'make product' generates a source folder for the current project,"
+	@echo "which must be defined in 'current.makefile'."
 
-# FIXME: Should define entries elsewhere, not in a common Makefile (?)
-# Assembly 2014 4k entry:
-# Specifics needed are song, sounds, and gfx:
-A14FILES = example/a14_4k/a14_4k.mid \
-	   example/a14_4k/a14_4k.s2bank \
-	   example/shader_test/render.c \
-	   example/a14_4k/vertex.vert \
-	   example/shader_test/fragment.frag \
-	   example/glfuncs.c
-
-CUSTOMFILES=$(A14FILES)
-
-# Maybe include a makefile here that could define CUSTOMFILES:
-#   include custom.make
-# Users could create their own makefile from there..
+# Variable CUSTOMFILES should be defined in the included file:
+include current.makefile
 
 tools: bin/synti2gui
 

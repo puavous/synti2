@@ -142,14 +142,7 @@ void main(){
 
   vec3 cameraPosition = vec3(0.,0.,-40.);
   vec3 lightPosition = vec3(50.*sin(s[0]),5.,-40.);
-  // I just shoot 'over there'..
-  // TODO: Proper vector length and direction; from resol.
-  //vec3 vto = vec3(pix.x*2.,pix.y*2.,8.);
-  //vec3 vdir = vto - vec3(pix.x,pix.y,1.);
-  // // Hmm.. think about how the direction affects the rendering:
-  // vdir = normalize(vdir);
-
-  // Watch into positive x-axis.. Determine viewing angle by a far plane:
+  // look along z-axis.. Determine viewing angle by a far plane:
   vec3 vdir = normalize(vec3(pix,7.));
 
   marchRes pr = march(cameraPosition,vdir);

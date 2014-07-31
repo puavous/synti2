@@ -132,6 +132,47 @@ vec4 doLightPhong(vec3 pcam, vec3 p, vec3 n, vec3 lpos,
   return vec4 (c,1.); // no alpha blending in use...
 }
 
+vec4 tryout(vec3 p, vec3 dir){
+  p = vec3(0.1);
+  dir *= .02;
+
+  int   ngrid = 10;
+  int   maxit = 30;
+  float len = 10.;
+  int   i;
+  int   k;
+  float intens = 0.;
+  for (i=0; i < ngrid; i++) {
+    vec3 v0 = p + (float(i)*dir);
+    vec3 v = v0;
+             /*
+    vn.x = v.x*v.x + 2*v.y*v.z + sin(x0);
+    vn.y = v.z*v.z + 2*v.x*v.y + sin(y0);
+    vn.z = v.y*v.y + 2*v.x*v.z + sin(z0);
+
+a = xn2 + 2 yn zn
+b = zn2 + 2 xn yn
+c = yn2 + 2 xn zn
+             */
+
+
+    for (k=0; k < maxit; k++) {
+      if (length(v) > 3.) break;
+
+      v = vec3(v.x*v.x + 2.*v.y*v.z,
+               v.z*v.z + 2.*v.x*v.y,
+               v.y*v.y + 2.*v.x*v.z)
+        + sin(v0);
+
+    }
+
+    intens += float(k) * .005;
+
+  }
+
+  return vec4(.5,intens,0.,1.);
+}
+
 
 void main(){
   // Expect screen width in s[1], height in s[2].
@@ -140,6 +181,14 @@ void main(){
   vec2 pix = 1. - gl_FragCoord.xy / (.5 * vec2(s[1],s[2]));
   pix.x *= s[1]/s[2];
 
+  vec3 cameraPosition = vec3(0.,0.,-40.);
+  vec3 lightPosition = vec3(50.*sin(s[0]),5.,-40.);
+  // look along z-axis.. Determine viewing angle by a far plane:
+  vec3 vdir = normalize(vec3(pix,7.));
+  gl_FragColor = tryout(cameraPosition,vdir);
+
+
+  /*
   vec3 cameraPosition = vec3(0.,0.,-40.);
   vec3 lightPosition = vec3(50.*sin(s[0]),5.,-40.);
   // look along z-axis.. Determine viewing angle by a far plane:
@@ -163,4 +212,5 @@ void main(){
     
   if (r<.01) color = vec4(1./log(pr.closestD)); //vec4(0.);
   gl_FragColor = 1.5*color;
+  */
 }

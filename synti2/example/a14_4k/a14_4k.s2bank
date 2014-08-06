@@ -8,7 +8,7 @@ num_knees 4
 num_mods 4
 --- End capacity description
 # The following on/off features are selected while editing this bank:
- fm add noise pdetune delay squash phase pitenv
+ fm add noise pdetune delay squash phase pitenv filter fres fresenv fcutenv
 --- Mapper section begins ---
 #Mapping of Midi channel 0
 Mode 0
@@ -919,7 +919,7 @@ ADDTO1     0
 ADDTO2     0
 ADDTO3     0
 ADDTO4     0
-FILT       0
+FILT       3
 FFOLL      0
 CSQUASH    0
 [F]
@@ -934,11 +934,11 @@ LVN        0.5               -8 8 2
 LVD        0                 -8 8 2
 ENV1K1T    0.006             0 0.255 3
 ENV1K1L    1                 0 1.27 2
-ENV1K2T    0.01              0 1.27 2
+ENV1K2T    0.02              0 1.27 2
 ENV1K2L    0.3               0 1.27 2
-ENV1K3T    0.09              0 1.27 2
+ENV1K3T    0.06              0 1.27 2
 ENV1K3L    0.09              0 1.27 2
-ENV1K4T    0.3               0 1.27 2
+ENV1K4T    0.22              0 1.27 2
 ENV1K4L    0                 0 1.27 2
 ENV1K5T    0                 0 1.27 2
 ENV1K5L    0                 0 1.27 2
@@ -1001,7 +1001,7 @@ PBAM2      0                 0 24 1
 PBAM3      0                 0 24 1
 PBAM4      0                 0 24 1
 PBVAL      0                 -1 1 2
-FFREQ      0                 0 128 1
+FFREQ      110               0 128 1
 FRESO      0                 0 1 2
 DINLV1     0                 -1 1 2
 DINLV2     0                 -1 1 2

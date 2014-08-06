@@ -93,12 +93,12 @@ src/shaders.c: src/vertex.vert src/fragment.frag
 	$(SHADER_CMD) -o vertshader.tmp src/vertex.vert
 	$(SHADER_CMD) -o fragshader.tmp src/fragment.frag
 	echo '/*Shaders, by the messiest makefile ever..*/' > src/shaders.c
-	echo -n 'const GLchar *vs="' >> src/shaders.c
-	cat vertshader.tmp >> src/shaders.c
-	echo '";' >> src/shaders.c
-	echo -n 'const GLchar *fs="' >> src/shaders.c
-	cat fragshader.tmp >> src/shaders.c
-	echo '";' >> src/shaders.c
+	echo -n 'const GLchar *vs=' >> src/shaders.c
+	sed -e 's/.*/"&\\n"/'< vertshader.tmp >> src/shaders.c
+	echo ';' >> src/shaders.c
+	echo -n 'const GLchar *fs=' >> src/shaders.c
+	sed -e 's/.*/"&\\n"/' fragshader.tmp >> src/shaders.c
+	echo ';' >> src/shaders.c
 	rm vertshader.tmp fragshader.tmp
 
 TOOL_CMD=../bin/synti2gui
@@ -118,6 +118,7 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-o $@.unstripped.payload \
 		-DULTRASMALL \
 		-DSYNTH_PLAYBACK_SDL \
+		-DSCREEN_HEIGHT=300 \
 		-fwhole-program -flto \
 		-nostdlib -nostartfiles -lc \
 		$(MAINFILE) \

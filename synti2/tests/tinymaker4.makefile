@@ -55,7 +55,6 @@ GZIP_TMP_CMD = 7za a -tgzip -mx=9 tmp.gz tmp
 #GZIP_TMP_CMD = zopfli --i25 tmp
 #GZIP_TMP_CMD = zopfli --i1000 tmp
 
-
 # These are required for the compilation:
 MAINFILE = src/general_main.c
 JACKSOURCES = src/synti2_jack.c src/synti2_midi.c
@@ -64,6 +63,9 @@ VISHEADERS = src/synti2_archdep.h src/synti2_cap_full.h src/synti2_guts.h src/sy
 TINYHACKS = src/shaders.c src/render.c src/glfuncs.c src/patchdata.c src/songdata.c 
 VISHACKS =  src/shaders.c src/render.c src/glfuncs.c
 
+
+# Possibly override any of the above:
+include current.makefile
 
 
 # Just for looking at the machine code being produced by gcc
@@ -93,12 +95,12 @@ src/shaders.c: src/vertex.vert src/fragment.frag
 	$(SHADER_CMD) -o vertshader.tmp src/vertex.vert
 	$(SHADER_CMD) -o fragshader.tmp src/fragment.frag
 	echo '/*Shaders, by the messiest makefile ever..*/' > src/shaders.c
-	echo -n 'const GLchar *vs="' >> src/shaders.c
-	cat vertshader.tmp >> src/shaders.c
-	echo '";' >> src/shaders.c
-	echo -n 'const GLchar *fs="' >> src/shaders.c
-	cat fragshader.tmp >> src/shaders.c
-	echo '";' >> src/shaders.c
+	echo -n 'const GLchar *vs=' >> src/shaders.c
+	sed -e 's/.*/"&\\n"/'< vertshader.tmp >> src/shaders.c
+	echo ';' >> src/shaders.c
+	echo -n 'const GLchar *fs=' >> src/shaders.c
+	sed -e 's/.*/"&\\n"/' fragshader.tmp >> src/shaders.c
+	echo ';' >> src/shaders.c
 	rm vertshader.tmp fragshader.tmp
 
 TOOL_CMD=../bin/synti2gui
@@ -114,10 +116,11 @@ src/songdata.c: $(wildcard src/*.mid) $(wildcard src/*.s2bank)
 
 
 tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) $(ADDFLAGS) \
+	$(CC) $(HCFLAGS) $(ARCHFLAGS) \
 		-o $@.unstripped.payload \
 		-DULTRASMALL \
 		-DSYNTH_PLAYBACK_SDL \
+		$(CUSTOM_FLAGS) \
 		-fwhole-program -flto \
 		-nostdlib -nostartfiles -lc \
 		$(MAINFILE) \
@@ -141,7 +144,7 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 
 
 bin/jackvsynti2: $(MAINFILE) $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
-	$(CC) $(CFLAGS) $(ARCHFLAGS) $(ADDFLAGS) \
+	$(CC) $(CFLAGS) $(ARCHFLAGS) \
 		-o $@ \
 		-DCOMPOSE_MODE \
                 -DJACK_MIDI \
@@ -151,7 +154,7 @@ bin/jackvsynti2: $(MAINFILE) $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
 		$(ARCHLIBS) -lGLU -lGLEW
 
 writ2: $(WRITERSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) $(CFLAGS) $(ARCHFLAGS) $(ADDFLAGS) \
+	$(CC) $(CFLAGS) $(ARCHFLAGS) \
 		-o $@ \
 		-DDUMP_FRAMES_AND_SNDFILE \
 		-DPLAYBACK_DURATION=10.f \

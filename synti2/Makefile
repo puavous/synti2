@@ -55,6 +55,7 @@ product/: tools Makefile $(PRODFILES)
 	mkdir -p product/bin
 	cp $(ENGINEFILES) $(TINYFILES) $(JACKFILES) $(CUSTOMFILES) product/src
 	cp tests/tinymaker4.makefile product/Makefile
+	cp current.makefile product/
 
 bin/jackvsynti2: product/ $(PRODFILES)
 	cd product; make bin/jackvsynti2

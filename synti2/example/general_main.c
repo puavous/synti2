@@ -376,7 +376,10 @@ static void init_or_die_sdl(){
   
   /* Do some SDL init stuff.. */
 #if SYNTH_PLAYBACK_SDL
+#ifndef ULTRASMALL
+  /* I learned in Asm14 that SDL_Init gets called automatically .. */
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
+#endif
 #elif SYNTH_COMPOSE_JACK || DUMP_FRAMES_AND_SNDFILE
   SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
 #else
@@ -541,10 +544,17 @@ static void main2(){
     SDL_PollEvent(&event);
 
 #ifdef SYNTH_PLAYBACK_SDL
-  } while ((event.type!=SDL_KEYDOWN)); // && (synthtime <78.0f));
+#ifdef PLAYBACK_DURATION
+  } while ((event.type!=SDL_KEYDOWN) && (synthtime < PLAYBACK_DURATION));
+#else
+  } while ((event.type!=SDL_KEYDOWN));
+#endif
 #elif SYNTH_COMPOSE_JACK
   } while ((event.type!=SDL_QUIT));
 #elif DUMP_FRAMES_AND_SNDFILE
+#ifndef PLAYBACK_DURATION
+#error PLAYBACK_DURATION (floating point seconds) must be defined in dump mode.
+#endif
   } while ((event.type!=SDL_KEYDOWN) && (synthtime < PLAYBACK_DURATION));
 #else
 #error End condition not determined by sound output
@@ -556,7 +566,7 @@ static void main2(){
 #endif
 #elif SYNTH_COMPOSE_JACK
   jack_client_close(client);
-#elif DUMP_AUDIO_FOR_ONE_FRAME
+#elif DUMP_FRAMES_AND_SNDFILE
   sf_close(sf);
 #endif
   

@@ -45,9 +45,10 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 # Then, sstrip is used to further reduce executable size:
 SSTRIP = sstrip
 
-# Command for shader minification. Must support "-o OUTFNAME"
-SHADER_CMD = mono ~/files/hacking/shader_minifier/shader_minifier.exe --format none \
-		--preserve-externals 
+# Command for shader minification.
+# Must output a file called shader.tmp
+SHADER_TMP_CMD = mono ~/files/hacking/shader_minifier/shader_minifier.exe --format none \
+		--preserve-externals -o shader.tmp
 
 # Command for creating gzip-compatible tmp.gz from tmp.file:
 #GZIP_TMP_CMD = gzip -9 tmp
@@ -74,34 +75,19 @@ include current.makefile
 #	as -alhnd synti2.s > $@
 
 
-
-# ------------------- Shaders.
-#	shaders to c source using sed..:
-#	nothingFIXME:
-#		echo $(filter %vertex.vert, $^)
-#		echo '/*Shaders, by the messiest makefile ever..*/' > hackpack3/shaders.c
-#		echo 'const GLchar *vs=""' >> hackpack3/shaders.c
-#	
-#		sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/\(.*\)\/\/.*$$/\1/g; s/\(.*\)/"\1"/g;' \
-#			< $(filter %vertex.vert, $^) >> hackpack3/shaders.c
-#		echo '"";' >> hackpack3/shaders.c
-#		echo 'const GLchar *fs=""' >> hackpack3/shaders.c
-#		sed 's/^ *//g; s/  */ /g; s/ *\([=+\*,<>;//]\) */\1/g; s/\(.*\)\/\/.*$$/\1/g; s/\(.*\)/"\1"/g;' \
-#			< $(filter %fragment.frag, $^) >> hackpack3/shaders.c
-#		echo '"";' >> hackpack3/shaders.c
-
 #	shaders to c source, using the shader_minifier tool:
 src/shaders.c: src/vertex.vert src/fragment.frag
-	$(SHADER_CMD) -o vertshader.tmp src/vertex.vert
-	$(SHADER_CMD) -o fragshader.tmp src/fragment.frag
 	echo '/*Shaders, by the messiest makefile ever..*/' > src/shaders.c
 	echo -n 'const GLchar *vs=' >> src/shaders.c
-	sed -e 's/.*/"&\\n"/'< vertshader.tmp >> src/shaders.c
+	$(SHADER_TMP_CMD) src/vertex.vert
+	sed -e 's/.*/"&\\n"/'< shader.tmp >> src/shaders.c
 	echo ';' >> src/shaders.c
+
 	echo -n 'const GLchar *fs=' >> src/shaders.c
-	sed -e 's/.*/"&\\n"/' fragshader.tmp >> src/shaders.c
+	$(SHADER_TMP_CMD) src/fragment.frag
+	sed -e 's/.*/"&\\n"/' shader.tmp >> src/shaders.c
 	echo ';' >> src/shaders.c
-	rm vertshader.tmp fragshader.tmp
+	rm shader.tmp
 
 TOOL_CMD=../bin/synti2gui
 

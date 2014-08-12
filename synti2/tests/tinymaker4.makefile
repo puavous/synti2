@@ -22,7 +22,8 @@ CFLAGS = -O3 -ffast-math -Wall -Wextra -pedantic -Isrc
 
 ## For normal 64-bit build:
 ARCHFLAGS = `sdl-config --cflags`
-ARCHLIBS = -lSDL -lGL
+ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm
+HCLIBS = -lSDL -lGL
 
 # `sdl-config --libs` polite but gives -lpthread which is not needed.
 # I wonder why I used to have -lGLEW ... not using it nowadays...
@@ -34,6 +35,7 @@ ARCHLIBS = -lSDL -lGL
 
 #ARCHFLAGS = -m32 -DNO_I64 `sdl-config --cflags`
 #ARCHLIBS = `sdl-config --libs` -lm /usr/lib/libGL.so.1
+#HCLIBS = -lSDL -lm /usr/lib/libGL.so.1
 
 # Looks as if it is best to strip first with strip and then sstrip..
 # With strip, I'm taking away all I can so that the executable still
@@ -114,13 +116,13 @@ src/songdata.c: $(wildcard src/*.mid) $(wildcard src/*.s2bank)
 tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(HCFLAGS) $(ARCHFLAGS) \
 		-o $@.unstripped.payload \
-		-DULTRASMALL \
 		-DSYNTH_PLAYBACK_SDL \
-		$(CUSTOM_FLAGS) \
+		-DULTRASMALL \
+		-nostdlib -nostartfiles \
 		-fwhole-program -flto \
-		-nostdlib -nostartfiles -lc \
+		$(CUSTOM_FLAGS) \
 		$(MAINFILE) \
-		$(ARCHLIBS)
+		$(HCLIBS)
 
 	cp $@.unstripped.payload $@.payload 
 

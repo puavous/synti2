@@ -56,6 +56,7 @@ product/: tools Makefile $(PRODFILES)
 	cp $(ENGINEFILES) $(TINYFILES) $(JACKFILES) $(CUSTOMFILES) product/src
 	cp tests/tinymaker4.makefile product/Makefile
 	cp tests/shader_preview.sed product/src/
+	cp tests/tinyexe.ld product/
 	cp current.makefile product/
 
 bin/jackvsynti2: product/ $(PRODFILES)

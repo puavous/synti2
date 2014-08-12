@@ -14,6 +14,9 @@ CUSTOMFILES=$(A14FILES)
 
 CUSTOM_FLAGS=-DSCREEN_HEIGHT=80 -DPLAYBACK_DURATION=35
 
+## This gcc flag will use tinyexe.ld as the link script (..dangerous?):
+#		-Wl,-dTtinyexe.ld \
+
 ## Uncomment to test without non-standard software dependencies:
 #GZIP_TMP_CMD = gzip -9 tmp
 #SHADER_TMP_CMD = sed -f src/shader_preview.sed > shader.tmp

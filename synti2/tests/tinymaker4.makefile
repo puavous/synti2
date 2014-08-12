@@ -8,7 +8,7 @@
 # executable. Could be tuned further?
 HCFLAGS = -Os -fwhole-program -Isrc \
 	-mfpmath=387 -ffast-math \
-	-Wl,--hash-style=sysv \
+	-Wl,--hash-style=sysv,-znorelro \
 	-Wall -Wextra -pedantic
 
 # With these, the dependency of libm could be lifted (just a few bytes
@@ -22,7 +22,12 @@ CFLAGS = -O3 -ffast-math -Wall -Wextra -pedantic -Isrc
 
 ## For normal 64-bit build:
 ARCHFLAGS = `sdl-config --cflags`
-ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm
+ARCHLIBS = -lSDL -lGL
+
+# `sdl-config --libs` polite but gives -lpthread which is not needed.
+# I wonder why I used to have -lGLEW ... not using it nowadays...
+# Also, was -lm necessary for some reason? sqrt? sin?
+#ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm
 
 # For linking against 32-bit libraries (ca 5% smaller packed exe, but
 # target machine needs separate installation of the 32-bit libs..):
@@ -44,6 +49,11 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 
 # Then, sstrip is used to further reduce executable size:
 SSTRIP = sstrip
+
+# Neither strip nor sstrip take away the symbols __bss_start, _edata, _end
+# which seem to be not so necessary to have the exe working...
+# Solution to this would be to use a custom linker script?? Need to learn this
+# stuff a little bit..
 
 # Command for shader minification.
 # Must output a file called shader.tmp

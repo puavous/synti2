@@ -10,6 +10,9 @@
 #define NUM_GLOBAL_PARAMS 3
 #define NUM_SYNTH_PARAMS 9
 
+/* Global now. Some bytes shorter code..: */
+  GLfloat state[NUM_SYNTH_PARAMS];
+
 /** Paint it. */
 static void render_scene(const synti2_synth *s){
   int i, j;
@@ -37,7 +40,7 @@ static void render_scene(const synti2_synth *s){
   for(i=NUM_GLOBAL_PARAMS;
       i<NUM_GLOBAL_PARAMS + NUM_SYNTH_PARAMS;
       i++){
-    state[i] = s->voi[i-NUM_GLOBAL_PARAMS].eprog[1].f;  // FIXME: (later.)
+    state[i] = s->voi[i-NUM_GLOBAL_PARAMS].c[CI_ENVS+1].f;  // FIXME: (later.)
   }
 
   unipar = oglGetUniformLocation(pid, "s");
@@ -54,7 +57,7 @@ static void render_scene(const synti2_synth *s){
 
 /** Render something that varies with time and "audio snapshot". */
 static
-void render_w_shaders(const synti2_synth *s, float ar){
+void render_w_shaders(const synti2_synth *s){
 
   //oglMatrixMode(GL_PROJECTION);
   //oglLoadIdentity();

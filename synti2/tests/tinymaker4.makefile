@@ -50,7 +50,7 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 		-R .eh_frame_hdr -R .eh_frame 
 
 # Then, sstrip is used to further reduce executable size:
-SSTRIP = sstrip
+SSTRIP = sstrip -z
 
 # Neither strip nor sstrip take away the symbols __bss_start, _edata, _end
 # which seem to be not so necessary to have the exe working...

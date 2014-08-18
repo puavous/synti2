@@ -7,13 +7,6 @@
  * thing compiled in small space.
  */
 
-#define NUM_GLOBAL_PARAMS 3
-#define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_ENVS + 1 + NUM_MODULATORS + 1))
-
-//#define NEED_DEBUG
-
-/* Global now. Some bytes shorter code..: */
-  GLfloat state[NUM_SYNTH_PARAMS];
 
 /** Paint it. */
 static void render_scene(const synti2_synth *s){
@@ -58,7 +51,7 @@ static void render_scene(const synti2_synth *s){
 
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
-  glRects( -1, -1, 1, 1 );
+  oglRects( -1, -1, 1, 1 );
 }
 
 

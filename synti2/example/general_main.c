@@ -85,10 +85,6 @@ typedef jack_default_audio_sample_t sample_t;
 #define SCREEN_WIDTH (SCREEN_HEIGHT * (16./9))
 #endif
 
-/* For autodetecting reso: */
-SDL_VideoInfo myVideoInfo;
-SDL_VideoInfo * vid;
-
 #ifdef SYNTH_COMPOSE_JACK
 jack_client_t *client;
 jack_port_t *output_portL;
@@ -373,6 +369,10 @@ static void init_or_die_sdl(){
   SDL_AudioSpec aud;
 #endif
   int i;
+  /* For autodetecting reso: */
+  SDL_VideoInfo * vid;
+  SDL_VideoInfo myVideoInfo;
+
   
   /* Do some SDL init stuff.. */
 #if SYNTH_PLAYBACK_SDL
@@ -406,7 +406,11 @@ static void init_or_die_sdl(){
    */
   
 #ifdef SCREEN_AUTODETECT
-  /* "Usual operation", SDL autodetect fullscreen */
+  /* "Usual operation", SDL autodetect - use FULLSCREEN for best effect */
+#ifdef ULTRASMALL
+  /* SDL_Init needs to be called explicitly in this case, unfortunately.*/
+  SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
+#endif
   vid = SDL_GetVideoInfo(); /* from desktop settings */
 #else
   /* Force a video mode. */

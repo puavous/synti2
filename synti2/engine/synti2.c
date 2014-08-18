@@ -2,11 +2,12 @@
  *
  * Core functionality of Synti2 ("synti-kaksi"), a miniature realtime
  * software synthesizer with a sequence playback engine. Released at
- * Instanssi 2012;
+ * Instanssi 2012; Final interface and capabilities August 2014. (I'm
+ * moving on to the next synth project...)
  * 
  * @author Paavo Nieminen <paavo.j.nieminen@jyu.fi>
  *
- * @copyright 2012. MIT License, see LICENSE.txt
+ * @copyright 2012-2014. MIT License, see LICENSE.txt
  */
 
 #include <math.h>
@@ -974,16 +975,23 @@ synti2_render(synti2_synth *s,
 #ifdef FEAT_APPLY_ADD
         interm += sigin[pat->ipar3[IPAR_ADDTO1+iosc]]; /* parallel */
 #endif
-        /* FIXME: Are these a good idea? Other functions better?
-         * sign()? abs()?
-         */
+        /* Some rougher waveshapings.. TODO: rename feature */
 #ifdef FEAT_POWER_WAVES
         if (pat->ipar3[IPAR_POWR1+iosc] == 2){
-          interm *= interm;
+          interm = (interm>0.f)?1.f:-1.f;
         } else if (pat->ipar3[IPAR_POWR1+iosc] == 3){
-          interm *= interm * interm;
-        } else if (pat->ipar3[IPAR_POWR1+iosc] == 5){
-          interm *= (interm * interm) * (interm * interm);
+          interm = ((interm>0.f)?1.f:-1.f)-interm;
+        } /* Just an idea.. further options can be added to further versions..*/
+#endif
+        
+        /* Yet another idea.. not yet implemented in the tool
+         * programs. Could be nicer for some patches,
+         * maybe.. (sometimes the high pitches sound too loud if
+         * played on the same patch as some lower notes..)
+         */
+#ifdef FEAT_ATTENUATE_HIGH_NOTES
+        if ((pat->ipar3[IPAR_ATNHIGH]) && (voi->note > 64)){
+          interm *= (192 - voi->note) / 128.f;
         }
 #endif
 

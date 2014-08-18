@@ -95,7 +95,6 @@ char * client_name = "jacksynti2";
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 #endif
 
-float synthtime;
 
 /* I'm dirty enough to just include everything in the same compilation
  * unit. Then I don't have to think about linking and special
@@ -124,8 +123,18 @@ GLuint vsh,fsh,pid;
 
 /* Global variables for window size (to be passed on to the shader in render.c) */
 /* Needed nowadays for proper coordinate computations: */
-static int window_h = SCREEN_HEIGHT;
-static float ar;
+#define NUM_GLOBAL_PARAMS 3
+#define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_ENVS + 1 + NUM_MODULATORS + 1))
+
+//#define NEED_DEBUG
+
+/* Global now. Some bytes shorter code..: */
+GLfloat state[NUM_SYNTH_PARAMS];
+
+// Hack defines.. to modify less code below..
+#define synthtime (state[0])
+#define window_w  (state[1])
+#define window_h  (state[2])
 
 /* The rendering functions: */
 #include "render.c"
@@ -217,11 +226,11 @@ static void write_image(int n, int w, int h, unsigned char *data){
 static void grab_frame(){
   static int n=0;
   unsigned char *data;
-  data = malloc(3*(int)(ar*window_h*window_h));
+  data = malloc(3*(int)(window_w*window_h));
   /*unsigned char data[3*(int)(ar*window_h*window_h)];*/
   n++;
-  glReadPixels(0,0,ar*window_h,window_h,GL_RGB,GL_UNSIGNED_BYTE,data);
-  write_image(n, ar*window_h, window_h, data);
+  glReadPixels(0,0,window_w,window_h,GL_RGB,GL_UNSIGNED_BYTE,data);
+  write_image(n, window_w, window_h, data);
   free(data);
 }
 
@@ -372,7 +381,7 @@ static void init_or_die_sdl(){
   /* For autodetecting reso: */
   SDL_VideoInfo * vid;
   SDL_VideoInfo myVideoInfo;
-
+  float ar;
   
   /* Do some SDL init stuff.. */
 #if SYNTH_PLAYBACK_SDL
@@ -430,8 +439,8 @@ static void init_or_die_sdl(){
   window_h = vid->current_h;
   ar = (float)vid->current_w / vid->current_h;
 
-  state[1] = window_h*ar; /* globals */
-  state[2] = window_h;    /* globals */
+  state[1] = window_h*ar; /* globals: window width */
+  state[2] = window_h;    /* globals: window height */
 
 #ifndef ULTRASMALL
   SDL_WM_SetCaption("Soft synth SDL interface",0);

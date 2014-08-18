@@ -52,9 +52,9 @@ varlength(const unsigned char * source, unsigned int * dest){
     else *dest <<= 7;
   }
 #ifndef ULTRASMALL
-  /* Longer than 4 bytes! Actually unexpected input which should be
-     caught as a bug. */
-  return 0;
+  /* Longer than 4 bytes! Unexpected input which would be a bug!! */
+  byte = *source++;
+  return nread;
 #endif
 }
 
@@ -495,29 +495,15 @@ synti2_fill_patches_from(synti2_synth *s, const unsigned char *data)
   
   for(ipat=0; *data != 0xf7; ipat++){
     pat = &(s->voi[ipat].patch);
-#if 0
-    for(ir=0;ir<NUM_IPARS; ir+=2){
-      pat->ipar3[ir] = *data >> 4;
-      pat->ipar3[ir+1] = (*data++) & 0xf;
-    }
-#endif
+    /* We read extra parameters to both integer and float arrays, to
+       simplify reader code (only one loop necessary); parameter
+       indices account for this quirk.*/
     for(ir=0;ir<NUM_IPARS + NUM_FPARS; ir++){
       nbytes = varlength(data, &intval);
       data += nbytes;
       pat->ipar3[ir] = intval;
       pat->fpar[ir] = synti2_decode_f(intval);
-      /*pat->ipar3[ir] = *data++;*/
     }
-#if 0
-    for (ir=0; ir<NUM_FPARS; ir++){
-      /*printf("Reading value %08lx: (%02x %02x) ", data, data[0], data[1]);*/
-      nbytes = varlength(data, &intval);
-      data += nbytes;
-      pat->fpar[ir] = synti2_decode_f(intval);
-      /*printf("%04x len=%d %03d <- %f\n", intval, nbytes, ir, pat->fpar[ir]);*/
-      /*fflush(stdout);*/
-    }
-#endif
   }
 }
 

@@ -24,7 +24,7 @@ CFLAGS = -O3 -ffast-math -Wall -Wextra -pedantic -Isrc
 ## For normal 64-bit build:
 ARCHFLAGS = -rdynamic `sdl-config --cflags`
 ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm -ldl
-HCLIBS = -lSDL -lGL -ldl
+HCLIBS = -ldl
 
 # `sdl-config --libs` polite but gives -lpthread which is not needed.
 # I wonder why I used to have -lGLEW ... not using it nowadays...
@@ -119,7 +119,7 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-o $@.unstripped.payload \
 		-DSYNTH_PLAYBACK_SDL \
 		-DULTRASMALL \
-		-nostdlib -nostartfiles \
+		-nostdlib -nostartfiles -nodefaultlibs \
 		-fwhole-program -flto \
 		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS)\
 		$(MAINFILE) \
@@ -158,7 +158,7 @@ writ2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-DDUMP_FRAMES_AND_SNDFILE \
 		$(CUSTOM_FLAGS) \
 		$(MAINFILE) \
-		$(HCLIBS) -lm -lsndfile -lc 
+		$(HCLIBS) -lSDL -lGL -lm -lsndfile -lc 
 
 
 

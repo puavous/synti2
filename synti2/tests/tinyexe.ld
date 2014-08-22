@@ -1,6 +1,14 @@
 /* This is a stripped down version of what ld was using by
    default. The gzipped exe will be about 120 bytes shorter using this,
    but I don't know what happens to executable portability... 
+
+  When dlopen and dlsym are used for function linkage, we can lose
+  almost all of the sections... Some of them seem to make the
+  compressed exe smaller, though FIXME: Examine, and make it
+  so... there wille be more space for graphics that way FIXME: Also,
+  make all data in ULTRASMALL mode static.. and clean up the codes
+  even if they are eventually in one bunch (only in ultrasmall mode..)
+  FIXME: dlclose() in all but ultrasmall mode.
 */
 
 SEARCH_DIR("/lib64"); SEARCH_DIR("/usr/lib64"); SEARCH_DIR("/usr/local/lib64"); 

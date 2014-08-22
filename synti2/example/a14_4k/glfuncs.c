@@ -18,58 +18,62 @@ typedef void (*BLENDFUNC_F_T)( GLenum sfactor, GLenum dfactor);
 typedef GLint (*GETUNIFORMLOC_F_T)( GLuint program, const GLchar *name);
 typedef void (*UNIFORM1FV_F_T)( GLint location, GLsizei count, const GLfloat *value);
 
+typedef void (*SDLINIT_F_T)(Uint32 flags);
+typedef SDL_Surface * (*SDLSETV_F_T)( int w, int h, int bpp, Uint32 flags );
+typedef int (*SDLSHOW_F_T) (int toggle);
+typedef int (*SDLOPAU_F_T) (SDL_AudioSpec *desired, SDL_AudioSpec *obtained);
+typedef void (*SDLPAUS_F_T) (int pause_on);
+typedef void (*SDLGLSW_F_T) (void);
+typedef void (*SDLPOLL_F_T) (SDL_Event *event);
+typedef void (*SDLQUIT_F_T)( void );
 
-#define oglCreateProgram	            ((PFNGLCREATEPROGRAMPROC)myglfunc[0])
-#define oglCreateShader		            ((PFNGLCREATESHADERPROC)myglfunc[1])
-#define oglShaderSource                 ((PFNGLSHADERSOURCEPROC)myglfunc[2])
-#define oglCompileShader                ((PFNGLCOMPILESHADERPROC)myglfunc[3])
-#define oglAttachShader                 ((PFNGLATTACHSHADERPROC)myglfunc[4])
-#define oglLinkProgram                  ((PFNGLLINKPROGRAMPROC)myglfunc[5])
-#define oglUseProgram                   ((PFNGLUSEPROGRAMPROC)myglfunc[6])
+/* functions from libGL.so */
+#define oglCreateProgram	  ((PFNGLCREATEPROGRAMPROC)myglfunc[0])
+#define oglCreateShader		  ((PFNGLCREATESHADERPROC) myglfunc[1])
+#define oglShaderSource     ((PFNGLSHADERSOURCEPROC) myglfunc[2])
+#define oglCompileShader    ((PFNGLCOMPILESHADERPROC)myglfunc[3])
+#define oglAttachShader     ((PFNGLATTACHSHADERPROC) myglfunc[4])
+#define oglLinkProgram      ((PFNGLLINKPROGRAMPROC)  myglfunc[5])
+#define oglUseProgram       ((PFNGLUSEPROGRAMPROC)   myglfunc[6])
+#define oglClear            ((CLEAR_F_T)             myglfunc[7])
+#define oglRects            ((RECTS_F_T)             myglfunc[8])
+#define oglGetUniformLocation ((GETUNIFORMLOC_F_T)   myglfunc[9])
+#define oglUniform1fv       ((UNIFORM1FV_F_T)        myglfunc[10])
 
-//#define oglLoadIdentity                 (myglfunc[7])
-//#define oglMatrixMode                   ((MATMODE_F_T)myglfunc[8])
-//#define oglFrustum                      ((FRUSTUM_F_T)myglfunc[9])
-//#define oglRotatef      ((ROTATE_F_T)myglfunc[10])
-//#define	oglPushMatrix   (myglfunc[11])
-//#define	oglPopMatrix    (myglfunc[12])
-//#define	oglEnd          (myglfunc[10])
-//#define oglBegin        ((BEGIN_F_T)myglfunc[11])
-//#define oglEnable       ((ENABLE_F_T)myglfunc[12])
-#define oglClear        ((CLEAR_F_T)myglfunc[7])
-#define oglRects        ((RECTS_F_T)myglfunc[8])
-//#define oglVertex3i     ((VERTEX3I_F_T)myglfunc[13])
-//#define oglBlendFunc    ((BLENDFUNC_F_T)myglfunc[18])
-#define oglGetUniformLocation ((GETUNIFORMLOC_F_T)myglfunc[9])
-#define oglUniform1fv ((UNIFORM1FV_F_T)myglfunc[10])
-//#define oglTranslatef   ((TRANSLATEF_F_T)myglfunc[18])
-#define NUMFUNCTIONS 11    //number of functions in *strs function array
+/* functions from libSDL.so */
+#define oSDL_Init           ((SDLINIT_F_T)          myglfunc[11])
+#define oSDL_SetVideoMode   ((SDLSETV_F_T)          myglfunc[12])
+#define oSDL_ShowCursor     ((SDLSHOW_F_T)          myglfunc[13])
+#define oSDL_OpenAudio      ((SDLOPAU_F_T)          myglfunc[14])
+#define oSDL_PauseAudio     ((SDLPAUS_F_T)          myglfunc[15])
+#define oSDL_GL_SwapBuffers ((SDLGLSW_F_T)          myglfunc[16])
+#define oSDL_PollEvent      ((SDLPOLL_F_T)          myglfunc[17])
+#define oSDL_Quit           ((SDLQUIT_F_T)          myglfunc[18])
 
-static const char *strs[] = {
-	"glCreateProgram",
-	"glCreateShader",
-	"glShaderSource",
-	"glCompileShader",
-	"glAttachShader",
-	"glLinkProgram",
-	"glUseProgram",
+#define NUMFUNCTIONS 100    //number of functions in *strs function array
 
-  //	"glLoadIdentity",
-  //	"glMatrixMode",
-  //	"glFrustum",
-
-  //	"glRotatef",
-  //	"glRotatef",
-  //	"glRotatef",
-  //	"glEnd",
-  //  "glBegin",
-  //"glEnable",
-  "glClear",
-  "glRects",
-  //  "glVertex3i",
-  //  "glBlendFunc",
-  "glGetUniformLocation",
-  "glUniform1fv",
-  //  "glTranslatef",
-};
-
+static const char funs[] =
+  "libGL.so\0"
+	"glCreateProgram\0"
+	"glCreateShader\0"
+	"glShaderSource\0"
+	"glCompileShader\0"
+	"glAttachShader\0"
+	"glLinkProgram\0"
+	"glUseProgram\0"
+  "glClear\0"
+  "glRects\0"
+  "glGetUniformLocation\0"
+  "glUniform1fv\0"
+  "\0"
+  "libSDL.so\0"
+  "SDL_Init\0"
+  "SDL_SetVideoMode\0"
+  "SDL_ShowCursor\0"
+  "SDL_OpenAudio\0"
+  "SDL_PauseAudio\0"
+  "SDL_GL_SwapBuffers\0"
+  "SDL_PollEvent\0"
+  "SDL_Quit\0"
+  "\0"
+  "\0";

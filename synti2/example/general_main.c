@@ -387,32 +387,49 @@ static void init_or_die_sdl(){
 #if SYNTH_PLAYBACK_SDL
 #ifndef ULTRASMALL
   /* I learned in Asm14 that SDL_Init gets called automatically .. */
-  SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
+  oSDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
 #endif
 #elif SYNTH_COMPOSE_JACK || DUMP_FRAMES_AND_SNDFILE
-  SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
+  oSDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
 #else
 #error Where should I output sound??
 #endif
 
-  
+
   /* Use dlopen, dlsym on linux */
   /* FIXME: Make this proper, with error checking and dlclose()!!*/
   #include<dlfcn.h>
-  void *handle;
-  handle = dlopen("libGL.so", RTLD_LAZY);
+  void *handles[3];
+  char *strs;
+  strs = funs;
+  i = 0;
+  int nlib = 0;
 
-  for(i=0; i<NUMFUNCTIONS;i++) {
-  //myglfunc[i] = (func_t*) glXGetProcAddress( (const unsigned char *)strs[i] );
-    myglfunc[i] = (func_t*) dlsym( handle, (const unsigned char *)strs[i] );
-      
-#ifdef NEED_DEBUG
-      printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
-      if( !myglfunc[i] ){
-        exit(1);
-      }
+  do{
+    /* Open .so */
+    handles[nlib] = dlopen(strs, RTLD_LAZY);
+    while (*(++strs) != '\0'){};
+    strs++;
+
+    /* Load functions from this .so */
+    do{
+      myglfunc[i] = (func_t*) dlsym(handles[nlib], (const unsigned char *)strs );
+      while (*(++strs) != '\0'){};
+      i++;
+    } while (*(++strs) != '\0');
+    nlib++;
+  } while (*(++strs) != '\0');
+
+#if 0
+  // Aa.. old debug code doesn't work anymore without string array
+  for (i=0;i<NUMFUNCTIONS;i++){
+        printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
+        if( !myglfunc[i] ){
+          exit(1);
+        }
+  }
 #endif
-    }
+  
   
   /* It costs 23-35 bytes (compressed) to politely query the display
    * mode. But it is definitely worth the ease! Oooh, but it won't
@@ -424,9 +441,9 @@ static void init_or_die_sdl(){
   /* "Usual operation", SDL autodetect - use FULLSCREEN for best effect */
 #ifdef ULTRASMALL
   /* SDL_Init needs to be called explicitly in this case, unfortunately.*/
-  SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
+  oSDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER);
 #endif
-  vid = SDL_GetVideoInfo(); /* from desktop settings */
+  vid = oSDL_GetVideoInfo(); /* from desktop settings */
 #else
   /* Force a video mode. */
   vid = &myVideoInfo;
@@ -435,10 +452,10 @@ static void init_or_die_sdl(){
 #endif
 
 #ifdef FULLSCREEN
-  SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
+  oSDL_SetVideoMode(vid->current_w, vid->current_h, 32,
                    SDL_OPENGL|SDL_FULLSCREEN);
 #else
-  SDL_SetVideoMode(vid->current_w, vid->current_h, 32,
+  oSDL_SetVideoMode(vid->current_w, vid->current_h, 32,
                    SDL_OPENGL);
 #endif
 
@@ -452,19 +469,19 @@ static void init_or_die_sdl(){
   SDL_WM_SetCaption("Soft synth SDL interface",0);
 #endif
   /* For Assembly 2013 they need the cursor hidden always: */
-  SDL_ShowCursor(SDL_DISABLE);
+  oSDL_ShowCursor(SDL_DISABLE);
   
   /* They say that OpenAudio needs to be called after video init. */
 #ifdef SYNTH_PLAYBACK_SDL
   /* NULL 2nd param makes SDL automatically convert btw formats. Nice! */
   init_or_die_sdl_audio(&aud);
 #ifndef ULTRASMALL
-  if (SDL_OpenAudio(&aud, NULL) < 0) {
+  if (oSDL_OpenAudio(&aud, NULL) < 0) {
     printf("SDL_OpenAudio failed: %s\n", SDL_GetError());
     exit(2);
   };
 #else
-  SDL_OpenAudio(&aud, NULL);  /* Would return <0 upon failure.*/
+  oSDL_OpenAudio(&aud, NULL);  /* Would return <0 upon failure.*/
 #endif
 #endif
 
@@ -539,7 +556,7 @@ static void main2(){
 #endif
   
 #ifdef SYNTH_PLAYBACK_SDL
-  SDL_PauseAudio(0); /* Start audio after inits are done.. */
+  oSDL_PauseAudio(0); /* Start audio after inits are done.. */
 #endif
 
 #ifdef DUMP_FRAMES_AND_SNDFILE
@@ -554,13 +571,13 @@ static void main2(){
     synthtime = (float)global_synth.framecount / global_synth.sr;
     state[0] = synthtime;
     render_w_shaders(&global_synth);
-    SDL_GL_SwapBuffers();
+    oSDL_GL_SwapBuffers();
 
 #ifdef DUMP_FRAMES_AND_SNDFILE
     grab_frame();
 #endif
 
-    SDL_PollEvent(&event);
+    oSDL_PollEvent(&event);
 
 #ifdef SYNTH_PLAYBACK_SDL
 #ifdef PLAYBACK_DURATION
@@ -589,7 +606,7 @@ static void main2(){
   sf_close(sf);
 #endif
   
-  SDL_Quit();  /* This must happen. Otherwise problems with exit! */
+  oSDL_Quit();  /* This must happen. Otherwise problems with exit! */
 }
 
 

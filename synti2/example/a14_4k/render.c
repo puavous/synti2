@@ -7,6 +7,11 @@
  * thing compiled in small space.
  */
 
+/* Some gfx cards don't allow very many uniform variables, so send
+ * fewer than available.. use the first few channels to control
+ * graphics...
+ */
+#define NUM_SYNTH_PARAMS_TRANSMITTED 200
 
 /** Paint it. */
 static void render_scene(const synti2_synth *s){
@@ -40,14 +45,19 @@ static void render_scene(const synti2_synth *s){
   for(i=0; i<NUM_CHANNELS; i++){
     for(j=0; j<NUM_ENVS+1; j++)
       *isp++ = v->c[CI_ENVS+j].f;
+    /* for consistency btw compose&playback*/
+    isp += (NUM_MAX_ENVS - NUM_ENVS);
     for(j=0; j<NUM_MODULATORS; j++)
       *isp++ = v->c[CI_MODS+j].f;
+    /* for consistency btw compose&playback*/
+    isp += (NUM_MAX_MODULATORS - NUM_MODULATORS);
     *isp++ = v->note;
     v++;
   }
 
   unipar = oglGetUniformLocation(pid, "s");
-  oglUniform1fv(unipar, NUM_SYNTH_PARAMS, state);
+  
+  oglUniform1fv(unipar, NUM_SYNTH_PARAMS_TRANSMITTED, state);
 
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 

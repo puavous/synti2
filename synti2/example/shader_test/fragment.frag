@@ -14,8 +14,11 @@ uniform float s[200]; // State parameters from app.
     vec2 pix = gl_FragCoord.xy / vec2(s[1],s[2]);
     pix.y = 1.-pix.y;
 
-    int nchan = int(s[3]);
-    int nstat = int(s[4]) + int(s[5]) + 1;
+    //    int nchan = int(s[3]);
+    //    int nstat = int(s[4]) + int(s[5]) + 1;
+    int nchan = 16;
+    int nstat = 11; // 6 + 4 + 1
+    // Total 16x11 = 176 ...
 
     pix *= vec2(nstat,nchan);
     int row = int(pix.y);

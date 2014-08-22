@@ -11,6 +11,7 @@ typedef void (*ROTATE_F_T)(GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
 typedef void (*BEGIN_F_T)(GLenum mode);
 typedef void (*ENABLE_F_T)(GLenum cap);
 typedef void (*CLEAR_F_T)(GLbitfield mask);
+typedef void (*RECTS_F_T)(GLshort x1, GLshort y1, GLshort x2, GLshort y2);
 typedef void (*VERTEX3I_F_T)(GLint x, GLint y, GLint z);
 typedef void (*TRANSLATEF_F_T)(GLfloat tx, GLfloat ty, GLfloat tz);
 typedef void (*BLENDFUNC_F_T)( GLenum sfactor, GLenum dfactor);
@@ -36,14 +37,15 @@ typedef void (*UNIFORM1FV_F_T)( GLint location, GLsizei count, const GLfloat *va
 //#define oglBegin        ((BEGIN_F_T)myglfunc[11])
 //#define oglEnable       ((ENABLE_F_T)myglfunc[12])
 #define oglClear        ((CLEAR_F_T)myglfunc[7])
+#define oglRects        ((RECTS_F_T)myglfunc[8])
 //#define oglVertex3i     ((VERTEX3I_F_T)myglfunc[13])
 //#define oglBlendFunc    ((BLENDFUNC_F_T)myglfunc[18])
-#define oglGetUniformLocation ((GETUNIFORMLOC_F_T)myglfunc[8])
-#define oglUniform1fv ((UNIFORM1FV_F_T)myglfunc[9])
+#define oglGetUniformLocation ((GETUNIFORMLOC_F_T)myglfunc[9])
+#define oglUniform1fv ((UNIFORM1FV_F_T)myglfunc[10])
 //#define oglTranslatef   ((TRANSLATEF_F_T)myglfunc[18])
-#define NUMFUNCTIONS 10    //number of functions in *strs function array
+#define NUMFUNCTIONS 11    //number of functions in *strs function array
 
-static char *strs[] = {
+static const char *strs[] = {
 	"glCreateProgram",
 	"glCreateShader",
 	"glShaderSource",
@@ -63,6 +65,7 @@ static char *strs[] = {
   //  "glBegin",
   //"glEnable",
   "glClear",
+  "glRects",
   //  "glVertex3i",
   //  "glBlendFunc",
   "glGetUniformLocation",

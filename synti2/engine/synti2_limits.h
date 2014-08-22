@@ -6,8 +6,10 @@
 #define SYNTI2_LIMITS_H
 
 /* Arbitrary limits on operators, modulators and voices. */
+/* As of now, these play a role in consistent transfer of state to gfx shader!*/
 #define NUM_MAX_OPERATORS 6
 #define NUM_MAX_MODULATORS 4
+#define NUM_MAX_ENVS 6
 #define NUM_MAX_CHANNELS 256
 
 /* Minimums. Always need 2 knees in 1 envelope to hear any sound. */

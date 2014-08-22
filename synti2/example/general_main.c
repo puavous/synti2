@@ -124,7 +124,7 @@ GLuint vsh,fsh,pid;
 /* Global variables for window size (to be passed on to the shader in render.c) */
 /* Needed nowadays for proper coordinate computations: */
 #define NUM_GLOBAL_PARAMS 3
-#define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_ENVS + 1 + NUM_MODULATORS + 1))
+#define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_MAX_ENVS + 1 + NUM_MAX_MODULATORS + 1))
 
 //#define NEED_DEBUG
 

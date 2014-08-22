@@ -43,8 +43,16 @@ varlength(const unsigned char * source, unsigned int * dest){
   size_t nread;
   unsigned char byte;
   *dest = 0;
+  /* In ULTRASMALL we take our chances with no end condition: */
+#ifdef ULTRASMALL
+  nread=0;
+  for(;;){
+    byte = *source++;
+    nread++;
+#else
   for (nread=1; nread<=4; nread++){
     byte = *source++;
+#endif
     *dest += (byte & 0x7f);
     if ((byte & 0x80) == 0){
       return nread; 
@@ -52,7 +60,9 @@ varlength(const unsigned char * source, unsigned int * dest){
     else *dest <<= 7;
   }
 #ifndef ULTRASMALL
-  /* Longer than 4 bytes! Unexpected input which would be a bug!! */
+  /* Longer than 4 bytes! Unexpected input which would be a bug in
+   * tool programs, if this was final ''ultrasmall'' exe!!
+   */
   byte = *source++;
   return nread;
 #endif

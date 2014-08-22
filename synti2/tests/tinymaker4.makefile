@@ -11,6 +11,7 @@ HCFLAGS = -Os -fwhole-program -Isrc \
 	-Wl,--hash-style=sysv,-znorelro \
 	-Wall -Wextra -pedantic
 
+
 # With these, the dependency of libm could be lifted (just a few bytes
 # gained, though): -mfpmath=387 -funsafe-math-optimizations
 #
@@ -21,9 +22,9 @@ HCFLAGS = -Os -fwhole-program -Isrc \
 CFLAGS = -O3 -ffast-math -Wall -Wextra -pedantic -Isrc
 
 ## For normal 64-bit build:
-ARCHFLAGS = `sdl-config --cflags`
-ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm
-HCLIBS = -lSDL -lGL
+ARCHFLAGS = -rdynamic `sdl-config --cflags`
+ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm -ldl
+HCLIBS = -lSDL -lGL -ldl
 
 # `sdl-config --libs` polite but gives -lpthread which is not needed.
 # I wonder why I used to have -lGLEW ... not using it nowadays...
@@ -120,7 +121,7 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-DULTRASMALL \
 		-nostdlib -nostartfiles \
 		-fwhole-program -flto \
-		$(CUSTOM_FLAGS) \
+		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS)\
 		$(MAINFILE) \
 		$(HCLIBS)
 
@@ -151,14 +152,22 @@ bin/jackvsynti2: $(MAINFILE) $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
 		`pkg-config --cflags --libs jack` \
 		$(ARCHLIBS) -lGLU -lGLEW
 
-writ2: $(WRITERSOURCES) $(TINYHEADERS) $(TINYHACKS)
+writ2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
+	$(CC) \
+		-o $@ \
+		-DDUMP_FRAMES_AND_SNDFILE \
+		$(CUSTOM_FLAGS) \
+		$(MAINFILE) \
+		$(HCLIBS) -lm -lsndfile -lc 
+
+
+
+writX: $(MAINFILE) $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) $(CFLAGS) $(ARCHFLAGS) \
 		-o $@ \
 		-DDUMP_FRAMES_AND_SNDFILE \
 		-DPLAYBACK_DURATION=10.f \
-		$(MAINFILE) \
-		`pkg-config --cflags --libs jack` \
-		`sdl-config --cflags --libs` -lm -lGL -lGLU -lGLEW \
+		$(MAINFILE) $(filter %.c, $(WRITERSOURCES)) \
 		-lsndfile
 
 all: bin/jackvsynti2 tiny4 writ2

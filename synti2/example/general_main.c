@@ -396,9 +396,15 @@ static void init_or_die_sdl(){
 #endif
 
   
-  for(i=0; i<NUMFUNCTIONS;i++)
-    {
-      myglfunc[i] = (func_t*) glXGetProcAddress( (const unsigned char *)strs[i] );
+  /* Use dlopen, dlsym on linux */
+  /* FIXME: Make this proper, with error checking and dlclose()!!*/
+  #include<dlfcn.h>
+  void *handle;
+  handle = dlopen("libGL.so", RTLD_LAZY);
+
+  for(i=0; i<NUMFUNCTIONS;i++) {
+  //myglfunc[i] = (func_t*) glXGetProcAddress( (const unsigned char *)strs[i] );
+    myglfunc[i] = (func_t*) dlsym( handle, (const unsigned char *)strs[i] );
       
 #ifdef NEED_DEBUG
       printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);

@@ -111,25 +111,23 @@ synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 #include "glfuncs.c"
 
 /* The shaders */
-#include "shaders.c"
+#include "shaders.h"
 
 /* The synth engine. */
 #include "synti2.c"
 
 /* gl and shader stuff... global. Hmm. cost/gain of putting into a struct? */
 typedef void *func_t(void);
-func_t *myglfunc[NUMFUNCTIONS];
-GLuint vsh,fsh,pid;
+static func_t *myglfunc[NUMFUNCTIONS];
+static GLuint vsh,fsh,pid;
 
 /* Global variables for window size (to be passed on to the shader in render.c) */
 /* Needed nowadays for proper coordinate computations: */
 #define NUM_GLOBAL_PARAMS 3
 #define NUM_SYNTH_PARAMS (NUM_GLOBAL_PARAMS + NUM_CHANNELS * (NUM_MAX_ENVS + 1 + NUM_MAX_MODULATORS + 1))
 
-//#define NEED_DEBUG
-
 /* Global now. Some bytes shorter code..: */
-GLfloat state[NUM_SYNTH_PARAMS];
+static GLfloat state[NUM_SYNTH_PARAMS];
 
 // Hack defines.. to modify less code below..
 #define synthtime (state[0])
@@ -142,9 +140,9 @@ GLfloat state[NUM_SYNTH_PARAMS];
 
 /* stereo interleaved.. so SDL should have samples==AUDIOBUFSIZE/2 and
    bytes==AUDIOBUFSIZE / 4 for 16bit dynamic range (correct?)  */
-float audiobuf[AUDIO_BUFFER_SIZE];
+static float audiobuf[AUDIO_BUFFER_SIZE];
 
-synti2_synth global_synth;
+static synti2_synth global_synth;
 
 #ifdef SYNTH_COMPOSE_JACK
 static void signal_handler(int sig)

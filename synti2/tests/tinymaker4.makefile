@@ -48,7 +48,14 @@ HCLIBS = -ldl
 ARCHSTRIP    = strip
 ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 		-R .note.gnu.build-id \
-		-R .eh_frame_hdr -R .eh_frame 
+		-R .eh_frame_hdr -R .eh_frame \
+		-N _start
+
+# Hmm... _start is not necessary after linking?, so why does it remain
+# in the exe? Can it be removed without hex/binary editing? (There are
+# also the unnecessary push and pop instructions in function
+# pro&epilogue which could be taken away with a binary edit, and not
+# in any other way..?)
 
 # Then, sstrip is used to further reduce executable size:
 SSTRIP = sstrip -z
@@ -74,8 +81,8 @@ MAINFILE = src/general_main.c
 JACKSOURCES = src/synti2_jack.c src/synti2_midi.c
 TINYHEADERS = src/synti2_archdep.h src/synti2_limits.h src/synti2_cap_custom.h  src/synti2_guts.h  src/synti2.h  src/synti2_misss.h
 VISHEADERS = src/synti2_archdep.h src/synti2_cap_full.h src/synti2_guts.h src/synti2.h src/synti2_misss.h
-TINYHACKS = src/shaders.c src/render.c src/glfuncs.c src/patchdata.c src/songdata.c 
-VISHACKS =  src/shaders.c src/render.c src/glfuncs.c
+TINYHACKS = src/shaders.h src/render.c src/glfuncs.c src/patchdata.c src/songdata.c 
+VISHACKS =  src/shaders.h src/render.c src/glfuncs.c
 
 
 # Possibly override any of the above:
@@ -89,17 +96,17 @@ include current.makefile
 
 
 #	shaders to c source, using the shader_minifier tool:
-src/shaders.c: src/vertex.vert src/fragment.frag
-	echo '/*Shaders, by the messiest makefile ever..*/' > src/shaders.c
-	echo -n 'const GLchar *vs=' >> src/shaders.c
+src/shaders.h: src/vertex.vert src/fragment.frag
+	echo '/*Shaders, by the messiest makefile ever..*/' > src/shaders.h
+	echo -n 'static const GLchar *vs=' >> src/shaders.h
 	$(SHADER_TMP_CMD) src/vertex.vert
-	sed -e 's/.*/"&\\n"/'< shader.tmp >> src/shaders.c
-	echo ';' >> src/shaders.c
+	sed -e 's/.*/"&\\n"/'< shader.tmp >> src/shaders.h
+	echo ';' >> src/shaders.h
 
-	echo -n 'const GLchar *fs=' >> src/shaders.c
+	echo -n 'static const GLchar *fs=' >> src/shaders.h
 	$(SHADER_TMP_CMD) src/fragment.frag
-	sed -e 's/.*/"&\\n"/' shader.tmp >> src/shaders.c
-	echo ';' >> src/shaders.c
+	sed -e 's/.*/"&\\n"/' shader.tmp >> src/shaders.h
+	echo ';' >> src/shaders.h
 	rm shader.tmp
 
 TOOL_CMD=../bin/synti2gui

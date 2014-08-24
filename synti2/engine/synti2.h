@@ -28,6 +28,9 @@ typedef struct synti2_player synti2_player;
 /* ------- Realtime / pre-sequenced synth interface ------- */
 
 /** Create a synth instance */
+#ifdef ULTRASMALL
+static
+#endif
 void
 synti2_init(synti2_synth * s,
             unsigned long sr, 
@@ -37,6 +40,9 @@ synti2_init(synti2_synth * s,
 /** Render some (stereo-interleaved) frames of audio to the output
  *  buffer.
  */
+#ifdef ULTRASMALL
+static
+#endif
 void
 synti2_render(synti2_synth *s, 
 	      synti2_smp_t *buffer,

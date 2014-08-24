@@ -22,7 +22,7 @@ HCFLAGS = -Os -fwhole-program -Isrc \
 CFLAGS = -O3 -ffast-math -Wall -Wextra -pedantic -Isrc
 
 ## For normal 64-bit build:
-ARCHFLAGS = -rdynamic `sdl-config --cflags`
+ARCHFLAGS = `sdl-config --cflags`
 ARCHLIBS = `sdl-config --libs` -lGL -lGLEW -lm -ldl
 HCLIBS = -ldl
 

@@ -615,8 +615,10 @@ _start()
 {
 #ifndef NO_I64
   /* x64-64 requires stack alignment */
+  /* TODO: check if rbp always arrives pre-zeroed...
+      "xor %rbp,%rbp\n"                      \
+   */
   asm (                                         \
-       "xor %rbp,%rbp\n"                        \
        "and $0xfffffffffffffff0,%rsp"           \
                                                 );
 #endif

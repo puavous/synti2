@@ -626,11 +626,21 @@ _start()
   main2();
   
   /* Inline assembler for exiting without need of stdlib */
+
   asm (                                         \
        "movl $1,%eax\n"                         \
        "xor %ebx,%ebx\n"                        \
        "int $128\n"                             \
                                                 );
+
+  /* one byte shorter as follows :)
+  asm (                                         \
+       "xor %eax,%eax\n"                        \
+       "movl %eax,%ebx\n"                        \
+       "inc %eax\n"                         \
+       "int $128\n"                             \
+                                                );
+  */
 }
 #else
 int main(int argc, char *argv[]){

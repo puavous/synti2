@@ -41,7 +41,7 @@ static void render_scene(const synti2_synth *s){
 
   isp = state + NUM_GLOBAL_PARAMS;
   
-  synti2_voice *v = s->voi;
+  const synti2_voice *v = s->voi;
   for(i=0; i<NUM_CHANNELS; i++){
     for(j=0; j<NUM_ENVS+1; j++)
       *isp++ = v->c[CI_ENVS+j].f;

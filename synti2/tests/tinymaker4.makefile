@@ -128,7 +128,7 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-DULTRASMALL \
 		-nostdlib -nostartfiles -nodefaultlibs \
 		-fwhole-program -flto \
-		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS)\
+		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) \
 		$(MAINFILE) \
 		$(HCLIBS)
 

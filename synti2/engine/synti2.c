@@ -373,6 +373,7 @@ synti2_init(synti2_synth * s,
 }
 
 
+#ifdef USE_MIDI_INPUT
 /**
  * Panic reset - Zero everything that might contribute to infinite
  * feedbacks etc. Only needed in compose mode as a real-time SysEx.
@@ -389,7 +390,7 @@ void
 synti2_panic_reset(synti2_synth * s)
 {
   unsigned long sr;
-  int ii, id, iv;
+  int ii, iv;
 
   for (iv=0;iv<NUM_CHANNELS;iv++){
 #ifdef FEAT_FILTER
@@ -407,7 +408,7 @@ synti2_panic_reset(synti2_synth * s)
 #endif
   }
 }
-
+#endif
 
 
 
@@ -440,7 +441,6 @@ synti2_do_noteon(synti2_synth *s,
                  unsigned int vel)
 {
   int ie;
-  
 #ifdef FEAT_LOOPING_ENVELOPES
   s->voi[voice].sustain = vel;
 #endif
@@ -453,6 +453,9 @@ synti2_do_noteon(synti2_synth *s,
     }
     return; /* Note off done. */
   }
+#else
+  /* Suppresses warning about unused vel; optimizer would skip compilation. */
+  vel=vel;
 #endif
   
   /* note on */
@@ -870,7 +873,10 @@ synti2_render(synti2_synth *s,
               int nframes)
 {
   unsigned int dsamp;
-  int iframe, ii, iv, id, iosc;
+  int iframe, iv, id, iosc;
+#ifdef FEAT_MODULATORS
+  int ii;
+#endif
   int iframeL;
   float interm;
   int wtoffs;

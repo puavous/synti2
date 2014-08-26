@@ -376,7 +376,7 @@ synti2base::MisssSong::write_as_c(std::ostream &outs){
   outs << "#include \"synti2_misss.h\"" << std::endl;
 
   /*FIXME: Some configuration for name and static/nonstatic?*/
-  outs << "static ";
+  outs << "static const ";
   /*FIXME: Must name it differently soon, when it's not a hack anymore!*/
   outs << "unsigned char hacksong_data[] = {" << std::endl;
 

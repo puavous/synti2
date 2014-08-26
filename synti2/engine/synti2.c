@@ -28,11 +28,6 @@ static
 void
 synti2_fill_patches_from(synti2_synth *s, const unsigned char *data);
 
-/* The simple random number generator was posted on musicdsp.org by
- * Dominik Ries. Thanks a lot.
- */
-static int RandSeed = 1;
-
 /** Reads a MIDI variable length number. "Varlengths" are used in my
  * native song format for time deltas and fixed-point patch
  * parameters.
@@ -293,7 +288,7 @@ synti2_init(synti2_synth * s,
   float deltaf;
   
   memset(s, 0, sizeof(synti2_synth));     /* zero */
-  
+  s->RandSeed++; /* Start from seed=1 */
   /* Initialize the player module. (Not much to be done...) */
   s->sr = sr;
   
@@ -1010,13 +1005,13 @@ synti2_render(synti2_synth *s,
       
       /* Optional additive noise after FM operator synthesis: */
 #ifdef FEAT_NOISE_SOURCE
-      RandSeed *= 16807;
+      s->RandSeed *= 16807;
       interm += eprog[pat->ipar3[IPAR_EAMPN]].f 
 #ifdef FEAT_VELOCITY_SENSITIVITY
         * ((pat->ipar3[IPAR_VSN])?(voi->velocity / 127.f) : 1.f)
 #endif
         * pat->fpar[FPAR_LVN]       /*noise gain*/
-        * (float)RandSeed * 4.6566129e-010f; /*noise*/
+        * (float)s->RandSeed * 4.6566129e-010f; /*noise*/
 #endif
 
 #ifdef FEAT_DELAY_LINES

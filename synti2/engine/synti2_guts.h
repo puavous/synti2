@@ -163,6 +163,11 @@ struct synti2_synth {
    * less 'modular', but seems to be a bit smaller size.
    */
   unsigned int sr; /* Better for code size to have indiv. attrib 1st?*/
+  /* The simple random number generator was posted on musicdsp.org by
+   * Dominik Ries. Thanks a lot.
+   */
+  int RandSeed;
+
   synti2_player seq;
 
   /* TODO: This space could be used for LFO's. But I suppose memory

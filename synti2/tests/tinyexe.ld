@@ -46,8 +46,9 @@ SECTIONS
 
   . = ALIGN (CONSTANT (MAXPAGESIZE)) - ((CONSTANT (MAXPAGESIZE) - .) 
           & (CONSTANT (MAXPAGESIZE) - 1)); 
+/*
   . = DATA_SEGMENT_ALIGN (CONSTANT (MAXPAGESIZE), CONSTANT (COMMONPAGESIZE));
-
+*/
   .dynamic        : { *(.dynamic) }
   .got            : { *(.got) *(.igot) }
   .got.plt        : { *(.got.plt)  *(.igot.plt) }

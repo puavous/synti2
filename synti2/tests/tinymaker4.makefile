@@ -7,6 +7,8 @@
 # The HCFLAGS (as in "hardcore") are for making a very small
 # executable. Could be tuned further?
 HCFLAGS = -Os -fwhole-program -Isrc \
+	-fno-exceptions \
+	-fno-asynchronous-unwind-tables \
 	-mfpmath=387 -ffast-math \
 	-Wl,--hash-style=sysv,-znorelro \
 	-Wall -Wextra -pedantic
@@ -129,10 +131,12 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-DSYNTH_PLAYBACK_SDL \
 		-DULTRASMALL \
 		-nostdlib -nostartfiles -nodefaultlibs \
-		-fwhole-program -flto \
 		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) \
 		$(MAINFILE) \
 		$(HCLIBS)
+
+# Sometimes helps with the size, sometimes unhelps (both/separate):
+#                -fwhole-program -flto\
 
 	cp $@.unstripped.payload $@.payload 
 

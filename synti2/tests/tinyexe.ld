@@ -20,28 +20,24 @@ SECTIONS
 {
   /* Read-only sections, merged into text segment: */
 
+
   . = SEGMENT_START("text-segment", 0x400000) + SIZEOF_HEADERS;
 
+  /* Order of sections has some non-zero impact on packed exe size: */
   .interp         : { *(.interp) }
+  .dynstr	  : { *(.dynstr) }
   .dynamic        : { *(.dynamic) }
   .dynsym         : { *(.dynsym) }
+  .gnu.version    : { *(.gnu.version) }
+  .gnu.version_r  : { *(.gnu.version_r) }
 
-  /* Will be shorter compressed with these (wonder why.. aha.. has
-     to do with relocations.. have to learn some more..): */
-  .rela.plt       :
-    {
-      *(.rela.plt)  PROVIDE_HIDDEN (__rela_iplt_start = .);
-      *(.rela.iplt) PROVIDE_HIDDEN (__rela_iplt_end = .);
-    }
+  .hash : { *(.hash) }
+
+  .rela.plt       : { *(.rela.plt) }
   .got            : { *(.got) *(.igot) }
   .got.plt        : { *(.got.plt)  *(.igot.plt) }
   .plt            : { *(.plt) *(.iplt) }
-
-/*
-  .text           : { *(.text) }
-
-  .rodata         : { *(.rodata) *(.rodata*) }
-*/
+  /* Combine text and rodata */
   .text           : { *(.text) *(.rodata) *(.rodata*) }
 
   /* Adjust the address for the data segment.  We want to adjust up to
@@ -55,8 +51,12 @@ SECTIONS
 
   .data           : { *(.data) }
 
-/* Is it safe to not have bss (?): */
-/*  .bss : { *(.dynbss) *(.bss .bss.* .gnu.linkonce.b.*) *(COMMON)
+  .bss : { *(.dynbss) *(.bss .bss.* .gnu.linkonce.b.*) }
+
+
+  /DISCARD/ : { *(.note.gnu.build-id) }
+
+/*
    . = ALIGN(. != 0 ? 64 / 8 : 1); }  */
 /*
   . = DATA_SEGMENT_END (.);

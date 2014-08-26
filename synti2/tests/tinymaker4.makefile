@@ -8,8 +8,9 @@
 # executable. Could be tuned further?
 HCFLAGS = -Os -fwhole-program -Isrc \
 	-fno-exceptions \
-	-Wl,--hash-style=sysv \
 	-fno-asynchronous-unwind-tables \
+	-Wl,--hash-style=sysv \
+	-Wl,--build-id=none \
 	-mfpmath=387 -ffast-math \
 	-Wall -Wextra -pedantic
 

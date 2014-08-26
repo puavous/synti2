@@ -34,9 +34,12 @@ SECTIONS
 
 /*.plt            : { *(.plt) *(.iplt) }*/
 
+/*
   .text           : { *(.text) }
 
-  .rodata         : { *(.rodata) }
+  .rodata         : { *(.rodata) *(.rodata*) }
+*/
+  .text           : { *(.text) *(.rodata) *(.rodata*) }
 
   /* Adjust the address for the data segment.  We want to adjust up to
      the same address within the page on the next page up.  */

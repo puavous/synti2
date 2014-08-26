@@ -98,15 +98,17 @@ include current.makefile
 #	shaders to c source, using the shader_minifier tool:
 src/shaders.h: src/vertex.vert src/fragment.frag
 	echo '/*Shaders, by the messiest makefile ever..*/' > src/shaders.h
-	echo -n 'static const GLchar *vs=' >> src/shaders.h
+	echo -n 'static const GLchar * const vs[]={' >> src/shaders.h
 	$(SHADER_TMP_CMD) src/vertex.vert
 	sed -e 's/.*/"&\\n"/'< shader.tmp >> src/shaders.h
-	echo ';' >> src/shaders.h
+	echo '};' >> src/shaders.h
+#	echo 'static const GLchar **pvs = &vs;' >> src/shaders.h
 
-	echo -n 'static const GLchar *fs=' >> src/shaders.h
+	echo -n 'static const GLchar * const fs[]={' >> src/shaders.h
 	$(SHADER_TMP_CMD) src/fragment.frag
 	sed -e 's/.*/"&\\n"/' shader.tmp >> src/shaders.h
-	echo ';' >> src/shaders.h
+	echo '};' >> src/shaders.h
+#	echo 'static const GLchar **pfs = &fs;' >> src/shaders.h
 	rm shader.tmp
 
 TOOL_CMD=../bin/synti2gui

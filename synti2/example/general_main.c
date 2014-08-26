@@ -491,8 +491,8 @@ static void init_or_die_sdl(){
   pid = oglCreateProgram();
   vsh = oglCreateShader(GL_VERTEX_SHADER);
   fsh = oglCreateShader(GL_FRAGMENT_SHADER);
-  oglShaderSource(vsh,1,&vs,0);
-  oglShaderSource(fsh,1,&fs,0);
+  oglShaderSource(vsh,1,vs,0);
+  oglShaderSource(fsh,1,fs,0);
   oglCompileShader(vsh);
   oglCompileShader(fsh);
   oglAttachShader(pid,vsh);

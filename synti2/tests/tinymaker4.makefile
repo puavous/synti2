@@ -8,10 +8,11 @@
 # executable. Could be tuned further?
 HCFLAGS = -Os -fwhole-program -Isrc \
 	-fno-exceptions \
+	-Wl,--hash-style=sysv \
 	-fno-asynchronous-unwind-tables \
 	-mfpmath=387 -ffast-math \
-	-Wl,--hash-style=sysv,-znorelro \
 	-Wall -Wextra -pedantic
+
 
 
 # With these, the dependency of libm could be lifted (just a few bytes

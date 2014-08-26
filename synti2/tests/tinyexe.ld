@@ -22,6 +22,8 @@ SECTIONS
 
   . = SEGMENT_START("text-segment", 0x400000) + SIZEOF_HEADERS;
 
+  .interp         : { *(.interp) }
+  .dynamic        : { *(.dynamic) }
   .dynsym         : { *(.dynsym) }
 
   /* Will be shorter compressed with these (wonder why.. aha.. has
@@ -31,8 +33,9 @@ SECTIONS
       *(.rela.plt)  PROVIDE_HIDDEN (__rela_iplt_start = .);
       *(.rela.iplt) PROVIDE_HIDDEN (__rela_iplt_end = .);
     }
-
-/*.plt            : { *(.plt) *(.iplt) }*/
+  .got            : { *(.got) *(.igot) }
+  .got.plt        : { *(.got.plt)  *(.igot.plt) }
+  .plt            : { *(.plt) *(.iplt) }
 
 /*
   .text           : { *(.text) }
@@ -49,9 +52,6 @@ SECTIONS
 /*
   . = DATA_SEGMENT_ALIGN (CONSTANT (MAXPAGESIZE), CONSTANT (COMMONPAGESIZE));
 */
-  .dynamic        : { *(.dynamic) }
-  .got            : { *(.got) *(.igot) }
-  .got.plt        : { *(.got.plt)  *(.igot.plt) }
 
   .data           : { *(.data) }
 

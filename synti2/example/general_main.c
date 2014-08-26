@@ -411,7 +411,7 @@ static void init_or_die_sdl(){
 
     /* Load functions from this .so */
     do{
-      myglfunc[i] = (func_t*) dlsym(handles[nlib], (const unsigned char *)strs );
+      myglfunc[i] = (func_t*) dlsym(handles[nlib], (const char *)strs );
       while (*(++strs) != '\0'){};
       i++;
     } while (*(++strs) != '\0');

@@ -72,6 +72,21 @@ typedef jack_default_audio_sample_t sample_t;
 #include "sndfile.h"
 #endif
 
+/* opengl (and other! FIXME: naming) functions bypassing normal linkage */
+#include "glfuncs.h"
+
+/* These datas are created by the tool programs: */
+#if SYNTH_PLAYBACK_SDL || DUMP_FRAMES_AND_SNDFILE
+extern const unsigned char patch_sysex[];
+extern const unsigned char hacksong_data[];
+#endif
+
+/* The shaders */
+extern const GLchar * const vs[];
+extern const GLchar * const fs[];
+
+
+
 #ifndef SAMPLE_RATE
 #define SAMPLE_RATE 48000
 #endif
@@ -95,25 +110,8 @@ char * client_name = "jacksynti2";
 synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 #endif
 
-
-/* I'm dirty enough to just include everything in the same compilation
- * unit. Then I don't have to think about linking and special
- * link-time optimizations.
- */
-
-/* These datas are created by the tool programs: */
-#if SYNTH_PLAYBACK_SDL || DUMP_FRAMES_AND_SNDFILE
-#include "patchdata.c"
-#include "songdata.c"
-#endif
-
-/* opengl functions bypassing normal linkage */
-#include "glfuncs.c"
-
-/* The shaders */
-#include "shaders.h"
-
-/* The synth engine. */
+/* The synth engine. Dirty to include c source. See if other options
+   exist that don't bloat the exe.. */
 #include "synti2.c"
 
 /* gl and shader stuff... global. Hmm. cost/gain of putting into a struct? */
@@ -398,7 +396,7 @@ static void init_or_die_sdl(){
   /* FIXME: Make this proper, with error checking and dlclose()!!*/
   #include<dlfcn.h>
   void *handles[3];
-  char *strs;
+  const char *strs;
   strs = funs;
   i = 0;
   int nlib = 0;
@@ -491,8 +489,8 @@ static void init_or_die_sdl(){
   pid = oglCreateProgram();
   vsh = oglCreateShader(GL_VERTEX_SHADER);
   fsh = oglCreateShader(GL_FRAGMENT_SHADER);
-  oglShaderSource(vsh,1,vs,0);
-  oglShaderSource(fsh,1,fs,0);
+  oglShaderSource(vsh,1,(const GLchar **)vs,0);
+  oglShaderSource(fsh,1,(const GLchar **)fs,0);
   oglCompileShader(vsh);
   oglCompileShader(fsh);
   oglAttachShader(pid,vsh);

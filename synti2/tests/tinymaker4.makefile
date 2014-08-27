@@ -85,8 +85,8 @@ MAINFILE = src/general_main.c
 JACKSOURCES = src/synti2_jack.c src/synti2_midi.c
 TINYHEADERS = src/synti2_archdep.h src/synti2_limits.h src/synti2_cap_custom.h  src/synti2_guts.h  src/synti2.h  src/synti2_misss.h
 VISHEADERS = src/synti2_archdep.h src/synti2_cap_full.h src/synti2_guts.h src/synti2.h src/synti2_misss.h
-TINYHACKS = src/shaders.h src/render.c src/glfuncs.c src/patchdata.c src/songdata.c 
-VISHACKS =  src/shaders.h src/render.c src/glfuncs.c
+TINYHACKS = src/shaders.c src/render.c src/glfuncs.c src/patchdata.c src/songdata.c 
+VISHACKS =  src/shaders.c src/render.c src/glfuncs.c
 
 
 # Possibly override any of the above:
@@ -100,19 +100,18 @@ include current.makefile
 
 
 #	shaders to c source, using the shader_minifier tool:
-src/shaders.h: src/vertex.vert src/fragment.frag
-	echo '/*Shaders, by the messiest makefile ever..*/' > src/shaders.h
-	echo -n 'static const GLchar * const vs[]={' >> src/shaders.h
+src/shaders.c: src/vertex.vert src/fragment.frag
+	echo '/*Shaders, by the messiest makefile ever..*/' > $@
+	echo '#include "GL/gl.h"' >> $@
+	echo -n 'const GLchar * const vs[]={' >> $@
 	$(SHADER_TMP_CMD) src/vertex.vert
-	sed -e 's/.*/"&\\n"/'< shader.tmp >> src/shaders.h
-	echo '};' >> src/shaders.h
-#	echo 'static const GLchar **pvs = &vs;' >> src/shaders.h
+	sed -e 's/.*/"&\\n"/'< shader.tmp >> $@
+	echo '};' >> $@
 
-	echo -n 'static const GLchar * const fs[]={' >> src/shaders.h
+	echo -n 'const GLchar * const fs[]={' >> $@
 	$(SHADER_TMP_CMD) src/fragment.frag
-	sed -e 's/.*/"&\\n"/' shader.tmp >> src/shaders.h
-	echo '};' >> src/shaders.h
-#	echo 'static const GLchar **pfs = &fs;' >> src/shaders.h
+	sed -e 's/.*/"&\\n"/' shader.tmp >> $@
+	echo '};' >> $@
 	rm shader.tmp
 
 TOOL_CMD=../bin/synti2gui
@@ -128,6 +127,11 @@ src/songdata.c: $(wildcard src/*.mid) $(wildcard src/*.s2bank)
 
 
 tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
+	$(CC) -c -o shaders.o src/shaders.c
+	$(CC) -c -o glfuncs.o src/glfuncs.c
+	$(CC) -c -o songdata.o src/songdata.c
+	$(CC) -c -o patchdata.o src/patchdata.c
+
 	$(CC) $(HCFLAGS) $(ARCHFLAGS) \
 		-o $@.unstripped.payload \
 		-DSYNTH_PLAYBACK_SDL \
@@ -135,6 +139,7 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-nostdlib -nostartfiles -nodefaultlibs \
 		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) \
 		$(MAINFILE) \
+		glfuncs.o shaders.o patchdata.o songdata.o \
 		$(HCLIBS)
 
 # Sometimes helps with the size, sometimes unhelps (both/separate):

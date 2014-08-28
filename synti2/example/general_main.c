@@ -55,8 +55,12 @@
 #include "GL/glx.h"
 #include "SDL/SDL.h"
 
+#include "glfuncs.h"
+
 #include "synti2.h"
 #include "synti2_guts.h"
+
+#include "default_defs.h"
 
 #ifdef SYNTH_COMPOSE_JACK
 #ifndef WIN32
@@ -72,9 +76,6 @@ typedef jack_default_audio_sample_t sample_t;
 #include "sndfile.h"
 #endif
 
-/* opengl (and other! FIXME: naming) functions bypassing normal linkage */
-#include "glfuncs.h"
-
 /* These datas are created by the tool programs: */
 #if SYNTH_PLAYBACK_SDL || DUMP_FRAMES_AND_SNDFILE
 extern const unsigned char patch_sysex[];
@@ -84,21 +85,7 @@ extern const unsigned char hacksong_data[];
 /* The shaders */
 extern const GLchar * const vs[];
 extern const GLchar * const fs[];
-
-
-
-#ifndef SAMPLE_RATE
-#define SAMPLE_RATE 48000
-#endif
-#ifndef AUDIO_BUFFER_SIZE
-#define AUDIO_BUFFER_SIZE 8192
-#endif
-#ifndef SCREEN_HEIGHT
-#define SCREEN_HEIGHT 108
-#endif
-#ifndef SCREEN_WIDTH
-#define SCREEN_WIDTH (SCREEN_HEIGHT * (16./9))
-#endif
+extern func_t *myglfunc[NUMFUNCTIONS];
 
 #ifdef SYNTH_COMPOSE_JACK
 jack_client_t *client;
@@ -115,8 +102,7 @@ synti2_smp_t global_buffer[20000]; /* FIXME: limits? */
 #include "synti2.c"
 
 /* gl and shader stuff... global. Hmm. cost/gain of putting into a struct? */
-typedef void *func_t(void);
-static func_t *myglfunc[NUMFUNCTIONS];
+extern func_t *myglfunc[NUMFUNCTIONS];
 static GLuint vsh,fsh,pid;
 
 /* Global variables for window size (to be passed on to the shader in render.c) */
@@ -389,43 +375,7 @@ static void init_or_die_sdl(){
   oSDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
 #else
 #error Where should I output sound??
-#endif
-
-
-  /* Use dlopen, dlsym on linux */
-  /* FIXME: Make this proper, with error checking and dlclose()!!*/
-  #include<dlfcn.h>
-  void *handles[3];
-  const char *strs;
-  strs = funs;
-  i = 0;
-  int nlib = 0;
-
-  do{
-    /* Open .so */
-    handles[nlib] = dlopen(strs, RTLD_LAZY);
-    while (*(++strs) != '\0'){};
-    strs++;
-
-    /* Load functions from this .so */
-    do{
-      myglfunc[i] = (func_t*) dlsym(handles[nlib], (const char *)strs );
-      while (*(++strs) != '\0'){};
-      i++;
-    } while (*(++strs) != '\0');
-    nlib++;
-  } while (*(++strs) != '\0');
-
-#if 0
-  // Aa.. old debug code doesn't work anymore without string array
-  for (i=0;i<NUMFUNCTIONS;i++){
-        printf("Func %d at: %lx  (\"%s\")\n",i, myglfunc[i],strs[i]);
-        if( !myglfunc[i] ){
-          exit(1);
-        }
-  }
-#endif
-  
+#endif  
   
   /* It costs 23-35 bytes (compressed) to politely query the display
    * mode. But it is definitely worth the ease! Oooh, but it won't
@@ -542,9 +492,9 @@ dump_audio_for_one_frame(){
 
 
 /** Try to wrap it... */
-static void main2(){
+__attribute__ ((externally_visible)) 
+void main2(){
   SDL_Event event;
-    
   init_or_die_sdl();
 
 #ifdef SYNTH_COMPOSE_JACK
@@ -604,45 +554,3 @@ static void main2(){
   
   oSDL_Quit();  /* This must happen. Otherwise problems with exit! */
 }
-
-
-#ifdef ULTRASMALL
-void
-__attribute__ ((externally_visible)) 
-_start()
-{
-#ifndef NO_I64
-  /* x64-64 requires stack alignment */
-  /* TODO: check if rbp always arrives pre-zeroed...
-      "xor %rbp,%rbp\n"                      \
-   */
-  asm (                                         \
-       "and $0xfffffffffffffff0,%rsp"           \
-                                                );
-#endif
-  
-  main2();
-  
-  /* Inline assembler for exiting without need of stdlib */
-
-  asm (                                         \
-       "movl $1,%eax\n"                         \
-       "xor %ebx,%ebx\n"                        \
-       "int $128\n"                             \
-                                                );
-
-  /* one byte shorter as follows :)
-  asm (                                         \
-       "xor %eax,%eax\n"                        \
-       "movl %eax,%ebx\n"                        \
-       "inc %eax\n"                         \
-       "int $128\n"                             \
-                                                );
-  */
-}
-#else
-int main(int argc, char *argv[]){
-  main2();
-  return 0;
-}
-#endif

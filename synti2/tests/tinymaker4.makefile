@@ -131,6 +131,7 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	$(CC) -c -o glfuncs.o src/glfuncs.c
 	$(CC) -c -o songdata.o src/songdata.c
 	$(CC) -c -o patchdata.o src/patchdata.c
+	$(CC) -c -DULTRASMALL -o startup64.o src/startup64.c
 
 	$(CC) $(HCFLAGS) $(ARCHFLAGS) \
 		-o $@.unstripped.payload \
@@ -139,7 +140,7 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		-nostdlib -nostartfiles -nodefaultlibs \
 		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) \
 		$(MAINFILE) \
-		glfuncs.o shaders.o patchdata.o songdata.o \
+		startup64.o glfuncs.o shaders.o patchdata.o songdata.o \
 		$(HCLIBS)
 
 # Sometimes helps with the size, sometimes unhelps (both/separate):

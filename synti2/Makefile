@@ -36,7 +36,10 @@ ENGINEFILES = engine/synti2.c \
 
 # These are additionally needed for tiny executables (like 4k intros):
 TINYFILES = example/selfextr.stub \
-	     example/general_main.c 
+	    example/general_main.c \
+	    example/default_defs.h \
+	    example/startup64.c 
+
 
 # These are additionally needed for any compose-mode MIDI synth:
 MIDIFILES = engine/synti2_midi.c engine/synti2_midi.h engine/synti2_midi_guts.h \

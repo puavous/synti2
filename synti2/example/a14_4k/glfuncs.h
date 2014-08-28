@@ -11,6 +11,13 @@
 #ifndef GLFUNCS_H
 #define GLFUNCS_H
 
+#include "GL/glew.h"
+#include "GL/gl.h"
+#include "GL/glx.h"
+#include "SDL/SDL.h"
+
+typedef void *func_t(void);
+
 extern const char funs[];
 
 typedef void (*MATMODE_F_T)(GLenum);

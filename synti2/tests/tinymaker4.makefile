@@ -6,7 +6,8 @@
 
 # The HCFLAGS (as in "hardcore") are for making a very small
 # executable. Could be tuned further?
-HCFLAGS = -Os -fwhole-program -Isrc \
+HCFLAGS = -Os -Isrc \
+	-DULTRASMALL \
 	-fno-exceptions \
 	-fno-asynchronous-unwind-tables \
 	-Wl,--hash-style=sysv \
@@ -127,11 +128,11 @@ src/songdata.c: $(wildcard src/*.mid) $(wildcard src/*.s2bank)
 
 
 tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) -c -o shaders.o src/shaders.c
-	$(CC) -c -o glfuncs.o src/glfuncs.c
-	$(CC) -c -o songdata.o src/songdata.c
-	$(CC) -c -o patchdata.o src/patchdata.c
-	$(CC) -c -DULTRASMALL -o startup64.o src/startup64.c
+	$(CC) $(HCFLAGS) -c -o shaders.o src/shaders.c
+	$(CC) $(HCFLAGS) -c -o glfuncs.o src/glfuncs.c
+	$(CC) $(HCFLAGS) -c -o songdata.o src/songdata.c
+	$(CC) $(HCFLAGS) -c -o patchdata.o src/patchdata.c
+	$(CC) $(HCFLAGS) -c -o startup64.o src/startup64.c
 
 	$(CC) $(HCFLAGS) $(ARCHFLAGS) \
 		-o $@.unstripped.payload \

@@ -7,13 +7,17 @@
 # The HCFLAGS (as in "hardcore") are for making a very small
 # executable. Could be tuned further?
 HCFLAGS = -Os -Isrc \
+	-DSYNTH_PLAYBACK_SDL \
 	-DULTRASMALL \
+	-nostdlib -nostartfiles -nodefaultlibs \
 	-fno-exceptions \
 	-fno-asynchronous-unwind-tables \
 	-Wl,--hash-style=sysv \
 	-Wl,--build-id=none \
 	-mfpmath=387 -ffast-math \
 	-Wall -Wextra -pedantic
+
+HCLINKF = --hash-style=sysv --build-id=none
 
 
 
@@ -128,26 +132,57 @@ src/songdata.c: $(wildcard src/*.mid) $(wildcard src/*.s2bank)
 
 
 tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) $(HCFLAGS) -c -o shaders.o src/shaders.c
-	$(CC) $(HCFLAGS) -c -o glfuncs.o src/glfuncs.c
-	$(CC) $(HCFLAGS) -c -o songdata.o src/songdata.c
-	$(CC) $(HCFLAGS) -c -o patchdata.o src/patchdata.c
-	$(CC) $(HCFLAGS) -c -o startup64.o src/startup64.c
+	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o shaders.o src/shaders.c
+	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o glfuncs.o src/glfuncs.c
+	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o songdata.o src/songdata.c
+	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o patchdata.o src/patchdata.c
+	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o startup64.o src/startup64.c
+	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o main2.o src/general_main.c
 
-	$(CC) $(HCFLAGS) $(ARCHFLAGS) \
+	$(LD) -i -o therest.o startup64.o glfuncs.o shaders.o patchdata.o songdata.o main2.o
+	$(LD) \
+		-o $@.unstripped.payload \
+		therest.o \
+		--hash-style=sysv \
+		--build-id=none \
+		-z noexecstack \
+		--dynamic-linker=/lib64/ld-linux-x86-64.so.2 \
+		-Ttinyexe.ld \
+		$(HCLIBS)
+
+	echo NOT $(CC) $(HCFLAGS) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) \
+		-o $@.unstripped.payload \
+		startup64.o therest.o \
+		-Wl,--hash-style=sysv \
+		-Wl,--build-id=none \
+		-Wl,-z,noexecstack \
+		$(HCLIBS)
+
+#		-Wl,-Ttinyexe.ld \
+
+	echo NOT $(CC) $(HCFLAGS) $(ARCHFLAGS) \
 		-o $@.unstripped.payload \
 		-DSYNTH_PLAYBACK_SDL \
 		-DULTRASMALL \
 		-nostdlib -nostartfiles -nodefaultlibs \
 		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) \
-		$(MAINFILE) \
-		startup64.o glfuncs.o shaders.o patchdata.o songdata.o \
+		startup64.o glfuncs.o shaders.o patchdata.o songdata.o main2.o \
 		$(HCLIBS)
 
 # Sometimes helps with the size, sometimes unhelps (both/separate):
 #                -fwhole-program -flto\
 
 	cp $@.unstripped.payload $@.payload 
+
+# get rid of symbol versioning in dynamic segment:
+# The 432 may be fragile! should have a tool that can
+# actually seek the location of 0x6ffffffe and friends.
+	dd conv=nocreat,notrunc bs=1 count=48 seek=432 of=$@.payload < /dev/zero
+
+# Then, there is no need for the respective sections anymore:
+	strip -R ".gnu.version" -R ".gnu.version_r" -R ".comment" $@.payload
+
+# Then, we can strip all we want...
 
 	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
 	$(SSTRIP) $@.payload

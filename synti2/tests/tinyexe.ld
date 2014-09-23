@@ -22,7 +22,6 @@ PHDRS
   dynamic PT_DYNAMIC ;
 }
 
-
 SECTIONS
 {
   /* Read-only sections, merged into text segment: */
@@ -64,7 +63,7 @@ SECTIONS
 
   .gnu.version_r  : { *(.gnu.version_r) } :text
 
-
+  .gnu.version_d  : { *(.gnu.version_d) } :text
 
   .got            : { *(.got) *(.igot) } :text
 

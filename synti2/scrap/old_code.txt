@@ -9,6 +9,26 @@ Nice sites about graphics stuff:
 
   http://www.kickjs.org/tool/shader_editor/shader_editor.html?null
 
+What I didn't know about ELF before I learned it:
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# With strip, I'm taking away all I can so that the executable still
+# works...  This must not be taken away: .gnu.hash (Seems to work on
+# the build system, but not others.. need to study the elf business a
+# bit. TODO: See if the --hash-style= option affects this.. in any case
+# we get a smaller exe with sysv hash)
+
+# Hmm... _start is not necessary after linking?, so why does it remain
+# in the exe? Can it be removed without hex/binary editing? 
+# (Solution was to use linker scripts and stripping properly).
+
+# Neither strip nor sstrip take away the symbols __bss_start, _edata, _end
+# which seem to be not so necessary to have the exe working...
+# Solution to this would be to use a custom linker script?? Need to learn this
+# stuff a little bit..
+
+
+
 The makefile used to look like this in 2013:
 ++++++++++++++++++++++++++++++++++++++++++++
 

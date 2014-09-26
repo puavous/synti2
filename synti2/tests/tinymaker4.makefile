@@ -20,7 +20,6 @@ HCFLAGS = -Os -Isrc \
 HCLINKF = --hash-style=sysv --build-id=none
 
 
-
 # With these, the dependency of libm could be lifted (just a few bytes
 # gained, though): -mfpmath=387 -funsafe-math-optimizations
 #
@@ -48,11 +47,6 @@ HCLIBS = -ldl
 #HCLIBS = -lSDL -lm /usr/lib/libGL.so.1
 
 # Looks as if it is best to strip first with strip and then sstrip..
-# With strip, I'm taking away all I can so that the executable still
-# works...  This must not be taken away: .gnu.hash (Seems to work on
-# the build system, but not others.. need to study the elf business a
-# bit. TODO: See if the --hash-style= option affects this.. in any case
-# we get a smaller exe with sysv hash)
 
 ARCHSTRIP    = strip
 ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
@@ -60,19 +54,12 @@ ARCHSTRIPOPT = -s -R .comment  -R .gnu.version \
 		-R .eh_frame_hdr -R .eh_frame \
 		-N _start
 
-# Hmm... _start is not necessary after linking?, so why does it remain
-# in the exe? Can it be removed without hex/binary editing? (There are
-# also the unnecessary push and pop instructions in function
+#(There are also the unnecessary push and pop instructions in function
 # pro&epilogue which could be taken away with a binary edit, and not
 # in any other way..?)
 
 # Then, sstrip is used to further reduce executable size:
 SSTRIP = sstrip -z
-
-# Neither strip nor sstrip take away the symbols __bss_start, _edata, _end
-# which seem to be not so necessary to have the exe working...
-# Solution to this would be to use a custom linker script?? Need to learn this
-# stuff a little bit..
 
 # Command for shader minification.
 # Must output a file called shader.tmp
@@ -85,17 +72,61 @@ GZIP_TMP_CMD = 7za a -tgzip -mx=9 tmp.gz tmp
 #GZIP_TMP_CMD = zopfli --i25 tmp
 #GZIP_TMP_CMD = zopfli --i1000 tmp
 
-# These are required for the compilation:
-MAINFILE = src/general_main.c
-JACKSOURCES = src/synti2_jack.c src/synti2_midi.c
+# These are required for the compilation (todo: better deps):
 TINYHEADERS = src/synti2_archdep.h src/synti2_limits.h src/synti2_cap_custom.h  src/synti2_guts.h  src/synti2.h  src/synti2_misss.h
 VISHEADERS = src/synti2_archdep.h src/synti2_cap_full.h src/synti2_guts.h src/synti2.h src/synti2_misss.h
-TINYHACKS = src/shaders.c src/render.c src/glfuncs.c src/patchdata.c src/songdata.c 
-VISHACKS =  src/shaders.c src/render.c src/glfuncs.c
 
 
 # Possibly override any of the above:
 include current.makefile
+
+BASE_OBJS=startup64.o glfuncs.o shaders.o general_main.o
+PLAY_OBJS=patchdata.o songdata.o
+JACK_OBJS=synti2_jack.o synti2_midi.o
+
+# Target objects in different output folders:
+VIS_OBJS=$(addprefix obj_vis/,$(BASE_OBJS)) \
+	 $(addprefix obj_vis/,$(JACK_OBJS))
+TINY_OBJS=$(addprefix obj_tiny/,$(BASE_OBJS) $(PLAY_OBJS))
+WRITER_OBJS = obj_writ/general_main.o \
+		obj_writ/startup64.o \
+		obj_tiny/glfuncs.o \
+		obj_tiny/shaders.o \
+		obj_tiny/patchdata.o \
+		obj_tiny/songdata.o
+
+
+#directories for object files
+obj_vis:
+	mkdir obj_vis
+obj_tiny:
+	mkdir obj_tiny
+obj_writ:
+	mkdir obj_writ
+
+# Building differently for different outputs
+obj_vis/%.o: src/%.c obj_vis
+	$(CC) $(CUSTOM_FLAGS) $(CFLAGS) \
+		-DCOMPOSE_MODE -DJACK_MIDI \
+		-DSYNTH_COMPOSE_JACK \
+		-c -o $@ $<
+
+obj_tiny/%.o: src/%.c obj_tiny $(TINYHEADERS)
+	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o $@ $<
+
+obj_writ/%.o: src/%.c obj_writ $(TINYHEADERS)
+	$(CC) $(CUSTOM_FLAGS) $(CFLAGS) \
+		-DDUMP_FRAMES_AND_SNDFILE \
+		-c -o $@ $<
+
+
+bin/jackvsynti2: $(VIS_OBJS)
+	$(CC) -o $@ $^ `pkg-config --cflags --libs jack` \
+		$(ARCHLIBS) -lGLU -lGLEW
+
+writ2: $(WRITER_OBJS)
+	$(CC) -o $@ $^ \
+		 -ldl -lSDL -lGL -lm -lsndfile 
 
 
 # Just for looking at the machine code being produced by gcc
@@ -131,15 +162,9 @@ src/songdata.c: $(wildcard src/*.mid) $(wildcard src/*.s2bank)
 	$(TOOL_CMD) --write-song $(wildcard src/*.mid) $(wildcard src/*.s2bank) > $@
 
 
-tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o shaders.o src/shaders.c
-	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o glfuncs.o src/glfuncs.c
-	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o songdata.o src/songdata.c
-	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o patchdata.o src/patchdata.c
-	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o startup64.o src/startup64.c
-	$(CC) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) $(HCFLAGS) -c -o main2.o src/general_main.c
+tiny4: $(TINY_OBJS)
 
-	$(LD) -i -o therest.o startup64.o glfuncs.o shaders.o patchdata.o songdata.o main2.o
+	$(LD) -i -o therest.o $^
 	$(LD) \
 		-o $@.unstripped.payload \
 		therest.o \
@@ -149,28 +174,6 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 		--dynamic-linker=/lib64/ld-linux-x86-64.so.2 \
 		-Ttinyexe.ld \
 		$(HCLIBS)
-
-	echo NOT $(CC) $(HCFLAGS) $(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) \
-		-o $@.unstripped.payload \
-		startup64.o therest.o \
-		-Wl,--hash-style=sysv \
-		-Wl,--build-id=none \
-		-Wl,-z,noexecstack \
-		$(HCLIBS)
-
-#		-Wl,-Ttinyexe.ld \
-
-	echo NOT $(CC) $(HCFLAGS) $(ARCHFLAGS) \
-		-o $@.unstripped.payload \
-		-DSYNTH_PLAYBACK_SDL \
-		-DULTRASMALL \
-		-nostdlib -nostartfiles -nodefaultlibs \
-		$(CUSTOM_FLAGS) $(CUSTOM_HCFLAGS) \
-		startup64.o glfuncs.o shaders.o patchdata.o songdata.o main2.o \
-		$(HCLIBS)
-
-# Sometimes helps with the size, sometimes unhelps (both/separate):
-#                -fwhole-program -flto\
 
 	cp $@.unstripped.payload $@.payload 
 
@@ -183,7 +186,6 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	strip -R ".gnu.version" -R ".gnu.version_r" -R ".comment" $@.payload
 
 # Then, we can strip all we want...
-
 	$(ARCHSTRIP) $(ARCHSTRIPOPT) $@.payload
 	$(SSTRIP) $@.payload
 
@@ -198,33 +200,5 @@ tiny4: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
 	@echo End result:
 	@ls -lt $@
 
-
-bin/jackvsynti2: $(MAINFILE) $(JACKSOURCES) $(VISHEADERS) $(VISHACKS)
-	$(CC) $(CFLAGS) $(ARCHFLAGS) \
-		-o $@ \
-		-DCOMPOSE_MODE \
-                -DJACK_MIDI \
-		-DSYNTH_COMPOSE_JACK \
-		$(MAINFILE) $(filter %.c, $(JACKSOURCES)) \
-		`pkg-config --cflags --libs jack` \
-		$(ARCHLIBS) -lGLU -lGLEW
-
-writ2: $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) \
-		-o $@ \
-		-DDUMP_FRAMES_AND_SNDFILE \
-		$(CUSTOM_FLAGS) \
-		$(MAINFILE) \
-		$(HCLIBS) -lSDL -lGL -lm -lsndfile -lc 
-
-
-
-writX: $(MAINFILE) $(TINYSOURCES) $(TINYHEADERS) $(TINYHACKS)
-	$(CC) $(CFLAGS) $(ARCHFLAGS) \
-		-o $@ \
-		-DDUMP_FRAMES_AND_SNDFILE \
-		-DPLAYBACK_DURATION=10.f \
-		$(MAINFILE) $(filter %.c, $(WRITERSOURCES)) \
-		-lsndfile
 
 all: bin/jackvsynti2 tiny4 writ2

@@ -67,6 +67,7 @@ typedef void (*SDLQUIT_F_T)( void );
 #define oSDL_PollEvent      ((SDLPOLL_F_T)          myglfunc[17])
 #define oSDL_Quit           ((SDLQUIT_F_T)          myglfunc[18])
 
-#define NUMFUNCTIONS 100    //number of functions in *strs function array
+/*number of functions in *strs function array*/
+#define NUMFUNCTIONS 100
 
 #endif

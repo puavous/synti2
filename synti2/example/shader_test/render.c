@@ -35,9 +35,11 @@ static void render_scene(const synti2_synth *s){
      float synthtime;
      synthtime =  (float)(s->framecount) / s->sr;
   */
+#if 0
   //state[0] = synthtime;
   //state[1] = window_h*ar; /* globals */
   //state[2] = window_h;    /* globals */
+#endif
 
   isp = state + NUM_GLOBAL_PARAMS;
   

@@ -209,6 +209,10 @@ static void grab_frame(){
   static int n=0;
   unsigned char *data;
   data = malloc(3*(int)(window_w*window_h));
+  if (data==NULL){
+      fprintf(stderr,"Couldn't allocate memory for frame grab.\n");
+      return;
+  }
   /*unsigned char data[3*(int)(ar*window_h*window_h)];*/
   n++;
   glReadPixels(0,0,window_w,window_h,GL_RGB,GL_UNSIGNED_BYTE,data);

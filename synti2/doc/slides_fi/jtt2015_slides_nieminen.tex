@@ -1,0 +1,530 @@
+% -*- coding: utf-8 -*-
+
+\documentclass[pdf,10pt]{beamer}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+
+\mode<presentation>
+{
+  \usetheme{Goettingen}
+  \usecolortheme{seagull}
+}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{bibliography item}{[\theenumiv]}
+
+\setlength{\parskip}{\baselineskip}
+
+
+\usepackage[finnish]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{palatino}
+
+%\graphicspath{{figs/}}
+
+\title[TIEP115]
+{Tietotekniikasta, matematiikasta, harrastamisesta ja soitinrakennuksesta}
+
+\author{Paavo Nieminen}
+
+\date{TIEP115 Johdatus tietotekniikkaan, 12.2.2015}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Sisältö}
+
+{
+\setlength{\parskip}{\smallskipamount}
+  \tableofcontents
+  % You might wish to add the option [pausesections]
+}
+\end{frame}
+
+\begin{frame}{Tässä esitelmässä:}
+  \begin{itemize}
+  \item Lähdetään liikkeelle ''viattomasta ja hauskasta harrastusprojektista''
+  \item Katsotaan, mihin tietotekniikan osa-alueeseen se liittyy
+  \item Millaista historiaa tuolla tietotekniikan osa-alueella on
+  \item Mitä aiheen tutkimiseen liittyy (muun muassa)
+  \item Miten laitoksellamme tarjottavat kandidaatin ja maisterin
+    opinnot liittyvät aiheeseen.
+  \item Väliajoin totean erikseen ''pointteja'', joita haluan korostaa
+    erityisesti ensimmäisen vuoden opiskelijalle.
+  \end{itemize}
+\end{frame}
+
+
+\section{Synti2}
+\begin{frame}{''Synti2 Software Synthesizer''}
+\begin{itemize}
+  \item Ohjelmisto, joka muodostaa ääntä algoritmisesti,
+    ''softasyntikka''
+  \item Harrastusprojekti, johon tulee kajottua kerran tai pari vuodessa
+  \item Julkinen versiokanta:\\ \small{\url{https://yousource.it.jyu.fi/synti2/synti2}}
+
+    (pittäis löytyä myös googlettamalla ''synti2'')
+
+  \item Kehitysympäristönä tarvitaan ainakin toistaiseksi Linux ja
+    useampia lisäkirjastoja sekä työkaluohjelmia.
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}{''Synti2 Software Synthesizer'' --~synteesimenetelmä}
+
+  \begin{itemize}
+  \item Vaihemodulaatiosynteesi (tyyliin Yamahan DX7 ym. 80-luvulta)
+  \item Operaattorit miksattavissa (ts. osin additiivinen synteesi)
+  \item Resonoiva ali- / yli- / kaistapäästösuodin (ts. osin
+    subtraktiivinen synteesi)
+  \item Oskillattorit esilaskettuina taulukoina
+    (''wavetable-synteesi'')
+  \item Rajalliset viivästysefektit / kampasuodin mahdollisia
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{''Synti2 Software Synthesizer'' --~ominaisuudet}
+  \begin{itemize}
+  \item Reaaliaikainen äänentuotto 
+  \item Ohjaus standardilla MIDI-protokollalla
+  \item Tyypillisen kosketinsoittimen perusominaisuudet, ts. huomioi
+    kosketusvoimakkuuden sekä jatkuva-arvoiset kontrollerit (ml. pitch
+    bend, modulator, aftertouch, breath, \ldots)
+  \item Hetkellinen tila luettavissa esim. visualisointia varten
+  \item Sekvensserimoodi nauhoitetun kappaleen toistoon
+  \item Yksinkertainen sekvenssi, äänipankki ja toistokoneisto mahtuu
+    3 kilotavuun pakattua suoritettavaa koodia.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Miksi, miksi, miksi?}
+  Miksi näitä juttuja pitäisi vielä harrastaakin? Eikö se riitä, että
+  näitä tekee töikseen tai opiskellakseen?
+  \begin{itemize}
+    \item Harrastuksissa oppii asioita, jotka eivät (ainakaa
+      vielä\ldots) tule vastaan opinnoissa tai töissä.
+    \item Oppi ei kaada ojaan koskaan. Enemmän se avaa ovia kuin
+      sulkee.
+    \item Harrastukset ovat hauskoja ja antavat motivaatiota teorian
+      oppimiseen yliopistokursseilla, joissa ei välttämättä ehditä
+      sovelluksiin asti.
+    \item Voipi välillä elvistellä tekeleillään vähän.
+    \item Optimitilanteessa harrastuksesta voi tulla työ tai siitä voi
+      lähteä liikkeelle myyntikelpoinen tuote\ldots
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Pointti: Harrastakaa vapaasti!}
+  On sopivaa ja suotavaa kokeilla, löytyisikö opintojen lähimaastosta
+  aihetta myös harrastelulle. Itseäni kiinnostaa äänisynteesi ja
+  audio-ohjelmistot, mutta yhtä hyvin kiinnostuksen kohteet voivat
+  olla grafiikassa, peleissä, tietoturvassa, verkkokaupoissa,
+  sosiaalisessa mediassa, kääntäjätekniikassa, \ldots
+
+  Opintoaika on rajoitettu, joten kiirettä pitelee kurssienkin
+  parissa. Silti aika ennen työelämää mahdollistaa harrastukset
+  paremmin. Sopivasti valittu harrastus voi myös konvergoida opintojen
+  kanssa etenkin loppua kohden edettäessä.
+
+  Synti2:n parissa olen itse oppinut asian jos toisenkin
+  mm. ohjelmoinnista, käyttöjärjestelmistä ja tietokonegrafiikasta.
+  Päätarkoitus ja alullepaneva tekijä oli kuitenkin opetella
+  nimenomaan digitaalista soitinrakennusta, joten puhutaan tällä
+  luennolla siitä.
+\end{frame}
+
+\section{Historiaa}
+
+\subsection{Tietokonemusiikki}
+\begin{frame}{Historiaa: tietokonemusiikki, digitaalinen äänisynteesi}
+  Digitaalisen tietokoneen käyttöä ''musiikkisoittimena'' visioidaan
+  1960-luvulla esim. Mathewsin artikkelissa
+  \cite{Mathews63thedigital}, jossa viitataan jo ensimmäisiin olemassa
+  olleisiin toteutuksiin.
+
+  Törmäsin Mathewsin artikkeliin Smithin konferenssipuheen
+  \cite{smith1991viewpoints} alkulauseessa. Itse puhe, tai pikemminkin siihen
+  liittyvä artikkeli, on sinällään mielenkiintoista luettavaa, vaikka
+  onkin esseemäinen näkemys historiaan ja siihen, mikä kirjoittajan
+  mielestä onnistui ja mikä meni pieleen 1960-luvun jälkeen. Vuonna
+  1991 kirjoitetun esseen näkemyksiä voidaan nyt jo arvioida
+  historiallisesta näkökulmasta. Tietokoneiden nopeuden kasvu on kauan
+  sitten mahdollistanut tarvittavan laskennan, mutta äänten ja
+  musiikin kuvailemiseen tarkoitettujen kielten (eli
+  musiikin ''ohjelmointikielten'') osalta lopullisten voittojen
+  saavuttaminen voi olla vaikeampaa, kuten Smith alkusanoissaan
+  ounastelikin.
+  
+\end{frame}
+
+\subsection{Äänisynteesi}
+\begin{frame}{Erilaisia digitaalisen äänisynteesin menetelmiä}
+  Synti2:n synteesimenetelmä perustuu (tavallaan) taajuusmodulaatioon,
+  jonka sovellukset tietoliikenteessä olivat arkipäivää jo siinä
+  vaiheessa, kun niiden käyttöä musiikilliseen äänisynteesiin vasta
+  ehdotettiin 1970-luvulla \cite{chowning1973fm}.
+
+  Muita viime vuosituhannen loppuun mennessä keksittyjä
+  äänisynteesimenetelmiä on lueteltu ja luokiteltu esimerkiksi Tolosen
+  ym. raportissa \cite{TolonenEtal1998evaluation}. Tulevaisuudessa,
+  tietokoneiden suorituskyvyn kasvaessa, fysikaaliseen mallinnukseen
+  perustuvien menetelmien roolin voisi olettaa yhä kasvavan.
+
+\end{frame}
+
+\section{DSP}
+\begin{frame}{Historiaa: Digitaalinen signaalinkäsittely}
+
+  Digitaalinen äänisynteesi on yksi sovellus ja osa-alue
+  laajemmasta tutkimuskentästä nimeltä digitaalinen signaalinkäsittely
+  (engl. digital signal processing, DSP), jossa yleisesti ottaen
+  vieläkin laajemman alan, signaalinkäsittelyn, ongelmia pyritään
+  ratkaisemaan digitaalitekniikan, ml. tietokoneohjelmien, avulla.
+
+  Yhtenä DSP-alan kivijalkana on mm. Shannonin informaation siirron
+  matemaattisia perusteita koskeva julkaisu
+  \cite{shannon48amathematical} vuodelta 1948.
+
+  Muita alan sovelluksia kuin musiikki-instrumentit? Puhelinyhteydet,
+  televisio- ja radiolähetykset, tallennusvälineet, mittarit autojen
+  moottoreissa, lääketieteellinen kuvantaminen, eksoplaneettojen
+  etsiminen, \ldots
+  
+\end{frame}
+
+\subsection{Suotimet}
+\begin{frame}
+
+  Esimerkki digitaaliseen signaalinkäsittelyn kenttään liittyvästä
+  erityiskohteesta on suodinsuunnittelu (filter design).
+
+  Synti2:n suodin (on tietysti vaan copy-pastattu nettifoorumilta,
+  mutta jos haluaisi tehdä aiheesta tiedettä, niin tulisi tietää että
+  se\ldots) perustuu Dattorron artikkeliin \cite{dattorro1997effect},
+  joka vie eteenpäin 1980-luvulla julkaistun kirjan
+  \cite{Chamberlin1980} ideaa.
+
+\end{frame}
+
+\subsection{FFT}
+
+\begin{frame}
+  Tärkeä ominaisuus esimerkiksi musiikissa on että suotimien ja muiden
+  synteesimenetelmän osien tuottaman äänen ns. harmoninen sisältö eli
+  taajuusalueen spektri saadaan sopivaksi. Taajuuksia päästään
+  tutkimaan (ja tarvittaessa manipuloimaan) muuntamalla ajan suhteen
+  näytteistetty digitaalinen signaali esimerkiksi diskreetillä
+  Fourier-muunnoksella (engl. discrete Fourier transform,
+  DFT). Matemaattisesti sanoen: signaalia kuvaava vektori siirretään
+  toiseen avaruuteen, jonka kanta on helpommin tulkittavissa
+  tarkoituksenmukaisella tavalla, eli DFT:n tapauksessa
+  taajuuskomponentteina.
+\end{frame}
+
+\begin{frame}
+  Cooleyn ja Tukeyn julkaisu \cite{CooleyTukey1965fft} teki tunnetuksi
+  nopean menetelmän diskreettien signaalien taajuuskomponenttien
+  analysoimiseksi, ns. nopea Fourier-muunnos (fast Fourier transform)
+  FFT. Algoritmin historian seuraaminen johtaa kuitenkin jo Carl
+  Friedrich Gaussin tuntemiin menettelyihin
+  \footnote{\url{http://music.columbia.edu/cmc/musicandcomputers/popups/chapter3/xbit_3_2.php}}.
+\end{frame}
+
+
+\begin{frame}{Pointti: Keskittykää kursseihin alusta asti!}
+  Hyödyllisen algoritmin vaativuusluokan pudottaminen luokasta
+  $O(N^2)$ luokkaan $O(N \mathop{log} N)$ takaa tietoteknikolle
+  ikuisen paikan historian kirjoissa! Mitä edellinen lause tarkoittaa,
+  selviää kursseilla Algoritmit 1 \& Algoritmit 2.
+
+  Pitäkää mielessä sovellukset ja tavoitteet jo alkupään opinnoissa,
+  vaikka teoriapainotteisilla kursseilla ei niitä kaikkia ehditä
+  esittelemään. Ei alkupään teoria edes kaikkia sovelluksia
+  mahdollista -- mutta pohja tulevalle luodaan!
+  
+\end{frame}
+
+\begin{frame}{Yleinen teoria mahdollistaa uudet tulokset}
+  Erilaiset wavelet-muunnokset \cite{daubechies1990wavelet} ovat
+  Fourier-muunnoksen ohella toinen, tietyissä tilanteissa
+  tarkoituksenmukainen tapa siirtää diskreetti signaali avaruuteen,
+  jonka kanta on alkuperäistä helpompi. Reunahuomautus: yhtymäkohtana
+  aiempaan aiheeseen, Wavelet-muunnos voidaan tulkita tietyllä tapaa
+  järjestelmällisesti suunniteltujen yli- ja alipäästösuotimien sovelluksena.
+
+  Kaikkien näiden asioiden äärelle päästään matematiikan
+  ''peruskursseilla'' eli noin kolmannen yliopistovuoden syventävillä
+  kursseilla, kun niitä on ensin ehditty pohjustaa perustiedoilla
+  esimerkiksi vektoriavaruuksista ja niiden kannoista sekä
+  fundamentaaleilla funktioiden ja raja-arvojen käsitteillä.
+
+\end{frame}
+
+\begin{frame}{Pointti: Matematiikasta on hyväksyttävää innostua!}
+
+  Kanditutkintoon mahtuu helposti ainakin matematiikan perusopinnot
+  (25op eli melkein 700 tuntia aikaa opetella matematiikan eri
+  osa-alueita.)
+
+  Käyttäkää hyvät ihmiset hyödyksi tuo aika, joka on sitä varten nyt
+  annettu\ldots työelämässä voi sitten päivittää ja ylläpitää tietoja,
+  mutta perustaitoja ei enää välttämättä ehdi siinä vaiheessa haalia.
+
+  Mikäli esimerkiksi äänen- ja kuvankäsittelyn teknologiat alkavat
+  kiinnostaa, ei ole paha ottaa jopa perus- ja aineopintojen
+  pakettia (60 op on jo yli 1600 tuntia ihanaa matematiikka-aikaa!)
+
+\end{frame}
+
+
+
+\section{Nykypäivää}
+\begin{frame}{Nykypäivää}
+
+  Tutkimuksen laajuus tänään? Hakusanalla ''sound synthesis'' löytyy
+  Thomson Reuters Web of Knowledgesta vuoden 2010 jälkeen julkaistuja
+  lehtiartikkeleita 125 kpl. Esimerkiksi ehdotus kvanttihiukkasen
+  käyttäytymiseen perustuvasta synteesimenetelmästä
+  \cite{CadizRamos2014quantum}.
+
+  TODO: Entä hakusanalla ''filter design'' vuoden 2010 jälkeen?
+
+  Uudempi paperi suodintekniikasta musiikkisoitinten tarpeisiin on
+  esim. \cite{Wishnick14timevaryingfilters}.
+
+  TODO: Entä hakusanalla ''digital signal processing'' vuoden 2010 jälkeen?
+
+\end{frame}
+
+
+\section{Lähteitä}
+
+\begin{frame}{Pointti: opetelkaa hakemaan tietoa laajasti (mutta hallitusti)}
+  Papereita julkaistaan nykyään tosi paljon, ja niitä on helppo
+  löytää. Perusasiat on kaluttu kauan sitten ja nyt ollaan taas jo
+  uuden äärellä. On kriittisen tärkeätä kyetä kartoittamaan ja
+  valitsemaan relevantit julkaisut, jotka liittyvät omaan
+  tiedontarpeeseen. Kannattaa alkaa opettelemaan jo hyvissä ajoin
+  ennen tutkielmien tekoa. Itseä kiinnostava aihekin löytyy helpommin,
+  kun on jo selaillut, mitä muut ovat aiemmin kirjoittaneet aihepiirin
+  ympäriltä.
+
+  Tietoa tulee niin paljon ja monesta tuutista, että esimerkiksi
+  ensimmäiset Google-osumat saattavat olla yhtä tyhjän
+  kanssa. Lähtökohtahan niistä voi hyvinkin löytyä\ldots Tätä luentoa
+  varten hain ensimmäiseksi ''History of digital signal processing'',
+  mutta syvemmältä piti kaivaa, ennen kuin seuraavien kalvojen
+  lähdeluettelo lopulta löytyi. 
+\end{frame}
+
+\begin{frame}[allowframebreaks]{Lähteitä}
+\tiny
+\bibliographystyle{plain}
+\bibliography{dspstuff}
+\end{frame}
+
+
+\end{document}
+
+
+\begin{frame}{Softasyntikan toimintaympäristö}
+  \begin{itemize}
+  \item DA-muunnin, digitaalisen datan puskuri äänikortissa,
+    ajuriohjelmistot, käyttöjärjestelmä
+  \item Kirjasto-ohjelmat järjestelmän abstrahoimiseksi
+  \item Ohjelmoijan rajapinta: aika-ikkuna täytettäväksi numeroilla,
+    esim. 256 tavua, joista ulostulosignaalin amplitudi määräytyy
+    esim. 48000 kertaa sekunnissa kanavaa kohti. Ikkuna on täytettävä
+    salamannopeasti, jotta ''ääni ei pätki''.
+  \item ''Musiikkia'' varten pitää jostain tulla myös tieto rytmistä,
+    äänenkorkeudesta ja -väristä sekä harmoniasta. Eli
+    ''instrumentit'' ja ''nuottien sekvenssi'' ilmeisesti tarvitaan.
+  \item Eli tavoite on hyvin selkeä. Sitte eiku koodaamaan.
+  \end{itemize}
+\end{frame}
+
+\section{Ekat purkat: Synti}
+\begin{frame}{tästä se lähti}
+\begin{itemize}
+\item Teinistä asti haikaillut koodailla näitä, mutta ei tullut
+  aloitettua\ldots
+\item Innostukseni heräsi uudelleen Zipolan 4k introsta ekoilla
+  Instansseilla pari vuotta sitten. ''Mäkin haluun tehdä meteliä!''
+\item Mitäs meillä pittäis olla? Varmaan fraasisekvensseri, jotain
+  oskillaattoreita, verhokäyriä, filttereitä, \ldots ja kiva nimi
+  projektille.
+\item Niinpä ''tein Syntiä'' pari kuukautta ennen Instanssia 2011.
+\item Syntyi ekat purkkaviritykset \ldots
+\item Hyvät tuli.
+\item Meteliä! Jes!!!
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Mutta..}
+\begin{itemize}
+\item
+  Musiikkia hankala editoida (tekstimuotoinen ``oma formaatti''\ldots
+  tyhmä idea). Ajattelin säveltää ekan biisin jälkeen myös toisen,
+  mutta kunto loppui syötedatan muotoiluun ekan bassoriffin kohdalla.
+\item
+  Melko pikkiriikkistä koodia, mutta ei kovin nopeata -- ei
+  reaaliaikaisesti soiteltavissa.
+\item
+  Kuvan synkronointia äänen kanssa ei ollut tullut ajateltua yhtään
+  alunperin -- vain purkka ja päälleliimaus olivat mahdollisia
+  varsinaisen 4k intron tekemisen hetkellä.
+\item
+  Sounditkin oli vähän niin ja näin, vaikka vahingossa toteutuneella
+  ''köyhän miehen taajuusmodulaatiolla'' sai ihan riittävän pahvisen
+  kumivirvelin.
+\item
+  Koodissa jopa niin hämmästyttävän paljon purkkaa, ettei kehdannut
+  julkaista.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Kantapääopetuksia}
+\begin{itemize}
+\item
+  Numero 1: Älä keksi MIDIä uudestaan; se on jo ihan hyvä
+  (lähtökohdaksi, ei lopputulemaksi).
+\item
+  Siis kertaus: älä keksi uudestaan protokollaa, jonka
+  insinööriarmeija on jo miettinyt läpi.
+\item
+  Numero 2: Valmiit työkalut (esim. sekvensseriohjelmat) ovat ihan
+  hyviä ja niitä on mietitty. Hyödynnä!
+\item
+  Numero 3: Syntikka on kivampi reaaliaikaisena.
+\item
+  Numero 4: Koodinnälkä kasvaa koodatessa, jos innostuu jostain
+  puuhasta.
+\end{itemize}
+\end{frame}
+
+
+\section{Uudet purkat: Synti2}
+\begin{frame}{Synti2:n vaatimukset 1/2}
+\begin{itemize}
+\item Kalusto tuottaa pikkiriikkisen suoritettavan ohjelman, jossa on
+  mukana ääni ja grafiikka (so. ennakkoon kiinnitetty musiikillinen ja
+  graafinen sekvenssi sekä syntesoidut
+  instrumenttiäänet). Suoritettava ohjelma datoineen on kooltaan alle
+  4096 tavua, ja sen voi suorittaa standardissa käyttöympäristössä
+  (kehitysvaiheessa 32-bittinen Linux, libSDL, libGL, gunzip TAI
+  64-bittinen Linux johon asennettuna 32-bittiset SDL \& OpenGL)
+\item
+  Grafiikan parametrit voidaan lukea syntetisaattorin tilasta, jota
+  sekvenssi ohjaa. (Äänitapahtumiin synkronoitu animaatio)
+\item
+  Sävellysvaiheessa synteesi on reaaliaikainen. Latenssin on oltava
+  alle 10 millisekuntia (jota suuremmat latenssit häiritsevät jopa
+  meikäläistä rähmätassua sunnuntaisoittelijaa)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Synti2:n vaatimukset 2/2}
+\begin{itemize}
+\item Sävellysvaiheessa ohjattavissa standardilla
+  MIDIllä. Mahdollistaa musiikin (ja tarkemmin ajatellen myös
+  animaation ohjaussekvenssin) tuottamisen millä tahansa
+  MIDI-sekvensseriohjelmistolla.
+\item Suoritettavan ohjelman sekvenssi muodostetaan (karsien ja
+  muuntaen) standardimuotoisesta MIDI-musiikkitiedostosta (SMF0 tai
+  SMF1).
+\item Instrumentteja varten on parametrieditori, jossa jokainen
+  parametri on muutettavissa hiirellä raahaamalla. Äänien tallennus ja
+  lataus tapahtuu MIDI-maailmassa tavanomaisella SysEx-tiedostojen
+  käytänteellä.
+\item Äänenlaadultaan vähintään yhtä hyvä kuin alkuperäinen ``Synti
+  ykkönen''
+\item Lisävaatimus Instanssin aikataulun kirjoittajalta:
+  synteesimoduulin koko on alle 1 kilotavu. Tämä oli ainoa, joka ei
+  aivan täysin toteutunut :).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Toteutuksesta}
+\begin{itemize}
+\item
+  FM-synteesi, 4 siniaalto-operaattoria
+\item
+  Wavetablet, Verhokäyrät, Filtterit ja Delayt kuten edellisessä,
+  joskin aavistuksen verran paremmin
+\item 
+  Sekvensseri
+\item 
+  MIDI-rajapinta
+\item
+  Apuohjelmat: reaaliaikainen MIDI-adapteri, offline
+  SMF-adapteri, soundieditori.
+\item
+  Huhhuh!! Aika paljon sitten putkahtikin tekemistä pikkiriikkisen
+  oskillaattorin ympärille \ldots
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Tilanne 9.3.2012 klo 20:38}
+  \begin{itemize}
+  \item
+    Aika kiva lelu \ldots
+  \item
+    Katsotaanpa kalustoa livenä \ldots Demoefektin todennäköisyys oli
+    kuin olikin suuri (\ldots yllättäen oli kuitenkin muu kuin oma
+    softa, joka jumitti audiosysteemin.)
+    \begin{itemize}
+    \item Jack käyntiin
+    \item Syntikka käyntiin
+    \item ''MIDI-mukiloija'' käyntiin
+    \item Äänieditori käyntiin
+    \item Koskettimet kiinni ja jamittelemaan \ldots
+    \end{itemize}
+  \item Biisin säveltäminen vapaavalintaisella
+    MIDI-sekvensserillä. Esim. Rosegarden on oikeasti hyvä ohjelma,
+    vaikka oli huteralla tuulella tänään.
+  \item Paketointi ''4k introksi'' on helppoa kuin 'make tinyexe'.
+  \item Eli miten kävi otsikon lupaukselle ''alle 1k softasyntikka''?
+    Synamoduulin saa runtattua 1.6 kiloon, mutta äänen saaminen
+    äänikortista ulos asti (SDL:n kautta) pullahtaa minimissään 2
+    kiloon.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Kantapääopetuksia}
+\begin{itemize}
+\item Vois lukea matematiikkaa silloin, kun siihen on oikeasti aikaa,
+  vaikkapa perusopintojen yhteydessä. Signaaliprosessoinnin teoria
+  (suodatinsuunnittelu ym.) helpottaisi näitä harrastuksia kovasti.
+\item
+  Vois koodata kaikenlaista useammin, ettei taidot ruostu esim. olio-,
+  grafiikka- tai käyttöliittymäohjelmoinnin osalta.
+\item
+  Vois vaikka tämän jälkeen päästää irti menneisyydestä ja siirtyä
+  muihin kuin C-kieleen.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Lähdekoodit ja Workshoppailu Instansseilla}
+  \begin{itemize}
+  \item Lähdekoodit MIT-lisenssillä noin puoleen yöhön mennessä
+    (Malttia!): \url{https://yousource.it.jyu.fi/synti2}
+  \item Apuohjelmat vielä bugisia ja muutenkin hiukan
+    vaiheessa. Kivoja ovat ikuinen silmukka reaaliaikasäikeessä tai
+    täysillä korvaan tuleva valkoinen kohina. Varokaa, jos kokeilette.
+  \item Parantunevat (koodit, ei korvat), jahka Instanssin kompojen
+    deadlinet lähestyvät :)
+  \item Nykikää hihoista, jos aihepiiri(t) kiinnostaa enempi.
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
+

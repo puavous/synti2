@@ -310,7 +310,6 @@ void PatchBank::reloadFromStream(istream & ist)
 
     /* Then we need to do some more actions.. maybe here, maybe somewhere else.*/
     forceAllRuleActions();
-    sendAllPatches();
     notifyReloadListeners();
 }
 
@@ -382,6 +381,28 @@ PatchBank::setParEnabled(string const & key, bool status)
     if (status != old_status) {
       sendParamOnAllPatches(key);
     }
+}
+
+void
+PatchBank::sendPatch(size_t ipat){
+    vector<string>::const_iterator it;
+    /* FIXME: Keys in a single key vector!! */
+    for(it=getI4Begin(ipat);it!=getI4End(ipat);++it){
+        sendMidi(getEffectiveParAsSysEx(ipat,*it));
+    }
+    for(it=getFBegin(ipat);it!=getFEnd(ipat);++it){
+        sendMidi(getEffectiveParAsSysEx(ipat,*it));
+    }
+}
+
+void
+PatchBank::sendAllPatches(){
+    for(size_t i=0;i<getNumPatches();++i) sendPatch(i);
+}
+
+void
+PatchBank::sendMidiMap(){
+    midimap.sendEverything();
 }
 
 static

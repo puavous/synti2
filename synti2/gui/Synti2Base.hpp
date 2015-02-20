@@ -18,9 +18,21 @@ namespace synti2base {
   /** Derive this to give a concrete Midi API for sending data. */
   class MidiSender {
   protected:
+    /** Override this get bytes moving towards a midi port */
     virtual void doSendBytes(vector<unsigned char> const & bytes) = 0;
+    /** Override this to tell if the midi port is ready to send */
+    virtual size_t inspectSendCapacity() = 0;
   public:
+    /** Send bytes, if all goes well. Success is not guaranteed. Check
+     *  queue capacity first with isReadyToSend(). And watch out for
+     *  broken physical MIDI cables.
+     */
     void send(vector<unsigned char> const & bytes){doSendBytes(bytes);}
+
+    /** See if there is room in the communication pipe */
+    bool isReadyToSend(vector<unsigned char> const & bytes){
+        return inspectSendCapacity() > (bytes.size() + sizeof(size_t));
+    }
   };
 
   /** Derive this to do something when rules are either met or not. */

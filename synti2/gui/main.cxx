@@ -72,14 +72,21 @@ class JackMidiSender : public MidiSender {
 private:
     my_jack_T *js_;
 protected:
+    size_t inspectSendCapacity(){
+        return jack_ringbuffer_write_space(js_->rb);
+    }
     void doSendBytes(std::vector<unsigned char> const &bytes)
     {
         char sysex_buf[2000];
         size_t len = bytes.size();
-        if (len>sizeof(sysex_buf))
+        if (len > sizeof(sysex_buf))
         {
-            std::cerr << "No space for messasge." << std::endl;
+            std::cerr << "Message too long for processing buffer." << std::endl;
             return; /*should throw?*/
+        }
+        if (!isReadyToSend(bytes)){
+            std::cerr << "Ringbuffer not ready. Skipping transmission of " << len << " bytes." << std::endl;
+            return;
         }
 
         for (size_t i = 0; i<bytes.size(); i++)
@@ -87,21 +94,23 @@ protected:
             sysex_buf[i] = bytes.at(i);
         }
 
+        size_t space = jack_ringbuffer_write_space(js_->rb);
+        std::cerr << "Available rb write space: " << space << std::endl;
+        /*
+        printf("About to send:\n");
         for (size_t i = 0; i<bytes.size(); i++){
           printf("0x%02x ", (int) ((unsigned char*)sysex_buf)[i]);
         } printf("\n"); fflush(stdout);
+        printf("Target ring buffer ptr: %llx\n",js_->rb);
+        */
 
+        // Write length and then bytes.
         size_t nwrit = jack_ringbuffer_write (js_->rb, (char*)(&len), sizeof(size_t));
         nwrit += jack_ringbuffer_write (js_->rb, sysex_buf, len);
         if (nwrit < (sizeof(size_t) + len)){
-          std::cerr << "Write to ringbuffer failed? wrote" << nwrit;
+            std::cerr << "Write to ringbuffer failed?"
+                      << " wrote " << nwrit << " bytes." << std::endl;
         }
-        /*
-        std::cerr << "Should send:";
-        for(int i=0;i<bytes.size();++i){
-            std::cerr << " " << bytes[i];
-        }  std::cerr << std::endl;
-        */
     };
 public:
     JackMidiSender(my_jack_T *js) : MidiSender(),js_(js){}
@@ -141,7 +150,7 @@ process_with_jack(jack_nframes_t nframes, void *arg)
   nsent = 0;
   //while (jack_ringbuffer_read_space (global_rb) >= sizeof(s2ed_msg_t)) {
   for(;;){
-    /* This should be a call to a "has_message()" */
+    /* This should be a call to a "has_complete_message()" */
     if (jack_ringbuffer_read_space (my_jack.rb) < sizeof(size_t)) break;
     jack_ringbuffer_peek (my_jack.rb, (char*)&sz, sizeof(size_t));
     if (jack_ringbuffer_read_space (my_jack.rb) < sz) break;
@@ -149,7 +158,10 @@ process_with_jack(jack_nframes_t nframes, void *arg)
     /* If there is no space to forward the event, we'll have to
      * wait. Leave the message untouched in the ringbuffer front.
      */
-    if (jack_midi_max_event_size(midi_out_buffer) < sz) break;
+    if (jack_midi_max_event_size(midi_out_buffer) < sz){
+        std::cerr << "Midi output buffer is full.";
+        break;
+    }
 
     /* Read size and contents. */
     jack_ringbuffer_read (my_jack.rb, (char*)&sz, sizeof(size_t));

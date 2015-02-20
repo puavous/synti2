@@ -14,9 +14,10 @@ LIBS=-lfltk
 		-I../engine
 
 synti2gui: $(OBJS) Makefile
-	$(LD) 	`fltk-config --cxxflags`  \
-		`pkg-config --cflags --libs jack` \
-                $(LDFLAGS) $(OBJS) -o $(MAIN) $(LIBS)
+	$(LD) 	\
+                $(LDFLAGS) $(OBJS) -o $(MAIN) $(LIBS) \
+		`fltk-config --cxxflags`  \
+		`pkg-config --cflags --libs jack` 
 
 synti2_midi.o: ../engine/synti2_midi.c
 	g++ -g -c -o $@ $<

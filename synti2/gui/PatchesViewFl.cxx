@@ -94,6 +94,8 @@ void ViewPatches::butt_load_bank_cb(Fl_Widget* w, void* p){
 
     std::ifstream ifs(fname.c_str());
     ((ViewPatches*)p)->pb->reloadFromStream(ifs);
+    ((ViewPatches*)p)->pb->sendMidiMap();
+    ((ViewPatches*)p)->pb->sendAllPatches();
     //((ViewPatches*)p)->reloadWidgetValues();
 }
 void ViewPatches::butt_save_current_cb(Fl_Widget* w, void* p){

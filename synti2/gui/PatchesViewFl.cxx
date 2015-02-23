@@ -104,6 +104,13 @@ void ViewPatches::butt_save_current_cb(Fl_Widget* w, void* p){
     std::ofstream ofs(fname.c_str(), std::ios::trunc);
     ((ViewPatches*)p)->pb->writeOnePatch(((ViewPatches*)p)->getActivePatch(),ofs);
 }
+void ViewPatches::butt_duplicate_cb(Fl_Widget* w, void* p){
+    ViewPatches* view = ((ViewPatches*)p);
+    size_t n = view->dupnum->value();
+    view->pb->duplicate(view->getActivePatch(),n);
+    view->pb->sendAllPatches();
+    view->reloadWidgetValues();
+}
 void ViewPatches::butt_load_current_cb(Fl_Widget* w, void* p){
     string fname = fileChooser(".",".s2patch",false);
     if (fname == "") return;
@@ -164,25 +171,32 @@ void ViewPatches::val_ipat_cb(Fl_Widget* w, void* p){
   box = new Fl_Button(px + 1*(w+sp),py,w,h,"Send al&l");
   box->callback(butt_send_all_cb,this); box->labelsize(labsz);
 
-  px += w/2;
+  px += w/4;
   box = new Fl_Button(px + 2*(w+sp),py,w,h,"Save this");
   box->callback(butt_save_current_cb,this); box->labelsize(labsz);
 
   box = new Fl_Button(px + 3*(w+sp),py,w,h,"&Save all");
   box->callback(butt_save_bank_cb,this); box->labelsize(labsz);
 
+  px += w/4;
+  box = new Fl_Button(px + 4*(w+sp),py,w,h,"Dupli&cate");
+  box->callback(butt_duplicate_cb,this); box->labelsize(labsz);
+
+  dupnum = new Fl_Value_Input(px + 5*(w+sp),py,w/4,h);
+
   px += w/2;
-  box = new Fl_Button(px + 4*(w+sp),py,w,h,"Clear this");
+
+  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Clear this");
   box->callback(butt_clear_cb,this); box->labelsize(labsz);
 
-  box = new Fl_Button(px + 5*(w+sp),py,w,h,"Load this");
+  box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load this");
   box->callback(butt_load_current_cb,this); box->labelsize(labsz);
 
-  box = new Fl_Button(px + 6*(w+sp),py,w,h,"Load all");
+  box = new Fl_Button(px + 7*(w+sp),py,w,h,"Load all");
   box->callback(butt_load_bank_cb,this); box->labelsize(labsz);
 
-  px += w/2;
-  box = new Fl_Button(px + 7*(w+sp),py,w,h,"Panic!");
+  px += w/4;
+  box = new Fl_Button(px + 8*(w+sp),py,w,h,"Panic!");
   box->callback(butt_panic_cb,this); box->labelsize(labsz);
 
   std::vector<std::string>::const_iterator i4it,fit;

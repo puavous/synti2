@@ -166,6 +166,7 @@ namespace synti2gui {
     std::string lastErrorMessage;
     std::vector<S2Valuator*> ws;
     Fl_Input* wpatname;
+    Fl_Valuator *dupnum;
 
     void build_patch_editor(Fl_Group *gr);
 
@@ -181,6 +182,7 @@ namespace synti2gui {
     static void butt_panic_cb(Fl_Widget* w, void* p);
     static void inp_name_cb(Fl_Widget* w, void* p);
     static void val_ipat_cb(Fl_Widget* w, void* p);
+    static void butt_duplicate_cb(Fl_Widget* w, void* p);
   public:
     static void refreshViewFromData(void *me){
         ((ViewPatches*)me)->reloadWidgetValues();

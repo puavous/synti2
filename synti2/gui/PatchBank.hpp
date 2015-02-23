@@ -302,6 +302,14 @@ namespace synti2base {
         patches[ipat].setName(n);
     }
 
+    /** Make duplicates of a patch. */
+    void duplicate(size_t ipat, size_t ndups) {
+        if (ndups < 2) return;
+        for(size_t i=ipat+1; i<ipat+ndups; ++i){
+            patches[i] = patches[ipat];
+        }
+    }
+
     /** Sets a midi sender. */
     void setMidiSender(MidiSender *ms){
         midiSender = ms;

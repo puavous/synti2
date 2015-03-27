@@ -1116,3 +1116,59 @@ Regarding modularity and size:
    * most lean (and mean) option for a 4k synth, I guess. No... this
    * turned out to be untrue, at least when just trying out in the
    * most obvious way.
+
+
+
+
+Tried, gave up - just let the compiler do its job:
+---------------------------------------------------
+
+
+.text
+.global _start
+.global varlength
+.global main2
+	
+# Here is a bare minimum pro and epilogue for AMD64
+# Expects that start-up code has zeroed rbp! Rumors
+# have said that it happens nowadays, but might not
+# be standardized..
+#
+# Some 25 bytes smaller with this startup code instead of the function
+# prologue produced by gcc (with unnecessary push&pop).
+
+_start:	
+	and $0xfffffffffffffff0,%rsp
+
+	call main2
+	
+	movl $0x1,%eax
+	xor %ebx,%ebx
+	int $128
+
+
+
+# Here's the shortest varlength() I could
+# come up with.. but the one from gcc compresses better,
+# so the gzipped exe was longer with this assembly
+# (using 7za.. with zopfli the size was exactly the same)
+
+varlength:
+	xor    %eax,%eax
+	xor    %edx,%edx
+	
+vl_loop:
+	mov	(%rdi,%rax,1),%cl
+	inc	%al
+
+	mov	%cl,%ch
+	shl	$0x7,%edx
+	and	$0x7f,%cl
+	add	%cl,%dl
+	
+	test    %ch,%ch
+	js	vl_loop
+	
+vl_ret:
+	mov    %edx,(%rsi)
+	retq

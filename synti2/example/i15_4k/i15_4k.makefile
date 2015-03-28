@@ -3,8 +3,8 @@
 
 # Instanssi 2015 4k entry:
 # Specifics needed are song, sounds, and gfx (and other stuff as of now):
-FILES = example/i14_4k/i14_4k.mid \
-	   example/i14_4k/i14_4k.s2bank \
+FILES = example/i15_4k/song.mid \
+	   example/i15_4k/patches.s2bank \
 	   example/i15_4k/vertex.vert \
 	   example/i15_4k/fragment.frag \
 	   example/i15_4k/render.c \
@@ -14,8 +14,9 @@ FILES = example/i14_4k/i14_4k.mid \
 
 CUSTOMFILES=$(FILES)
 
-#CUSTOM_FLAGS=-DSCREEN_HEIGHT=320 -DPLAYBACK_DURATION=35
-CUSTOM_FLAGS=-DFULLSCREEN -DSCREEN_AUTODETECT -DPLAYBACK_DURATION=8
+CUSTOM_FLAGS=-DSCREEN_HEIGHT=160 -DPLAYBACK_DURATION=35
+# Instanssi 2015 Linux compo machine maybe can autodetect screen size:
+#CUSTOM_FLAGS=-DFULLSCREEN -DSCREEN_AUTODETECT -DPLAYBACK_DURATION=8
 
 ## This gcc flag will use tinyexe.ld as the link script (..dangerous?):
 #		-Wl,-dTtinyexe.ld \

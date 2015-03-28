@@ -13,7 +13,7 @@ A14FILES = example/i14_4k/i14_4k.mid \
 
 CUSTOMFILES=$(A14FILES)
 
-CUSTOM_FLAGS=-DSCREEN_HEIGHT=80 -DPLAYBACK_DURATION=35
+CUSTOM_FLAGS=-DSCREEN_HEIGHT=320 -DPLAYBACK_DURATION=35
 
 ## This gcc flag will use tinyexe.ld as the link script (..dangerous?):
 #		-Wl,-dTtinyexe.ld \

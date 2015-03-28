@@ -32,7 +32,7 @@ float julia(vec2 c, vec2 z, int iter){
     //pix /= .5 + s[0]/10.;
     //float l = length(pix);
     float l = max(abs(pix.x),abs(pix.y));
-    pix = sin(s[0]/(l+.001)) * pix;
+    pix = sin(s[0]/4 + sin(s[0])/(l+.001)) * pix;
 
     int iter = 30;
 
@@ -50,7 +50,7 @@ float julia(vec2 c, vec2 z, int iter){
     float rotm = s[0];
 
     vec4 ctab[5] = vec4[5](
-      vec4(1.,0.,0.,1.),
+      vec4(1.,.5,0.,1.),
       vec4(0.,0.,1.,1.),
       vec4(1.,0.,1.,1.),
       vec4(0.,0.,2.,1.),
@@ -73,7 +73,7 @@ float julia(vec2 c, vec2 z, int iter){
     int l;
     int lmax = 5;
     for (l=0;l<lmax;l++){
-      vec2 c = ctr[l] + s[0]*.1*vec2(sin(s[0]),cos(s[0]));
+        vec2 c = ctr[l] + (20.-s[0])*.1*vec2(sin(s[0]),cos(s[0]));
       vec2 z = z0 + ztab[l];
       float j = julia(c,z,iter);
       col += j * 5.*ctab[l];

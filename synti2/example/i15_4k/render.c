@@ -43,6 +43,11 @@ static void render_scene(const synti2_synth *s){
   
   const synti2_voice *v = s->voi;
   for(i=0; i<NUM_CHANNELS; i++){
+      // FIXME: Hack...
+      *isp++ = v->c[CI_ENVS+1].f;
+      *isp++ = v->note;
+#if 0
+  for(i=0; i<NUM_CHANNELS; i++){
     for(j=0; j<NUM_ENVS+1; j++)
       *isp++ = v->c[CI_ENVS+j].f;
     /* for consistency btw compose&playback*/
@@ -53,8 +58,9 @@ static void render_scene(const synti2_synth *s){
     isp += (NUM_MAX_MODULATORS - NUM_MODULATORS);
     *isp++ = v->note;
     v++;
+#endif
   }
-
+  
   unipar = oglGetUniformLocation(pid, "s");
   
   oglUniform1fv(unipar, NUM_SYNTH_PARAMS_TRANSMITTED, state);

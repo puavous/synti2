@@ -162,7 +162,7 @@ src/songdata.c: $(wildcard src/*.mid) $(wildcard src/*.s2bank)
 	$(TOOL_CMD) --write-song $(wildcard src/*.mid) $(wildcard src/*.s2bank) > $@
 
 
-tiny4: $(TINY_OBJS)
+tiny.bin: $(TINY_OBJS)
 
 	$(LD) -i -o therest.o $^
 	$(LD) \
@@ -201,4 +201,4 @@ tiny4: $(TINY_OBJS)
 	@ls -lt $@
 
 
-all: bin/jackvsynti2 tiny4 writ2
+all: bin/jackvsynti2 tiny.bin writ2

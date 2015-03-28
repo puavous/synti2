@@ -43,6 +43,7 @@ typedef void (*SDLPAUS_F_T) (int pause_on);
 typedef void (*SDLGLSW_F_T) (void);
 typedef void (*SDLPOLL_F_T) (SDL_Event *event);
 typedef void (*SDLQUIT_F_T)( void );
+typedef void* (*SDLGETVINF_F_T)( void );
 
 /* functions from libGL.so */
 #define oglCreateProgram	  ((PFNGLCREATEPROGRAMPROC)myglfunc[0])
@@ -66,6 +67,7 @@ typedef void (*SDLQUIT_F_T)( void );
 #define oSDL_GL_SwapBuffers ((SDLGLSW_F_T)          myglfunc[16])
 #define oSDL_PollEvent      ((SDLPOLL_F_T)          myglfunc[17])
 #define oSDL_Quit           ((SDLQUIT_F_T)          myglfunc[18])
+#define oSDL_GetVideoInfo   ((SDLGETVINF_F_T)       myglfunc[19])
 
 /*number of functions in *strs function array*/
 #define NUMFUNCTIONS 100

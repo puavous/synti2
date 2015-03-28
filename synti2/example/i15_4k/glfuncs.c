@@ -21,5 +21,6 @@ const char funs[] =
   "SDL_GL_SwapBuffers\0"
   "SDL_PollEvent\0"
   "SDL_Quit\0"
+  "SDL_GetVideoInfo\0"
   "\0"
   "\0";

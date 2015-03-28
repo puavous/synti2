@@ -1,19 +1,21 @@
 # Customization for a final product. Can override any switches. Must
 # define at least CUSTOMFILES.
 
-# Assembly 2014 4k entry:
-# Specifics needed are song, sounds, and gfx:
-A14FILES = example/i14_4k/i14_4k.mid \
+# Instanssi 2015 4k entry:
+# Specifics needed are song, sounds, and gfx (and other stuff as of now):
+FILES = example/i14_4k/i14_4k.mid \
 	   example/i14_4k/i14_4k.s2bank \
 	   example/i15_4k/vertex.vert \
 	   example/i15_4k/fragment.frag \
 	   example/i15_4k/render.c \
 	   example/i15_4k/glfuncs.h \
-	   example/i15_4k/glfuncs.c
+	   example/i15_4k/glfuncs.c \
+	   example/i15_4k/info.txt
 
-CUSTOMFILES=$(A14FILES)
+CUSTOMFILES=$(FILES)
 
-CUSTOM_FLAGS=-DSCREEN_HEIGHT=320 -DPLAYBACK_DURATION=35
+#CUSTOM_FLAGS=-DSCREEN_HEIGHT=320 -DPLAYBACK_DURATION=35
+CUSTOM_FLAGS=-DFULLSCREEN -DSCREEN_AUTODETECT -DPLAYBACK_DURATION=8
 
 ## This gcc flag will use tinyexe.ld as the link script (..dangerous?):
 #		-Wl,-dTtinyexe.ld \

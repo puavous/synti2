@@ -62,6 +62,9 @@ product/: tools Makefile $(PRODFILES)
 	cp tests/tinyexe.ld product/
 	cp current.makefile product/
 
+entry.zip: final
+	zip -j entry.zip product/tiny.bin product/src/info.txt
+
 bin/jackvsynti2: product/ $(PRODFILES)
 	cd product; make bin/jackvsynti2
 	mv product/bin/jackvsynti2 ./bin

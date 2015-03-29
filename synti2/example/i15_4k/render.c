@@ -57,8 +57,8 @@ static void render_scene(const synti2_synth *s){
     /* for consistency btw compose&playback*/
     isp += (NUM_MAX_MODULATORS - NUM_MODULATORS);
     *isp++ = v->note;
-    v++;
 #endif
+    v++;
   }
   
   unipar = oglGetUniformLocation(pid, "s");

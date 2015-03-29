@@ -28,17 +28,11 @@ float julia(vec2 c, vec2 z, int iter){
     pix.x *= s[1]/s[2];
 
     // Map from screen coordinates to something radially symmetric
-
-    //pix /= .5 + s[0]/10.;
-    //float l = length(pix);
     float l = max(abs(pix.x),abs(pix.y));
     pix = sin(s[0]/4 + sin(s[0])/(l+.001)) * pix;
 
     int iter = 30;
 
-    //vec2 cbase = vec2(.1104,.023);
-    //vec2 cbt = vec2(.1104,.023);
-    //vec2 c = cbase + (1.+s[0])*.1*vec2(sin(s[0]),cos(s[0]));
     vec2 ctr[5] = vec2[5](
                           vec2(.1104,.023),
                           vec2(.104,-.023),

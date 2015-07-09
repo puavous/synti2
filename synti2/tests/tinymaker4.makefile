@@ -161,6 +161,16 @@ src/patchdata.c: $(wildcard src/*.s2bank)
 src/songdata.c: $(wildcard src/*.mid) $(wildcard src/*.s2bank)
 	$(TOOL_CMD) --write-song $(wildcard src/*.mid) $(wildcard src/*.s2bank) > $@
 
+tiny.debug.bin: $(TINY_OBJS)
+	$(LD) -i -o therest.o $^
+	$(LD) \
+		-o $@ \
+		therest.o \
+		--hash-style=sysv \
+		--build-id=none \
+		-z noexecstack \
+		--dynamic-linker=/lib64/ld-linux-x86-64.so.2 \
+		$(HCLIBS) -lc -lGLEW  
 
 tiny.bin: $(TINY_OBJS)
 

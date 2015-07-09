@@ -35,6 +35,16 @@ typedef void (*BLENDFUNC_F_T)( GLenum sfactor, GLenum dfactor);
 typedef GLint (*GETUNIFORMLOC_F_T)( GLuint program, const GLchar *name);
 typedef void (*UNIFORM1FV_F_T)( GLint location, GLsizei count, const GLfloat *value);
 
+typedef void (*GENTEX_F_T)(GLsizei n, GLuint *textures);
+typedef void (*BINDTEX_F_T)(GLenum target, GLuint texture);
+typedef void (*TEXPARAMI_F_T)( GLenum target, GLenum pname, GLint param );
+typedef void (*TEXIMAGE2D_F_T)( GLenum target, GLint level,
+                                GLint internalFormat,
+                                GLsizei width, GLsizei height,
+                                GLint border, GLenum format, GLenum type,
+                                const GLvoid *pixels );
+
+
 typedef void (*SDLINIT_F_T)(Uint32 flags);
 typedef SDL_Surface * (*SDLSETV_F_T)( int w, int h, int bpp, Uint32 flags );
 typedef int (*SDLSHOW_F_T) (int toggle);
@@ -57,17 +67,21 @@ typedef void* (*SDLGETVINF_F_T)( void );
 #define oglRects            ((RECTS_F_T)             myglfunc[8])
 #define oglGetUniformLocation ((GETUNIFORMLOC_F_T)   myglfunc[9])
 #define oglUniform1fv       ((UNIFORM1FV_F_T)        myglfunc[10])
+#define oglGenTextures      ((GENTEX_F_T)        myglfunc[11])
+#define oglBindTexture      ((BINDTEX_F_T)        myglfunc[12])
+#define oglTexParameteri    ((TEXPARAMI_F_T)        myglfunc[13])
+#define oglTexImage2D       ((TEXIMAGE2D_F_T)        myglfunc[14])
 
 /* functions from libSDL.so */
-#define oSDL_Init           ((SDLINIT_F_T)          myglfunc[11])
-#define oSDL_SetVideoMode   ((SDLSETV_F_T)          myglfunc[12])
-#define oSDL_ShowCursor     ((SDLSHOW_F_T)          myglfunc[13])
-#define oSDL_OpenAudio      ((SDLOPAU_F_T)          myglfunc[14])
-#define oSDL_PauseAudio     ((SDLPAUS_F_T)          myglfunc[15])
-#define oSDL_GL_SwapBuffers ((SDLGLSW_F_T)          myglfunc[16])
-#define oSDL_PollEvent      ((SDLPOLL_F_T)          myglfunc[17])
-#define oSDL_Quit           ((SDLQUIT_F_T)          myglfunc[18])
-#define oSDL_GetVideoInfo   ((SDLGETVINF_F_T)       myglfunc[19])
+#define oSDL_Init           ((SDLINIT_F_T)          myglfunc[15])
+#define oSDL_SetVideoMode   ((SDLSETV_F_T)          myglfunc[16])
+#define oSDL_ShowCursor     ((SDLSHOW_F_T)          myglfunc[17])
+#define oSDL_OpenAudio      ((SDLOPAU_F_T)          myglfunc[18])
+#define oSDL_PauseAudio     ((SDLPAUS_F_T)          myglfunc[19])
+#define oSDL_GL_SwapBuffers ((SDLGLSW_F_T)          myglfunc[20])
+#define oSDL_PollEvent      ((SDLPOLL_F_T)          myglfunc[21])
+#define oSDL_Quit           ((SDLQUIT_F_T)          myglfunc[22])
+#define oSDL_GetVideoInfo   ((SDLGETVINF_F_T)       myglfunc[23])
 
 /*number of functions in *strs function array*/
 #define NUMFUNCTIONS 100

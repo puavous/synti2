@@ -13,23 +13,50 @@
  */
 #define NUM_SYNTH_PARAMS_TRANSMITTED 200
 
+//#define NEED_DEBUG 1
+
 /** Paint it. */
 static void render_scene(const synti2_synth *s){
   int i, j;
   GLint unipar;
   GLfloat *isp;
 
-/*
-     compression    old  new
-     7za    -mx=9   4176 4244
-     zopfli --i25   4110 4128
+  GLuint tex;
 
-     Somehow this renderer gets compressed better
-     than the previous one, and now we get all
-     the envelopes, controllers, and notes for
-     all voices into the shader side.
-     
-  */
+  #define TEXTURE_W 256
+  #define TEXTURE_H 256
+
+  static int first_time = 1;
+  static float pixels[TEXTURE_W*TEXTURE_H*3];
+  
+  /* FIXME: static render_init() for all initialization */
+  if (first_time){
+      first_time = 0;
+      /* Straight from an OpenGL intro at first... */
+      oglGenTextures(1, &tex);
+      oglBindTexture(GL_TEXTURE_2D, tex);
+      oglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      oglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      oglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      oglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      //oglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      //oglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      int rs = 1;
+      // Generate RGB noise:
+      for (i=0;i<TEXTURE_W*TEXTURE_H*3;i++){
+          rs *= 16807;
+          pixels[i]=(float)((unsigned int)rs) * 4.6566129e-010f;
+      }
+      /*
+      // Generate a test image in RGB:
+      for (i=0;i<TEXTURE_W*TEXTURE_H*3;i+=3){
+          pixels[i] = (float)((i/3)%TEXTURE_W)/(TEXTURE_H);
+          pixels[i+1] = (float)((i/3)/TEXTURE_H)/(TEXTURE_W);
+          pixels[i+2] = (float)(i/3)/(TEXTURE_W*TEXTURE_H);
+      }
+      */
+      oglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEXTURE_W, TEXTURE_H, 0, GL_RGB, GL_FLOAT, pixels);
+  }
 
   /* Global now:
      float synthtime;
@@ -41,13 +68,11 @@ static void render_scene(const synti2_synth *s){
 
   isp = state + NUM_GLOBAL_PARAMS;
   
+  // The whole state doesn't fit in uniform arrays of some gfx cards..
+  #define NUM_CHANNELS_TO_TRANSFER 3
+  
   const synti2_voice *v = s->voi;
-  for(i=0; i<NUM_CHANNELS; i++){
-      // FIXME: Hack...
-      *isp++ = v->c[CI_ENVS+1].f;
-      *isp++ = v->note;
-#if 0
-  for(i=0; i<NUM_CHANNELS; i++){
+  for(i=0; i<NUM_CHANNELS_TO_TRANSFER; i++){
     for(j=0; j<NUM_ENVS+1; j++)
       *isp++ = v->c[CI_ENVS+j].f;
     /* for consistency btw compose&playback*/
@@ -57,7 +82,6 @@ static void render_scene(const synti2_synth *s){
     /* for consistency btw compose&playback*/
     isp += (NUM_MAX_MODULATORS - NUM_MODULATORS);
     *isp++ = v->note;
-#endif
     v++;
   }
   

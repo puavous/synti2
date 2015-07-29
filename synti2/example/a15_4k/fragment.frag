@@ -3,6 +3,8 @@ uniform float s[200]; // State parameters from app.
 
 uniform sampler2D tex; // One texture (learning as I do...)
 
+varying vec3 normal;
+
 vec2 rot(vec2 p, float th){
     float si = sin(th);
     float co = cos(th);
@@ -38,6 +40,8 @@ void main(){
         + rndX(rc+vec2(.4), pix, 120)*.5;
 
     vec4 col = vec4(inty,inty*.3,.1,1.) / (1.+pow(length(spix.y-1),4.));
+
+    col *= dot(normal,vec3(10,10,10));
 
     int iter = 30;
 

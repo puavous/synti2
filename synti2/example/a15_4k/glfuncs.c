@@ -15,6 +15,8 @@ const char funs[] =
     "glBindTexture\0"
     "glTexParameteri\0"
     "glTexImage2D\0"
+    "glMatrixMode\0"
+    "glLoadIdentity\0"
     "\0"
     "libSDL.so\0"
     "SDL_Init\0"
@@ -27,4 +29,8 @@ const char funs[] =
     "SDL_Quit\0"
     "SDL_GetVideoInfo\0"
     "\0"
+    "libGLU.so\0"
+    "gluNewQuadric\0"
+    "gluSphere\0"
+    "gluPerspective\0"
     "\0";

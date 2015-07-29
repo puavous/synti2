@@ -28,6 +28,7 @@ static void render_scene(const synti2_synth *s){
 
   static int first_time = 1;
   static float pixels[TEXTURE_W*TEXTURE_H*3];
+  static GLUquadricObj *quadobj;
   
   /* FIXME: static render_init() for all initialization */
   if (first_time){
@@ -56,6 +57,8 @@ static void render_scene(const synti2_synth *s){
       }
       */
       oglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEXTURE_W, TEXTURE_H, 0, GL_RGB, GL_FLOAT, pixels);
+
+      quadobj = ogluNewQuadric();
   }
 
   /* Global now:
@@ -91,7 +94,20 @@ static void render_scene(const synti2_synth *s){
 
   oglClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
-  oglRects( -1, -1, 1, 1 );
+  oglMatrixMode(GL_PROJECTION);
+  oglLoadIdentity();
+  //glFrustum(-1.33,1.33,-1,1,1.5,400);
+
+  ogluPerspective(45., state[1]/state[2], 1, 100);
+  ogluSphere( quadobj, 1., 30, 20);
+  for(i=0;i<50;i++){
+      for(j=0;j<50;j++){
+          oglRects( -25+i, -25+j, -24+i, -24+j );
+      }
+  }
+  
+  //oglRects( -1, -1, 1, 1 );
+  
 }
 
 

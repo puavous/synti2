@@ -39,7 +39,11 @@ void main(){
         + rndX(rc+vec2(.3), pix, 48)*.3
         + rndX(rc+vec2(.4), pix, 120)*.5;
 
-    vec4 col = vec4(inty,inty*.3,.1,1.) / (1.+pow(length(spix.y-1),4.));
+    //vec4 col = vec4(inty,inty*.3,.1,1.) / (1.+pow(length(spix.y-1),4.));
+    
+    vec4 col = vec4(1.,1.,1.,1.) / (1.+pow(length(spix.y-1),4.));
+
+    if (normal.z > 0.) discard;
 
     col *= dot(normal,vec3(10,10,10));
 

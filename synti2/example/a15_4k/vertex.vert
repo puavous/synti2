@@ -11,8 +11,8 @@ float rndX(vec2 rndcent, vec2 rndoff, float rndscale){
 float rndH(vec2 c, vec2 rndoff){
     return rndX(c,rndoff,2)*.2
         + rndX(c,rndoff,5)*.4
-        + rndX(c,rndoff,10)*1
-        + rndX(c,rndoff,25)*2;
+        + rndX(c,rndoff,10)*2
+        + rndX(c,rndoff,30)*5;
 }
 
 void main(){
@@ -22,23 +22,24 @@ void main(){
     vec2 c = vec2(.001*s[0]);
     
     //float h1 = rndX(c,v.xy,5);
-    float h1 = rndH(c,v.xy);
-    float h2 = rndH(c,v.xy+vec2(.1,0));
-    float h3 = rndH(c,v.xy+vec2(0,.1));
+    float h1 = rndH(c,v.xy/25);
+    float h2 = rndH(c,v.xy/25+vec2(.1,0));
+    float h3 = rndH(c,v.xy/25+vec2(0,.1));
 
     // Then, map to xz plane and make height map:
     v.xz = v.xy;
-    v.y = -4.;
+    v.y = 8.;
     //v.xyz *= rndX(vec2(.02*s[0]),v.xy,5);
     //v.xyz *= 2.+sin(s[0]);
     v.z += -30+s[0];
 
-    v.y += h1;
+    v.y -= h1;
 
     normal = cross(vec3(.1,h2-h1,0),vec3(0,h3-h1,.1));
     normal = normalize(normal);
 
-    v.xy = vec2(sin(s[0])*v.x+cos(s[0])*v.y, cos(s[0])*v.x-sin(s[0])*v.y);
+    //v.xy = vec2(sin(s[0])*v.x+cos(s[0])*v.y, cos(s[0])*v.x-sin(s[0])*v.y);
+    
     // Finally, project with the projection matrix given from app:
     gl_Position = gl_ProjectionMatrix * v;
 

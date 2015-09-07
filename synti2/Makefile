@@ -15,7 +15,7 @@ bin/synti2gui: engine/synti2_midi.o
 	mv gui/synti2gui bin/synti2gui
 
 bin/atest: engine/atest.c
-	gcc -o $@ $<
+	gcc -DBITS_FOR_WAVETABLE=16 -o $@ $<
 
 engine/synti2_archdep.h: bin/atest
 	bin/atest > $@

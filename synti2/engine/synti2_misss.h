@@ -23,9 +23,10 @@
  * TODO: (perhaps in a later version) If only one bit is used for
  * layer identification in the end, then maybe use the remaining 7 for
  * some useful aspect (could hold par[0], for example). But... do I
- * want MISSS_LAYER_DATA !? TODO: If ramps were not used, there would
- * be only one kind of layers, and the whole identification byte/bit
- * would be unnecessary.
+ * want MISSS_LAYER_DATA !? TODO: (maybe in a later version) If the
+ * controller ramp feature would be disabled, there are only one kind
+ * of layers, and the whole identification byte/bit could be ifdeffed
+ * away.
  */
 #define MISSS_LAYER_NOTES 0x00
 #define MISSS_LAYER_CONTROLLER_RAMPS 0x01

@@ -256,8 +256,8 @@ synti2_player_init_from_misss(synti2_synth *s, const byte_t *r)
   /* TODO: Now we use the standard MIDI tempo unit of MSPQN. For our
    * 4k purposes, we might not need tpq at all. Just give us
    * microseconds per tick, and we'll be quite happy here and try to
-   * match it approximately by framecounts... TODO: Think about
-   * accuracy vs. code size once more in here(?).
+   * match it approximately by framecounts... Think about accuracy
+   * vs. code size once more in here(?).
    */
   r += varlength(r, &(s->seq.tpq));  /* Ticks per quarter note */
   r += varlength(r, &uspq);          /* Microseconds per quarter note */
@@ -972,7 +972,7 @@ synti2_render(synti2_synth *s,
 #ifdef FEAT_APPLY_ADD
         interm += sigin[pat->ipar3[IPAR_ADDTO1+iosc]]; /* parallel */
 #endif
-        /* Some rougher waveshapings.. TODO: rename feature */
+        /* Some rougher waveshapings.. more "powerful" than sine waves */
 #ifdef FEAT_POWER_WAVES
         if (pat->ipar3[IPAR_POWR1+iosc] == 2){
           interm = (interm>0.f)?1.f:-1.f;

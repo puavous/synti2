@@ -45,23 +45,26 @@
  * result, the executable is a little bit smaller, and the source
  * looks pretty nice too.
  * 
- * TODO: think if it is more efficient to put values and deltas in
- * separate arrays. Probably, if you think of a possible assembler
- * implementation with multimedia vector instructions(?). Or maybe
- * not? Look at the compiler output...
+ * TODO: (later, maybe) think if it is more efficient to put values
+ * and deltas in separate arrays. Probably, if you think of a possible
+ * assembler implementation with multimedia vector instructions(?). Or
+ * maybe not? Look at the compiler output...
  *
- * TODO: Think. Signed integers would overflow just as nicely (oops.. 
- * check the standard again.. I hear it could be undefined behavior). 
- * Could it be useful to model things in -1..1 range instead of 0..1 ?
+ * TODO: (don't, actually) Signed integers would overflow just as
+ * nicely in some implementation, but the standard says signed
+ * overflow is undefined. So let's not think about this further.
  *
- * TODO: Maybe separate functions for oscillators and envelopes could
- * still be used if they would compress nicely...
+ * TODO: (later, maybe) Maybe separate functions for oscillators and
+ * envelopes could still be used if they would compress nicely...
  *
- * TODO: Now I convert the counter value to a float before
- * computations even though fixed point arithmetics could admittedly
- * yield shorter code (maybe...) Fixed point synth remains to be tried
- * in a later project, because now I didn't have the time to think
- * about accuracies and stuff. Floats are so easy.
+ * TODO: (to try in later projects altogether) Now I convert the
+ * counter value to a float before computations even though fixed
+ * point arithmetics could admittedly yield shorter code (maybe...)
+ * Fixed point synth remains to be tried in a later project, because
+ * now I didn't have the time to think about accuracies and
+ * stuff. Floats are so easy. In the end, I suppose everything should
+ * use floats, including oscillators. As in 'updated :=
+ * decimal_part_of(old+delta)'.
  */
 typedef struct {
   unsigned int val;
@@ -73,10 +76,11 @@ typedef struct {
   float bb;  /* for interpolation end */
 } counter;
 
-/* Events shall form a singly linked list. TODO: Is the list code too
- * complicated? Use just tables with O(n^2) pre-ordering instead??
- * Hmm.. after some futile attempts, I was unable to squeeze a smaller
- * code from any other approach, so I'm leaving the list as it is now.
+/* Events shall form a singly linked list. TODO: (or not) Is the list
+ * code too complicated? Use just tables with O(n^2) pre-ordering
+ * instead??  Hmm.. after some futile attempts, I was unable to
+ * squeeze a smaller code from any other approach, so I'm leaving the
+ * list as it is now.
  */
 typedef struct synti2_player_ev synti2_player_ev;
 

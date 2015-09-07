@@ -584,7 +584,7 @@ synti2_midi_to_misss(synti2_midi_map *map,
   case MIDI_STATUS_CONTROL:
     return synti2_map_cc(map, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_PROGRAM:
-    return 0; /* Omit program change. TODO: a sound bank system(?) */
+    return 0; /* Omit program change. TODO: (in a later project) a sound bank system */
   case MIDI_STATUS_CHANNEL_PRESSURE:
     return synti2_map_pressure(map, midi_chn, midi_in, misss_out, msgsizes);
   case MIDI_STATUS_PITCH_WHEEL:

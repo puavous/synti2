@@ -1,0 +1,460 @@
+% -*- coding: utf-8 -*-
+
+\documentclass[pdf,10pt,handout]{beamer}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+
+\mode<presentation>
+{
+  \usetheme{Goettingen}
+  \usecolortheme{seagull}
+}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{bibliography item}{[\theenumiv]}
+
+\setlength{\parskip}{\baselineskip}
+
+
+\usepackage[finnish]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{palatino}
+
+%\graphicspath{{figs/}}
+
+\title[TIEP115]
+{Tietotekniikasta, harrastamisesta, matematiikasta ja soitinrakennuksesta}
+
+\author{Paavo Nieminen}
+
+\date{TIEP115 Johdatus tietotekniikkaan, 18.2.2016}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Sisältö (sama kuin vuosi sitten)}
+
+{
+\setlength{\parskip}{\smallskipamount}
+  \tableofcontents
+  % You might wish to add the option [pausesections]
+}
+\end{frame}
+\beamerdefaultoverlayspecification{<+->}
+
+\begin{frame}{Tässä esityksessä:}
+  \begin{itemize}
+  \item Lähdetään liikkeelle tohtorikoulutettavan ''viattomasta ja
+    hauskasta harrastusprojektista''
+  \item Katsotaan, mihin tietotekniikan osa-alueeseen se liittyy
+  \item Millaista historiaa tuolla tietotekniikan osa-alueella on
+  \item Mitä aiheen tutkimiseen liittyy (muun muassa)
+  \item Miten laitoksellamme tarjottavat kandidaatin ja maisterin
+    opinnot liittyvät aiheeseen.
+  \item Väliajoin totean erikseen ''pointteja'', joita haluan korostaa
+    erityisesti ensimmäisen vuoden opiskelijalle.
+  \end{itemize}
+\end{frame}
+
+
+\section{Harrastelua ja leikkimistä}
+\begin{frame}{''Synti2 Software Synthesizer''}
+\begin{itemize}
+  \item Synti2 on, muusikkojargonilla ilmaistuna, mun omatekemä
+    softasyntikka, jolla pääsee silloin tällöin elvistelemään. (Kiitos
+    Jonnelle tämänkin kevään mahdollisuudesta!)
+  \item Muusikkojargon avattuna tarkoittaa tietokoneohjelmaa
+    (software, ''softa''), joka muodostaa ääntä (synthesizer,
+    ''syntikka'')
+  \item Harrastusprojekti, johon tulee kajottua kerran tai pari vuodessa
+  \item Julkinen versiokanta:\\ \small{\url{https://yousource.it.jyu.fi/synti2/synti2}}
+
+    (pittäis löytyä myös googlettamalla ''synti2'')
+
+  \item Kehitysympäristönä tarvitaan ainakin toistaiseksi Linux ja
+    useampia lisäkirjastoja sekä työkaluohjelmia.
+    
+  \item \ldots [Demotaan käytännössä, jos salitekniikka antaa myöten]
+    \ldots
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}{''Synti2 Software Synthesizer'' --~synteesimenetelmä}
+
+  \begin{itemize}
+  \item Vaihemodulaatiosynteesi (tyyliin Yamahan DX7 ym. 80-luvulta)
+  \item Operaattorit miksattavissa (ts. osin additiivinen synteesi;
+    tyypillistä FM-syntikoissa)
+  \item Resonoiva ali- / yli- / kaistapäästösuodin (ts. osin
+    subtraktiivinen synteesi)
+  \item Oskillattorit esilaskettuina taulukoina
+    (''wavetable''-synteesi)
+  \item Rajalliset viivästysefektit / kampasuodin mahdollisia
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{''Synti2 Software Synthesizer'' --~ominaisuudet}
+  \begin{itemize}
+  \item Reaaliaikainen äänentuotto 
+  \item Ohjaus standardilla MIDI-protokollalla
+  \item Sisältää tyypillisen kosketinsoittimen perusominaisuudet,
+    ts. huomioi kosketusvoimakkuuden sekä jatkuva-arvoiset
+    kontrollerit (ml. pitch bend, modulator, aftertouch, breath
+    controller, \ldots)
+  \item Hetkellinen tila luettavissa esim. musiikkiin synkronoitua
+    visualisointia varten
+  \item[] (ei tarvitse taputtaa)
+  \item Sekvensserimoodi nauhoitetun kappaleen toistoon
+  \item Yksinkertainen sekvenssi, äänipankki ja toistokoneisto mahtuu
+    3 kilotavuun pakattua suoritettavaa koodia.
+  \item[] (nyt saa taputtaa.)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Miksi, miksi, miksi?}
+  Miksi näitä juttuja pitäisi vielä harrastaakin? Eikö se riitä, että
+  näitä tekee töikseen tai opiskellakseen?
+  \begin{itemize}
+    \item Harrastuksissa oppii asioita, jotka eivät tule vastaan
+      opinnoissa tai töissä (kunnes saattavat yllättäen tullakin).
+    \item Oppi ei kaada ojaan koskaan. Enemmän se avaa ovia kuin
+      sulkee.
+    \item Harrastukset ovat hauskoja ja antavat motivaatiota teorian
+      oppimiseen yliopistokursseilla, joissa ei välttämättä ehditä
+      sovelluksiin asti.
+    \item Voipi välillä elvistellä tekeleillään vähän.
+    \item Optimitilanteessa harrastuksesta voi tulla työ tai siitä voi
+      lähteä liikkeelle myyntikelpoinen tuote\ldots no, ainakin voi
+      haaveilla \ldots
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Pointti: Harrastakaa vapaasti!}
+  \begin{itemize}
+    \item
+  On sopivaa ja suotavaa kokeilla, löytyisikö opintojen lähimaastosta
+  aihetta myös harrastelulle. Itseäni kiinnostaa äänisynteesi ja
+  audio-ohjelmistot, mutta yhtä hyvin kiinnostuksen kohteet voivat
+  olla grafiikassa, peleissä, tietoturvassa, verkkokaupoissa,
+  sosiaalisessa mediassa, kääntäjätekniikassa, tekoälyssä, \ldots
+
+\item
+  Opintoaika on rajoitettu, joten kiirettä pitelee kurssienkin
+  parissa. Silti aika ennen työelämää mahdollistaa harrastukset
+  paremmin. Sopivasti valittu harrastus voi myös konvergoida opintojen
+  kanssa etenkin loppua kohden. Siis opintopisteitä ja tutkimusaihe
+  harrastuksen tiimoilta? Täysin mahdollista!
+
+\item
+  Synti2:n parissa olen itse oppinut asian jos toisenkin
+  mm. ohjelmoinnista, käyttöjärjestelmistä ja tietokonegrafiikasta.
+  Päätarkoitus ja alullepaneva tekijä oli kuitenkin opetella
+  nimenomaan ''digitaalista soitinrakennusta'', joten puhutaan tällä
+  luennolla siitä.
+\end{itemize}
+\end{frame}
+
+\section{Historiaa}
+
+\subsection{Tietokonemusiikki}
+\begin{frame}{Historiaa: tietokonemusiikki, digitaalinen äänisynteesi}
+  \begin{itemize}
+    \item
+  Digitaalisen tietokoneen käyttöä ''musiikkisoittimena'' visioidaan
+  1960-luvulla esim. Mathewsin artikkelissa
+  \cite{Mathews63thedigital}, jossa jo viitataan ensimmäisiin olemassa
+  olleisiin toteutuksiin.
+
+    \item
+  Törmäsin Mathewsin artikkeliin Smithin konferenssipuheen
+  \cite{smith1991viewpoints} alkulauseessa. Itse puhe, tai pikemminkin siihen
+  liittyvä artikkeli, on sinällään mielenkiintoista luettavaa, vaikka
+  onkin esseemäinen näkemys historiaan ja siihen, mikä kirjoittajan
+  mielestä onnistui ja mikä meni pieleen 1960-luvun jälkeen. Vuonna
+  1991 kirjoitetun esseen näkemyksiä voidaan nyt jo arvioida
+  historiallisesta näkökulmasta. Tietokoneiden nopeuden kasvu on kauan
+  sitten mahdollistanut tarvittavan laskennan, mutta äänten ja
+  musiikin kuvailemiseen tarkoitettujen kielten (eli
+  musiikin ''ohjelmointikielten'') osalta lopullisten voittojen
+  saavuttaminen voi olla vaikeampaa, kuten Smith alkusanoissaan
+  ounastelikin.
+  \end{itemize}
+\end{frame}
+
+\subsection{Äänisynteesi}
+\begin{frame}{Erilaisia digitaalisen äänisynteesin menetelmiä}
+\begin{itemize}
+\item
+  Synti2:n synteesimenetelmä perustuu (tavallaan) taajuusmodulaatioon,
+  jonka sovellukset tietoliikenteessä olivat arkipäivää jo siinä
+  vaiheessa, kun niiden käyttöä musiikilliseen äänisynteesiin vasta
+  ehdotettiin 1970-luvulla \cite{chowning1973fm}.
+
+\item[]
+  (Demotaan käytännössä, jos tekniikka antaa myöten)
+
+\item
+  Muita viime vuosituhannen loppuun mennessä keksittyjä
+  äänisynteesimenetelmiä on lueteltu ja luokiteltu esimerkiksi Tolosen
+  ym. raportissa \cite{TolonenEtal1998evaluation}. Tulevaisuudessa,
+  tietokoneiden suorituskyvyn kasvaessa, fysikaaliseen mallinnukseen
+  perustuvien menetelmien roolin voisi olettaa yhä kasvavan.
+
+\end{itemize}
+
+\end{frame}
+
+\section{DSP}
+\begin{frame}{Historiaa: Digitaalinen signaalinkäsittely}
+  \begin{itemize}
+    \item
+  Digitaalinen äänisynteesi on yksi sovellus ja osa-alue laajemmasta
+  tutkimuskentästä nimeltä digitaalinen signaalinkäsittely
+  (engl. digital signal processing, DSP), jossa yleisesti ottaen
+  vieläkin laajemman alan, signaalinkäsittelyn, ongelmia pyritään
+  ratkaisemaan digitaalitekniikan, ml. tietokoneohjelmien,
+  avulla.
+\item
+  IEEE:n historiikista \cite{nebeker1998signalprocessing} löytyvän
+  haastattelusitaatin mukaan itse asiassa koko signaalinkäsittelyn ala
+  sai nimensä vasta kun tietokoneet pistivät siihen vauhtia; siihen
+  asti tutkimus oli tapahtunut erillisinä saarekkeina sovellusalojen
+  sisällä.
+
+\item
+  Yhtenä DSP-alan kivijalkana on mm. Shannonin informaation siirron
+  matemaattisia perusteita koskeva julkaisu
+  \cite{shannon48amathematical} vuodelta 1948.
+
+\item
+  Muita alan sovelluksia kuin musiikki-instrumentit? Puhelinyhteydet,
+  televisio- ja radiolähetykset, tallennusvälineet, autojen
+  moottoreita ohjaavat mittarit, lääketieteellinen kuvantaminen,
+  seismologia, eksoplaneettojen etsiminen \ldots lisätietoa esim. em.
+  historiikissa.
+  \end{itemize}
+  
+\end{frame}
+
+\subsection{Suotimet}
+\begin{frame}{Suotimet ja suodinsuunnittelu}
+
+  \begin{itemize}
+    \item
+  Esimerkki digitaalisen signaalinkäsittelyn kenttään liittyvästä
+  erityiskohteesta on suodinsuunnittelu (filter design).
+    \item
+  Synti2:n suodin (on tietysti vaan copy-pastattu nettifoorumilta,
+  mutta jos haluaisi tehdä aiheesta tiedettä, niin tulisi tietää, että
+  se\ldots) perustuu Dattorron artikkeliin \cite{dattorro1997effect},
+  joka edistää 1980-luvulla julkaistun kirjan \cite{Chamberlin1980}
+  ideaa.
+  \end{itemize}
+
+\end{frame}
+
+\subsection{FFT}
+
+\begin{frame}{Taajuusspektri ja Fourier-muunnos}
+  \begin{itemize}
+\item
+  Tärkeä ominaisuus esimerkiksi musiikissa on että suotimien ja muiden
+  synteesimenetelmän osien tuottaman äänen ns. harmoninen sisältö eli
+  taajuusalueen spektri saadaan sopivaksi.
+\item
+  Taajuuksia päästään
+  tutkimaan (ja tarvittaessa manipuloimaan) muuntamalla ajan suhteen
+  näytteistetty digitaalinen signaali esimerkiksi diskreetillä
+  Fourier-muunnoksella (engl. discrete Fourier transform,
+  DFT).
+\item
+  Matemaattisesti sanoen: signaalia kuvaava vektori siirretään
+  toiseen avaruuteen, jonka kanta on helpommin tulkittavissa
+  tarkoituksenmukaisella tavalla, eli DFT:n tapauksessa
+  taajuuskomponentteina.
+\item[]
+  (Demotaan käytännössä, jos tekniikka antaa myöten)
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}{Nopea Fourier-muunnos}
+\begin{itemize}
+\item
+  Cooleyn ja Tukeyn julkaisu \cite{CooleyTukey1965fft} teki tunnetuksi
+  nopean menetelmän diskreettien signaalien taajuuskomponenttien
+  analysoimiseksi, ns. nopean Fourier-muunnoksen (fast Fourier transform)
+  FFT.
+\item
+  Algoritmin historian seuraaminen johtaa kuitenkin jo Carl
+  Friedrich Gaussin tuntemiin menettelyihin
+  \footnote{\url{http://music.columbia.edu/cmc/musicandcomputers/popups/chapter3/xbit_3_2.php}}.
+\item
+  Nopean fourier-muunnoksen sovelluksena saadaan (matematiikkaan
+  perustuen, luonnollisesti) mm. nopeat konvoluutiot. Näillä voi tehdä
+  ihmeitä myös audio- ja musiikkimaailmassa..)
+\item[] (Demotaan käytännössä, jos tekniikka antaa myöten)\\ Eli
+  haetaan Internetin ihmeellisestä maailmasta jostain mukavasta
+  mestasta mitattu impulssivaste ja ''mennään paikan päälle'' ääniaistimuksen
+  mielessä\ldots Lisää aiheesta kurssijatkumossa Numeeriset
+  menetelmät, numeerinen lineaarialgebra, signaalinkäsittely.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Pointti: Keskittykää kursseihin alusta asti!}
+\begin{itemize}
+\item
+  Hyödyllisen algoritmin vaativuusluokan pudottaminen luokasta
+  $O(N^2)$ luokkaan $O(N \mathop{log} N)$ takaa tietoteknikolle
+  ikuisen paikan historian kirjoissa! Mitä edellinen lause tarkoittaa,
+  selviää kursseilla Algoritmit 1 \& Algoritmit 2.
+\item
+  Pitäkää mielessä sovellukset ja tavoitteet jo alkupään opinnoissa,
+  vaikka teoriapainotteisilla kursseilla ei niitä kaikkia ehditä
+  esittelemään.
+\item Alkupään perusteoria ei vielä edes mahdollista kaikkia
+  sovelluksia -- mutta edistyneemmät asiat voi ymmärtää vain aiempien
+  pohjalta!
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Yleinen teoria mahdollistaa uudet tulokset}
+\begin{itemize}
+\item
+  Erilaiset wavelet-muunnokset \cite{daubechies1990wavelet} ovat
+  Fourier-muunnoksen ohella toinen, tietyissä tilanteissa
+  tarkoituksenmukainen tapa siirtää diskreetti signaalivektori
+  avaruuteen, jonka kanta on alkuperäistä
+  ''helpompi''. Reunahuomautus: yhtymäkohtana aiempaan aiheeseen eli
+  suotimiin, Wavelet-muunnos voidaan tulkita tietyllä tapaa
+  järjestelmällisesti suunniteltujen yli- ja alipäästösuotimien
+  sovelluksena.
+\item
+  Kaikkien näiden asioiden äärelle päästään matematiikan
+  ''peruskursseilla'' eli noin kolmannen yliopistovuoden syventävillä
+  kursseilla, kun niitä on ensin ehditty pohjustaa perustiedoilla
+  esimerkiksi vektoriavaruuksista ja niiden kannoista sekä aivan
+  kaiken taustalla olevilla funktioiden ja raja-arvojen käsitteillä.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Pointti: Matematiikasta on hyväksyttävää innostua!}
+
+\begin{itemize}
+\item
+  Kanditutkintoon mahtuu helposti ainakin matematiikan perusopinnot
+  (25op eli melkein 700 tuntia aikaa opetella matematiikan eri
+  osa-alueita.)
+\item
+  Käyttäkää hyvät ihmiset hyödyksi tuo aika, joka on sitä varten nyt
+  annettu\ldots työelämässä voi sitten päivittää ja ylläpitää tietoja,
+  mutta perustaitoja ei enää välttämättä ehdi siinä vaiheessa haalia
+  alusta alkaen.
+\item
+  Mikäli esimerkiksi äänen- ja kuvankäsittelyn teknologiat alkavat
+  kiinnostaa, ei ole paha ottaa jopa perus- ja aineopintojen
+  pakettia (60 op on jo yli 1600 tuntia ihanaa matematiikka-aikaa!)
+\end{itemize}
+\end{frame}
+
+
+
+
+\section{Nykypäivää}
+
+\begin{frame}{Tutkimuksen laajuus tänään?}
+  \begin{itemize}
+  \item
+    Hakusanalla ''sound synthesis'' löytyy Thomson Reuters Web of
+    Knowledgesta 2010-luvulla julkaistuja lehtiartikkeleita 125
+    kpl. Esimerkiksi ehdotus kvanttihiukkasen käyttäytymiseen
+    perustuvasta synteesimenetelmästä
+    \cite{CadizRamos2014quantum}. Ideat saavat olla villejä ja kaukaa
+    haettuja!
+  \item
+    Hakusanalla ''filter design'' 2010-luvulla: 1466
+    kpl. Musiikkisoitinten erityistarpeisiin keskittyy
+    esim. \cite{Wishnick14timevaryingfilters}.
+  \item
+    ''digital signal processing'' 2010-luvulla: 1392 kpl.
+  \item
+    (pelkkä''signal processing'' 2010-luvulla: 22019 kpl.)
+  \item
+    ''Signal processing AND music'' 2010-luvulla: 303 kpl.
+    
+    Tällä haulla löytyy esimerkiksi Daviesin ja kumppaneiden juttu
+    automaattisesta Mash-up -generoinnista
+    \cite{daviesEtal2014automashupper}. Suomalaisen
+    julkaisuluokituksen
+    kakkostasolla\footnote{{\tiny \url{http://www.tsv.fi/julkaisufoorumi/haku.php?nimeke=ieee+transactions+on+audio&konferenssilyh=&issn=&tyyppi=kaikki&kieli=&maa=&wos=&scopus=&nappi=Hae}}}
+    voi siis tehdä tutkimusta periaatteessa aika hauskoista asioista.
+
+  \end{itemize}
+\end{frame}
+
+
+\section{Lähteitä}
+
+\begin{frame}{Pointti: Opetelkaa hakemaan tietoa laajasti (mutta hallitusti)}
+  \begin{itemize}
+  \item
+    Papereita julkaistaan nykyään tosi paljon, ja julkaisut löytyvät
+    tietokannoista helposti. 
+  \item Yliopisto maksaa opiskelijoilleen pääsyn aika kalliisiinkin
+    tietolähteisiin. Hyödyntäkää etuoikeuttanne, heti tänään!
+  \item Perusasiat on kaluttu kauan sitten, ja
+    koko ajan ollaan uuden äärellä. On tärkeätä kyetä kartoittamaan ja
+    valitsemaan relevantit julkaisut.
+  \item Itseä kiinnostava tutkimusaihe voi löytyä helpommin, kun on jo
+    selaillut, mitä muut ovat aiemmin kirjoittaneet aihepiirin
+    ympäriltä. Huom: historia alkaa vuosikymmenten takaa!
+  \item Tietoa tulee niin paljon ja monesta tuutista, että esimerkiksi
+    ensimmäiset Google-osumat saattavat olla yhtä tyhjän
+    kanssa. Lähtökohta voi toki löytyä\ldots Tätä luentoa varten hain
+    ensimmäiseksi ''History of digital signal processing'', mutta
+    vasta pykälää syvemmältä alkoi löytyä hyödyllisempiä lähteitä.
+  \end{itemize}
+\end{frame}
+
+\beamerdefaultoverlayspecification{}
+\begin{frame}[allowframebreaks]{Lähteitä}
+
+  \tiny
+  \bibliographystyle{plain}
+  \bibliography{dspstuff}
+
+\end{frame}
+
+\beamerdefaultoverlayspecification{<+->}
+
+\section{Yhteenveto}
+\begin{frame}{Pointit vielä kerran}
+\begin{itemize}
+\item Harrastakaa vapaasti! (Oma erityisosaaminen, eli tietotekniikka,
+  on parhaimmillaan mukana, mutta kaikki sovellukset sementin
+  valamisesta ja komeettojen paikantamisesta optiohinnoitteluun ovat
+  mahdollista pelikenttää)
+\item Keskittykää kursseihin alusta asti! (Kaikki liittyy kaikkeen;
+  luottakaa siihen, että kaikista opituista asioista on hyötyä, kun
+  ''hedelmät kerätään'' lopulta)
+\item Matematiikasta on hyväksyttävää innostua! (Luonnontieteiden ja
+  tekniikan kivijalan osaamalla avaat itsellesi ovia ja erotut
+  eduksesi tilanteissa, joissa ''rivikoodari'' ei riitä.)
+\item Opetelkaa hakemaan tietoa! (sitä on tarjolla ähkyksi asti;
+  kursseilla ei voida käydä läpi moniakaan sovelluksia, joten juuri
+  omaasi ei välttämättä ehditä mainita)
+  
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Esitys on loppu}
+  Kysykää aina, ja viimeistään nyt!
+\end{frame}
+
+\end{document}

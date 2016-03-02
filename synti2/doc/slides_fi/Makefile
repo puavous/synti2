@@ -19,3 +19,4 @@ mostlyclean:
 clean: mostlyclean
 	-rm instanssi2012_slides_nieminen.pdf
 	-rm jtt2015_slides_nieminen.pdf
+	-rm jtt2016_slides_nieminen.pdf

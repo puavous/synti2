@@ -1,4 +1,9 @@
+instanssi2016_nieminen_spinoff_1k.pdf: instanssi2016_nieminen_spinoff_1k.tex
+	pdflatex instanssi2016_nieminen_spinoff_1k.tex
+
 all:
+
+
 	pdflatex instanssi2012_slides_nieminen.tex
 	pdflatex instanssi2012_slides_nieminen.tex
 

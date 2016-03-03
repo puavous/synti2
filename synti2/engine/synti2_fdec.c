@@ -10,6 +10,7 @@
     but we assume it is read into an int before calling this function)
   - two least significant bits are the accuracy, as negative power of ten.
   - third least significant bit is the sign (1 = positive, 0 = negative)
+    FIXME: Would be nicer if the sign was 1=negative,0=positive!
   - rest of the bits (at most 25) are the significant digits of the value
   - Output is a single-precision float.
 

@@ -1,0 +1,599 @@
+% -*- coding: utf-8 -*-
+
+\documentclass[pdf,10pt]{beamer}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+
+\mode<presentation>
+{
+  \usetheme{Goettingen}
+  \usecolortheme{seagull}
+}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{bibliography item}{[\theenumiv]}
+
+\setlength{\parskip}{\baselineskip}
+
+
+\usepackage[finnish]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{palatino}
+
+%\graphicspath{{figs/}}
+
+\title[Linux 1k intro -- ``making of'']
+{Yhden kilotavun intro natiivina (x86-64) Linux-binäärinä. Hullulla on huvinsa?}
+
+\author{Paavo Nieminen}
+
+\date{Instanssi 2016, Valorinne, Jyväskylä, 4.-6.3.2016}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+%\begin{frame}{Sisältö}
+%{
+%\setlength{\parskip}{\smallskipamount}
+%  \tableofcontents
+%  % You might wish to add the option [pausesections]
+%}
+%\end{frame}
+\beamerdefaultoverlayspecification{<+->}
+
+\section{Sisältö}
+\begin{frame}{1k Intro Linux-binäärinä -- ``Making of'':}
+  \begin{itemize}
+  \item Taustaa: Demoscenen koodarikisat ``pikkiriikkisille
+    ohjelmille'' (kokorajoitus esim. 4096, 1024 tai 256 tavua).
+    %Miksi ihmeessä?
+  \item Mikä nyt taas lähti lapasesta (+miksi), ja mitä siitä opittiin?
+  \item Kaikki tulee käytännön kautta. Screenille lävähtää mm.:
+    \begin{itemize}
+    \item AMD64-konekieltä, ELF-binääritiedostoa, POSIX-shell
+      -komentoja ja deflate-pakattua dataa ennen ja jälkeen
+      pakkauksen. Heksalukuina, luonnollisesti\ldots
+    \item Assembler-lähdekoodia, GLSL-varjostinkieltä ja SDL2:n ja
+      OpenGL:n funktionimistöä. ASCII-tekstinä, luonnollisesti.
+    \item Deflate-pakattua bittivirtaa juuri sellaisena kuin se tulee
+      ulos tämän hetken ehkä parhaasta pakkausohjelmasta (zopfli).
+    \item Alkuperäisen datavirran jokaisen tavun pakattu bittimäärä.
+      Bittien sommittelu voi koukuttaa enemmän kuin Sudokut!
+    \item Rikkeitä, rikoksia ja rötöksiä standardeja vastaan kohdissa,
+      joissa ``valvonta pettää'' nykyisessä Linuxissa.
+    \end{itemize}
+  \item Lopussa kerätään yhteen, miksi tämä näpertely kuitenkin ehkä
+    jälleen kannatti\ldots
+  \item Erityisesti tietotekniikan opiskelijoille pari täkyä tulevien
+    kurssien, harkkojen ja tutkimusaiheiden suhteen!
+  \end{itemize}
+\end{frame}
+
+
+
+\section{Demoscene ja Introt}
+\subsection{Demoscene}
+\begin{frame}{Mikä se Demoscene ja ``Intro'' on?}
+  \begin{itemize}
+  \item Historia alkaa noin 1980-luvulta, kun ``tietotekniikkaa
+    paremmin osaava nuoriso'' purki pelien kopiosuojauksia
+    (laittomasti) ja jakeli näitä ns. ``kräkättyjä'' pelejä.
+  \item Laittomassa jakeluversiossa oli tyypillistä laittaa alkuun
+    näkyville omat terveiset kräkkerikavereille ja huomautella omasta
+    paremmuudesta, tyyliin ``oltiin ekat!''.
+%    mm. siinä kuinka nopeasti
+%    laillisen pelin julkaisun jälkeen oli saatu oma ilmainen, laiton,
+%    versio liikkeelle.
+  \item Terveisten muoto oli tietokoneohjelma, joka käynnistyy ennen
+    itse peliä tuottaen grafiikkaa ja ääntä, joilla viesti
+    välittyy. Siinä mielessä kyseessä oli ``Intro'' eli esittely
+    kräkätylle pelille ja ryhmän eli ``groupin'' saavutukselle.
+  \item Introstakin haluttiin mahdollisimman hieno ja näyttävä.
+  \item Tietokoneet olivat rajallisia, kotikäyttöön myytäviä
+    kasarivehkeitä, samoin kuin jakeluvälineet (C-kasetit,
+    disketit). Jotta itse peli mahtuisi mukaan, intron koodin
+    ja datan täytyi mahtua todella pieneen tilaan.
+  \item Itse en vielä ollut mukana, mitä etenkin laittomuuden osalta
+    haluan korostaa. Hymiö tähän. Olin tuossa vaiheessa vielä aika
+    junnu\ldots päädyin mukaan vasta laillisemmassa vaiheessa (about
+    1994).
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ihminen haluaa kilpailla?}
+  \begin{itemize}
+  \item Paitsi itse kräkkäämisen osalta, tietenkin piti
+    ``elvistellä'' kavereille siinä, miten hieno intro oli tullut
+    tehtyä\ldots
+%  \item Ja kun muutenkin oli ryhdytty pitämään miittejä\ldots
+  \item Lähtivätten sitten erikseen kilpailemaan siinä, kuka osasi
+    tehdä hienoimman näköisiä juttuja tietokoneella.
+  \item Kun kerran kilpailtiin, ``perustettiin laji'' ja luotiin
+    säännöt.
+  \item Hommasta tuli myös taidetta sinällään, luomisen muoto.
+  \item ``Rajoittamattomassa'' sarjassa (``demo'') näytettiin, mitä
+    kaikkea osattiin tehdä.. joskus hienommin kuin saman aikakauden
+    tietokonepeleissä. Saattoivatpa demoryhmät myös päätyä tekemään
+    pelejä, joissa demoissa demoillut tekniikat pääsivät käyttöön.
+  \item ``Rajoitetut'' sarjat mallinsivat alkuperäisiä introja, joissa
+    suoritettavan tiedoston koko oli teknisten syiden vuoksi
+    pieni. Toki sarjoja oli erikseen myös mm. grafiikoille ja
+    musiikoille. Instanssi jatkaa genren perinnettä hienosti!
+  \item Siinä lyhyesti. Mm. Yle Areenasta löytyy näköjään YLE:n ja
+    Alternative Partyn tuottama dokumenttisarja
+    ``Demoscene-dokumentti'' (Demoscene Documentary), josta
+    kannattaapi tsekata, mitä oikein tapahtui:
+    \url{http://areena.yle.fi/1-1299532}
+  \end{itemize}
+\end{frame}
+
+\subsection{Nykypäivä}
+\begin{frame}{Mistä on kyse nykyään?}
+  \begin{itemize}
+  \item Digitaalista taidetta.
+  \item Kilpailuissa mahdollisuus mitata omaa osaamista ja näyttää
+    sitä muille. Tapahtumissa myös vaihdetaan ja jaetaan vinkkejä.
+  \item Tuotos on joka tapauksessa aina taideteos, josta tulee osa
+    alakulttuurin historiaa, riippumatta kilpailusijoituksesta.
+  \item Eli demoparty on aina vähän niinkuin Euroviisut?
+  \item Demoissa tarvittavat taidot ovat suoraan käytettävissä
+    esimerkiksi peliteollisuudessa ja mediatuotannossa.
+  \item ``Rajoittamaton sarja'' eli ``demo'' tarjoaa nykyään upeita
+    ja/tai mielenkiintoisia useimmiten ryhmätyönä toteutettuja
+    tuotoksia, joissa musiikki, grafiikka, 3D-mallinnus, tarina,
+    tuotanto, projektityöskentely ja koodaus yhdistyvät.
+  \item Rajoitetuissa sarjoissa on edelleen useimmiten rajoitteena
+    suoritettavan ohjelmatiedoston koko. Esim. Assembly -tapahtumassa
+    kilpaillaan nykyään 4096 tavun ja 1024 tavun
+    sarjoissa. Instanssissa ``pikkiriikkisen'' raja on 4096.
+  \end{itemize}
+\end{frame}
+
+\subsection{Miksi ihmeessä?}
+\begin{frame}{Miksi pitää tehdä asiasta niin vaikeaa?}
+  \begin{itemize}
+  \item Miksi pitää tehdä esim. 4096 tai 1024 tavun tiedostoja, kun
+    1000000 tavua olisi niin paljon helpompi?
+  \item Hei\ldots Se on harrastus! Vertaa aitajuoksu: Minkä takia
+    pitää kasata jotain aitoja siihen matkalle, kun olisi helpompaa
+    juosta ilman aitoja?
+  \item Kuten juoksussa vs. aitajuoksussa, demokisoissakin korostuu
+    erilaiset taidot ja vahvuudet eri sarjoissa.
+  \item Rajoitetuimpia sarjoja voitaneen sanoa ``koodarin
+    yksilökilpailuiksi'', koska mukaan ei yksinkertaisesti mahdu
+    paljonkaan ``joukkueen'' tuottamaa grafiikkaa, musiikkia tai
+    muutakaan, mitkä taas ovat välttämätön edellytys kovempitasoisen
+    täysmittaisen demon tekemisessä.  Paljolti kaikki on generoitava
+    ohjelmallisesti ajon aikana.
+  \item Rajoitekoon alittaminenkin on haaste, saati sitten mielekkään
+    ja/tai mielenkiintoisen kokonaisuuden luonti.
+  \item Onneksi vasta-alkajalla on tänä päivänä helppoa, koska
+    valmiita runkoja on saatavilla hyvin, ja oman koodaamisen voi
+    keskittää taiteelliseen puoleen eikä kivuliaaseen runkokoodin koon
+    pienentämiseen\ldots
+  \item[\ldots] josta kivusta tämä esitys kylläkin kertoo :)
+  \end{itemize}
+\end{frame}
+
+\section{1k intro Linuxille}
+\begin{frame}{Miksi 1k intro on jotenkin ``vaikea''?}
+  \begin{itemize}
+  \item Tässä on 1024 merkkiä (x-kirjaimia esimerkin vuoksi):{\footnotesize \\
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\\%
+}
+    \item Tuon verran tilaa olis sulla ohjelmakoodille, joka tuottaa
+      jotain mielekästä audiovisuaalista tulostetta.
+    \item Ja koodin pitää siis olla ``klikkaamalla'' käynnistettävissä
+      ja suoritettavissa jollain yleisellä alustalla, esim. Windows,
+      Mac, Linux, Web-selain.
+  \end{itemize}
+\end{frame}
+
+\subsection{Erilaiset alustat}
+\begin{frame}{Erilaiset alustat 1/2}
+  \begin{itemize}
+    \item Perusmuodossaan edes ``Hello world'' -ohjelma ei nykyään
+      taivu alle 1024 tavun muussa kuin tulkattavassa ympäristössä,
+      jossa koko ohjelma kuuluu print "Hello world!"\ tmv. (21
+      merkkiä, mukaanlukien lopussa oleva
+      rivinvaihto). Tulkattavillakin grafiikan ja audion tuotto on
+      haastavaa saada mahtumaan pieneen tilaan.
+    \item Pääsääntöisesti 1k introt ovat pakattuja, jolloin ohjelman
+      käynnistämisen jälkeen mahdollisimman lyhyellä (välttämättä
+      pakkaamattomalla) koodilla ensin avataan varsinainen intro, joka
+      sitten suoritetaan.
+    \item Selainpuolella Javascript myös tyypillisesti lyhennetään
+      automaattisilla työkaluilla, jolloin lähdekoodin sanat
+      ``piirraKolmio(kolmioLista[i],nykyinenVari);'' voivat muuttua
+      esim. muotoon ``a(b[d],c);''. Onhan se lyhyempi, mutta ei tuossa
+      muodossa ollenkaan kehitettävissä. Siksi tarvitaan
+      työkaluohjelmat, ns. ``minifier'' -ohjelmat.
+    \item Vastaava automaattinen pienennys tehdään grafiikassa
+      tarvittaville varjostimille eli shadereille. Ja lopuksi kaikki
+      vielä pakataan (Web-alustoilla yleensä PNG-kuvaksi, olennaisesti
+      siis deflate-algoritmilla).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Erilaiset alustat 2/2}
+  \begin{itemize}
+    \item Nykyään suosittu alusta on Web-selain, jossa on
+      käyttöjärjestelmän päällä monipuolinen ja hyvin standardoitu
+      välikerros. Tuotokset ovat luonnostaan käyttöjärjestelmästä
+      riippumattomia. Grafiikkaa voi tehdä WebGL:llä, eli OpenGL:n
+      Web-versiolla, tai suoraan selaimen kanvaasielementillä.
+    \item Toinen suosittu alusta on Windows, jolle on saatavilla aika
+      hyvät introntekijän työkalut Visual C:n päälle. Osa näitäkin on
+      automaattinen pakkaaminen ja avaaminen.
+    \item Macillä on myös tehty näyttäviä 1k-tuotoksia. Itselläni ei
+      toistaiseksi ole tarkempaa tietoa Mac-maailman työkaluista,
+      mutta evidenssin perusteella niitä täytyy olla saatavilla hyvin.
+    \item Linux-alustalle itselläni ei ole tiedossa varsinaisia
+      valmiita työkaluja. Linuxille on ollut tosi vähän 1k-tuotoksia
+      viime vuosina -- esim. Assemblyssä käsittääkseni 4 kpl koskaan
+      toistaiseksi (2015 asti)
+    \item Joten tuota\ldots\ Mikä lähti lapasesta tällä kertaa?
+    \item Piti ihan ite väsätä Linux 1k ja kahtoa mitä siihen
+      liittyy\ldots
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Reunahuomautus}
+  \begin{itemize}
+    \item Oletko kiinnostunut aloittamaan harrastuksen 4k tai 1k
+      introjen parissa?
+    \item Miedosti suosittelen aloittamaan Web-alustan päällä eli
+      Javascript \& WebGL \& valmiit ohjelmistot
+      pienentämiseen. Ohessa oppii väistämättä nykypäivänä keskimäärin
+      hyvin relevanttia Web-ohjelmointia.
+    \item[]
+      {\tiny  \url{http://www.p01.org/} (Assembly 2015 voittajan sivusto aiheesta),\\
+      %mm. 47 minuutin video, jossa Assembly
+      %2015 1k:n voittaja duunaa livenä audiovisuaalisen demon
+      %selaimelle;
+      \url{http://creativejs.com/2012/06/jsexe-javascript-compressor/}
+      (JS-pienentäjäsofta Windowsille)\\
+      \url{https://gist.github.com/gasman/2560551} (Simppeli malli
+      Ruby-kielellä)\\
+      }
+      
+    \item Jos natiivisti haluat tehdä, niin Windowsilla tai Macillä
+      päässee helpommalla. Löytyy enemmän ja hienompia aiempia
+      tuotoksia, joiden päälle rakentaa omaa taidetta.
+    \item Osa tämän esityksen sisällöstä on hyvin relevanttia myös
+      noilla alustoilla -- pakkaus tapahtuu samoin, grafiikka luodaan
+      samoilla menetelmillä, ja natiivit ohjelmat ovat tänä päivänä
+      useimmiten AMD64-konekieltä.
+    \item Ja sitten lienee syytä perustella, miksi itse lähdin
+      tekemään kaikesta huolimatta Linux-alustalle.
+  \end{itemize}
+\end{frame}
+
+\subsection{Miksi Linux?}
+\begin{frame}{Mix just Linux?}
+  \begin{itemize}
+    \item Se nyt on lähellä sydäntä, tuo suomalaista alkuperää oleva
+      avoimen lähdekoodin käyttöjärjestelmä\ldots
+    \item Aiemmin tein pari 4k introa Linuxille, ja homma lähti
+      luontevasti lapasesta, kun halusin kokea omin käsin, miten
+      linukalla mentäisiin 1k-puolelle.
+    \item Haaste on haaste. Linux-natiivi 4k oli jo sinänsä kova
+      homma, joten tottakai piti kiivetä vielä korkeammalle.
+    \item Viime vuodet olen myös luennoinut Jyväskylän yliopiston
+      Informaatioteknologian tiedekunnan kurssia nimeltä
+      ``Käyttöjärjestelmät''. Tässä harrastuksessa voi soveltaa mm.
+      kyseisen kurssin sisältöä ja oppia siitä itse uutta.
+    \item Eli yleisöstäkin ne, jotka ovat tulossa kevään 2016
+      kurssille: itse uskoisin, että olette kurssilla oikein hyvissä
+      käsissä, kiitos mm. tässä nähtävän pikku puuhastelun :).
+    \item[$\rightarrow$] Vakuudeksi, tjsp., ajetaan käytännössä
+      yksi pikkiriikkinen audiovisuaalinen ohjelma.
+  \end{itemize}
+\end{frame}
+
+\section{Toteutus}
+\subsection{Lähtökohtia}
+\begin{frame}{Toteutus: Lähtökohtia}
+\begin{itemize}
+\item
+Ei tosiaan keksitty koko pyörää uudelleen, vaan aiempia vinkkejä
+tietysti noudateltiin.
+\item Tällaiset olivat varmaan tärkeimpiä:
+  \begin{itemize}
+    \item Markku Reunanen (marq): ``Linux 4k coding'', Assembly 2006,
+      \url{https://www.youtube.com/watch?v=-UQSiRg8Ra0}
+    \item Brian Raiter: ``A Whirlwind Tutorial on Creating Really
+      Teensy ELF Executables for Linux``, 
+      \url{http://www.muppetlabs.com/~breadbox/software/tiny/teensy.html}
+  \end{itemize}
+\item
+   Lisäksi on paljon keskusteltu kasvotusten muiden harrastajien
+   kanssa.
+\item
+HUOM: Audiovisuaalisen tuotoksen tekemiseksi on käytännössä aivan
+pakko hyödyntää apukirjastoja. Reunasen malliin käytän SDL:ää
+(nykyversio SDL2) ja OpenGL:ää, jotka löytyvät useimmista
+Linux-distroista oletuksena. Rohkenisin lisätä ``sallittujen
+kirjastojen'' listaan myös perusasennuksista löytyvän OpenGL Utility
+-kirjaston (libGLU.so). Ehkä muitakin?
+\end{itemize}
+\end{frame}
+
+\subsection{Perustemput}
+\begin{frame}{Toteutus: Perustemput}
+  \begin{itemize}
+    \item Se korkeintaan 1024 tavun mittainen Linux-ohjelma, joka
+      kilpailupaikalla ajetaan, on itse asiassa ``kikka-kolmosella''
+      rakenneltu mötkö, joka näyttäytyy shell-skriptinä, mutta itse
+      asiassa avaa varsinaisen gzip-pakatun binäärin ``/tmp/''
+      -hakemistoon (johon nykyisellä käyttäjällä on kirjoitus- ja
+      suoritusoikeus) ja suorittaa sen sieltä. Kohteliaimmillaan
+      väliaikainen tiedosto myös lopuksi poistetaan. Kilpailupaikan
+      säännötkin voivat määrätä poistosta.
+    \item[$\rightarrow$] katsotaan käytännössä, miltä tuo tiedosto
+      näyttää.
+    \item Niin\ldots pakattu data on käännetyssä järjestyksessä (eka
+      tavu on tiedoston lopussa), koska tällä tapaa skriptiosuudesta
+      saa yhtä tavua lyhyemmän. Nykyinen ``zcat'' -ohjelman toteutus
+      ei hajoile lopussa tulevaan tauhkaan, joten nähtävästi näin voi
+      tehdä.
+    \item Reunasen esitelmästä modattu koodi on ihan standardi skripti
+      (siihen asti, että skriptin sisälle onkin ängetty binääridataa,
+      mikä on melkoisen ihanan törkeää :))
+  \end{itemize}
+\end{frame}
+
+\subsection{Skripti ja gzip}
+\begin{frame}{Toteutus: Rakentelu}
+  \begin{itemize}
+    \item Pelikenttä on siis: tehdään suoritettava binääritiedosto,
+      pieni tai isompikin, kunhan se pakkautuu gzip-formaatissa
+      (``deflate''-pakkaus) riittävän pieneksi.
+    \item Zopfli -pakkausohjelma tekee tosi tiivistä tavaraa ja
+      soveltuu nähtävästi hyvin myös pienten tiedostojen pakkaamiseen:
+      \url{https://github.com/google/zopfli}
+    \item[$\rightarrow$] katsotaan käytännössä, miten lopullinen
+      tiedosto rakennellaan (ts. Makefile).
+    \item Käynnistysohjelmassa uskallan korvata hyvin käyttäytyvän
+      ``exit'' -komennon kolme tavua lyhyemmällä syntaksivirheellä eli
+      yksinäisellä sulkumerkillä ``)'', koska loppuuhan se skriptin
+      suoritus siihenkin\ldots en kylläkään ole toistaiseksi
+      tarkistanut, miten yleispätevää tämä on.
+    \item Loppuisi skripti myös binääritauhkan läpikäyntiin, mutta se
+      olisi jo liian törkeää. Pahimmalla säkällä pakatussa datassa
+      sattuisi olemaan jotain järkeviä komentoja, jotka sotkevat
+      käyttäjän dataa!! Siihen ei mennä ollenkaan\ldots
+  \end{itemize}
+\end{frame}
+
+\subsection{ELF-Binääri}
+\begin{frame}{Toteutus: Pakattavan binääritiedoston muoto}
+  \begin{itemize}
+    \item Suoritettavan binääritiedoston on oltava ELF-formaatin
+      mukainen siinä määrin, että nykyiset Linux-distrot noin
+      keskimäärin hyväksyvät ja suostuvat käynnistämään sen,
+      mahdollisista rikkeistä huolimatta.
+    \item[$\rightarrow$] Katsotaan käytännössä, millaisen tiedoston
+      käynnistysskripti purkaa ja käynnistää
+    \item Suoritettavan tiedoston sisällössä on paljon luvallisia ja
+      luvattomia mahdollisuuksia vaikuttaa siihen, miten hyvin se
+      pakkautuu esim. zopfli:lla.
+    \item Tässä produktiossa päädyin tekemään koko binäärin,
+      mukaanlukien käyttöjärjestelmän vaatimat otsikkotiedot,
+      NASM-assemblerilla tavu tavulta Raiterin ``teensy ELF'' -ohjeita
+      mukaillen.
+    \item[$\rightarrow$] katsotaan käytännössä, miltä 1k-tuotoksen
+      varsinainen ohjelmakoodi näyttää Assemblerina tekstieditorissa.
+  \end{itemize}
+\end{frame}
+
+\subsection{Superdoku?}
+\begin{frame}{Toteutus: Sommittelutehtävä Sudokua siistimpi?}
+  \begin{itemize}
+    \item Deflate-pakkauksen teho perustuu (1) yleisimmin käytettyjen
+      tavujen toistuvuuteen (2) yhtenäisten tavujonojen
+      toistuvuuteen.
+    \item Lopputulema on siis sitä pienempi, mitä enemmän pystyy
+      käyttämään (1) kaikkein yleisimpiä tavuja/merkkejä ja (2) samoja
+      yhtenäisiä tavujonoja useammassa kohdassa.
+    \item Elintärkeätä on tietää, mitä tavuja ja tavujonoja voisi
+      hyödyntää, ja toisaalta mitkä pätkät nykyisessä versiossa ovat
+      pahinta ``myrkkyä'' pakkaukselle.
+    \item Pari todella miellyttävää työkalua (varsin harmillisesti
+      eivät ole avointa lähdekoodia, vaikkakin ilmaisia): ``defdb'' ja
+      ``gzthermal''\\{\tiny
+      \url{http://encode.ru/threads/1428-defdb-a-tool-to-dump-the-deflate-stream-from-gz-and-png-files}\\
+      \url{http://encode.ru/threads/1889-gzthermal-pseudo-thermal-view-of-Gzip-Deflate-compression-efficiency}\\}
+    \item[$\rightarrow$] katsotaan käytännössä työkaluohjelmien tulosteita.
+  \end{itemize}
+\end{frame}
+
+\subsection{Törkeyksiä}
+\begin{frame}{Toteutus: Törkeyksiä}
+  \begin{itemize}
+    \item ELF:n rakenteiden ja kenttien pituudet voi (osin) valehdella
+      erilaisiksi kuin ne oikeasti ovat. Eli tietysti mahdollisimman
+      samoiksi, että pakkautuu toisteisuuden vuoksi hyvin!
+    \item Pirulainen näköjään tarkistaa kuitenkin mm., että
+      merkkijonoksi väitetyt muistialueet päättyvät nollaan, joten
+      aivan kaikki ``ei mene läpi'' kuitenkaan. Muitakin tarkistuksia
+      on.
+    \item[$\rightarrow$] Katsotaan näitä törkeyksiä käytännössä.
+    \item Standardia rikkova binääri on luonnonvastainen hirviö, eikä
+      se välttämättä toimi kaikissa järjestelmissä tai saman
+      järjestelmän huomisessa versiossa.
+    \item Kilpailujen luonteen mukaisesti 1024 tavun version tarvitsee
+      kuitenkin toimia vain yhtenä päivänä ja vain sillä yhdellä
+      koneella, jota kisapaikalla käytetään :)
+    \item Olen yrittänyt pitää lähdekoodin sellaisena, että myös aivan
+      standardin mukaan toimivan ohjelman voi tuottaa melko helposti,
+      vaikkei se pakkaudukaan yhtä hyvin.
+    \item 4k-sarjassa en välttämättä menisi näihin äärimmäisyyksiin
+      alkuunkaan. Siellä on muutenkin 3072 tavua enemmän tilaa
+      mellastaa.
+  \end{itemize}
+\end{frame}
+
+\subsection{Kikkailua}
+\begin{frame}{Toteutus: Muita kikkoja (outoja, ei törkeitä)}
+%  Törkeyksien lisäksi aivan sallittuja keinoja ovat mm.:
+  \begin{itemize}
+  \item 32-bittisen (tai jopa 16-bittisen) käskykannan käyttäminen
+    aina, kun mahdollista. Variaatiot saman vaikutuksen tuottavista
+    käskyistä. Esim. PUSH \& POP vs. MOV.
+  \item Kirjasto-ohjelmien linkittäminen siinä järjestyksessä kuin
+    niitä tullaan kutsumaan. Kutsujen konekielikoodi toistuu silloin
+    identtisenä, ml. ``kutsuosoite++''.
+  \item Liukulukujen ``pyöristäminen'' siten, että esitysmuoto tavuina
+    on melkein sama kuin jollain muulla koodilla tai
+    datalla. Tuollaista mukavaa työkalua käyttelin:
+    \url{http://www.h-schmidt.net/FloatConverter/IEEE754.html}
+  \item GLSL-varjostinkoodin muuttujanimien vaihtaminen
+    ASCII-merkeiksi, jotka ovat tiedostossa jo valmiiksi yleisiä.
+  \item Viittaukset GLSL:n vektorielementteihin mahdollisimman
+    yleisesti käytetyillä merkeillä (``xyzw'' vs. ``rgba''
+    vs. ``stpq'').
+  \item Ja muuta, ja muuta \ldots
+  \item[$\rightarrow$] Katsotaan käytännössä
+  \end{itemize}
+\end{frame}
+
+
+\subsection{Havaintoja}
+\begin{frame}{Havaintoja 1/2}
+  \begin{itemize}
+  \item Tämän ekskursion perusteella Linuxilla ei taideta koskaan
+    taistella 256 tavun sarjassa. En ainakaan itse näe mitään
+    mahdollisuutta. Lienee käytännössä Java, Javascript tai MS-DOS,
+    millä pystyy. Pienin ylimäärä lienee MS-DOSin COM-formaatissa(?).
+  \item 1024 tavun sarjassa 64-bittinen Linux on mahdollinen, mutta
+    luultavasti verrattain rajoittava alusta, johtuen ELFin ja
+    funktiolinkitysten välttämättömästä tilantarpeesta.
+  \item Tarkempaan vertailuun en pysty, kun en tunne muita
+    nykyalustoja niin hyvin, mutta luulen, että niissä on vähemmän
+    ylimääräistä pakollista. Windowsilla voi myös käyttää MIDIä
+    musiikkiin, joten syntetisaattorikoodin tilalle mahtuu grafiikkaa.
+  \item 32-bittinen rajoittaisi todennäköisesti paljon
+    vähemmän. Mm. ELF-otsikot, tietyt merkkijonot, muistiosoitteet ja
+    suurin osa konekielikäskyistä lyhempiä. Useammat Raiterin
+    härökikoista käytettävissä. En ole vielä kokeillut.
+    %Käytännössä koko koodi olisi erilainen\ldots
+  \item 4096 tavun sarjassa pienempi ero, koska ylimäärän jälkeen
+    jää kuitenkin selvästi yli kolme kiloa sisällölle.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Havaintoja 2/2}
+  \begin{itemize}
+  \item Ainakin 64-bittisessä Linux 1k:ssa on turha haaveilla
+    kummemmasta softasyntikasta.
+  \item Toisaalta rajoittaa, toisaalta vapauttaa: audiogenerointi on
+    vahvasti osa uniikkia teosta.
+  \item Grafiikan osalta sama homma. Kummempaa aliohjelmakirjastoa ei
+    mukaan laiteta, vaan kaikki koodi tulee ``juuri tässä ja tätä
+    teosta varten''. Ei tule rönsyjä.
+  \item Jännittävä lisähavainto: Neljä kiloa ei jotenkin tunnu enää
+    ollenkaan ahtaalta!
+  \end{itemize}
+\end{frame}
+
+\section{Yhteenveto}
+\begin{frame}{Kannattiko?}
+  \begin{itemize}
+  \item Relevantti kysymys lienee ``kannattiko taas lähteä''?
+  \item Vahvasti kannatti. Miksi?
+  \item Pelataan ensiksi harrastuskortti: Tykkään näpertää, ja
+    näperrellä sain. Asetin haastavan tavoitteen ja pääsin
+    siihen. Voittajafiilis. Jes. Sen takia kait harrastukset
+    on\ldots
+  \item Sitten nörttikortti: Tuli (jälleen kerran) luettua entistä
+    tarkemmin ELF-spesifikaatio, AMD64:n manuaaleja (kohtalaisen
+    laajalti), POSIX-standardin osia, Linuxin järjestelmärajapinnan
+    osia. Kaikki on taas kerran vähän selkeämpää, mikä on aina
+    miellyttävä kokemus.
+  \item Työelämärelevanssikortti: Ensinnäkin voi taas viilata omaa
+    kurssia (Käyttöjärjestelmät) tarkemmaksi ja hyödyllisemmäksi
+    opiskelijoillekin. Assembleriin ja liukulukuihin liittyvät
+    havainnot eivät ainakaan haittaa tutkimuskoodeja. Ohimennen näkee
+    ja oppii kaikenlaista myös käsissä olevan kysymyksen ulkopuolelta.
+  \item Omat kortit on siinä pöydällä, ja kyllähän tuo käsi aika
+    vahvalta tuntuu.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Mitä voisi tehdä hurjemmin (eli ns. ``oikein'')?}
+  \begin{itemize}
+    \item Pakkauksen huomiointi ``minifier''-tyyppisissä ohjelmissa
+      WebGL:lle ja Javascriptille. Näyttäisi olevan tutkittavaa ja
+      kehitettävää -- mahdollisesti jopa liiketoimintapotentiaalia,
+      koska kysyntää on varmasti kaikkialla, missä siirtokaistalla on
+      rajat! (Itse näkisin mieluiten avoimen koodin toteutuksia ja
+      liiketoiminnat palveluina koodia hyödyntäen, but that's just
+      me\ldots)
+    \item ``Pyynnöstä törkeän'' linkkerin luominen Linuxille, eli
+      jotakuinkin Windows-puolelta tutun Crinklerin vastine, joka
+      hoitaisi tässä käsipelillä kopeloidut muunnokset ELFiin
+      automaattisesti. Olisi kiva koodata esim. C:llä ja antaa
+      käännös- ja linkitysjärjestelmän hoitaa likaisten
+      yksityiskohtien lisäksi myös törkeät. Varmasti ei
+      liiketoimintapotentiaalia, mutta tällaisen värkin onnistuneesti
+      tehnyt tyyppi pääsee kyllä töihin koodariksi. Välineellä voisi
+      ehkä olla oikeampiakin käyttötarkoituksia.
+    \item Pakkauksen huomiointi natiivin AMD64-konekielen
+      optimoinnissa. Sama keissi -- tuskin bisnestä, mutta älytön
+      taidonnäyte portfoliossa ja mieletön osaamisen määrä matkan
+      varrelta.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Inception:}
+  \begin{itemize}
+    \item Mitä ajatuksia ehkä haluaisin istuttaa erityisesti JY:n
+      tietotekniikan opiskelijoiden päähän?
+    \item Vaikka tämä on harrastelua, niin kyllähän hyvä demokoodari
+      on hyvä koodari muutenkin.
+    \item Syvään päähän sukeltaminen voi olla tuskallista, mutta
+      sieltä voi myös tulla palkitsevia löytöjä.
+    \item Esim. edellisen kalvon työkalut, hyvin tehtynä,
+      soveltuisivat mielestäni hyvin esim. kanditutkielman ja sitä
+      seuraavan gradun ja ehkä erikoistyönkin aiheiksi.
+    \item Pohjalle suosiolla kurssit Ohjelmointi 1\&2, Algoritmit
+      1\&2, Käyttöjärjestelmät, Automaatit ja kieliopit,
+      Funktio-ohjelmointi 1\&2 (laajoina versioina),
+      Tietokonegrafiikan perusteet \& Reaaliaikainen renderöinti
+      (GLSL:n osalta), Web-sovellukset (Javascriptin osalta),
+      Ohjelmointikielten periaatteet ja Kääntäjätekniikka.
+    \item Kandi pakkausalgoritmeista ja/tai ohjelmointikielten
+      jäsentämisestä, sitten gradu minifiereista / optimoinneista;
+      konkreettinen koodi todisteeksi, että näin se tehdään.
+    \item[] Ois aika kova.
+    \item[] (toki alustava ajatus; vaatii tarkempaa aiheen
+      pallottelua)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Se oli siinä tällä kertaa}
+  \begin{itemize}
+    \item Keskustelua?
+  \end{itemize}
+\end{frame}
+\end{document}

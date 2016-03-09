@@ -1,0 +1,5 @@
+minimized_vertex_shader_str:
+	db 'void main(){gl_Position=ftransform();}',10,0
+minimized_fragment_shader_str:
+	db '#version 120',10
+	db 'uniform float s[200];vec2 n(vec2 v,float y){float x=sin(y),a=cos(y);return vec2(a*v.x-x*v.y,x*v.x+a*v.y);}float n(vec2 v,vec2 f,int y){int x;for(x=0;x<y;x++){float a=f.x*f.x-f.y*f.y+v.x,c=f.y*f.x+f.x*f.y+v.y;if(a*a+c*c>76.)break;f.x=a;f.y=c;}return(x==y?0.:float(x))/100.;}void main(){vec2 v=1.-gl_FragCoord.xy/(.5*vec2(s[1],s[2]));v.x*=s[1]/s[2];float x=max(abs(v.x),abs(v.y));v=sin(s[0]/4+sin(s[0])/(x+.001))*v;int y=30;vec2 f[5]=vec2[5](vec2(.1104,.023),vec2(.104,-.023),vec2(-.1104,.123),vec2(.14,-.123),vec2(-.1,.023));float a=s[0];vec4 m[5]=vec4[5](vec4(1.,.5,0.,1.),vec4(0.,0.,1.,1.),vec4(1.,0.,1.,1.),vec4(s[7],0.,s[9],1.),vec4(1.,0.,1.,1.));vec2 c[5]=vec2[5](vec2(1.,0.),vec2(0.,1.),vec2(1.,1.),vec2(-1.,-1.),vec2(1.,-1.)),r=v;vec4 i=vec4(0.);int e,k=5;for(e=0;e<k;e++){vec2 o=f[e]+(20.-s[0])*.1*vec2(sin(s[0]),cos(s[0])),t=r+c[e];float l=n(o,t,y);i+=l*5.*m[e];}gl_FragColor=i;}',10,0

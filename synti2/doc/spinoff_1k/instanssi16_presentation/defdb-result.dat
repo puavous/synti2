@@ -1,0 +1,1584 @@
+ [1] New block (val: 0)
+ [2] Dynamic Huffman Tree block (val: 2)
+ [5] HLIT  270 (val:13)
+ [5] HDIST  15 (val:14)
+ [4] HCLEN  14 (val:10)
+ [3] 16 CLL (val: 2)
+ [3] 17 CLL (val: 0)
+ [3] 18 CLL (val: 4)
+ [3]  0 CLL (val: 4)
+ [3]  8 CLL (val: 5)
+ [3]  7 CLL (val: 4)
+ [3]  9 CLL (val: 3)
+ [3]  6 CLL (val: 3)
+ [3] 10 CLL (val: 0)
+ [3]  5 CLL (val: 2)
+ [3] 11 CLL (val: 0)
+ [3]  4 CLL (val: 6)
+ [3] 12 CLL (val: 0)
+ [3]  3 CLL (val: 6)
+ [_] 13 CLL (val: 0)
+ [_]  2 CLL (val: 0)
+ [_] 14 CLL (val: 0)
+ [_]  1 CLL (val: 0)
+ [_] 15 CLL (val: 0)
+ [2] 0x00 CL (val: 5)
+ [3] 0x01 CL (val: 9)
+ [4] LREP (6 times)
+ [_] 0x02 CL (val: 9)
+ [_] 0x03 CL (val: 9)
+ [_] 0x04 CL (val: 9)
+ [_] 0x05 CL (val: 9)
+ [_] 0x06 CL (val: 9)
+ [_] 0x07 CL (val: 9)
+ [4] LREP (3 times)
+ [_] 0x08 CL (val: 9)
+ [_] 0x09 CL (val: 9)
+ [_] 0x0A CL (val: 9)
+[11] ZREP (21 times)
+ [_] 0x0B CL (val: 0)
+ [_] 0x0C CL (val: 0)
+ [_] 0x0D CL (val: 0)
+ [_] 0x0E CL (val: 0)
+ [_] 0x0F CL (val: 0)
+ [_] 0x10 CL (val: 0)
+ [_] 0x11 CL (val: 0)
+ [_] 0x12 CL (val: 0)
+ [_] 0x13 CL (val: 0)
+ [_] 0x14 CL (val: 0)
+ [_] 0x15 CL (val: 0)
+ [_] 0x16 CL (val: 0)
+ [_] 0x17 CL (val: 0)
+ [_] 0x18 CL (val: 0)
+ [_] 0x19 CL (val: 0)
+ [_] 0x1A CL (val: 0)
+ [_] 0x1B CL (val: 0)
+ [_] 0x1C CL (val: 0)
+ [_] 0x1D CL (val: 0)
+ [_] 0x1E CL (val: 0)
+ [_] 0x1F CL (val: 0)
+ [3] 0x20 CL (val: 9)
+ [4] LREP (6 times)
+ [_] 0x21 CL (val: 9)
+ [_] 0x22 CL (val: 9)
+ [_] 0x23 CL (val: 9)
+ [_] 0x24 CL (val: 9)
+ [_] 0x25 CL (val: 9)
+ [_] 0x26 CL (val: 9)
+ [3] 0x27 CL (val: 9)
+ [3] 0x28 CL (val: 6)
+ [4] LREP (6 times)
+ [_] 0x29 CL (val: 6)
+ [_] 0x2A CL (val: 6)
+ [_] 0x2B CL (val: 6)
+ [_] 0x2C CL (val: 6)
+ [_] 0x2D CL (val: 6)
+ [_] 0x2E CL (val: 6)
+ [4] LREP (6 times)
+ [_] 0x2F CL (val: 6)
+ [_] 0x30 CL (val: 6)
+ [_] 0x31 CL (val: 6)
+ [_] 0x32 CL (val: 6)
+ [_] 0x33 CL (val: 6)
+ [_] 0x34 CL (val: 6)
+ [3] 0x35 CL (val: 9)
+ [4] LREP (5 times)
+ [_] 0x36 CL (val: 9)
+ [_] 0x37 CL (val: 9)
+ [_] 0x38 CL (val: 9)
+ [_] 0x39 CL (val: 9)
+ [_] 0x3A CL (val: 9)
+ [5] 0x3B CL (val: 8)
+ [4] LREP (6 times)
+ [_] 0x3C CL (val: 8)
+ [_] 0x3D CL (val: 8)
+ [_] 0x3E CL (val: 8)
+ [_] 0x3F CL (val: 8)
+ [_] 0x40 CL (val: 8)
+ [_] 0x41 CL (val: 8)
+ [4] LREP (6 times)
+ [_] 0x42 CL (val: 8)
+ [_] 0x43 CL (val: 8)
+ [_] 0x44 CL (val: 8)
+ [_] 0x45 CL (val: 8)
+ [_] 0x46 CL (val: 8)
+ [_] 0x47 CL (val: 8)
+ [4] LREP (6 times)
+ [_] 0x48 CL (val: 8)
+ [_] 0x49 CL (val: 8)
+ [_] 0x4A CL (val: 8)
+ [_] 0x4B CL (val: 8)
+ [_] 0x4C CL (val: 8)
+ [_] 0x4D CL (val: 8)
+ [4] LREP (6 times)
+ [_] 0x4E CL (val: 8)
+ [_] 0x4F CL (val: 8)
+ [_] 0x50 CL (val: 8)
+ [_] 0x51 CL (val: 8)
+ [_] 0x52 CL (val: 8)
+ [_] 0x53 CL (val: 8)
+ [4] LREP (4 times)
+ [_] 0x54 CL (val: 8)
+ [_] 0x55 CL (val: 8)
+ [_] 0x56 CL (val: 8)
+ [_] 0x57 CL (val: 8)
+ [4] 0x58 CL (val: 0)
+ [4] LREP (6 times)
+ [_] 0x59 CL (val: 0)
+ [_] 0x5A CL (val: 0)
+ [_] 0x5B CL (val: 0)
+ [_] 0x5C CL (val: 0)
+ [_] 0x5D CL (val: 0)
+ [_] 0x5E CL (val: 0)
+ [4] 0x5F CL (val: 7)
+ [4] 0x60 CL (val: 0)
+ [2] 0x61 CL (val: 5)
+ [3] 0x62 CL (val: 9)
+ [3] 0x63 CL (val: 6)
+ [2] 0x64 CL (val: 5)
+ [2] 0x65 CL (val: 5)
+ [4] 0x66 CL (val: 7)
+ [3] 0x67 CL (val: 6)
+ [4] 0x68 CL (val: 7)
+ [2] 0x69 CL (val: 5)
+ [4] 0x6A CL (val: 0)
+ [3] 0x6B CL (val: 9)
+ [2] 0x6C CL (val: 5)
+ [3] 0x6D CL (val: 6)
+ [2] 0x6E CL (val: 5)
+ [2] 0x6F CL (val: 5)
+ [3] 0x70 CL (val: 6)
+ [4] 0x71 CL (val: 0)
+ [6] 0x72 CL (val: 4)
+ [3] 0x73 CL (val: 6)
+ [2] 0x74 CL (val: 5)
+ [2] 0x75 CL (val: 5)
+ [3] 0x76 CL (val: 6)
+ [3] 0x77 CL (val: 9)
+ [4] LREP (6 times)
+ [_] 0x78 CL (val: 9)
+ [_] 0x79 CL (val: 9)
+ [_] 0x7A CL (val: 9)
+ [_] 0x7B CL (val: 9)
+ [_] 0x7C CL (val: 9)
+ [_] 0x7D CL (val: 9)
+ [3] 0x7E CL (val: 9)
+ [3] 0x7F CL (val: 9)
+[11] ZREP (128 times)
+ [_] 0x80 CL (val: 0)
+ [_] 0x81 CL (val: 0)
+ [_] 0x82 CL (val: 0)
+ [_] 0x83 CL (val: 0)
+ [_] 0x84 CL (val: 0)
+ [_] 0x85 CL (val: 0)
+ [_] 0x86 CL (val: 0)
+ [_] 0x87 CL (val: 0)
+ [_] 0x88 CL (val: 0)
+ [_] 0x89 CL (val: 0)
+ [_] 0x8A CL (val: 0)
+ [_] 0x8B CL (val: 0)
+ [_] 0x8C CL (val: 0)
+ [_] 0x8D CL (val: 0)
+ [_] 0x8E CL (val: 0)
+ [_] 0x8F CL (val: 0)
+ [_] 0x90 CL (val: 0)
+ [_] 0x91 CL (val: 0)
+ [_] 0x92 CL (val: 0)
+ [_] 0x93 CL (val: 0)
+ [_] 0x94 CL (val: 0)
+ [_] 0x95 CL (val: 0)
+ [_] 0x96 CL (val: 0)
+ [_] 0x97 CL (val: 0)
+ [_] 0x98 CL (val: 0)
+ [_] 0x99 CL (val: 0)
+ [_] 0x9A CL (val: 0)
+ [_] 0x9B CL (val: 0)
+ [_] 0x9C CL (val: 0)
+ [_] 0x9D CL (val: 0)
+ [_] 0x9E CL (val: 0)
+ [_] 0x9F CL (val: 0)
+ [_] 0xA0 CL (val: 0)
+ [_] 0xA1 CL (val: 0)
+ [_] 0xA2 CL (val: 0)
+ [_] 0xA3 CL (val: 0)
+ [_] 0xA4 CL (val: 0)
+ [_] 0xA5 CL (val: 0)
+ [_] 0xA6 CL (val: 0)
+ [_] 0xA7 CL (val: 0)
+ [_] 0xA8 CL (val: 0)
+ [_] 0xA9 CL (val: 0)
+ [_] 0xAA CL (val: 0)
+ [_] 0xAB CL (val: 0)
+ [_] 0xAC CL (val: 0)
+ [_] 0xAD CL (val: 0)
+ [_] 0xAE CL (val: 0)
+ [_] 0xAF CL (val: 0)
+ [_] 0xB0 CL (val: 0)
+ [_] 0xB1 CL (val: 0)
+ [_] 0xB2 CL (val: 0)
+ [_] 0xB3 CL (val: 0)
+ [_] 0xB4 CL (val: 0)
+ [_] 0xB5 CL (val: 0)
+ [_] 0xB6 CL (val: 0)
+ [_] 0xB7 CL (val: 0)
+ [_] 0xB8 CL (val: 0)
+ [_] 0xB9 CL (val: 0)
+ [_] 0xBA CL (val: 0)
+ [_] 0xBB CL (val: 0)
+ [_] 0xBC CL (val: 0)
+ [_] 0xBD CL (val: 0)
+ [_] 0xBE CL (val: 0)
+ [_] 0xBF CL (val: 0)
+ [_] 0xC0 CL (val: 0)
+ [_] 0xC1 CL (val: 0)
+ [_] 0xC2 CL (val: 0)
+ [_] 0xC3 CL (val: 0)
+ [_] 0xC4 CL (val: 0)
+ [_] 0xC5 CL (val: 0)
+ [_] 0xC6 CL (val: 0)
+ [_] 0xC7 CL (val: 0)
+ [_] 0xC8 CL (val: 0)
+ [_] 0xC9 CL (val: 0)
+ [_] 0xCA CL (val: 0)
+ [_] 0xCB CL (val: 0)
+ [_] 0xCC CL (val: 0)
+ [_] 0xCD CL (val: 0)
+ [_] 0xCE CL (val: 0)
+ [_] 0xCF CL (val: 0)
+ [_] 0xD0 CL (val: 0)
+ [_] 0xD1 CL (val: 0)
+ [_] 0xD2 CL (val: 0)
+ [_] 0xD3 CL (val: 0)
+ [_] 0xD4 CL (val: 0)
+ [_] 0xD5 CL (val: 0)
+ [_] 0xD6 CL (val: 0)
+ [_] 0xD7 CL (val: 0)
+ [_] 0xD8 CL (val: 0)
+ [_] 0xD9 CL (val: 0)
+ [_] 0xDA CL (val: 0)
+ [_] 0xDB CL (val: 0)
+ [_] 0xDC CL (val: 0)
+ [_] 0xDD CL (val: 0)
+ [_] 0xDE CL (val: 0)
+ [_] 0xDF CL (val: 0)
+ [_] 0xE0 CL (val: 0)
+ [_] 0xE1 CL (val: 0)
+ [_] 0xE2 CL (val: 0)
+ [_] 0xE3 CL (val: 0)
+ [_] 0xE4 CL (val: 0)
+ [_] 0xE5 CL (val: 0)
+ [_] 0xE6 CL (val: 0)
+ [_] 0xE7 CL (val: 0)
+ [_] 0xE8 CL (val: 0)
+ [_] 0xE9 CL (val: 0)
+ [_] 0xEA CL (val: 0)
+ [_] 0xEB CL (val: 0)
+ [_] 0xEC CL (val: 0)
+ [_] 0xED CL (val: 0)
+ [_] 0xEE CL (val: 0)
+ [_] 0xEF CL (val: 0)
+ [_] 0xF0 CL (val: 0)
+ [_] 0xF1 CL (val: 0)
+ [_] 0xF2 CL (val: 0)
+ [_] 0xF3 CL (val: 0)
+ [_] 0xF4 CL (val: 0)
+ [_] 0xF5 CL (val: 0)
+ [_] 0xF6 CL (val: 0)
+ [_] 0xF7 CL (val: 0)
+ [_] 0xF8 CL (val: 0)
+ [_] 0xF9 CL (val: 0)
+ [_] 0xFA CL (val: 0)
+ [_] 0xFB CL (val: 0)
+ [_] 0xFC CL (val: 0)
+ [_] 0xFD CL (val: 0)
+ [_] 0xFE CL (val: 0)
+ [_] 0xFF CL (val: 0)
+ [3] EofB CL (val: 9)
+ [2] l_00 CL (val: 5) (length 3)
+ [2] l_01 CL (val: 5) (length 4)
+ [4] l_02 CL (val: 7) (length 5)
+ [4] LREP (5 times)
+ [_] l_03 CL (val: 7) (length 6)
+ [_] l_04 CL (val: 7) (length 7)
+ [_] l_05 CL (val: 7) (length 8)
+ [_] l_06 CL (val: 7) (length 9)
+ [_] l_07 CL (val: 7) (length 10)
+ [3] l_08 CL (val: 9) (lengths [11-12])
+ [4] LREP (3 times)
+ [_] l_09 CL (val: 9) (lengths [13-14])
+ [_] l_10 CL (val: 9) (lengths [15-16])
+ [_] l_11 CL (val: 9) (lengths [17-18])
+ [5] l_12 CL (val: 8) (lengths [19-22])
+ [3] d_00 CL (val: 6) (distance 1)
+ [3] d_01 CL (val: 6) (distance 2)
+ [2] d_02 CL (val: 5) (distance 3)
+ [4] LREP (4 times)
+ [_] d_03 CL (val: 5) (distance 4)
+ [_] d_04 CL (val: 5) (distances [5-6])
+ [_] d_05 CL (val: 5) (distances [7-8])
+ [_] d_06 CL (val: 5) (distances [9-12])
+ [6] d_07 CL (val: 3) (distances [13-16])
+ [4] LREP (5 times)
+ [_] d_08 CL (val: 3) (distances [17-24])
+ [_] d_09 CL (val: 3) (distances [25-32])
+ [_] d_10 CL (val: 3) (distances [33-48])
+ [_] d_11 CL (val: 3) (distances [49-64])
+ [_] d_12 CL (val: 3) (distances [65-96])
+ [2] d_13 CL (val: 5) (distances [97-128])
+ [2] d_14 CL (val: 5) (distances [129-192])
+ [9] 7F
+ [8] 45  E
+ [8] 4C  L
+ [8] 46  F
+ [9] 02
+ [9] 01
+ [9] 01
+ [5] 00
+[13] (8,1)
+ [9] 02
+ [5] 00
+ [8] 3E  >
+ [5] 00
+[12] (5,14)
+ [9] 08
+ [5] 75  u
+[13] (6,17)
+ [9] 05
+ [5] 00
+[16] (19,1)
+ [9] 38  8
+ [5] 00
+ [9] 04
+[14] (7,10)
+ [6] 2F  /
+ [5] 6C  l
+ [5] 69  i
+ [9] 62  b
+ [9] 36  6
+ [6] 34  4
+ [6] 2F  /
+ [5] 6C  l
+ [5] 64  d
+ [6] 2D  -
+ [5] 6C  l
+ [5] 69  i
+ [5] 6E  n
+ [5] 75  u
+ [9] 78  x
+ [6] 2D  -
+ [9] 78  x
+ [9] 38  8
+ [9] 36  6
+ [6] 2D  -
+ [9] 36  6
+ [6] 34  4
+ [6] 2E  .
+ [6] 73  s
+ [5] 6F  o
+ [6] 2E  .
+ [6] 32  2
+ [5] 00
+ [5] 64  d
+ [5] 6C  l
+ [5] 6F  o
+ [6] 70  p
+ [5] 65  e
+ [5] 6E  n
+ [5] 00
+[12] (3,34)
+ [5] 64  d
+ [5] 6C  l
+[13] (8,18)
+ [6] 73  s
+ [9] 79  y
+ [6] 6D  m
+[11] (4,17)
+ [8] 53  S
+ [8] 44  D
+ [8] 4C  L
+ [6] 32  2
+[11] (3,19)
+ [5] 00
+[11] (3,8)
+ [7] 5F  _
+ [8] 47  G
+ [8] 4C  L
+ [7] 5F  _
+ [8] 53  S
+ [9] 77  w
+ [5] 61  a
+ [6] 70  p
+ [8] 57  W
+ [5] 69  i
+ [5] 6E  n
+ [5] 64  d
+ [5] 6F  o
+ [9] 77  w
+[13] (5,18)
+ [8] 50  P
+ [5] 6F  o
+ [5] 6C  l
+ [5] 6C  l
+ [8] 45  E
+ [6] 76  v
+ [5] 65  e
+ [5] 6E  n
+ [5] 74  t
+[12] (5,14)
+ [8] 51  Q
+ [5] 75  u
+ [5] 69  i
+[14] (6,9)
+ [8] 49  I
+ [5] 6E  n
+[14] (7,9)
+ [8] 43  C
+ [4] 72  r
+ [5] 65  e
+ [5] 61  a
+ [5] 74  t
+ [5] 65  e
+[17] (11,49)
+ [8] 47  G
+[13] (8,20)
+ [8] 43  C
+ [5] 6F  o
+ [5] 6E  n
+ [5] 74  t
+ [5] 65  e
+ [9] 78  x
+[14] (6,38)
+ [8] 4F  O
+ [6] 70  p
+ [5] 65  e
+ [5] 6E  n
+ [8] 41  A
+ [5] 75  u
+ [5] 64  d
+ [5] 69  i
+ [5] 6F  o
+[15] (6,84)
+ [5] 61  a
+ [5] 75  u
+ [6] 73  s
+ [5] 65  e
+[12] (6,15)
+[16] (4,129)
+ [8] 47  G
+ [8] 4C  L
+[15] (4,127)
+ [6] 67  g
+ [5] 6C  l
+[14] (6,55)
+ [8] 50  P
+ [4] 72  r
+ [5] 6F  o
+ [6] 67  g
+ [4] 72  r
+ [5] 61  a
+ [6] 6D  m
+[12] (9,16)
+ [8] 53  S
+ [7] 68  h
+ [5] 61  a
+ [5] 64  d
+ [5] 65  e
+ [4] 72  r
+[10] (3,15)
+[14] (6,9)
+ [8] 53  S
+ [5] 6F  o
+ [5] 75  u
+ [4] 72  r
+ [6] 63  c
+ [5] 65  e
+[11] (4,30)
+ [5] 6F  o
+ [6] 6D  m
+ [6] 70  p
+ [5] 69  i
+ [5] 6C  l
+[13] (10,31)
+ [8] 41  A
+ [5] 74  t
+ [5] 74  t
+ [5] 61  a
+ [6] 63  c
+ [7] 68  h
+[12] (9,15)
+ [8] 4C  L
+ [5] 69  i
+ [5] 6E  n
+ [9] 6B  k
+[15] (10,75)
+ [8] 55  U
+ [6] 73  s
+ [5] 65  e
+[12] (10,13)
+ [8] 47  G
+ [5] 65  e
+ [5] 74  t
+ [8] 55  U
+ [5] 6E  n
+ [5] 69  i
+ [7] 66  f
+ [5] 6F  o
+ [4] 72  r
+ [6] 6D  m
+ [8] 4C  L
+ [5] 6F  o
+ [6] 63  c
+ [5] 61  a
+ [5] 74  t
+ [5] 69  i
+ [5] 6F  o
+ [5] 6E  n
+[12] (4,34)
+[13] (6,18)
+ [6] 34  4
+ [7] 66  f
+ [6] 76  v
+[13] (4,92)
+ [5] 6C  l
+ [5] 65  e
+ [5] 61  a
+[13] (4,69)
+ [8] 52  R
+ [5] 65  e
+ [6] 63  c
+ [5] 74  t
+ [6] 73  s
+ [5] 00
+[16] (19,1)
+ [9] 23  #
+ [6] 76  v
+ [5] 65  e
+ [4] 72  r
+ [6] 73  s
+[12] (3,57)
+ [9] 20   
+ [6] 31  1
+ [6] 32  2
+ [6] 30  0
+ [9] 0A
+ [5] 75  u
+[14] (6,59)
+ [9] 20   
+ [6] 76  v
+ [5] 65  e
+ [6] 63  c
+ [6] 34  4
+ [9] 20   
+ [5] 75  u
+ [8] 3B  ;
+ [6] 76  v
+ [5] 6F  o
+ [5] 69  i
+ [5] 64  d
+ [9] 20   
+ [6] 6D  m
+ [5] 61  a
+ [5] 69  i
+ [5] 6E  n
+ [6] 28  (
+ [6] 29  )
+ [9] 7B  {
+[11] (3,19)
+ [6] 32  2
+ [9] 20   
+ [4] 72  r
+ [8] 3D  =
+ [6] 31  1
+ [6] 2D  -
+ [6] 67  g
+ [5] 6C  l
+ [7] 5F  _
+ [8] 46  F
+ [4] 72  r
+ [5] 61  a
+ [6] 67  g
+ [8] 43  C
+ [5] 6F  o
+ [5] 6F  o
+ [4] 72  r
+ [5] 64  d
+ [6] 2E  .
+ [4] 72  r
+ [6] 67  g
+ [6] 2F  /
+ [5] 75  u
+ [6] 2E  .
+ [5] 74  t
+ [6] 70  p
+ [6] 2A  *
+ [6] 32  2
+ [8] 3B  ;
+ [4] 72  r
+ [6] 2E  .
+ [4] 72  r
+ [6] 2A  *
+ [8] 3D  =
+ [5] 75  u
+ [6] 2E  .
+[10] (4,16)
+ [6] 70  p
+ [8] 3B  ;
+ [5] 69  i
+ [5] 6E  n
+ [5] 74  t
+ [9] 20   
+ [5] 61  a
+ [8] 3D  =
+[13] (3,82)
+ [8] 3B  ;
+ [9] 77  w
+ [7] 68  h
+ [5] 69  i
+ [5] 6C  l
+ [5] 65  e
+ [6] 28  (
+ [5] 61  a
+ [6] 2D  -
+ [6] 2D  -
+ [8] 3E  >
+ [6] 30  0
+ [9] 26  &
+ [9] 26  &
+ [5] 64  d
+ [5] 6F  o
+ [5] 74  t
+ [6] 28  (
+ [4] 72  r
+ [6] 2C  ,
+ [4] 72  r
+ [6] 29  )
+ [8] 3C  <
+[11] (3,26)
+ [6] 29  )
+ [4] 72  r
+ [8] 3D  =
+[13] (4,83)
+ [6] 28  (
+ [6] 28  (
+[12] (4,57)
+[10] (3,4)
+ [6] 2D  -
+ [4] 72  r
+ [6] 2E  .
+ [5] 74  t
+[11] (3,8)
+ [5] 74  t
+ [6] 29  )
+ [6] 2B  +
+ [6] 2E  .
+ [6] 34  4
+ [6] 2B  +
+ [6] 73  s
+[15] (3,115)
+ [5] 75  u
+ [6] 2E  .
+ [4] 72  r
+ [6] 29  )
+ [6] 2F  /
+ [6] 33  3
+ [6] 2C  ,
+ [6] 28  (
+ [6] 32  2
+[11] (4,30)
+[13] (7,26)
+ [6] 33  3
+[13] (9,27)
+ [6] 2F  /
+ [6] 34  4
+ [6] 29  )
+[10] (3,3)
+ [8] 3B  ;
+[18] (9,141)
+ [5] 6C  l
+ [5] 6F  o
+[15] (5,80)
+ [6] 34  4
+ [6] 28  (
+ [5] 61  a
+ [6] 2F  /
+[13] (3,93)
+ [6] 2E  .
+ [6] 29  )
+ [8] 3B  ;
+ [9] EofB
+ [1] Last block (val: 1)
+ [2] Dynamic Huffman Tree block (val: 2)
+ [5] HLIT  286 (val:29)
+ [5] HDIST  22 (val:21)
+ [4] HCLEN  14 (val:10)
+ [3] 16 CLL (val: 1)
+ [3] 17 CLL (val: 0)
+ [3] 18 CLL (val: 0)
+ [3]  0 CLL (val: 4)
+ [3]  8 CLL (val: 4)
+ [3]  7 CLL (val: 4)
+ [3]  9 CLL (val: 3)
+ [3]  6 CLL (val: 4)
+ [3] 10 CLL (val: 0)
+ [3]  5 CLL (val: 4)
+ [3] 11 CLL (val: 0)
+ [3]  4 CLL (val: 5)
+ [3] 12 CLL (val: 0)
+ [3]  3 CLL (val: 5)
+ [_] 13 CLL (val: 0)
+ [_]  2 CLL (val: 0)
+ [_] 14 CLL (val: 0)
+ [_]  1 CLL (val: 0)
+ [_] 15 CLL (val: 0)
+ [5] 0x00 CL (val: 4)
+ [4] 0x01 CL (val: 6)
+ [4] 0x02 CL (val: 5)
+ [4] 0x03 CL (val: 6)
+ [4] 0x04 CL (val: 6)
+ [4] 0x05 CL (val: 7)
+ [3] LREP (3 times)
+ [_] 0x06 CL (val: 7)
+ [_] 0x07 CL (val: 7)
+ [_] 0x08 CL (val: 7)
+ [3] 0x09 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x0A CL (val: 9)
+ [_] 0x0B CL (val: 9)
+ [_] 0x0C CL (val: 9)
+ [_] 0x0D CL (val: 9)
+ [_] 0x0E CL (val: 9)
+ [_] 0x0F CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x10 CL (val: 9)
+ [_] 0x11 CL (val: 9)
+ [_] 0x12 CL (val: 9)
+ [_] 0x13 CL (val: 9)
+ [_] 0x14 CL (val: 9)
+ [_] 0x15 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x16 CL (val: 9)
+ [_] 0x17 CL (val: 9)
+ [_] 0x18 CL (val: 9)
+ [_] 0x19 CL (val: 9)
+ [_] 0x1A CL (val: 9)
+ [_] 0x1B CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x1C CL (val: 9)
+ [_] 0x1D CL (val: 9)
+ [_] 0x1E CL (val: 9)
+ [_] 0x1F CL (val: 9)
+ [_] 0x20 CL (val: 9)
+ [_] 0x21 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x22 CL (val: 9)
+ [_] 0x23 CL (val: 9)
+ [_] 0x24 CL (val: 9)
+ [_] 0x25 CL (val: 9)
+ [_] 0x26 CL (val: 9)
+ [_] 0x27 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x28 CL (val: 9)
+ [_] 0x29 CL (val: 9)
+ [_] 0x2A CL (val: 9)
+ [_] 0x2B CL (val: 9)
+ [_] 0x2C CL (val: 9)
+ [_] 0x2D CL (val: 9)
+ [3] LREP (4 times)
+ [_] 0x2E CL (val: 9)
+ [_] 0x2F CL (val: 9)
+ [_] 0x30 CL (val: 9)
+ [_] 0x31 CL (val: 9)
+ [4] 0x32 CL (val: 0)
+ [3] LREP (6 times)
+ [_] 0x33 CL (val: 0)
+ [_] 0x34 CL (val: 0)
+ [_] 0x35 CL (val: 0)
+ [_] 0x36 CL (val: 0)
+ [_] 0x37 CL (val: 0)
+ [_] 0x38 CL (val: 0)
+ [3] 0x39 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x3A CL (val: 9)
+ [_] 0x3B CL (val: 9)
+ [_] 0x3C CL (val: 9)
+ [_] 0x3D CL (val: 9)
+ [_] 0x3E CL (val: 9)
+ [_] 0x3F CL (val: 9)
+ [3] LREP (5 times)
+ [_] 0x40 CL (val: 9)
+ [_] 0x41 CL (val: 9)
+ [_] 0x42 CL (val: 9)
+ [_] 0x43 CL (val: 9)
+ [_] 0x44 CL (val: 9)
+ [4] 0x45 CL (val: 8)
+ [3] LREP (6 times)
+ [_] 0x46 CL (val: 8)
+ [_] 0x47 CL (val: 8)
+ [_] 0x48 CL (val: 8)
+ [_] 0x49 CL (val: 8)
+ [_] 0x4A CL (val: 8)
+ [_] 0x4B CL (val: 8)
+ [3] LREP (6 times)
+ [_] 0x4C CL (val: 8)
+ [_] 0x4D CL (val: 8)
+ [_] 0x4E CL (val: 8)
+ [_] 0x4F CL (val: 8)
+ [_] 0x50 CL (val: 8)
+ [_] 0x51 CL (val: 8)
+ [3] LREP (6 times)
+ [_] 0x52 CL (val: 8)
+ [_] 0x53 CL (val: 8)
+ [_] 0x54 CL (val: 8)
+ [_] 0x55 CL (val: 8)
+ [_] 0x56 CL (val: 8)
+ [_] 0x57 CL (val: 8)
+ [3] LREP (6 times)
+ [_] 0x58 CL (val: 8)
+ [_] 0x59 CL (val: 8)
+ [_] 0x5A CL (val: 8)
+ [_] 0x5B CL (val: 8)
+ [_] 0x5C CL (val: 8)
+ [_] 0x5D CL (val: 8)
+ [4] 0x5E CL (val: 8)
+ [4] 0x5F CL (val: 8)
+ [4] 0x60 CL (val: 0)
+ [3] LREP (3 times)
+ [_] 0x61 CL (val: 0)
+ [_] 0x62 CL (val: 0)
+ [_] 0x63 CL (val: 0)
+ [3] 0x64 CL (val: 9)
+ [3] LREP (5 times)
+ [_] 0x65 CL (val: 9)
+ [_] 0x66 CL (val: 9)
+ [_] 0x67 CL (val: 9)
+ [_] 0x68 CL (val: 9)
+ [_] 0x69 CL (val: 9)
+ [4] 0x6A CL (val: 6)
+ [4] 0x6B CL (val: 0)
+ [3] LREP (6 times)
+ [_] 0x6C CL (val: 0)
+ [_] 0x6D CL (val: 0)
+ [_] 0x6E CL (val: 0)
+ [_] 0x6F CL (val: 0)
+ [_] 0x70 CL (val: 0)
+ [_] 0x71 CL (val: 0)
+ [4] 0x72 CL (val: 0)
+ [3] 0x73 CL (val: 9)
+ [4] 0x74 CL (val: 7)
+ [4] 0x75 CL (val: 5)
+ [3] 0x76 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x77 CL (val: 9)
+ [_] 0x78 CL (val: 9)
+ [_] 0x79 CL (val: 9)
+ [_] 0x7A CL (val: 9)
+ [_] 0x7B CL (val: 9)
+ [_] 0x7C CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x7D CL (val: 9)
+ [_] 0x7E CL (val: 9)
+ [_] 0x7F CL (val: 9)
+ [_] 0x80 CL (val: 9)
+ [_] 0x81 CL (val: 9)
+ [_] 0x82 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0x83 CL (val: 9)
+ [_] 0x84 CL (val: 9)
+ [_] 0x85 CL (val: 9)
+ [_] 0x86 CL (val: 9)
+ [_] 0x87 CL (val: 9)
+ [_] 0x88 CL (val: 9)
+ [4] 0x89 CL (val: 6)
+ [4] 0x8A CL (val: 7)
+ [3] LREP (3 times)
+ [_] 0x8B CL (val: 7)
+ [_] 0x8C CL (val: 7)
+ [_] 0x8D CL (val: 7)
+ [4] 0x8E CL (val: 0)
+ [3] 0x8F CL (val: 9)
+ [4] 0x90 CL (val: 0)
+ [3] LREP (6 times)
+ [_] 0x91 CL (val: 0)
+ [_] 0x92 CL (val: 0)
+ [_] 0x93 CL (val: 0)
+ [_] 0x94 CL (val: 0)
+ [_] 0x95 CL (val: 0)
+ [_] 0x96 CL (val: 0)
+ [3] LREP (5 times)
+ [_] 0x97 CL (val: 0)
+ [_] 0x98 CL (val: 0)
+ [_] 0x99 CL (val: 0)
+ [_] 0x9A CL (val: 0)
+ [_] 0x9B CL (val: 0)
+ [3] 0x9C CL (val: 9)
+ [4] 0x9D CL (val: 0)
+ [3] LREP (6 times)
+ [_] 0x9E CL (val: 0)
+ [_] 0x9F CL (val: 0)
+ [_] 0xA0 CL (val: 0)
+ [_] 0xA1 CL (val: 0)
+ [_] 0xA2 CL (val: 0)
+ [_] 0xA3 CL (val: 0)
+ [3] 0xA4 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xA5 CL (val: 9)
+ [_] 0xA6 CL (val: 9)
+ [_] 0xA7 CL (val: 9)
+ [_] 0xA8 CL (val: 9)
+ [_] 0xA9 CL (val: 9)
+ [_] 0xAA CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xAB CL (val: 9)
+ [_] 0xAC CL (val: 9)
+ [_] 0xAD CL (val: 9)
+ [_] 0xAE CL (val: 9)
+ [_] 0xAF CL (val: 9)
+ [_] 0xB0 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xB1 CL (val: 9)
+ [_] 0xB2 CL (val: 9)
+ [_] 0xB3 CL (val: 9)
+ [_] 0xB4 CL (val: 9)
+ [_] 0xB5 CL (val: 9)
+ [_] 0xB6 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xB7 CL (val: 9)
+ [_] 0xB8 CL (val: 9)
+ [_] 0xB9 CL (val: 9)
+ [_] 0xBA CL (val: 9)
+ [_] 0xBB CL (val: 9)
+ [_] 0xBC CL (val: 9)
+ [3] LREP (3 times)
+ [_] 0xBD CL (val: 9)
+ [_] 0xBE CL (val: 9)
+ [_] 0xBF CL (val: 9)
+ [4] 0xC0 CL (val: 6)
+ [4] 0xC1 CL (val: 7)
+ [3] 0xC2 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xC3 CL (val: 9)
+ [_] 0xC4 CL (val: 9)
+ [_] 0xC5 CL (val: 9)
+ [_] 0xC6 CL (val: 9)
+ [_] 0xC7 CL (val: 9)
+ [_] 0xC8 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xC9 CL (val: 9)
+ [_] 0xCA CL (val: 9)
+ [_] 0xCB CL (val: 9)
+ [_] 0xCC CL (val: 9)
+ [_] 0xCD CL (val: 9)
+ [_] 0xCE CL (val: 9)
+ [3] LREP (3 times)
+ [_] 0xCF CL (val: 9)
+ [_] 0xD0 CL (val: 9)
+ [_] 0xD1 CL (val: 9)
+ [4] 0xD2 CL (val: 0)
+ [3] LREP (4 times)
+ [_] 0xD3 CL (val: 0)
+ [_] 0xD4 CL (val: 0)
+ [_] 0xD5 CL (val: 0)
+ [_] 0xD6 CL (val: 0)
+ [4] 0xD7 CL (val: 7)
+ [3] LREP (4 times)
+ [_] 0xD8 CL (val: 7)
+ [_] 0xD9 CL (val: 7)
+ [_] 0xDA CL (val: 7)
+ [_] 0xDB CL (val: 7)
+ [3] 0xDC CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xDD CL (val: 9)
+ [_] 0xDE CL (val: 9)
+ [_] 0xDF CL (val: 9)
+ [_] 0xE0 CL (val: 9)
+ [_] 0xE1 CL (val: 9)
+ [_] 0xE2 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xE3 CL (val: 9)
+ [_] 0xE4 CL (val: 9)
+ [_] 0xE5 CL (val: 9)
+ [_] 0xE6 CL (val: 9)
+ [_] 0xE7 CL (val: 9)
+ [_] 0xE8 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xE9 CL (val: 9)
+ [_] 0xEA CL (val: 9)
+ [_] 0xEB CL (val: 9)
+ [_] 0xEC CL (val: 9)
+ [_] 0xED CL (val: 9)
+ [_] 0xEE CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xEF CL (val: 9)
+ [_] 0xF0 CL (val: 9)
+ [_] 0xF1 CL (val: 9)
+ [_] 0xF2 CL (val: 9)
+ [_] 0xF3 CL (val: 9)
+ [_] 0xF4 CL (val: 9)
+ [3] LREP (6 times)
+ [_] 0xF5 CL (val: 9)
+ [_] 0xF6 CL (val: 9)
+ [_] 0xF7 CL (val: 9)
+ [_] 0xF8 CL (val: 9)
+ [_] 0xF9 CL (val: 9)
+ [_] 0xFA CL (val: 9)
+ [3] LREP (4 times)
+ [_] 0xFB CL (val: 9)
+ [_] 0xFC CL (val: 9)
+ [_] 0xFD CL (val: 9)
+ [_] 0xFE CL (val: 9)
+ [4] 0xFF CL (val: 6)
+ [3] EofB CL (val: 9)
+ [5] l_00 CL (val: 4) (length 3)
+ [4] l_01 CL (val: 7) (length 4)
+ [4] l_02 CL (val: 6) (length 5)
+ [3] l_03 CL (val: 9) (length 6)
+ [4] l_04 CL (val: 5) (length 7)
+ [4] l_05 CL (val: 6) (length 8)
+ [4] l_06 CL (val: 6) (length 9)
+ [4] l_07 CL (val: 8) (length 10)
+ [4] l_08 CL (val: 8) (lengths [11-12])
+ [4] l_09 CL (val: 5) (lengths [13-14])
+ [4] l_10 CL (val: 8) (lengths [15-16])
+ [3] l_11 CL (val: 9) (lengths [17-18])
+ [3] LREP (6 times)
+ [_] l_12 CL (val: 9) (lengths [19-22])
+ [_] l_13 CL (val: 9) (lengths [23-26])
+ [_] l_14 CL (val: 9) (lengths [27-30])
+ [_] l_15 CL (val: 9) (lengths [31-34])
+ [_] l_16 CL (val: 9) (lengths [35-42])
+ [_] l_17 CL (val: 9) (lengths [43-50])
+ [3] LREP (6 times)
+ [_] l_18 CL (val: 9) (lengths [51-58])
+ [_] l_19 CL (val: 9) (lengths [59-66])
+ [_] l_20 CL (val: 9) (lengths [67-82])
+ [_] l_21 CL (val: 9) (lengths [83-98])
+ [_] l_22 CL (val: 9) (lengths [99-114])
+ [_] l_23 CL (val: 9) (lengths [115-130])
+ [3] LREP (5 times)
+ [_] l_24 CL (val: 9) (lengths [131-162])
+ [_] l_25 CL (val: 9) (lengths [163-194])
+ [_] l_26 CL (val: 9) (lengths [195-226])
+ [_] l_27 CL (val: 9) (lengths [227-257])
+ [_] l_28 CL (val: 9) (length 258)
+ [5] d_00 CL (val: 4) (distance 1)
+ [4] d_01 CL (val: 5) (distance 2)
+ [4] d_02 CL (val: 0) (distance 3)
+ [4] d_03 CL (val: 5) (distance 4)
+ [4] d_04 CL (val: 5) (distances [5-6])
+ [5] d_05 CL (val: 3) (distances [7-8])
+ [5] d_06 CL (val: 4) (distances [9-12])
+ [3] LREP (6 times)
+ [_] d_07 CL (val: 4) (distances [13-16])
+ [_] d_08 CL (val: 4) (distances [17-24])
+ [_] d_09 CL (val: 4) (distances [25-32])
+ [_] d_10 CL (val: 4) (distances [33-48])
+ [_] d_11 CL (val: 4) (distances [49-64])
+ [_] d_12 CL (val: 4) (distances [65-96])
+ [3] LREP (4 times)
+ [_] d_13 CL (val: 4) (distances [97-128])
+ [_] d_14 CL (val: 4) (distances [129-192])
+ [_] d_15 CL (val: 4) (distances [193-256])
+ [_] d_16 CL (val: 4) (distances [257-384])
+ [4] d_17 CL (val: 8) (distances [385-512])
+ [4] d_18 CL (val: 8) (distances [513-768])
+ [4] d_19 CL (val: 7) (distances [769-1024])
+ [4] d_20 CL (val: 7) (distances [1025-1536])
+ [4] d_21 CL (val: 7) (distances [1537-2048])
+ [9] 7D  }
+ [4] 00
+[17] (121,1)
+[13] (258,1)
+ [6] 03
+[10] (7,4)
+ [5] 02
+[16] (11,20)
+ [6] 01
+[19] (31,52)
+ [9] 12
+[18] (22,20)
+ [9] (3,4)
+[17] (114,1)
+ [9] 40  @
+ [9] 0D
+ [5] 75  u
+[15] (7,180)
+[16] (14,184)
+ [8] 4A  J
+[16] (11,24)
+ [5] 02
+[21] (31,256)
+ [7] 07
+[16] (4,72)
+[15] (8,80)
+ [4] 00
+ [5] 75  u
+[14] (14,33)
+ [6] 04
+[10] (13,8)
+[17] (13,292)
+ [7] 07
+[13] (13,18)
+[17] (15,56)
+ [9] 0F
+[22] (22,335)
+ [5] 02
+[14] (8,56)
+ [7] 06
+[12] (7,17)
+ [7] 06
+ [5] 75  u
+[18] (16,89)
+[10] (8,8)
+[17] (101,1)
+ [7] 05
+ [9] (7,8)
+ [8] 5C  \
+ [4] 00
+ [5] 75  u
+[15] (13,119)
+ [7] 07
+[13] (15,8)
+ [6] C0
+ [6] 04
+ [5] 75  u
+[17] (14,263)
+[11] (7,16)
+ [9] 0A
+[17] (14,296)
+[16] (9,215)
+ [9] 18
+[12] (7,32)
+ [7] 08
+[17] (8,344)
+ [9] (7,8)
+ [9] 09
+[13] (8,32)
+ [9] (7,8)
+ [9] 0B
+[12] (9,16)
+[16] (54,1)
+ [5] 75  u
+ [9] 9C
+ [9] 87
+ [9] 3A  :
+ [9] (3,4)
+ [9] 3F  ?
+ [6] FF
+[13] (4,5)
+ [9] (3,4)
+[28] (46,645)
+[13] (258,1)
+ [9] BF
+ [4] 00
+ [4] 00
+ [9] 76  v
+ [4] 00
+ [9] BD
+ [6] C0
+ [7] 06
+ [5] 75  u
+ [4] 00
+ [7] 8D
+ [9] B5
+ [9] 40  @
+ [6] 04
+ [4] 00
+ [4] 00
+ [9] 31  1
+ [6] C0
+ [9] AC
+ [9] 3C  <
+ [5] 75  u
+ [9] 0F
+ [9] 84
+ [7] 8C
+[11] (3,27)
+ [9] F7
+ [9] 65  e
+ [9] 10
+ [9] AC
+ [6] 89
+ [9] C3
+ [9] 31  1
+ [9] C9
+[13] (5,19)
+ [7] 74  t
+ [9] E6
+[10] (3,15)
+ [6] 01
+ [7] C1
+ [9] AC
+ [9] E8
+ [5] 02
+[11] (3,26)
+ [7] 74  t
+ [9] EC
+ [7] D9
+ [8] 45  E
+ [4] 00
+ [7] D8
+ [8] 4D  M
+ [6] 04
+ [9] 2C  ,
+ [6] 01
+ [5] 75  u
+ [9] F9
+ [8] 57  W
+ [8] 51  Q
+ [7] 8D
+ [9] 3C  <
+ [9] 8F
+ [8] 53  S
+ [8] 53  S
+ [7] DB
+ [6] 04
+ [9] 24  $
+ [7] DA
+ [7] 74  t
+ [9] 24  $
+ [7] 08
+ [7] D9
+ [7] C1
+ [9] D0
+ [9] CB
+ [9] 73  s
+ [9] 0A
+ [7] D8
+ [6] C0
+ [7] D8
+ [9] C9
+[11] (5,2)
+ [9] C2
+ [7] DA
+ [9] 0C
+ [9] 24  $
+[11] (3,17)
+ [9] 0C
+ [7] D9
+ [6] C0
+ [7] D8
+ [6] C0
+ [7] D9
+ [9] FE
+[11] (3,23)
+ [9] CA
+ [9] DE
+ [7] C1
+ [7] D9
+ [9] FE
+[11] (3,18)
+ [5] 02
+ [7] D8
+ [9] E0
+ [9] B8
+ [9] C3
+[19] (3,431)
+[10] (3,11)
+ [9] 0E
+ [9] F7
+ [9] 65  e
+ [9] 0C
+ [6] 89
+ [8] 45  E
+ [9] 0C
+ [7] DB
+ [8] 45  E
+ [9] 0C
+ [7] DA
+ [5] 75  u
+ [7] 08
+ [9] DE
+[12] (3,64)
+ [9] DE
+ [9] C9
+ [6] C0
+ [9] C3
+ [7] 05
+ [7] D8
+ [7] 07
+ [7] D9
+ [9] 1F
+ [9] AF
+ [6] FF
+ [9] 0C
+ [9] 24  $
+ [5] 75  u
+ [9] A6
+ [8] 5F  _
+ [8] 5F  _
+ [8] 59  Y
+ [8] 5F  _
+ [9] C3
+ [9] BD
+[22] (4,1000)
+ [9] BB
+ [7] 74  t
+ [4] 00
+ [5] 75  u
+ [4] 00
+ [8] 4C  L
+ [7] 8D
+ [5] 75  u
+ [9] 12
+ [8] 53  S
+ [8] 5F  _
+ [6] 6A  j
+ [5] 02
+ [8] 5E  ^
+ [6] FF
+ [8] 55  U
+ [4] 00
+ [6] 89
+ [8] 45  E
+ [9] F8
+ [6] FF
+ [9] C3
+ [9] 67  g
+ [9] 80
+ [9] 3B  ;
+ [4] 00
+ [5] 75  u
+ [8] (3,8)
+ [7] 8B
+ [9] 7D  }
+ [9] F8
+ [8] 53  S
+[11] (3,21)
+ [9] 0A
+ [8] 49  I
+ [6] 89
+ [7] 06
+ [8] 49  I
+ [9] 83
+ [9] C6
+ [7] 08
+[13] (8,25)
+ [9] (7,8)
+ [9] E1
+ [9] (7,8)
+ [9] C4
+[12] (3,64)
+ [9] 2A  *
+ [6] 6A  j
+ [9] 31  1
+ [8] 5F  _
+ [9] 41  A
+ [6] FF
+ [9] 16
+[15] (4,38)
+ [9] 31  1
+ [6] FF
+ [9] BE
+ [4] 00
+ [4] 00
+ [6] FF
+ [9] 1F
+ [6] 89
+ [9] F2
+ [7] 8B
+ [8] 4D  M
+ [6] C0
+ [9] 44  D
+ [7] 8B
+ [8] 45  E
+ [9] C4
+ [6] 6A  j
+ [5] 02
+ [9] 41  A
+ [8] 59  Y
+[12] (7,27)
+ [8] 48  H
+ [6] 89
+ [8] 45  E
+ [4] 00
+ [8] 48  H
+ [7] 8B
+ [9] 7D  }
+ [4] 00
+[11] (7,15)
+ [7] 8D
+ [9] 7D  }
+ [9] C8
+ [9] 31  1
+ [9] F6
+[14] (9,54)
+[11] (7,9)
+ [9] (7,7)
+ [6] 89
+ [8] 45  E
+ [7] 08
+ [9] BF
+ [9] 30  0
+ [7] 8B
+ [4] 00
+ [4] 00
+[12] (9,15)
+ [9] F8
+ [6] 6A  j
+ [6] 01
+ [8] 5E  ^
+ [7] 8D
+ [8] 55  U
+ [9] E8
+ [9] 31  1
+ [9] C9
+[14] (3,149)
+[12] (7,21)
+[12] (13,10)
+ [7] 8B
+ [5] 75  u
+ [7] 08
+ [8] 48  H
+ [9] 87
+ [9] F7
+[12] (9,16)
+[15] (8,72)
+ [9] E8
+ [9] 29  )
+ [4] 00
+ [4] 00
+[16] (5,225)
+[15] (13,120)
+ [9] 2A  *
+[14] (10,10)
+ [9] B4
+ [6] 03
+ [9] AF
+ [5] 75  u
+ [7] DA
+[10] (3,15)
+ [6] 6A  j
+ [6] 01
+ [8] 58  X
+ [9] CD
+ [9] 80
+[12] (3,41)
+ [9] 7A  z
+[14] (14,64)
+[12] (3,34)
+ [7] DB
+ [9] 85
+ [9] B8
+ [9] F2
+ [4] 00
+ [4] 00
+ [7] DA
+ [5] 75  u
+ [9] C8
+[15] (3,319)
+ [7] DB
+ [8] 45  E
+ [6] C0
+[12] (5,6)
+ [9] C4
+ [7] D9
+ [9] 1F
+ [7] 8D
+ [5] 75  u
+ [9] F0
+[16] (10,39)
+ [8] 50  P
+ [8] 5F  _
+[16] (5,159)
+[15] (8,88)
+ [9] BF
+ [4] 00
+ [9] 41  A
+[16] (9,187)
+ [6] 6A  j
+ [6] FF
+ [8] 5E  ^
+ [8] 56  V
+[11] (3,30)
+ [8] 5A  Z
+ [8] 52  R
+[18] (4,262)
+ [9] C3
+ [7] C1
+ [9] EA
+ [5] 02
+ [6] 89
+ [9] D1
+ [7] 8B
+ [8] 47  G
+ [9] F8
+ [6] 01
+ [8] 57  W
+ [9] F8
+ [7] 8D
+ [9] 3C  <
+ [9] 87
+[14] (3,178)
+ [9] F3
+ [9] A5
+ [9] C3
+ [4] 00
+[18] (206,1)
+ [5] 02
+ [6] 01
+ [4] 00
+ [9] 14
+ [6] 04
+[11] (13,2)
+ [5] 02
+ [9] (3,2)
+[20] (108,18)
+ [5] 75  u
+ [6] 01
+ [7] 08
+ [9] 24  $
+ [9] 43  C
+ [7] 08
+[11] (5,2)
+ [6] 03
+ [9] 43  C
+ [7] 05
+[18] (41,10)
+ [5] 75  u
+ [6] 03
+ [5] 02
+ [5] 02
+ [9] 25  %
+ [6] 04
+ [9] (3,2)
+ [6] 03
+ [9] 25  %
+ [5] 02
+ [9] 25  %
+ [6] 03
+ [9] 22  "
+ [6] 03
+ [9] 22  "
+ [5] 02
+ [9] 22  "
+[11] (7,6)
+[21] (133,22)
+ [5] 75  u
+ [5] 75  u
+ [4] 00
+[18] (165,1)
+ [9] 80
+ [5] 02
+ [4] 00
+ [4] 00
+ [9] E0
+ [6] 01
+ [8] (3,8)
+ [9] BB
+ [4] 00
+ [4] 00
+ [9] 20   
+ [9] 81
+ [6] 01
+[22] (9,1713)
+ [9] 1D
+ [9] 0A
+[16] (8,193)
+ [9] 76  v
+[12] (5,6)
+ [9] AB
+ [6] 01
+[15] (6,16)
+ [5] 75  u
+ [4] 00
+ [9] EofB

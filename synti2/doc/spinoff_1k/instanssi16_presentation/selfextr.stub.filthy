@@ -1,0 +1,5 @@
+a=/tmp/I$$
+tac -rs. $0|zcat>$a
+chmod +x $a
+$a
+)

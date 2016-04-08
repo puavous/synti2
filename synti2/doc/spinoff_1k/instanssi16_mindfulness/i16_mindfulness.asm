@@ -4,7 +4,11 @@
 ;;; Tested on two 64-bit linux platforms (x86_64): Current Fedora and
 ;;; current Debian. SDL2 and OpenGL libraries required. No guarantees
 ;;; on any other platform.
-;;; 
+;;;
+;;; No warranties. Every run is at your own risk!
+;;;
+;;; Author:  Paavo Nieminen <paavo.j.nieminen@jyu.fi>
+;;; License: MIT License with an added wish; see LICENSE.txt
 BITS 64
 DEFAULT REL
 ;;; This was my "Universal Mandala Mindfulness Colouring Book 1k"
@@ -52,9 +56,6 @@ DEFAULT REL
 ;;; the production. Feel free to experiment with the codes to generate
 ;;; such "more interesting" graphics which are very much behind the
 ;;; corner!! Just change the shader code a little bit...
-;;;
-;;; LICENSE: Totally public domain, with no warranties. Every run at
-;;; your own risk!
 
 %undef DEBUG
 	
@@ -98,14 +99,15 @@ reltext_size_makebelieve equ reltext_size
 ;;; Hardcoded layout of file - implemented with zero paddings:
 %define ZERO_PAD_UPTO(nxt) TIMES nxt + $$ - $	db	0
 %define STRINGS_START 		0x0040	; ASCII strings (lib & func names, shaders)
+;;; %define SHADERSTRINGS_START	0x01c0	; ASCII string(s) for shader(s)
 %define SHADERSTRINGS_START	0x01ab	; ASCII string(s) for shader(s)
 %define HEADERS_START		0x0400	; headers & sections other than ELF&prg hd.
 %define RELTEXT_START		0x04c0	; Relocation
 %define PROGHEADERS_START	0x0500	; Program headers
 %define SYNTH_CONST_START	0x06c0	; Synth constants
-%define CODE_START		0x06e0	; Actual program text	
-%define SYNTH_PATTERNS_START	0x0900	; Synth song patterns
-%define MAIN_DATA_START		0x0900	; Actual constant data for main program
+%define CODE_START		0x06e0	; Actual program text
+;;; %define SYNTH_PATTERNS_START	0x0900	; Synth song patterns
+%define MAIN_DATA_START		0x08e8	; Actual constant data for main program
 
 
 ;;; Minimal addressing for calls (3 bytes) is via rbp or rbx
@@ -130,7 +132,7 @@ reltext_size_makebelieve equ reltext_size
 ;;;	org	0x400000	; The usual value
 ;;; 	org	0x380000	; Happens to include 0x38 == prg header entry sz
 ;;;  	org	0xff0000	; 'Rhymes' very well with rest of the deflated world
- 	org	0x750000	; Could rhyme even better..?
+  	org	0x750000	; Could rhyme even better..?
 	
 %endif
 
@@ -323,9 +325,9 @@ minimized_fragment_shader_str:
  	db                     'o.s*sin((o.t+u.s/6*o.s*sin(2*o.s))*int(1+u.s/6)))'
 	db         '-smoothstep(0,.01+o.s/6,'
  	db                     'o.s*sin((o.t-u.s/6*o.s*sin(2*o.s))*int(1+u.s/6)));'
-    	db    'gl_FragColor=((fract(o.p)>0)?vec4(0):'
-	db                                 'a[int(u.s/6+o.p)]/o.s'
-    	db                                 '+2-2*sin(u.s/6/6))'
+    	db    'gl_FragColor=fract(o.p)>0?vec4(0):'
+ 	db                                 'a[int(u.s/6+o.p)]/o.s'
+    	db                                 '+2-2*sin(u.s/6/6)'
 ;;;      	db	  '+smoothstep(0,6,u.s-54)' ; fade-out costs some 7 bytes
 	db	';'
 	db '}'
@@ -479,8 +481,8 @@ dynamic_size equ $ - dynamic
 ;;;  ------------------------------------------------------ synth constants
 syn_constants:
 syn_c0freq:
- 	dd	0.001034631	; 0x3a879c75; close to MIDI note 0 freq / sr * 2 * pi
-
+;;;  	dd	0.001034631	; 0x3a879c75; close to MIDI note 0 freq / sr * 2 * pi
+	dd	0.016554097	; 0x3c879c75; close to MIDI note 0x30
 syn_freqr:
 ;;; 	dd	1.0594630943592953  ; freq. ratio between notes
 	dd	1.0594622	; 0x3f879c75; close to 1.0594630943592953
@@ -641,9 +643,8 @@ compile_shaders:
 	add	r14,8
 ;;;	call	[ADDR(rbp,_base1,glCompileShader_p)]
 	
-	mov	edi,[ADDR(rbp,_base1,tmpvar)]
-	mov	esi,[ADDR(rbp,_base1,shader_pid)]
-	xchg	rsi,rdi		; NOTE: this is OK if audio callback uses xchg, too!
+	mov	edi,[ADDR(rbp,_base1,shader_pid)]
+	mov	esi,[ADDR(rbp,_base1,tmpvar)]
 	call	[r14]
 	add	r14,8
 ;;;	call	[ADDR(rbp,_base1,glAttachShader_p)]
@@ -680,10 +681,15 @@ loop:
 	call	[r14]
 	add	r14,8
 ;;; 	call	[ADDR(rbp,_base1,SDL_PollEvent_p)]
-;;;	Stop when time is up:
-	cmp	dword [ADDR(rbp,_base1,synth_frames_done)],48000*60
-	jg	event_loop_is_over
-	
+
+;;; Stop when time is up:
+;;; 	cmp	dword [ADDR(rbp,_base1,synth_frames_done)],(48000*60+3584) ;close to 48000*60
+;;; Byte comparison is some bytes shorter, compressed:
+ 	cmp	[ADDR(rbp,_base1,synth_frames_done+2)], byte 0x2b ; 60 seconds plus a little
+ 	jg	event_loop_is_over
+
+
+;;; Stop at keypress event:
 %if 0
 	;; With many attempts, I didn't figure out a shorter way to test:
 	cmp	[ADDR(rbp,_base1,sdl_event_space)], word SDL_KEYDOWN
@@ -709,6 +715,7 @@ loop:
 	;; only ones with higher byte 0x03 .. try to exploit this instead!? Can't..
 	;; see above about sharing space with floats.
 %endif
+
 	jne	loop
 event_loop_is_over:
 	
@@ -839,14 +846,17 @@ no_restart:
 	
 	;; Also update note. Load RCX with note number.
 	mov	cl, byte [ADDR(rbx,syn_constants,syn_miniseq)]
-	and	ecx,0x0f
-	add	ecx,0x30
+;;;  	add	ecx,0x30
+;;; 	inc	cl
  	shr	dword [ADDR(rbx,syn_constants,syn_miniseq)], 4	
 
 	fld	dword [ADDR(rbx,syn_constants,syn_c0freq)]
+	and	ecx,0x0f
+	jz	syn_loop_over
 syn_loop:
 	fmul	dword [ADDR(rbx,syn_constants,syn_freqr)]
 	loop	syn_loop
+syn_loop_over:
  	fstp	dword[ADDR(rbx,syn_constants,syn_currentf)]
 	
 no_recompute:
@@ -898,14 +908,9 @@ no_recompute:
 	pop	rbp
 	ret
 
+;;; 	ZERO_PAD_UPTO(SYNTH_PATTERNS_START)
 	
-	ZERO_PAD_UPTO(SYNTH_PATTERNS_START)
-
-
-
-
 	ZERO_PAD_UPTO(MAIN_DATA_START)
-
 
 screen_w:	dd	MY_WINDOW_WIDTH
 screen_h:	dd	MY_WINDOW_HEIGHT
@@ -1041,7 +1046,7 @@ syn_dly_read:
 syn_delay_bottom:
 	resd	SYN_DLY_LEN
 syn_delay:
-	resd	48000*60
+	resd	(48000*60+3584)	; close to 48000*60
 
 
 ;;;  Outsiders.. for debug only, basically... no need for nearby base

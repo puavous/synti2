@@ -20,7 +20,7 @@ current.run: i16_mindfulness.asm definitions_from_libs.asm general_macros.asm de
 	cp selfextr.stub.unclean $@
 	tac -rs. tmp.gz >> $@
 	cp tmp.gz $@.bin.gz
-	rm tmp.gz
+#	rm tmp.gz
 	chmod ugo+x $@
 
 	@echo End result:
@@ -28,7 +28,7 @@ current.run: i16_mindfulness.asm definitions_from_libs.asm general_macros.asm de
 
 
 clean:
-	-rm *.bin a.out *.o tmp
+	-rm *.bin a.out *.o tmp tmp.gz
 	-rm *.bin.gz
 	-rm *~
 	-rm current.run

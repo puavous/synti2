@@ -321,9 +321,9 @@ minimized_fragment_shader_str:
 	db    'o=vec4(length(o.st),atan(o.t,o.s),atan(o.t,o.s),atan(o.t,o.s));'	
 	
 	db    'o.s/=1+fract(u.s/6);'    ; zoom in with time
- 	db    'o.p=2-smoothstep(0,.01+o.s/6,'
+ 	db    'o.p=smoothstep(0,.01+o.s/6,'
  	db                     'o.s*sin((o.t+u.s/6*o.s*sin(2*o.s))*int(1+u.s/6)))'
-	db         '-smoothstep(0,.01+o.s/6,'
+	db         '+smoothstep(0,.01+o.s/6,'
  	db                     'o.s*sin((o.t-u.s/6*o.s*sin(2*o.s))*int(1+u.s/6)));'
     	db    'gl_FragColor=fract(o.p)>0?vec4(0):'
  	db                                 'a[int(u.s/6+o.p)]/o.s'

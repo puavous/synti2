@@ -2,7 +2,7 @@ Universal Mandala Mindfulness Colouring Book 1k
 ==================================================
 
 These are the sources for my Instanssi 2016 intro compo entry. The
-compo size limit was 4096 bytes, but this packs into only 1026 (using
+compo size limit was 4096 bytes, but this packs into only 1025 (using
 zopfli with --i3000).
 
 System requirements:
@@ -21,7 +21,7 @@ System requirements:
 Of course, I was hoping to meet 1024 bytes, as in actual 1k compos,
 but decided to use the time to prepare a better "making of"
 -presentation at the party seminar session. I'm pretty sure this would
-fit into 1024 bytes (2 bytes smaller than the current version) using
+fit into 1024 bytes (1 byte smaller than the current version) using
 a combination of the following tricks:
 
 - The binary is a "moving target" until the artwork is final, and
@@ -42,7 +42,7 @@ a combination of the following tricks:
   absolute vs. RIP-relative addressing, etc.
 
 The following things I just had to do after the compo (getting the
-size down to 1026 from the 1030+ that it was at the compo):
+size down to 1025 from the 1030+ that it was at the compo):
 
 - The code for stopping after 60s was not optimal at all; it was just
   added for convenience and in a "usual, non-obscure" way. => Now it
@@ -58,4 +58,8 @@ size down to 1026 from the 1030+ that it was at the compo):
   synth code...
 
 - Oops, and there was some syntactically unnecessary parentheses in
-  the shader. Removed for a couple of bytes.
+  the shader. Removed those. One byte shorter.
+
+- Changed the shader algorithm just a bit. I doubt that anyone will
+  notice the difference in graphics :). One byte shorter.
+

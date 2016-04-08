@@ -107,7 +107,7 @@ reltext_size_makebelieve equ reltext_size
 %define SYNTH_CONST_START	0x06c0	; Synth constants
 %define CODE_START		0x06e0	; Actual program text
 ;;; %define SYNTH_PATTERNS_START	0x0900	; Synth song patterns
-%define MAIN_DATA_START		0x08e8	; Actual constant data for main program
+%define MAIN_DATA_START		0x08f0	; Actual constant data for main program
 
 
 ;;; Minimal addressing for calls (3 bytes) is via rbp or rbx
@@ -721,8 +721,9 @@ event_loop_is_over:
 	
 	call	[r14]
 ;;;  	call	[ADDR(rbp,_base1,SDL_Quit_p)]
+	
+ 	add	r14,8		; Unnecessary - but balances zopfli quite perfectly.
 %if 0
- 	add	r14,8		; Unnecessary - but balances the zopfli blocksplit.
  	add	r14,8		; Unnecessary - but balances the zopfli blocksplit.
 %endif
 	

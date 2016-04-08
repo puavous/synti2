@@ -28,7 +28,7 @@ current.run: i16_mindfulness.asm definitions_from_libs.asm general_macros.asm de
 
 
 clean:
-	-rm *.bin a.out *.o tmp tmp.gz
+	-rm current.run.bin a.out *.o tmp tmp.gz
 	-rm *.bin.gz
 	-rm *~
 	-rm current.run

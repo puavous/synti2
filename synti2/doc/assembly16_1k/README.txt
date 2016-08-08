@@ -1,5 +1,5 @@
-These are the source codes for my Assembly Summer 2016 1k intro
-compo. I have to emphasize that this was the only Linux platform entry
+These are the source codes for my Assembly Summer 2016 1k intro compo
+entry. I have to emphasize that this was the only Linux platform entry
 this year, and I honestly think this is one of the coolest native
 Linux 1k's ever.. Finns might want to read my presentation (in
 Finnish) about the fun and pain of creating tiny audiovisual wonders

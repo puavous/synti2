@@ -380,7 +380,7 @@ prg_head:
 ;; dynamic symbol section (and associated string table and hash table)
 ;; and the relocation section.
 
-;; Dynamic section entries, of type Elf64_Dyn {u64, u64}
+;; Dynamic section entries:
 
 dynamic:
 		dd	5,  dynstr		; DT_STRTAB
@@ -404,13 +404,9 @@ dynamic_size equ $ - dynamic
 
 
 ;;; Macro to skip zeros in string. Compresses very well; no need for function call
-;;; Could increase 32-bit register with shorter uncompressed code, but somehow
-;;; doesn't compress as well as when using full 64-bit instructions for %1 and %2.
 %macro MAC_skip_str_at_esi 0
 %%skip_str_at_esi:
 	lodsb
-;;;  	cmp	al, byte 0	; zero ends string
-;;; 	and	al,al	; another two byte opcode.. but cmp compresses better
  	shr	al, 1	; .. but can also stop with either 0 or 1; same code in synth
 	jnz	%%skip_str_at_esi
 %endmacro
@@ -830,7 +826,6 @@ read_from_sequence:
 	;; Shift last bit out to see if we have a 7-bit note or a control byte:
  	shr	al,1
 	mov	ecx,eax		; EAX was 0, so now CL==ECX==EAX==AL. mov changes no flag.
-	;; ^wow, that was a bug in the entry; lucky it worked at asm.. mov cl,al was intended
 	jnc	new_note
 
 	lodsb

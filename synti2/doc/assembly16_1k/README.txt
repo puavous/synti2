@@ -7,6 +7,9 @@ on the Linux platform:
 
 http://users.jyu.fi/~nieminen/instanssi2016_nieminen_spinoff_1k.pdf
 
+This is a "spinoff" from the older 4k synth project, and so far I've
+publish these 1k codes in the doc/ directory of that one.
+
 What else.. fuzzdealer.nfo is the info text file included in the entry
 zip. LICENSE.txt credits some authors I've imitated. Have fun coding,
 everybody!

@@ -86,7 +86,7 @@ namespace synti2gui {
         {
             vi = new Fl_Value_Input(x,y,w,h);
             vi->callback(vicb,this);
-            vi->tooltip(ipb->getI4Par(0,ikey).getHumanReadable().c_str());
+            vi->copy_tooltip(ipb->getI4Par(0,ikey).getHumanReadable().c_str());
             vi->precision(0);
             vi->bounds(0,ipb->getI4Par(0,ikey).getMaxValue());
             vi->color(colortab[ipb->getI4Par(0,ikey).getGuiGroup()]);
@@ -126,8 +126,8 @@ namespace synti2gui {
           vsf = new Fl_Roller(x,y,w,h);
           // Gonna ask from active patch.. FIXME: How do I change the limits per-patch?
           vsf->callback(cbfwd,this);
-          vsf->tooltip(ipb->getFPar(0,ikey).getHumanReadable().c_str());
-          vsf->label(ipb->getFPar(0,ikey).getHumanReadable().c_str());
+          vsf->copy_tooltip(ipb->getFPar(0,ikey).getHumanReadable().c_str());
+          vsf->copy_label(ipb->getFPar(0,ikey).getHumanReadable().c_str());
           vsf->align(FL_ALIGN_RIGHT);
           vsf->type(FL_HOR_NICE_SLIDER);
           //vsf->align(FL_HORIZONTAL);

@@ -44,7 +44,8 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
   FeatureValueInput *vi;
   Fl_Box *lbl;
   for (cit=pb->getCapacityBegin(); cit!= pb->getCapacityEnd(); ++cit){
-    lbl = new Fl_Box(px,py,captwidth,height,(*cit).getHumanReadable().c_str());
+    lbl = new Fl_Box(px,py,captwidth,height,0);
+    lbl->copy_label((*cit).getHumanReadable().c_str());
     lbl->align(FL_ALIGN_INSIDE|FL_ALIGN_LEFT);
 
     vi = new FeatureValueInput(px+captwidth,py,width,height,pb,
@@ -63,8 +64,10 @@ ViewFeatures::build_feature_selector(int x, int y, int w, int h)
   FeatureCheckButton *ckb;
   for (fit=pb->getFeatureBegin(); fit!=pb->getFeatureEnd(); ++fit){
     ckb = new FeatureCheckButton(px,py,200,20,
-                                (*fit).getHumanReadable().c_str(),pb,
-                                (*fit).getKey());
+                                 "unlabeled",
+                                 pb,
+                                 (*fit).getKey());
+    ckb->copy_label((*fit).getHumanReadable().c_str());
     keys.push_back((*fit).getKey());
     wfeat.push_back(ckb);
     ckb->argument(keys.size()-1);

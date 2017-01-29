@@ -595,7 +595,7 @@ synti2_midi_to_misss(synti2_midi_map *map,
     } else {
       msgsizes[0] = synti2_sysmsg_to_misss(midi_status, midi_in,
                                            misss_out, input_size-1);
-      return 1;
+      return (msgsizes[0]==0)?0:1; // TODO: suspect!
     }
   default:
     return 0;

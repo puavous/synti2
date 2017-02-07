@@ -19,11 +19,17 @@ jtt2015_slides_nieminen.pdf: jtt2015_slides_nieminen.tex dspstuff.bib
 	pdflatex jtt2015_slides_nieminen.tex
 	pdflatex jtt2015_slides_nieminen.tex
 
-jtt2016_slides_nieminen.pdf: jtt2015_slides_nieminen.tex dspstuff.bib
+jtt2016_slides_nieminen.pdf: jtt2016_slides_nieminen.tex dspstuff.bib
 	pdflatex jtt2016_slides_nieminen.tex
 	bibtex jtt2016_slides_nieminen
 	pdflatex jtt2016_slides_nieminen.tex
 	pdflatex jtt2016_slides_nieminen.tex
+
+jtt2017_slides_nieminen.pdf: jtt2017_slides_nieminen.tex dspstuff.bib
+	pdflatex jtt2017_slides_nieminen.tex
+	bibtex jtt2017_slides_nieminen
+	pdflatex jtt2017_slides_nieminen.tex
+	pdflatex jtt2017_slides_nieminen.tex
 
 
 mostlyclean:
@@ -34,3 +40,4 @@ clean: mostlyclean
 	-rm instanssi2012_slides_nieminen.pdf
 	-rm jtt2015_slides_nieminen.pdf
 	-rm jtt2016_slides_nieminen.pdf
+	-rm jtt2017_slides_nieminen.pdf

@@ -67,10 +67,13 @@ float julia(vec2 c, vec2 z, int iter){
     int l;
     int lmax = 5;
     for (l=0;l<lmax;l++){
+        // Original:
         vec2 c = ctr[l] + (20.-s[0])*.1*vec2(sin(s[0]),cos(s[0]));
-      vec2 z = z0 + ztab[l];
-      float j = julia(c,z,iter);
-      col += j * 5.*ctab[l];
+        // Without "fade-out" For JTT2017 lecture show
+        //vec2 c = ctr[l] + sin(.1*s[0])*.1*vec2(sin(s[0]),cos(s[0]));
+        vec2 z = z0 + ztab[l];
+        float j = julia(c,z,iter);
+        col += j * 5.*ctab[l];
     }
 
     gl_FragColor = col;

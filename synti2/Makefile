@@ -38,7 +38,7 @@ ENGINEFILES = engine/synti2.c \
 TINYFILES = example/selfextr.stub \
 	    example/general_main.c \
 	    example/default_defs.h \
-	    example/startup64.c 
+	    example/startup64.c
 
 
 # These are additionally needed for any compose-mode MIDI synth:
